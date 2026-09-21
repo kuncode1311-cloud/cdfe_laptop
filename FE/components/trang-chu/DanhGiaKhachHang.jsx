@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Star, CheckCircle, Quote, ThumbsUp, Sparkles, MapPin, ShieldCheck } from 'lucide-react';
 import { DanhGiaService } from '@/services/danh-gia.service';
+import { DANH_SACH_DANH_GIA } from '@/du-lieu/danh-sach-danh-gia';
 
 // Danh sách avatar mặc định tinh tế cho khách hàng thực tế
 const AVATAR_MAC_DINH = [
@@ -99,11 +100,25 @@ const rutGonTenLaptop = (ten) => {
         .trim();
 };
 
+// Tạo dữ liệu đánh giá ban đầu đảm bảo hiển thị tức thì 100%
+const khoiTaoDanhGia = (DANH_SACH_DANH_GIA || []).slice(0, 4).map((item, idx) => ({
+    id: item.id || item._id || `dg-init-${idx}`,
+    tenKhach: item.ho_ten || item.tenKhach || 'Khách hàng TNTP Laptop',
+    ngheNghiep: item.ngheNghiep || 'Khách hàng xác thực',
+    avatar: item.avatar || AVATAR_MAC_DINH[idx % AVATAR_MAC_DINH.length],
+    sanPhamDaMua: item.ten_san_pham || item.sanPhamDaMua || 'Laptop chính hãng',
+    soSao: item.so_sao || item.soSao || 5,
+    ngayDanhGia: item.ngay_danh_gia || item.ngayDanhGia || 'Gần đây',
+    noiDung: item.noi_dung || item.noiDung || 'Máy dùng rất mượt mà, nhân viên hỗ trợ nhiệt tình!',
+    diaDiemMua: item.diaDiemMua || CHI_NHANH_MAC_DINH[idx % CHI_NHANH_MAC_DINH.length],
+    da_mua_hang: item.da_mua_hang !== false
+}));
+
 export default function DanhGiaKhachHang() {
-    const [danhSachDanhGia, setDanhSachDanhGia] = useState([]);
-    const [tongSoDanhGia, setTongSoDanhGia] = useState(0);
+    const [danhSachDanhGia, setDanhSachDanhGia] = useState(khoiTaoDanhGia);
+    const [tongSoDanhGia, setTongSoDanhGia] = useState((DANH_SACH_DANH_GIA || []).length);
     const [diemTrungBinh, setDiemTrungBinh] = useState('5.0');
-    const [dangTai, setDangTai] = useState(true);
+    const [dangTai, setDangTai] = useState(false);
     const [daThich, setDaThich] = useState({});
     const [soLike, setSoLike] = useState({ 0: 24, 1: 19, 2: 32, 3: 15 });
 
