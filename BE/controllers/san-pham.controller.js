@@ -59,6 +59,9 @@ const docChiTietTuDbJson = (req, res) => {
 
 // 1. Lấy tất cả sản phẩm (kèm tìm kiếm, lọc đa tiêu chí và sắp xếp)
 const layTatCaSanPham = async (req, res) => {
+    // Thiết lập HTTP Caching tối ưu cho Server Railway & Trình duyệt khách (cache 60s)
+    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+
     // Nếu MongoDB chưa kết nối sẵn sàng (tránh treo 10 giây), nạp ngay từ db.json
     if (mongoose.connection.readyState !== 1) {
         return docSanPhamTuDbJson(req, res);
@@ -175,6 +178,9 @@ const layTatCaSanPham = async (req, res) => {
 
 // 2. Lấy thông tin chi tiết một sản phẩm theo ID hoặc Mã SKU
 const laySanPhamTheoId = async (req, res) => {
+    // Cache chi tiết sản phẩm 120s
+    res.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+
     // Nếu MongoDB chưa kết nối sẵn sàng, tìm ngay trong db.json
     if (mongoose.connection.readyState !== 1) {
         return docChiTietTuDbJson(req, res);

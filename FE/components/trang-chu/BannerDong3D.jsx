@@ -122,10 +122,23 @@ export default function BannerDong3D() {
     useEffect(() => {
         let cancelled = false;
         const warmFrameCache = async () => {
-            // Đợi 1.8s sau khi trang tải xong giao diện chính mới bắt đầu nạp ngầm
-            await new Promise((resolve) => window.setTimeout(resolve, 1800));
-            let cursor = 0;
-            // 4 luồng tải song song nạp ảnh vào cache trình duyệt
+            // Giai đoạn 1: Nạp NGAY LẬP TỨC 30 frame đầu tiên (Chapter 1) với độ ưu tiên cao
+            // Đảm bảo người dùng vừa vào trang lướt chuột là chuyển động 60fps mượt như nhung
+            const initialFrames = Array.from({ length: 30 }, (_, i) => i);
+            await Promise.all(
+                initialFrames.map(f => {
+                    load(f, "high");
+                    return fetch(pathFor(f), { cache: "force-cache" }).catch(() => {});
+                })
+            );
+
+            if (cancelled) return;
+
+            // Nghỉ nhẹ 400ms để nhường băng thông cho các thành phần giao diện khác
+            await new Promise((resolve) => window.setTimeout(resolve, 400));
+
+            // Giai đoạn 2: Nạp ngầm toàn bộ frames còn lại (30 -> 767) theo luồng song song
+            let cursor = 30;
             const worker = async () => {
                 while (!cancelled) {
                     const frame = cursor++;
@@ -137,7 +150,7 @@ export default function BannerDong3D() {
                     catch {
                         // Nếu lỗi nạp nền, bộ nạp trực tiếp sẽ tự fetch khi cần
                     }
-                    if (frame % 12 === 0)
+                    if (frame % 8 === 0)
                         await new Promise((resolve) => window.setTimeout(resolve, 16));
                 }
             };
@@ -147,9 +160,9 @@ export default function BannerDong3D() {
         const hasIdleCallback = typeof window !== 'undefined' && 'requestIdleCallback' in window;
         const idleId = hasIdleCallback
             ? window.requestIdleCallback(() => void warmFrameCache(), {
-                timeout: 3000,
+                timeout: 1500,
             })
-            : window.setTimeout(() => void warmFrameCache(), 1000);
+            : window.setTimeout(() => void warmFrameCache(), 300);
         return () => {
             cancelled = true;
             if (hasIdleCallback && 'cancelIdleCallback' in window) {
@@ -192,13 +205,13 @@ export default function BannerDong3D() {
             const x = clamp((value - from) / (to - from));
             return x * x * (3 - 2 * x);
         };
-        // Hàm tải ảnh của 1 frame cụ thể kèm cơ chế dọn dẹp RAM (LRU Cache tối đa 36 ảnh)
+        // Hàm tải ảnh của 1 frame cụ thể kèm cơ chế dọn dẹp RAM (LRU Cache tối đa 120 ảnh cho mượt mà)
         const load = (n, priority = "low") => {
             const i = Math.round(Math.max(0, Math.min(TOTAL - 1, n)));
             let img = images.current.get(i);
             if (!img) {
-                // Nếu bộ nhớ đệm vượt quá 36 ảnh, xóa bớt ảnh ở xa frame hiện tại nhất
-                if (images.current.size >= 36) {
+                // Nếu bộ nhớ đệm vượt quá 120 ảnh, xóa bớt ảnh ở xa frame hiện tại nhất
+                if (images.current.size >= 120) {
                     const victim = [...images.current.keys()].reduce((furthest, key) => Math.abs(key - i) > Math.abs(furthest - i) ? key : furthest);
                     const oldImage = images.current.get(victim);
                     if (oldImage)

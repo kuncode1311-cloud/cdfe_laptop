@@ -9,7 +9,7 @@ let boNhoDemSanPham = [...DANH_SACH_LAPTOP];
 // Khi chạy trên trình duyệt, tự động gọi backend lấy danh sách mới nhất.
 // Nếu backend chưa chạy thì apiFetch trả về DANH_SACH_LAPTOP (dữ liệu dự phòng).
 if (typeof window !== 'undefined') {
-    apiFetch('/san-pham', { cache: 'no-store' }, DANH_SACH_LAPTOP)
+    apiFetch('/san-pham', { cache: 'default' }, DANH_SACH_LAPTOP)
         .then((data) => {
             if (Array.isArray(data) && data.length > 0) {
                 boNhoDemSanPham = data;
@@ -51,7 +51,7 @@ export const SanPhamService = {
             endpoint += `?${queryString}`;
         }
 
-        const data = await apiFetch(endpoint, { cache: 'no-store' }, DANH_SACH_LAPTOP);
+        const data = await apiFetch(endpoint, { cache: 'default' }, DANH_SACH_LAPTOP);
         if (Array.isArray(data) && data.length > 0 && !queryString) {
             boNhoDemSanPham = data;
         }

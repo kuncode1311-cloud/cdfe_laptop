@@ -18,6 +18,15 @@ export const metadata = {
 export default function RootLayout({ children }) {
     return (
         <html lang="vi" suppressHydrationWarning>
+            <head>
+                <link
+                    rel="preload"
+                    as="image"
+                    href="/cinematic/frames/frame_00001.webp"
+                    type="image/webp"
+                    fetchPriority="high"
+                />
+            </head>
             <body className={`${fontChinh.variable} font-sans antialiased min-h-screen`} suppressHydrationWarning>
                 <AppProviders>
                     <BoKhungGiaoDien>
