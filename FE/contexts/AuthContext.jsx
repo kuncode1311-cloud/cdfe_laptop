@@ -258,6 +258,11 @@ export function AuthProvider({ children }) {
         setToken(null);
         localStorage.removeItem(USER_STORAGE_KEY);
         localStorage.removeItem(TOKEN_STORAGE_KEY);
+        if (typeof window !== 'undefined' && window.google?.accounts?.id) {
+            try {
+                window.google.accounts.id.disableAutoSelect();
+            } catch (_) {}
+        }
     };
 
     const laAdmin = nguoiDung?.vaiTro === 'admin';

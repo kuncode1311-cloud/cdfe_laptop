@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -105,7 +105,7 @@ export default function TrangTinTuc() {
   const coBai = baiNoi ? danhSachLoc.filter(t => (t.id || t._id) !== (baiNoi.id || baiNoi._id)) : danhSachLoc;
 
   return (
-    <div style={{ background: '#f1f5f9', minHeight: '100vh' }}>
+    <div className="min-h-screen">
       <style>{`
         .tt-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
         @media(max-width:1024px){.tt-grid{grid-template-columns:repeat(2,1fr);}}
