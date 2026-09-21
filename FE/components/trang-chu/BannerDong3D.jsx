@@ -115,6 +115,37 @@ export default function BannerDong3D() {
         audio.current = { ctx, gain, filter, rumble, rumbleGain };
         void ctx.resume();
     }, []);
+
+    // ------------------------------------------------------------------
+    // Hàm tải ảnh của 1 frame cụ thể kèm cơ chế dọn dẹp RAM (LRU Cache tối đa 120 ảnh cho mượt mà)
+    // Dùng chung cho cả Effect nạp trước và Effect render canvas
+    // ------------------------------------------------------------------
+    const load = useCallback((n, priority = "low") => {
+        const i = Math.round(Math.max(0, Math.min(TOTAL - 1, n)));
+        let img = images.current.get(i);
+        if (!img) {
+            // Nếu bộ nhớ đệm vượt quá 120 ảnh, xóa bớt ảnh ở xa frame hiện tại nhất
+            if (images.current.size >= 120) {
+                const victim = [...images.current.keys()].reduce((furthest, key) =>
+                    Math.abs(key - i) > Math.abs(furthest - i) ? key : furthest
+                );
+                const oldImage = images.current.get(victim);
+                if (oldImage)
+                    oldImage.src = "";
+                images.current.delete(victim);
+            }
+            img = new Image();
+            img.decoding = "async";
+            img.fetchPriority = priority;
+            img.src = pathFor(i);
+            images.current.set(i, img);
+        }
+        else if (priority === "high") {
+            img.fetchPriority = "high";
+        }
+        return img;
+    }, []);
+
     // ------------------------------------------------------------------
     // EFFECT 1: Tải trước (Pre-warm) toàn bộ frames vào bộ nhớ cache ngầm
     // Giúp người dùng khi cuộn nhanh không bị khựng hình
@@ -205,30 +236,7 @@ export default function BannerDong3D() {
             const x = clamp((value - from) / (to - from));
             return x * x * (3 - 2 * x);
         };
-        // Hàm tải ảnh của 1 frame cụ thể kèm cơ chế dọn dẹp RAM (LRU Cache tối đa 120 ảnh cho mượt mà)
-        const load = (n, priority = "low") => {
-            const i = Math.round(Math.max(0, Math.min(TOTAL - 1, n)));
-            let img = images.current.get(i);
-            if (!img) {
-                // Nếu bộ nhớ đệm vượt quá 120 ảnh, xóa bớt ảnh ở xa frame hiện tại nhất
-                if (images.current.size >= 120) {
-                    const victim = [...images.current.keys()].reduce((furthest, key) => Math.abs(key - i) > Math.abs(furthest - i) ? key : furthest);
-                    const oldImage = images.current.get(victim);
-                    if (oldImage)
-                        oldImage.src = "";
-                    images.current.delete(victim);
-                }
-                img = new Image();
-                img.decoding = "async";
-                img.fetchPriority = priority;
-                img.src = pathFor(i);
-                images.current.set(i, img);
-            }
-            else if (priority === "high") {
-                img.fetchPriority = "high";
-            }
-            return img;
-        };
+
         // Hàm vẽ trực tiếp hình ảnh lên thẻ Canvas
         const draw = (img) => {
             const dpr = 1;
