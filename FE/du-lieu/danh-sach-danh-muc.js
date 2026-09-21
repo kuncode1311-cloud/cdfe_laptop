@@ -1,0 +1,50 @@
+export const DANH_SACH_DANH_MUC = [
+    {
+        ma_danh_muc: 'gaming',
+        ten_danh_muc: 'Laptop Gaming Cực Đỉnh',
+        mo_ta: 'Tần số quét cao 240Hz-360Hz, Card RTX 40 Series, Tản nhiệt kim loại lỏng đỉnh cao',
+        so_luong_san_pham: 12,
+        bieu_tuong_icon: 'Gamepad2',
+        hinh_anh: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+        ma_danh_muc: 'ai-pc',
+        ten_danh_muc: 'AI PC Siêu Trí Tuệ 2026',
+        mo_ta: 'Tích hợp vi xử lý NPU xử lý trí tuệ nhân tạo cục bộ, tăng tốc workflow vượt bậc',
+        so_luong_san_pham: 8,
+        bieu_tuong_icon: 'Cpu',
+        hinh_anh: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+        ma_danh_muc: 'do-hoa-sang-tao',
+        ten_danh_muc: 'Đồ Họa & Sáng Tạo Studio',
+        mo_ta: 'Màn hình chuẩn màu 100% DCI-P3, OLED 4K, hiệu năng render 3D và dựng video mượt mà',
+        so_luong_san_pham: 10,
+        bieu_tuong_icon: 'Palette',
+        hinh_anh: 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+        ma_danh_muc: 'van-phong-mong-nhe',
+        ten_danh_muc: 'Mỏng Nhẹ & Sang Trọng',
+        mo_ta: 'Trọng lượng chỉ từ 1.1kg - 1.3kg, Pin trâu 15-20 giờ, Vỏ nhôm nguyên khối CNC tinh xảo',
+        so_luong_san_pham: 14,
+        bieu_tuong_icon: 'Feather',
+        hinh_anh: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+        ma_danh_muc: 'doanh-nhan',
+        ten_danh_muc: 'Laptop Doanh Nhân Cao Cấp',
+        mo_ta: 'Bảo mật vân tay, Nhận diện khuôn mặt IR, Độ bền chuẩn quân đội MIL-STD-810H',
+        so_luong_san_pham: 9,
+        bieu_tuong_icon: 'Briefcase',
+        hinh_anh: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=600&q=80'
+    },
+    {
+        ma_danh_muc: 'sinh-vien',
+        ten_danh_muc: 'Học Tập & Sinh Viên Giá Tốt',
+        mo_ta: 'Cấu hình cân đối Core i5/Ryzen 5, bàn phím êm ái, bảo hành 2 năm chính hãng',
+        so_luong_san_pham: 11,
+        bieu_tuong_icon: 'GraduationCap',
+        hinh_anh: 'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&w=600&q=80'
+    }
+];

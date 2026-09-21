@@ -1,0 +1,8 @@
+{
+  "name": "laptop-new",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node ./FE/node_modules/concurrently/dist/bin/index.js -n \"BE,FE\" -c \"blue,green\" \"npm --prefix BE run dev\" \"npm --prefix FE run dev\""
+  }
+}

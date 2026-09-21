@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+BE/node_modules/
+FE/node_modules/
+
+# Environment files
+.env
+.env.*
+.env.local
+!.env.example
+FE/.env.local
+BE/.env
+
+# Next.js build output
+.next/
+FE/.next/
+out/
+FE/out/
+build/
+FE/build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Word documents / local notes
+*.docx

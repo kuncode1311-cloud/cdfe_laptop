@@ -1,0 +1,173 @@
+import { generateOrderId, taoMaDonHang, getCurrentDateTimeFormatted, layNgayGioHienTai } from '@/utils/generateOrderId';
+import { apiFetch, API_BASE_URL } from './api-client';
+
+const KHOA_LUU_TRU_DON_HANG = 'laptopnew_danh_sach_don_hang';
+
+export const DonHangService = {
+    /**
+     * Tạo một đơn hàng mới, lưu vào MongoDB qua Express API và đồng bộ cục bộ
+     */
+    /**
+     * Tạo một đơn hàng mới, lưu vào MongoDB qua Express API và đồng bộ cục bộ
+     */
+    async taoDonHang(thongTinHoacPayload, danhSachSanPham, tamTinh, tienGiamGia, maGiamGia, hinhThucThanhToan) {
+        let donHangMoi;
+
+        // Nếu truyền vào 1 object đơn hàng hoàn chỉnh (dành cho Admin)
+        if (thongTinHoacPayload && typeof thongTinHoacPayload === 'object' && thongTinHoacPayload.thong_tin_giao_hang) {
+            donHangMoi = {
+                ...thongTinHoacPayload,
+                id: thongTinHoacPayload.id || `dh-${Date.now()}`,
+                ma_don_hang: thongTinHoacPayload.ma_don_hang || taoMaDonHang(),
+                ngay_tao: thongTinHoacPayload.ngay_tao || layNgayGioHienTai(),
+                tong_tien_thanh_toan: thongTinHoacPayload.tong_tien_thanh_toan !== undefined
+                    ? thongTinHoacPayload.tong_tien_thanh_toan
+                    : Math.max(0, (thongTinHoacPayload.tam_tinh || 0) - (thongTinHoacPayload.tien_giam_gia || 0))
+            };
+        } else {
+            // Khi gọi từ trang Checkout phía khách hàng (6 tham số)
+            const maDon = taoMaDonHang();
+            const thoiGian = layNgayGioHienTai();
+            const tongTien = Math.max(0, (tamTinh || 0) - (tienGiamGia || 0));
+
+            const thongTinChuan = {
+                ...thongTinHoacPayload,
+                ho_ten: thongTinHoacPayload?.ho_ten || thongTinHoacPayload?.ho_va_ten || '',
+                ho_va_ten: thongTinHoacPayload?.ho_va_ten || thongTinHoacPayload?.ho_ten || ''
+            };
+
+            donHangMoi = {
+                id: `dh-${Date.now()}`,
+                ma_don_hang: maDon,
+                ngay_tao: thoiGian,
+                trang_thai: 'da_xac_nhan',
+                thong_tin_giao_hang: thongTinChuan,
+                danh_sach_san_pham: danhSachSanPham || [],
+                tam_tinh: tamTinh || 0,
+                tien_giam_gia: tienGiamGia || 0,
+                ma_giam_gia: maGiamGia || '',
+                phi_van_chuyen: 0,
+                tong_tien_thanh_toan: tongTien,
+                hinh_thuc_thanh_toan: hinhThucThanhToan || 'chuyen_khoan_vietqr',
+                da_thanh_toan: hinhThucThanhToan === 'chuyen_khoan_vietqr',
+                lich_trinh_giao_hang: [
+                    {
+                        thoi_gian: thoiGian,
+                        tieu_de: 'Đặt hàng thành công',
+                        mo_ta_chi_tiet: 'Hệ thống đã tiếp nhận đơn hàng của quý khách.',
+                        hoan_thanh: true
+                    },
+                    {
+                        thoi_gian: thoiGian,
+                        tieu_de: 'Đã xác nhận đơn hàng',
+                        mo_ta_chi_tiet: 'Nhân viên kỹ thuật LaptopNew đang kiểm tra máy và đóng gói niêm phong chống sốc.',
+                        hoan_thanh: true
+                    },
+                    {
+                        thoi_gian: 'Dự kiến trong ngày',
+                        tieu_de: 'Bàn giao đơn vị vận chuyển',
+                        mo_ta_chi_tiet: 'Bàn giao đơn vị chuyển phát hỏa tốc Viettel Post / Giao hàng nhanh.',
+                        hoan_thanh: false
+                    },
+                    {
+                        thoi_gian: 'Dự kiến 1-2 ngày',
+                        tieu_de: 'Giao hàng thành công',
+                        mo_ta_chi_tiet: 'Quý khách kiểm tra máy trước khi thanh toán và nhận máy.',
+                        hoan_thanh: false
+                    }
+                ]
+            };
+        }
+
+        // 1. Lưu đồng bộ vào MongoDB qua apiFetch có gắn token
+        try {
+            const ketQuaServer = await apiFetch('/don-hang', {
+                method: 'POST',
+                body: JSON.stringify(donHangMoi)
+            });
+            if (ketQuaServer && ketQuaServer.ma_don_hang) {
+                donHangMoi = ketQuaServer;
+            }
+        } catch (err) {
+            console.warn('⚠️ Lỗi kết nối Express API khi tạo đơn hàng, lưu an toàn vào LocalStorage:', err.message);
+        }
+
+        // 2. Lưu đồng thời vào LocalStorage để truy xuất tức thời
+        if (typeof window !== 'undefined') {
+            try {
+                const danhSachHienTai = this.layTatCaDonHang();
+                const idx = danhSachHienTai.findIndex(d => d.id === donHangMoi.id || d.ma_don_hang === donHangMoi.ma_don_hang);
+                if (idx >= 0) {
+                    danhSachHienTai[idx] = donHangMoi;
+                } else {
+                    danhSachHienTai.unshift(donHangMoi);
+                }
+                localStorage.setItem(KHOA_LUU_TRU_DON_HANG, JSON.stringify(danhSachHienTai));
+            } catch (err) {
+                console.error('Lỗi khi lưu đơn hàng LocalStorage:', err);
+            }
+        }
+        return donHangMoi;
+    },
+
+    /**
+     * Lấy danh sách tất cả các đơn hàng đã đặt (từ Express API Async)
+     */
+    async layTatCaDonHangAsync() {
+        const local = this.layTatCaDonHang();
+        try {
+            const serverOrders = await apiFetch('/don-hang', { cache: 'no-store' }, local);
+            return Array.isArray(serverOrders) ? serverOrders : local;
+        } catch {
+            return local;
+        }
+    },
+
+    /**
+     * Lấy danh sách tất cả các đơn hàng đã đặt (Đồng bộ)
+     */
+    layTatCaDonHang() {
+        if (typeof window === 'undefined')
+            return [];
+        try {
+            const duLieu = localStorage.getItem(KHOA_LUU_TRU_DON_HANG);
+            if (duLieu) {
+                return JSON.parse(duLieu);
+            }
+        } catch (err) {
+            console.error('Lỗi khi đọc đơn hàng:', err);
+        }
+        return [];
+    },
+
+    /**
+     * Tra cứu đơn hàng theo Mã Đơn Hàng hoặc Số Điện Thoại
+     */
+    traCuuDonHang(maHoacSdt) {
+        if (!maHoacSdt.trim())
+            return [];
+        const key = maHoacSdt.trim().toLowerCase();
+        const tatCa = this.layTatCaDonHang();
+        return tatCa.filter((dh) => dh.ma_don_hang.toLowerCase() === key ||
+            dh.thong_tin_giao_hang.so_dien_thoai.includes(key));
+    },
+
+    /**
+     * Cập nhật trạng thái / lịch trình đơn hàng (Dành cho Admin)
+     */
+    async capNhatDonHang(id, duLieuCapNhat) {
+        return await apiFetch(`/don-hang/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(duLieuCapNhat)
+        });
+    },
+
+    /**
+     * Xóa đơn hàng (Dành cho Admin)
+     */
+    async xoaDonHang(id) {
+        return await apiFetch(`/don-hang/${id}`, {
+            method: 'DELETE'
+        });
+    }
+};

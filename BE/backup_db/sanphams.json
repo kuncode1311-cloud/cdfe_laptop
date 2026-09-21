@@ -1,0 +1,1714 @@
+[
+  {
+    "_id": "6aa02f97c2ea9243a450b8d0",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Bộ đôi tối thượng Intel Core i9-14900HX và NVIDIA RTX 4090 175W max TGP",
+      "Màn hình 18-inch Mini-LED 2.5K 240Hz Nebula HDR độ sáng 1100 nits",
+      "Tản nhiệt 3 quạt Arc Flow Gen 2 kết hợp keo kim loại lỏng Conductonaut Extreme",
+      "RAM 64GB DDR5 5600MHz và SSD 2TB RAID 0 cực nhanh"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-1",
+        "ten_nguoi_dung": "Hoàng Long (Gamer Pro)",
+        "so_sao": 5,
+        "tieu_de": "Cỗ máy quái vật đích thực!",
+        "noi_dung": "Màn hình Mini-LED 240Hz đẹp xuất sắc, chơi Cyberpunk 2077 Full Ray Tracing mượt 120 FPS không tụt giọt nào. Tản nhiệt cực êm ái.",
+        "ngay_danh_gia": "22/08/2026",
+        "da_mua_hang": true
+      },
+      {
+        "id": "dg-2",
+        "ten_nguoi_dung": "Vũ Minh Trí (3D Animator)",
+        "so_sao": 5,
+        "tieu_de": "Render Maya & Blender siêu tốc",
+        "noi_dung": "RTX 4090 kết hợp 64GB RAM xử lý các cảnh mô phỏng 3D nặng nhẹ như bỡn. Rất đáng đồng tiền bát gạo.",
+        "ngay_danh_gia": "18/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "gaming",
+      "ai-pc",
+      "do-hoa-sang-tao"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 125000000,
+    "gia_khuyen_mai": 109990000,
+    "hang_san_xuat": "asus",
+    "hinh_anh_chinh": "/images/sp/asus_rog_scar18.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "rog-scar-18-2026",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "G834JYR-R9054W",
+    "mo_ta_chi_tiet": "ASUS ROG Strix SCAR 18 là đỉnh cao công nghệ laptop gaming 2026, mang sức mạnh máy bàn vào thiết kế di động với khung gầm hợp kim sang trọng.",
+    "phan_tram_giam_gia": 12,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Balo ROG Ranger BP2701 Gaming trị giá 2.500.000đ",
+        "gia_tri": 2500000
+      },
+      {
+        "ten_qua_tang": "Chuột ROG Gladius III Wireless AimPoint trị giá 2.190.000đ",
+        "gia_tri": 2190000
+      },
+      {
+        "ten_qua_tang": "Tai nghe ROG Fusion II 500 7.1 Surround trị giá 3.990.000đ",
+        "gia_tri": 3990000
+      },
+      {
+        "ten_qua_tang": "Gói bảo hành vàng ASUS ROG Premium Care tận nhà 2 năm",
+        "gia_tri": 4500000
+      }
+    ],
+    "so_luong_da_ban": 45,
+    "so_luong_danh_gia": 28,
+    "so_luong_ton_kho": 7,
+    "ten_san_pham": "ASUS ROG Strix SCAR 18 (2026) Core i9-14900HX | RTX 4090 | 64GB | 2TB | 18\" 2.5K 240Hz Nebula HDR",
+    "thong_so": {
+      "cpu": "Intel® Core™ i9-14900HX (24 nhân 32 luồng, Turbo 5.8GHz, 36MB Cache)",
+      "so_nhan_luong": "24 Nhân (8 P-Core + 16 E-Core), 32 Luồng",
+      "xung_nhip_toi_da": "5.8 GHz Turbo Boost",
+      "bo_nho_dem_cache": "36MB Intel Smart Cache",
+      "chip_ai_npu": "Intel AI Boost NPU tích hợp",
+      "hieu_nang_ai_tops": 45,
+      "card_do_hoa": "NVIDIA® GeForce RTX™ 4090 Laptop GPU 16GB GDDR6 (175W TGP)",
+      "dung_luong_vram": "16GB GDDR6",
+      "cong_suat_tgp": 175,
+      "ho_tro_ray_tracing": true,
+      "ram": "64GB DDR5-5600MHz (2x32GB)",
+      "loai_ram": "DDR5 5600MHz",
+      "toc_do_bus": "5600 MHz",
+      "nang_cap_ram_toi_da": "Lên tới 64GB",
+      "o_cung": "2TB PCIe® 4.0 NVMe™ M.2 Performance SSD (Raid 0)",
+      "khe_cam_mo_rong": "2 khe M.2 PCIe Gen 4",
+      "man_hinh": "18.0 inch QHD+ (2560 x 1600) ROG Nebula HDR Mini-LED 240Hz 3ms",
+      "do_phan_giai": "2560 x 1600 (16:10)",
+      "tan_so_quet": 240,
+      "tam_nen": "Mini-LED",
+      "do_phu_mau": "100% DCI-P3, Pantone Validated",
+      "do_sang_nits": 1100,
+      "cong_nghe_man_hinh": [
+        "ROG Nebula HDR",
+        "G-Sync",
+        "Dolby Vision HDR",
+        "2000+ Dimming Zones"
+      ],
+      "he_thong_tan_nhiet": "ROG Intelligent Cooling - 3 quạt Arc Flow Gen 2, Tản nhiệt kim loại lỏng Conductonaut Extreme",
+      "chi_tiet_tan_nhiet": "Full-surround Heatsink với buồng hơi Vapor Chamber bao phủ 100% linh kiện",
+      "dung_luong_pin": "90WHrs, 4-cell Li-ion",
+      "thoi_luong_su_dung_uoc_tinh": "Khoảng 6 - 8 tiếng tác vụ cơ bản",
+      "cong_suat_sac": "330W ROG Power Adapter + Sạc nhanh Type-C 100W PD",
+      "trong_luong": 3.1,
+      "kich_thuoc": "399 x 294 x 23.1 ~ 30.8 mm",
+      "chat_lieu_vo": "Khung hợp kim Nhôm Magie Unibody phủ Nano chống bám vân tay",
+      "ban_phim": "Bàn phím cơ Per-Key RGB Aura Sync, hành trình phím sâu 2.0mm",
+      "am_thanh": "Hệ thống 4 loa Smart Amp, Dolby Atmos, Hi-Res Audio chứng nhận",
+      "cong_ket_noi": [
+        "1x Thunderbolt™ 4 hỗ trợ DisplayPort™ / sạc PD",
+        "1x USB 3.2 Gen 2 Type-C (DisplayPort / G-SYNC)",
+        "2x USB 3.2 Gen 2 Type-A",
+        "1x HDMI 2.1 FRL 8K@60Hz / 4K@120Hz",
+        "1x RJ-45 LAN 2.5G",
+        "1x Jack tai nghe 3.5mm Combo"
+      ],
+      "chuan_wifi_bluetooth": "Wi-Fi 6E (802.11ax) + Bluetooth® 5.3",
+      "he_dieu_hanh": "Windows 11 Home Bản quyền",
+      "che_do_bao_hanh": "24 tháng chính hãng ASUS Việt Nam (Hỗ trợ On-site tận nơi)"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/asus_rog_scar18.jpg",
+      "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=900&q=85",
+      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=900&q=85",
+      "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=900&q=85"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 3
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 2 - Bình Thạnh, TP.HCM",
+        "dia_chi": "399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM",
+        "so_dien_thoai": "0922.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 2
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh Hà Nội - Cầu Giấy",
+        "dia_chi": "120 Trần Thái Tông, Cầu Giấy, Hà Nội",
+        "so_dien_thoai": "0911.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 2
+      }
+    ],
+    "tuy_chon_phien_ban": [
+      {
+        "ma_tuy_chon": "opt-64-2tb",
+        "ten_tuy_chon": "RAM 64GB + SSD 2TB RAID 0 (Mặc định)",
+        "ram": "64GB DDR5",
+        "o_cung": "2TB NVMe PCIe 4.0",
+        "chenh_lech_gia": 0
+      },
+      {
+        "ma_tuy_chon": "opt-32-1tb",
+        "ten_tuy_chon": "RAM 32GB + SSD 1TB NVMe (Tiết kiệm)",
+        "ram": "32GB DDR5",
+        "o_cung": "1TB NVMe PCIe 4.0",
+        "chenh_lech_gia": -12000000
+      }
+    ],
+    "video_demo": "/videos/1-2_1080p_202608242249.mp4"
+  },
+  {
+    "_id": "6aa02f97c2ea9243a450b8d1",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Chip AI Lenovo LA-2Q tự động tinh chỉnh FPS cao nhất trong mọi tựa game",
+      "Pin 99.99Wh siêu lớn cho trải nghiệm làm việc cả ngày dài",
+      "Bảo hành chính hãng 3 năm Lenovo Legion Ultimate Support",
+      "Tản nhiệt buồng hơi Vapor Chamber siêu êm không bị bóp hiệu năng"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-3",
+        "ten_nguoi_dung": "Đặng Tuấn Anh",
+        "so_sao": 5,
+        "tieu_de": "Bàn phím gõ êm nhất thế giới laptop!",
+        "noi_dung": "TrueStrike gõ cực đầm, màn hình 240Hz màu đẹp không góc chết. Chip AI LA-2Q tự động ép xung khi chơi game rất thông minh.",
+        "ngay_danh_gia": "21/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "gaming",
+      "ai-pc"
+    ],
+    "diem_danh_gia_tb": 4.8,
+    "gia_goc": 89990000,
+    "gia_khuyen_mai": 79990000,
+    "hang_san_xuat": "lenovo",
+    "hinh_anh_chinh": "/images/sp/lenovo_legion_pro7.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "legion-pro-7i-2026",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "16IRX9H-83DE",
+    "mo_ta_chi_tiet": "Lenovo Legion Pro 7i Gen 9 đại diện cho sự cân bằng hoàn hảo giữa sức mạnh thuần túy và thiết kế thanh lịch sang trọng. Không chỉ là cỗ máy gaming hàng đầu với RTX 4080, máy còn là bạn đồng hành tuyệt vời cho kiến trúc sư và lập trình viên AI.",
+    "phan_tram_giam_gia": 11,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Balo Lenovo Legion Armored Backpack II trị giá 1.890.000đ",
+        "gia_tri": 1890000
+      },
+      {
+        "ten_qua_tang": "Chuột Legion M500 RGB Precision Gaming trị giá 1.150.000đ",
+        "gia_tri": 1150000
+      },
+      {
+        "ten_qua_tang": "Gói bảo hành cao cấp tận nhà Legion Ultimate Support 3 năm",
+        "gia_tri": 3500000
+      }
+    ],
+    "so_luong_da_ban": 68,
+    "so_luong_danh_gia": 34,
+    "so_luong_ton_kho": 9,
+    "ten_san_pham": "Lenovo Legion Pro 7i Gen 9 (2026) Core i9-14900HX | RTX 4080 12GB | 32GB | 1TB | 16\" 2.5K 240Hz PureSight Gaming",
+    "thong_so": {
+      "cpu": "Intel® Core™ i9-14900HX (24 nhân 32 luồng, Turbo 5.8GHz, 36MB Cache)",
+      "so_nhan_luong": "24 Nhân, 32 Luồng",
+      "xung_nhip_toi_da": "5.8 GHz",
+      "bo_nho_dem_cache": "36MB",
+      "chip_ai_npu": "Lenovo LA-2 AI Chip hỗ trợ tối ưu FPS theo thời gian thực",
+      "hieu_nang_ai_tops": 35,
+      "card_do_hoa": "NVIDIA® GeForce RTX™ 4080 Laptop GPU 12GB GDDR6 (175W TGP)",
+      "dung_luong_vram": "12GB GDDR6",
+      "cong_suat_tgp": 175,
+      "ho_tro_ray_tracing": true,
+      "ram": "32GB DDR5-5600MHz (2x16GB)",
+      "loai_ram": "DDR5 5600MHz",
+      "toc_do_bus": "5600 MHz",
+      "nang_cap_ram_toi_da": "Lên tới 64GB",
+      "o_cung": "1TB PCIe® 4.0 NVMe™ M.2 SSD",
+      "khe_cam_mo_rong": "2 khe M.2 PCIe 2280",
+      "man_hinh": "16.0 inch WQXGA (2560 x 1600) IPS 240Hz 500 nits 100% sRGB",
+      "do_phan_giai": "2560 x 1600 (16:10)",
+      "tan_so_quet": 240,
+      "tam_nen": "IPS",
+      "he_thong_tan_nhiet": "Legion Coldfront 5.0 với buồng hơi Vapor Chamber + Keo tản nhiệt gốm lỏng",
+      "dung_luong_pin": "99.99WHrs (Dung lượng tối đa cho phép mang lên máy bay)",
+      "trong_luong": 2.65,
+      "ban_phim": "Legion TrueStrike RGB Per-key chống mòn 100% Anti-ghosting",
+      "am_thanh": "2x 2W Harman Kardon Audio với Nahimic Sound",
+      "cong_ket_noi": [
+        "1x Thunderbolt 4 (DisplayPort 1.4)",
+        "1x USB-C 3.2 Gen 2 (140W Power Delivery)",
+        "4x USB 3.2 Gen 1 Type-A",
+        "1x HDMI 2.1",
+        "1x RJ-45 Ethernet Gigabit"
+      ],
+      "chuan_wifi_bluetooth": "Wi-Fi 6E + Bluetooth 5.2",
+      "he_dieu_hanh": "Windows 11 Home Bản quyền",
+      "che_do_bao_hanh": "36 tháng Lenovo Legion Ultimate Support cao cấp"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/lenovo_legion_pro7.jpg",
+      "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=900&q=85",
+      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=900&q=85"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 5
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 2 - Bình Thạnh, TP.HCM",
+        "dia_chi": "399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM",
+        "so_dien_thoai": "0922.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 4
+      }
+    ],
+    "video_demo": "/videos/laptop_inside.mp4"
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8d2",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Chip Apple M3 Max 16-Core CPU & 40-Core GPU mạnh mẽ chưa từng có",
+      "Bộ nhớ hợp nhất 48GB Unified Memory băng thông 400GB/s",
+      "Pin trâu lên tới 22 tiếng liên tục không cần cắm sạc",
+      "Màn hình Liquid Retina XDR 1600 nits đỉnh cao cho giới đồ họa chuyên nghiệp"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-4",
+        "ten_nguoi_dung": "Nguyễn Hải Đăng (Đạo diễn hình ảnh)",
+        "so_sao": 5,
+        "tieu_de": "Màu Space Black cực đẹp, pin dùng 2 ngày không cần sạc",
+        "noi_dung": "Dựng phim 4K ProRes trên Final Cut Pro mượt không tưởng, xuất video nhanh gấp 3 lần máy bàn cũ.",
+        "ngay_danh_gia": "19/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "do-hoa-sang-tao",
+      "doanh-nhan",
+      "van-phong-mong-nhe",
+      "ai-pc"
+    ],
+    "diem_danh_gia_tb": 5,
+    "gia_goc": 104990000,
+    "gia_khuyen_mai": 96990000,
+    "hang_san_xuat": "apple",
+    "hinh_anh_chinh": "/images/sp/macbook_pro_m3.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "macbook-pro-16-m3-max",
+    "la_ban_chay": true,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "MUW63SA/A",
+    "mo_ta_chi_tiet": "MacBook Pro 16 inch M3 Max định nghĩa lại tiêu chuẩn máy trạm di động. Dành cho các nhà làm phim Hollywood, chuyên gia dựng 3D, lập trình viên AI và giới sáng tạo nội dung hàng đầu toàn cầu.",
+    "phan_tram_giam_gia": 8,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Túi chống sốc Tomtoc Defender 360 cao cấp trị giá 990.000đ",
+        "gia_tri": 990000
+      },
+      {
+        "ten_qua_tang": "Hub HyperDrive 6-in-1 USB-C trị giá 1.490.000đ",
+        "gia_tri": 1490000
+      }
+    ],
+    "so_luong_da_ban": 82,
+    "so_luong_danh_gia": 52,
+    "so_luong_ton_kho": 12,
+    "ten_san_pham": "Apple MacBook Pro 16 inch (2026) M3 Max (16-Core CPU, 40-Core GPU) | 48GB | 1TB | Liquid Retina XDR Space Black",
+    "thong_so": {
+      "cpu": "Apple M3 Max Chip (16 nhân CPU gồm 12 nhân hiệu năng cao + 4 nhân tiết kiệm điện)",
+      "so_nhan_luong": "16 Nhân CPU, 16-Core Neural Engine thế hệ mới",
+      "chip_ai_npu": "16-core Neural Engine AI Engine (Hỗ trợ chạy Local LLM siêu nhanh)",
+      "hieu_nang_ai_tops": 50,
+      "card_do_hoa": "40-Core GPU tích hợp hỗ trợ Hardware-accelerated ray tracing",
+      "dung_luong_vram": "48GB Unified Memory dùng chung siêu tốc (400GB/s)",
+      "ho_tro_ray_tracing": true,
+      "ram": "48GB Unified Memory siêu băng thông 400GB/s",
+      "loai_ram": "Unified Memory",
+      "o_cung": "1TB SSD Siêu Tốc độ đọc ghi 7400MB/s",
+      "man_hinh": "16.2 inch Liquid Retina XDR (3456 x 2234) ProMotion 120Hz 1600 nits đỉnh",
+      "do_phan_giai": "3456 x 2234",
+      "tan_so_quet": 120,
+      "tam_nen": "Mini-LED",
+      "do_phu_mau": "100% P3 Wide Color, 1 tỷ màu",
+      "do_sang_nits": 1600,
+      "cong_nghe_man_hinh": [
+        "Liquid Retina XDR",
+        "ProMotion 120Hz",
+        "True Tone",
+        "Tỷ lệ tương phản 1.000.000:1"
+      ],
+      "he_thong_tan_nhiet": "Quạt tản nhiệt khí động học êm tuyệt đối, không kích hoạt khi làm việc nhẹ",
+      "dung_luong_pin": "100Wh Lithium-polymer",
+      "thoi_luong_su_dung_uoc_tinh": "Lên tới 22 giờ sử dụng liên tục (Kỷ lục thế giới)",
+      "cong_suat_sac": "140W USB-C Power Adapter với Cáp MagSafe 3 bọc dù",
+      "trong_luong": 2.16,
+      "kich_thuoc": "355.7 x 248.1 x 16.8 mm",
+      "chat_lieu_vo": "Nhôm nguyên khối 100% tái chế màu Space Black chống bám vân tay đỉnh cao",
+      "ban_phim": "Magic Keyboard tràn viền với Touch ID cảm biến vân tay siêu nhạy",
+      "am_thanh": "Hệ thống 6 loa phòng thu với Spatial Audio & Dolby Atmos chân thực",
+      "cong_ket_noi": [
+        "3x Thunderbolt 4 / USB 4 (hỗ trợ xuất 4 màn hình ngoài)",
+        "1x Cổng sạc MagSafe 3",
+        "1x HDMI 8K",
+        "1x Khe thẻ nhớ SDXC",
+        "1x Jack 3.5mm cho tai nghe trở kháng cao"
+      ],
+      "chuan_wifi_bluetooth": "Wi-Fi 6E + Bluetooth 5.3",
+      "he_dieu_hanh": "macOS Sequoia mới nhất",
+      "che_do_bao_hanh": "12 tháng chính hãng Apple Care trên toàn cầu"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/macbook_pro_m3.jpg",
+      "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=85"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 6
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh Hà Nội - Cầu Giấy",
+        "dia_chi": "120 Trần Thái Tông, Cầu Giấy, Hà Nội",
+        "so_dien_thoai": "0911.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 3
+      }
+    ],
+    "tuy_chon_phien_ban": [
+      {
+        "ma_tuy_chon": "mbp-48-1tb",
+        "ten_tuy_chon": "M3 Max 16CPU/40GPU | 48GB | 1TB SSD",
+        "ram": "48GB",
+        "o_cung": "1TB SSD",
+        "chenh_lech_gia": 0
+      },
+      {
+        "ma_tuy_chon": "mbp-64-2tb",
+        "ten_tuy_chon": "M3 Max 16CPU/40GPU | 64GB | 2TB SSD (Studio Pro)",
+        "ram": "64GB",
+        "o_cung": "2TB SSD",
+        "chenh_lech_gia": 22000000
+      }
+    ],
+    "video_demo": "/videos/laptop_render.mp4"
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8d3",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Thiết kế kính liền khối tương lai với Touchpad tàng hình cảm ứng lực Haptic",
+      "Màn hình 4K+ OLED cảm ứng 120Hz sắc nét rực rỡ",
+      "Chip Intel Core Ultra 7 tích hợp AI NPU tối ưu hóa năng lượng",
+      "Card đồ họa RTX 4070 mạnh mẽ hỗ trợ xử lý đồ họa và AI"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-5",
+        "ten_nguoi_dung": "Lê Hoàng Nam (CEO Startup)",
+        "so_sao": 5,
+        "tieu_de": "Thiết kế đẹp nhất lịch sử laptop Windows",
+        "noi_dung": "Bàn di chuột tàng hình quá đỉnh, màn hình OLED 4K sắc nét từng chi tiết. Mang đi họp đối tác cực kỳ sang trọng.",
+        "ngay_danh_gia": "15/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "doanh-nhan",
+      "do-hoa-sang-tao",
+      "ai-pc",
+      "van-phong-mong-nhe"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 84990000,
+    "gia_khuyen_mai": 74990000,
+    "hang_san_xuat": "dell",
+    "hinh_anh_chinh": "/images/sp/dell_xps_16.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "dell-xps-16-9640",
+    "la_ban_chay": false,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "XPS-9640-U7-4070",
+    "mo_ta_chi_tiet": "Dell XPS 16 (9640) là kiệt tác công nghệ kết hợp giữa thẩm mỹ tối giản mang tính biểu tượng và sức mạnh phần cứng tân tiến. Chiếc máy là biểu tượng của giới doanh nhân thành đạt và nhà sáng tạo thời đại mới.",
+    "phan_tram_giam_gia": 12,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Cặp da công sở cao cấp Dell Premier Briefcase 15 trị giá 2.200.000đ",
+        "gia_tri": 2200000
+      },
+      {
+        "ten_qua_tang": "Chuột không dây cảm ứng Bluetooth Dell Premier MS7421W trị giá 1.800.000đ",
+        "gia_tri": 1800000
+      }
+    ],
+    "so_luong_da_ban": 29,
+    "so_luong_danh_gia": 21,
+    "so_luong_ton_kho": 5,
+    "ten_san_pham": "Dell XPS 16 (9640) Intel Core Ultra 7 155H | RTX 4070 | 32GB LPDDR5X | 1TB | 16.3\" 4K+ OLED Touch 120Hz",
+    "thong_so": {
+      "cpu": "Intel® Core™ Ultra 7 155H (16 nhân 22 luồng, Turbo 4.8GHz, NPU tích hợp)",
+      "so_nhan_luong": "16 Nhân (6P + 8E + 2 LPE), 22 Luồng",
+      "chip_ai_npu": "Intel AI Boost NPU chuyên dụng tối ưu AI Copilot+",
+      "hieu_nang_ai_tops": 34,
+      "card_do_hoa": "NVIDIA® GeForce RTX™ 4070 Laptop GPU 8GB GDDR6 (60W)",
+      "dung_luong_vram": "8GB GDDR6",
+      "cong_suat_tgp": 60,
+      "ho_tro_ray_tracing": true,
+      "ram": "32GB LPDDR5X 7467MHz Dual Channel",
+      "loai_ram": "LPDDR5X",
+      "toc_do_bus": "7467 MHz",
+      "o_cung": "1TB M.2 PCIe NVMe SSD",
+      "man_hinh": "16.3\" 4K+ (3840 x 2400) OLED InfinityEdge Touch, 100% DCI-P3, 120Hz, Gorilla Glass 3",
+      "do_phan_giai": "3840 x 2400 (16:10)",
+      "tan_so_quet": 120,
+      "tam_nen": "OLED",
+      "do_phu_mau": "100% DCI-P3, Dolby Vision",
+      "do_sang_nits": 500,
+      "cong_nghe_man_hinh": [
+        "Cảm ứng đa điểm",
+        "Kính cường lực Corning Gorilla Glass 3",
+        "OLED InfinityEdge viền siêu mỏng"
+      ],
+      "he_thong_tan_nhiet": "Hệ thống quạt kép siêu mỏng công nghệ buồng cách nhiệt cách ly luồng gió",
+      "dung_luong_pin": "99.5Whr",
+      "thoi_luong_su_dung_uoc_tinh": "12 - 14 giờ",
+      "cong_suat_sac": "130W Type-C AC Adapter",
+      "trong_luong": 2.13,
+      "kich_thuoc": "358.18 x 240.05 x 18.7 mm",
+      "chat_lieu_vo": "Nhôm CNC nguyên khối phối kính Gorilla Glass viền liền mạch tương lai",
+      "ban_phim": "Touchpad kính tàng hình ẩn dưới chiếu nghỉ tay, thanh phím cảm ứng điện dung LED",
+      "am_thanh": "Hệ thống 4 loa Quad-speaker Studio Waves MaxxAudio Pro công suất 10W",
+      "cong_ket_noi": [
+        "3x Thunderbolt 4 Type-C (Power Delivery & DisplayPort)",
+        "1x Khe cắm thẻ nhớ SD v6.0",
+        "1x Jack 3.5mm"
+      ],
+      "chuan_wifi_bluetooth": "Intel Killer Wi-Fi 7 BE1750 + Bluetooth 5.4",
+      "he_dieu_hanh": "Windows 11 Pro Bản quyền",
+      "che_do_bao_hanh": "24 tháng Dell ProSupport tận nơi bảo hành 24/7"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/dell_xps_16.jpg",
+      "https://images.unsplash.com/photo-1541807084-5c52b6b3adef?auto=format&fit=crop&w=900&q=85"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 4
+      }
+    ],
+    "video_demo": "/videos/laptop_hero.mp4"
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8d4",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Màn hình Mini-LED 18 inch tần số quét khủng 250Hz",
+      "Đặc quyền bảo hành 3S1 nhanh nhất Việt Nam (quá 3 ngày 1 đổi 1)",
+      "Quạt kim loại 3D AeroBlade 5th Gen độc quyền siêu mát",
+      "Switch phím cơ MagKey 3.0 bấm cực nảy"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-6",
+        "ten_nguoi_dung": "Trần Bách Khoa",
+        "so_sao": 5,
+        "tieu_de": "Bảo hành 3S1 cực kỳ yên tâm",
+        "noi_dung": "Tần số quét 250Hz bắn Valorant và CS2 siêu dính tâm. Tản nhiệt quạt kim loại thổi gió cực mạnh.",
+        "ngay_danh_gia": "10/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "gaming",
+      "ai-pc",
+      "do-hoa-sang-tao"
+    ],
+    "diem_danh_gia_tb": 4.8,
+    "gia_goc": 89990000,
+    "gia_khuyen_mai": 79990000,
+    "hang_san_xuat": "acer",
+    "hinh_anh_chinh": "/images/sp/acer_predator_helios.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "acer-predator-helios-18-ai",
+    "la_ban_chay": true,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "PH18-72-97AL",
+    "mo_ta_chi_tiet": "Predator Helios 18 là cỗ máy chiến trường thực thụ cho các tuyển thủ eSports. Hệ thống tản nhiệt quạt kim loại cánh mỏng kết hợp cùng kim loại lỏng đảm bảo nhiệt độ luôn mát mẻ kể cả khi hoạt động liên tục ở mức công suất cao.",
+    "phan_tram_giam_gia": 11,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Balo Predator Gaming Utility Backpack trị giá 2.500.000đ",
+        "gia_tri": 2500000
+      },
+      {
+        "ten_qua_tang": "Chuột Predator Cestus 335 RGB trị giá 1.290.000đ",
+        "gia_tri": 1290000
+      },
+      {
+        "ten_qua_tang": "Gói đặc quyền bảo hành VIP 3S1 của Acer",
+        "gia_tri": 3000000
+      }
+    ],
+    "so_luong_da_ban": 37,
+    "so_luong_danh_gia": 19,
+    "so_luong_ton_kho": 5,
+    "ten_san_pham": "Acer Predator Helios 18 (2026) Core i9-14900HX | RTX 4080 12GB | 32GB | 1TB | 18\" WQXGA Mini-LED 250Hz",
+    "thong_so": {
+      "cpu": "Intel® Core™ i9-14900HX (24 Nhân 32 Luồng, Max Turbo 5.80 GHz)",
+      "so_nhan_luong": "24 Nhân, 32 Luồng",
+      "xung_nhip_toi_da": "5.80 GHz",
+      "chip_ai_npu": "Intel AI Boost NPU",
+      "hieu_nang_ai_tops": 36,
+      "card_do_hoa": "NVIDIA® GeForce RTX™ 4080 12GB GDDR6 (175W MGP)",
+      "dung_luong_vram": "12GB GDDR6",
+      "cong_suat_tgp": 175,
+      "ho_tro_ray_tracing": true,
+      "ram": "32GB DDR5 5600MHz (Nâng cấp tối đa 64GB)",
+      "loai_ram": "DDR5",
+      "toc_do_bus": "5600 MHz",
+      "o_cung": "1TB PCIe Gen4 NVMe SSD",
+      "man_hinh": "18\" WQXGA (2560 x 1600) Mini LED 250Hz, 100% DCI-P3, 1000 nits",
+      "do_phan_giai": "2560 x 1600",
+      "tan_so_quet": 250,
+      "tam_nen": "Mini-LED",
+      "do_phu_mau": "100% DCI-P3",
+      "do_sang_nits": 1000,
+      "cong_nghe_man_hinh": [
+        "Mini LED 250Hz",
+        "NVIDIA G-SYNC",
+        "NVIDIA Advanced Optimus"
+      ],
+      "he_thong_tan_nhiet": "Quạt tản nhiệt kim loại 3D AeroBlade™ Thế hệ thứ 5 cánh siêu mỏng 0.08mm + Kim loại lỏng",
+      "dung_luong_pin": "90Wh Li-ion",
+      "thoi_luong_su_dung_uoc_tinh": "5 - 7 giờ",
+      "cong_suat_sac": "330W Adapter sạc siêu nhanh",
+      "trong_luong": 3.25,
+      "kich_thuoc": "404 x 312 x 28.9 mm",
+      "chat_lieu_vo": "Khung kim loại hầm hố với khe tản nhiệt Predator RGB vô cực",
+      "ban_phim": "Bàn phím cơ MagKey 3.0 có thể thay thế phím cơ học, đèn nền RGB Per-key",
+      "am_thanh": "DTS:X® ULTRA Audio âm thanh vòm 360 độ",
+      "cong_ket_noi": [
+        "2x Thunderbolt 4 Type-C",
+        "3x USB 3.2 Gen 2 Type-A",
+        "1x HDMI 2.1",
+        "1x Killer Ethernet E3100G 2.5G",
+        "1x Đầu đọc thẻ MicroSD"
+      ],
+      "chuan_wifi_bluetooth": "Killer Wi-Fi 7 BE1750x + Bluetooth 5.4",
+      "he_dieu_hanh": "Windows 11 Home Bản quyền",
+      "che_do_bao_hanh": "Bảo hành VIP 3S1 (Trong 72 giờ không xong đổi máy mới)"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/acer_predator_helios.jpg",
+      "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&w=900&q=85"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 2
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 2 - Bình Thạnh, TP.HCM",
+        "dia_chi": "399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM",
+        "so_dien_thoai": "0922.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 3
+      }
+    ],
+    "video_demo": "/videos/laptop_inside.mp4"
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8d5",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Trọng lượng siêu nhẹ chỉ 1.2kg, độ mỏng 14.9mm",
+      "Màn hình 3K OLED Lumina 120Hz sắc nét độ tương phản 1.000.000:1",
+      "Pin 75Wh dùng liên tục tới 15 tiếng, sạc Type-C tiện lợi",
+      "Tặng kèm bản quyền trọn đời Microsoft Office Home 2024"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-7",
+        "ten_nguoi_dung": "Nguyễn Thị Mai (Content Creator)",
+        "so_sao": 5,
+        "tieu_de": "Màn hình 3K OLED đẹp mê hồn, máy nhẹ như cuốn sổ",
+        "noi_dung": "Mình mang đi cà phê làm việc cả ngày không cần đem theo cục sạc. Bàn phím gõ êm, màn hình chuẩn màu chỉnh ảnh Lightroom tuyệt vời.",
+        "ngay_danh_gia": "12/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "van-phong-mong-nhe",
+      "ai-pc",
+      "do-hoa-sang-tao",
+      "sinh-vien",
+      "doanh-nhan"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 34990000,
+    "gia_khuyen_mai": 29990000,
+    "hang_san_xuat": "asus",
+    "hinh_anh_chinh": "/images/sp/asus_zenbook_oled.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "asus-zenbook-14-oled-ai",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "UX3405MA-PP152W",
+    "mo_ta_chi_tiet": "ASUS Zenbook 14 OLED 2026 là chiếc laptop AI cao cấp mỏng nhẹ dẫn đầu xu thế. Với vi xử lý Intel Core Ultra 7 tích hợp AI NPU cùng màn hình 3K OLED đỉnh cao, máy đáp ứng trọn vẹn cả công việc văn phòng, sáng tạo nghệ thuật và di chuyển thường xuyên.",
+    "phan_tram_giam_gia": 14,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Túi chống sốc da ASUS Zenbook sang trọng trị giá 750.000đ",
+        "gia_tri": 750000
+      },
+      {
+        "ten_qua_tang": "Chuột không dây ASUS Silent Marshmallow trị giá 690.000đ",
+        "gia_tri": 690000
+      },
+      {
+        "ten_qua_tang": "Bản quyền Microsoft Office 2024 vĩnh viễn trị giá 2.490.000đ",
+        "gia_tri": 2490000
+      }
+    ],
+    "so_luong_da_ban": 114,
+    "so_luong_danh_gia": 46,
+    "so_luong_ton_kho": 25,
+    "ten_san_pham": "ASUS Zenbook 14 OLED (2026) Intel Core Ultra 7 155H | 32GB | 1TB | 14\" 3K OLED 120Hz 1.2kg Siêu Nhẹ",
+    "thong_so": {
+      "cpu": "Intel® Core™ Ultra 7 155H (16 Nhân 22 Luồng, NPU Intel AI Boost)",
+      "so_nhan_luong": "16 Nhân, 22 Luồng",
+      "xung_nhip_toi_da": "4.80 GHz",
+      "chip_ai_npu": "Intel AI Boost NPU",
+      "hieu_nang_ai_tops": 34,
+      "card_do_hoa": "Intel® Arc™ Graphics (Hiệu năng tương đương card rời GTX 1650)",
+      "dung_luong_vram": "Share RAM hệ thống",
+      "ram": "32GB LPDDR5X 7467MHz Onboard",
+      "loai_ram": "LPDDR5X",
+      "toc_do_bus": "7467 MHz",
+      "o_cung": "1TB M.2 NVMe™ PCIe® 4.0 SSD",
+      "man_hinh": "14.0\" 3K (2880 x 1800) OLED 16:10 120Hz 0.2ms 600nits HDR True Black 600",
+      "do_phan_giai": "2880 x 1800 (3K)",
+      "tan_so_quet": 120,
+      "tam_nen": "OLED",
+      "do_phu_mau": "100% DCI-P3, PANTONE Validated",
+      "do_sang_nits": 600,
+      "cong_nghe_man_hinh": [
+        "ASUS Lumina OLED",
+        "120Hz",
+        "Giảm 70% ánh sáng xanh hại mắt TÜV Rheinland"
+      ],
+      "he_thong_tan_nhiet": "Quạt tản nhiệt siêu êm 0dB Fanless mode ở chế độ tiết kiệm pin",
+      "dung_luong_pin": "75WHrs 4-cell Li-ion",
+      "thoi_luong_su_dung_uoc_tinh": "Lên tới 15 - 18 giờ liên tục",
+      "cong_suat_sac": "65W Type-C sạc nhanh 60% chỉ trong 49 phút",
+      "trong_luong": 1.2,
+      "kich_thuoc": "312.4 x 220.1 x 14.9 mm",
+      "chat_lieu_vo": "Hợp kim nhôm Ponder Blue chuẩn độ bền quân đội Mỹ MIL-STD-810H",
+      "ban_phim": "ASUS ErgoSense có đèn nền + ASUS NumberPad 2.0 tích hợp trên chuột cảm ứng",
+      "am_thanh": "Hệ thống loa siêu trầm Smart Amplifier Harman Kardon",
+      "cong_ket_noi": [
+        "2x Thunderbolt™ 4 Type-C (hỗ trợ DisplayPort / Power Delivery)",
+        "1x USB 3.2 Gen 1 Type-A",
+        "1x HDMI 2.1 TMDS",
+        "1x Jack 3.5mm Audio Combo"
+      ],
+      "chuan_wifi_bluetooth": "Wi-Fi 6E (802.11ax) + Bluetooth® 5.3",
+      "he_dieu_hanh": "Windows 11 Home Bản quyền + Office Home 2024 Vĩnh viễn",
+      "che_do_bao_hanh": "24 tháng bảo hành quốc tế chính hãng ASUS"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/asus_zenbook_oled.jpg",
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=85"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 10
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 2 - Bình Thạnh, TP.HCM",
+        "dia_chi": "399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM",
+        "so_dien_thoai": "0922.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 8
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh Hà Nội - Cầu Giấy",
+        "dia_chi": "120 Trần Thái Tông, Cầu Giấy, Hà Nội",
+        "so_dien_thoai": "0911.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 7
+      }
+    ],
+    "video_demo": "/videos/laptop_render.mp4"
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8d6",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Cấu hình quái vật: 128GB RAM DDR5 và 4TB SSD PCIe Gen 5 RAID 0",
+      "Bàn phím cơ Cherry MX Ultra Low Profile chính hãng Đức",
+      "Màn hình 18 inch 4K+ Mini-LED 1000 nits đỉnh chóp",
+      "Tổng công suất TDP GPU + CPU lên tới 270W MSI OverBoost Ultra"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-8",
+        "ten_nguoi_dung": "Phan Gia Huy (Pro Studio Leader)",
+        "so_sao": 5,
+        "tieu_de": "128GB RAM và phím Cherry MX bấm sướng rụng rời",
+        "noi_dung": "Khủng long bạo chúa của làng laptop. Xử lý dữ liệu Big Data và Deep Learning trực tiếp trên máy cực kỳ nhanh.",
+        "ngay_danh_gia": "08/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "gaming",
+      "ai-pc",
+      "do-hoa-sang-tao"
+    ],
+    "diem_danh_gia_tb": 5,
+    "gia_goc": 149990000,
+    "gia_khuyen_mai": 139990000,
+    "hang_san_xuat": "msi",
+    "hinh_anh_chinh": "/images/sp/msi_titan_18.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "msi-titan-18-hx-a14v",
+    "la_ban_chay": false,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "TITAN-18-A14VIG-040VN",
+    "mo_ta_chi_tiet": "MSI Titan 18 HX là tượng đài về sức mạnh tối thượng. Được sinh ra để phá vỡ mọi giới hạn, cỗ máy Titan 18 HX hội tụ những tinh hoa công nghệ đỉnh cao nhất thế giới năm 2026.",
+    "phan_tram_giam_gia": 7,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Balo vali MSI Titan Dragon Gaming cao cấp trị giá 4.500.000đ",
+        "gia_tri": 4500000
+      },
+      {
+        "ten_qua_tang": "Chuột MSI Gaming M99 RGB trị giá 1.200.000đ",
+        "gia_tri": 1200000
+      },
+      {
+        "ten_qua_tang": "Móc khóa rồng MSI mạ vàng phiên bản giới hạn trị giá 800.000đ",
+        "gia_tri": 800000
+      }
+    ],
+    "so_luong_da_ban": 18,
+    "so_luong_danh_gia": 14,
+    "so_luong_ton_kho": 3,
+    "ten_san_pham": "MSI Titan 18 HX A14VIG Core i9-14900HX | RTX 4090 16GB (175W) | 128GB RAM | 4TB SSD | 18\" 4K+ Mini-LED 120Hz",
+    "thong_so": {
+      "cpu": "Intel® Core™ i9-14900HX (24 Nhân 32 Luồng, Overclock lên tới 5.80 GHz)",
+      "so_nhan_luong": "24 Nhân, 32 Luồng",
+      "xung_nhip_toi_da": "5.80 GHz",
+      "chip_ai_npu": "MSI AI Engine + Intel AI Boost",
+      "hieu_nang_ai_tops": 48,
+      "card_do_hoa": "NVIDIA® GeForce RTX™ 4090 16GB GDDR6 (MSI OverBoost Ultra 270W tổng)",
+      "dung_luong_vram": "16GB GDDR6",
+      "cong_suat_tgp": 175,
+      "ho_tro_ray_tracing": true,
+      "ram": "128GB DDR5 5600MHz (4 khe cắm cắm tối đa 192GB)",
+      "loai_ram": "DDR5 4 Khe",
+      "toc_do_bus": "5600 MHz",
+      "nang_cap_ram_toi_da": "192GB",
+      "o_cung": "4TB NVMe SSD PCIe Gen5 (2TB x 2 RAID 0)",
+      "khe_cam_mo_rong": "Hỗ trợ 1x M.2 PCIe Gen 5 + 2x M.2 PCIe Gen 4",
+      "man_hinh": "18\" 4K+ (3840 x 2400) 16:10 120Hz Mini LED 100% DCI-P3 VESA DisplayHDR 1000",
+      "do_phan_giai": "3840 x 2400 (4K+ UHD)",
+      "tan_so_quet": 120,
+      "tam_nen": "Mini-LED",
+      "do_phu_mau": "100% DCI-P3",
+      "do_sang_nits": 1000,
+      "cong_nghe_man_hinh": [
+        "Mini-LED 4K+",
+        "VESA DisplayHDR 1000",
+        "True Color Technology"
+      ],
+      "he_thong_tan_nhiet": "Vapor Chamber Cooler buồng hơi 3D lớn nhất phân khúc với 2 quạt đường kính lớn",
+      "dung_luong_pin": "99.9Whr",
+      "thoi_luong_su_dung_uoc_tinh": "5 - 6 giờ",
+      "cong_suat_sac": "400W Adapter công suất khủng",
+      "trong_luong": 3.6,
+      "kich_thuoc": "404 x 307.5 x 24~32.05 mm",
+      "chat_lieu_vo": "Hợp kim Nhôm Magie siêu bền với Touchpad đèn RGB vô cực đổi màu huyền ảo",
+      "ban_phim": "Bàn phím cơ Cherry MX Ultra Low Profile siêu mỏng switch cơ học cao cấp từ Đức",
+      "am_thanh": "Hệ thống 6 loa Dynaudio (4 loa trầm + 2 loa bổng) chất lượng rạp phim",
+      "cong_ket_noi": [
+        "2x Thunderbolt 4 / USB-C",
+        "3x USB 3.2 Gen 2 Type-A",
+        "1x HDMI 2.1 8K@60Hz",
+        "1x Đầu đọc thẻ SD Express",
+        "1x LAN 2.5G Intel Killer E3100"
+      ],
+      "chuan_wifi_bluetooth": "Intel Killer Wi-Fi 7 BE1750 + Bluetooth 5.4",
+      "he_dieu_hanh": "Windows 11 Home Bản quyền",
+      "che_do_bao_hanh": "24 tháng chính hãng MSI Việt Nam"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/msi_titan_18.jpg",
+      "https://images.unsplash.com/photo-1611078489935-0cb964de46d6?auto=format&fit=crop&w=900&q=85",
+      "https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=900&q=85"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 2
+      }
+    ],
+    "video_demo": "/videos/laptop_inside.mp4"
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8d7",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Laptop Gaming 14 inch mỏng nhẹ nhất thế giới chỉ 1.63kg",
+      "Bàn phím HyperX Pudding viền trong suốt phát sáng RGB rực rỡ",
+      "Màn hình OLED 2.8K 120Hz chuẩn màu điện ảnh IMAX Enhanced",
+      "Tích hợp sẵn bộ thu âm thanh HyperX không cần gắn USB rời"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-9",
+        "ten_nguoi_dung": "Hoàng Quốc Việt",
+        "so_sao": 5,
+        "tieu_de": "Màu trắng đẹp xuất sắc, bàn phím pudding phát sáng cực ảo",
+        "noi_dung": "Laptop gaming 14 inch nhẹ 1.6kg mà nhồi được RTX 4070 và màn OLED 2.8K. Đi làm hay chơi game đều siêu tiện.",
+        "ngay_danh_gia": "05/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "gaming",
+      "ai-pc",
+      "van-phong-mong-nhe",
+      "do-hoa-sang-tao"
+    ],
+    "diem_danh_gia_tb": 4.8,
+    "gia_goc": 59990000,
+    "gia_khuyen_mai": 52990000,
+    "hang_san_xuat": "hp",
+    "hinh_anh_chinh": "/images/sp/hp_omen_14.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "hp-omen-transcend-14-ai",
+    "la_ban_chay": true,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "OMEN-14-FB0013DX",
+    "mo_ta_chi_tiet": "HP OMEN Transcend 14 phá bỏ ranh giới giữa laptop gaming hầm hố và laptop văn phòng thanh lịch. Trọng lượng chỉ 1.6kg trong lớp vỏ Ceramic White cùng bàn phím HyperX Pudding trong suốt mang đến nét cuốn hút khó cưỡng.",
+    "phan_tram_giam_gia": 12,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Tai nghe không dây gaming HyperX Cloud III Wireless trị giá 3.490.000đ",
+        "gia_tri": 3490000
+      },
+      {
+        "ten_qua_tang": "Balo HP OMEN Transpack 14 trị giá 1.490.000đ",
+        "gia_tri": 1490000
+      }
+    ],
+    "so_luong_da_ban": 54,
+    "so_luong_danh_gia": 25,
+    "so_luong_ton_kho": 8,
+    "ten_san_pham": "HP OMEN Transcend 14 (2026) Core Ultra 9 185H | RTX 4070 | 32GB | 1TB | 14\" 2.8K OLED 120Hz 1.6kg",
+    "thong_so": {
+      "cpu": "Intel® Core™ Ultra 9 185H (16 Nhân 22 Luồng, Xung nhịp lên tới 5.1GHz)",
+      "so_nhan_luong": "16 Nhân, 22 Luồng",
+      "xung_nhip_toi_da": "5.10 GHz",
+      "chip_ai_npu": "Intel AI Boost NPU",
+      "hieu_nang_ai_tops": 36,
+      "card_do_hoa": "NVIDIA® GeForce RTX™ 4070 8GB GDDR6 (80W)",
+      "dung_luong_vram": "8GB GDDR6",
+      "cong_suat_tgp": 80,
+      "ho_tro_ray_tracing": true,
+      "ram": "32GB LPDDR5x 7467 MHz",
+      "loai_ram": "LPDDR5x",
+      "toc_do_bus": "7467 MHz",
+      "o_cung": "1TB PCIe® Gen4 NVMe™ M.2 SSD",
+      "man_hinh": "14.0\" 2.8K (2880 x 1800) OLED 120Hz 0.2ms 500nits HDR 500 True Black 100% DCI-P3",
+      "do_phan_giai": "2880 x 1800 (16:10)",
+      "tan_so_quet": 120,
+      "tam_nen": "OLED",
+      "do_phu_mau": "100% DCI-P3, IMAX Enhanced chứng nhận",
+      "do_sang_nits": 500,
+      "cong_nghe_man_hinh": [
+        "OLED 2.8K 120Hz",
+        "VRR",
+        "EyeSafe® Certified Low Blue Light"
+      ],
+      "he_thong_tan_nhiet": "Công nghệ tản nhiệt buồng hơi OMEN Tempest Cooling kết hợp Intel Dual Flow Channel",
+      "dung_luong_pin": "71Wh Li-ion polymer",
+      "thoi_luong_su_dung_uoc_tinh": "8 - 11 giờ",
+      "cong_suat_sac": "140W USB Type-C sạc siêu gọn",
+      "trong_luong": 1.63,
+      "kich_thuoc": "313 x 233.5 x 17.99 mm",
+      "chat_lieu_vo": "Hợp kim nhôm siêu nhẹ màu Trắng Ceramic White tinh tế",
+      "ban_phim": "Bàn phím RGB 4 vùng HyperX PBT Pudding keycap độc quyền trong suốt phát sáng",
+      "am_thanh": "Âm thanh HyperX Audio điều chỉnh kép DTS:X Ultra",
+      "cong_ket_noi": [
+        "1x Thunderbolt™ 4 Type-C",
+        "1x USB-C 3.2 Gen 2 (10Gbps)",
+        "2x USB-A 3.2 Gen 2",
+        "1x HDMI 2.1",
+        "1x Jack 3.5mm Combo"
+      ],
+      "chuan_wifi_bluetooth": "Intel® Wi-Fi 7 BE200 + Bluetooth® 5.4 tích hợp mô-đun kết nối trực tiếp chuột HyperX không cần dongle",
+      "he_dieu_hanh": "Windows 11 Home Bản quyền",
+      "che_do_bao_hanh": "12 tháng chính hãng HP Việt Nam"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/hp_omen_14.jpg"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 5
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh Hà Nội - Cầu Giấy",
+        "dia_chi": "120 Trần Thái Tông, Cầu Giấy, Hà Nội",
+        "so_dien_thoai": "0911.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 3
+      }
+    ],
+    "video_demo": "/videos/laptop_hero.mp4"
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8d8",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Tốc độ đọc tuần tự lên đến 7.450 MB/s, ghi 6.900 MB/s",
+      "Trang bị sẵn tản nhiệt Heatsink tương thích hoàn hảo cho PS5 & Laptop",
+      "Độ bền 1.200 TBW cực cao, bảo hành 5 năm 1 đổi 1"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-ssd-1",
+        "ten_nguoi_dung": "Lê Hải Nam",
+        "so_sao": 5,
+        "tieu_de": "Tốc độ đọc ghi kinh hoàng!",
+        "noi_dung": "Gắn vào laptop boot win mất đúng 3 giây, mở file Photoshop 4GB trong nháy mắt. Tản nhiệt heatsink rất mát.",
+        "ngay_danh_gia": "19/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "linh-kien"
+    ],
+    "diem_danh_gia_tb": 5,
+    "gia_goc": 5990000,
+    "gia_khuyen_mai": 4690000,
+    "hang_san_xuat": "samsung",
+    "hinh_anh_chinh": "/images/sp/samsung_990_ssd.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "samsung-990-pro-2tb",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "MZ-V9P2T0CW",
+    "mo_ta_chi_tiet": "Samsung 990 PRO với Heatsink là dòng SSD PCIe 4.0 đỉnh cao nhất hiện nay, mang lại băng thông tối đa cho game thủ và chuyên gia xử lý đồ họa 3D.",
+    "phan_tram_giam_gia": 22,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Hỗ trợ lắp đặt và cài Win / Clone dữ liệu miễn phí tại Showroom",
+        "gia_tri": 200000
+      }
+    ],
+    "so_luong_da_ban": 120,
+    "so_luong_danh_gia": 35,
+    "so_luong_ton_kho": 40,
+    "ten_san_pham": "Ổ Cứng SSD Samsung 990 PRO 2TB M.2 NVMe PCIe 4.0 Heatsink (Đọc 7.450 MB/s - Ghi 6.900 MB/s)",
+    "thong_so": {
+      "cpu": "Controller Samsung Pascal Pascal V-NAND 3-bit MLC",
+      "card_do_hoa": "Tích hợp tản nhiệt Heatsink RGB nhôm phay xước",
+      "ram": "2GB LPDDR4 DRAM Cache",
+      "o_cung": "2TB PCIe Gen 4.0 x4, NVMe 2.0",
+      "man_hinh": "Tương thích PC, Laptop, PlayStation 5",
+      "tan_so_quet": 60,
+      "he_thong_tan_nhiet": "Bộ tản nhiệt nhôm liền khối kiểm soát nhiệt độ tối ưu dưới 50 độ C",
+      "dung_luong_pin": "Nguồn cấp trực tiếp qua khe M.2",
+      "trong_luong": 0.03,
+      "cong_ket_noi": [
+        "M.2 NVMe 2280"
+      ],
+      "he_dieu_hanh": "Hỗ trợ mọi hệ điều hành (Windows/macOS/Linux/PS5)",
+      "che_do_bao_hanh": "60 tháng chính hãng Samsung Việt Nam (1 đổi 1)"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/samsung_990_ssd.jpg"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 25
+      },
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh Hà Nội - Cầu Giấy",
+        "dia_chi": "120 Trần Thái Tông, Cầu Giấy, Hà Nội",
+        "so_dien_thoai": "0911.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 15
+      }
+    ]
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8d9",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Xung nhịp bus 6400MHz CL32 độ trễ cực thấp",
+      "Đèn LED RGB hiệu ứng mượt mà cấp bằng sáng chế Infrared Sync Technology",
+      "Hỗ trợ cả Intel XMP 3.0 và AMD EXPO"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-ram-1",
+        "ten_nguoi_dung": "Nguyễn Văn Thành",
+        "so_sao": 5,
+        "tieu_de": "LED RGB lung linh, bus 6400 cực ổn định",
+        "noi_dung": "Bật XMP 1 phát ăn ngay 6400MHz, render Premiere preview không hề giật lag.",
+        "ngay_danh_gia": "12/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "linh-kien"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 4290000,
+    "gia_khuyen_mai": 3690000,
+    "hang_san_xuat": "kingston",
+    "hinh_anh_chinh": "/images/sp/kingston_fury_ram.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "kingston-fury-renegade-rgb-32gb",
+    "la_ban_chay": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "KF564C32RSAK2-32",
+    "mo_ta_chi_tiet": "Kingston FURY Renegade DDR5 RGB mang lại hiệu năng bộ nhớ bứt phá cùng vẻ ngoài sắc sảo rực rỡ cho mọi cấu hình máy tính đỉnh cao.",
+    "phan_tram_giam_gia": 14,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Tặng áo thun Kingston Gaming FURY phiên bản giới hạn",
+        "gia_tri": 250000
+      }
+    ],
+    "so_luong_da_ban": 85,
+    "so_luong_danh_gia": 22,
+    "so_luong_ton_kho": 25,
+    "ten_san_pham": "Bộ Nhớ RAM Kingston FURY Renegade DDR5 RGB 32GB (2x16GB) Bus 6400MHz CL32",
+    "thong_so": {
+      "cpu": "Hỗ trợ Intel XMP 3.0 & AMD EXPO One-click Overclocking",
+      "card_do_hoa": "Đèn LED RGB 16.8 triệu màu đồng bộ FURY CTRL",
+      "ram": "32GB (2x16GB) DDR5 6400MHz CL32",
+      "o_cung": "Tản nhiệt nhôm đen kết hợp ánh bạc công nghệ cao",
+      "man_hinh": "Độ trễ thấp CL32 cực mượt",
+      "tan_so_quet": 60,
+      "he_thong_tan_nhiet": "Bộ giáp tản nhiệt nhôm đúc nguyên khối",
+      "dung_luong_pin": "Điện áp 1.4V",
+      "trong_luong": 0.12,
+      "cong_ket_noi": [
+        "288-Pin DIMM"
+      ],
+      "he_dieu_hanh": "Tất cả bo mạch chủ DDR5",
+      "che_do_bao_hanh": "36 tháng chính hãng Kingston 1 đổi 1"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/kingston_fury_ram.jpg"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 18
+      }
+    ]
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8da",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Màn hình OLED đa nhiệm hiển thị thông số CPU/GPU máy tính",
+      "Cấu trúc Gasket Mount 5 lớp đệm mang lại âm gõ HIFI trầm đục cực êm",
+      "3 Chế độ kết nối: Type-C, Wireless 2.4G và Bluetooth"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-kb-1",
+        "ten_nguoi_dung": "Đoàn Gia Bảo",
+        "so_sao": 5,
+        "tieu_de": "Âm gõ Thocky cực đã tai, màn hình OLED quá tiện",
+        "noi_dung": "Build nhôm đầm chắc, âm gõ êm mượt sẵn từ nhà máy không cần mod lại.",
+        "ngay_danh_gia": "17/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 3490000,
+    "gia_khuyen_mai": 2790000,
+    "hang_san_xuat": "keychron",
+    "hinh_anh_chinh": "/images/sp/gaming_keyboard_rgb.jpg",
+    "ho_tro_tra_gop_0_phan_tram": false,
+    "id": "ban-phim-co-custom-glyph-75",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "GLYPH-75-PRO",
+    "mo_ta_chi_tiet": "Bàn phím cơ Glyph 75% là món đồ gaming gear công thái học không thể thiếu cho góc setup chuyên nghiệp của bạn.",
+    "phan_tram_giam_gia": 20,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Tặng bộ 4 Switch Pre-lubed dự phòng + Dụng cụ gắp Keycap & Switch",
+        "gia_tri": 150000
+      }
+    ],
+    "so_luong_da_ban": 140,
+    "so_luong_danh_gia": 64,
+    "so_luong_ton_kho": 35,
+    "ten_san_pham": "Bàn Phím Cơ Custom Glyph 75% Gasket Mount | Màn Hình OLED | Núm Xoay Đa Năng | Switch HIFI",
+    "thong_so": {
+      "cpu": "Vi xử lý ARM Cortex-M4 32-bit tốc độ phản hồi 1000Hz",
+      "card_do_hoa": "Màn hình màu TFT OLED hiển thị thời gian, nhiệt độ máy tính và ảnh GIF",
+      "ram": "Hỗ trợ Hot-swap 5-pin thay switch nhanh không cần hàn",
+      "o_cung": "Núm xoay CNC Aluminum điều chỉnh âm lượng và hiệu ứng ánh sáng",
+      "man_hinh": "Keycap PBT Double-shot chống bám vân tay cao cấp",
+      "tan_so_quet": 60,
+      "he_thong_tan_nhiet": "Cấu trúc Gasket Mount 5 lớp tiêu âm Poron + Foam IXPE cho âm thanh HIFI trầm ấm",
+      "dung_luong_pin": "Pin sạc 4000mAh dùng liên tục 200 giờ",
+      "trong_luong": 0.98,
+      "cong_ket_noi": [
+        "Bluetooth 5.2",
+        "Wireless 2.4GHz không độ trễ",
+        "Dây Type-C bọc dù"
+      ],
+      "he_dieu_hanh": "Windows / macOS / iOS / Android",
+      "che_do_bao_hanh": "12 tháng đổi mới chính hãng"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/gaming_keyboard_rgb.jpg"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 30
+      }
+    ]
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8db",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Trọng lượng siêu nhẹ chỉ 49 gram thiết kế công thái học",
+      "Mắt đọc PixArt PAW3395 26.000 DPI siêu chuẩn xác",
+      "Thời lượng pin lên đến 90 giờ liên tục"
+    ],
+    "danh_gia": [
+      {
+        "id": "dg-mouse-1",
+        "ten_nguoi_dung": "Trịnh Quốc Bảo",
+        "so_sao": 5,
+        "tieu_de": "Chuột siêu nhẹ 49g vẩy Valorant cực chuẩn",
+        "noi_dung": "Cảm biến 3395 chuẩn xác không một vết flick trượt. Cầm lâu cả ngày không mỏi tay.",
+        "ngay_danh_gia": "16/08/2026",
+        "da_mua_hang": true
+      }
+    ],
+    "danh_muc": [
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 5,
+    "gia_goc": 2190000,
+    "gia_khuyen_mai": 1690000,
+    "hang_san_xuat": "logitech",
+    "hinh_anh_chinh": "/images/sp/gaming_mouse_wireless.jpg",
+    "ho_tro_tra_gop_0_phan_tram": false,
+    "id": "chuot-gaming-pro-air-8",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "AIR-8-WIRELESS",
+    "mo_ta_chi_tiet": "Chuột không dây Pro Air-8 là vũ khí hủy diệt dành cho các game thủ FPS chuyên nghiệp yêu thích sự linh hoạt và chuẩn xác tuyệt đối.",
+    "phan_tram_giam_gia": 23,
+    "qua_tang": [
+      {
+        "ten_qua_tang": "Tặng lót chuột Gaming Speed kháng nước cỡ lớn 800x300mm",
+        "gia_tri": 190000
+      }
+    ],
+    "so_luong_da_ban": 210,
+    "so_luong_danh_gia": 88,
+    "so_luong_ton_kho": 50,
+    "ten_san_pham": "Chuột Gaming Siêu Nhẹ Không Dây Pro Air-8 Wireless | Mắt Đọc 26.000 DPI | Siêu Nhẹ 49g | 8000Hz Polling Rate",
+    "thong_so": {
+      "cpu": "Cảm biến quang học PixArt PAW3395 lên tới 26.000 DPI, 650 IPS",
+      "card_do_hoa": "Switch quang học Huano Blue Pink Dot độ bền 80 triệu lần nhấn",
+      "ram": "Tốc độ phản hồi Polling Rate 8000Hz (0.125ms siêu nhanh)",
+      "o_cung": "Chân đế chuột 100% Virgin Grade PTFE lướt cực êm",
+      "man_hinh": "Phù hợp mọi kiểu cầm: Palm, Claw, Fingertip Grip",
+      "tan_so_quet": 60,
+      "he_thong_tan_nhiet": "Thiết kế tổ ong siêu nhẹ thoáng khí",
+      "dung_luong_pin": "Pin lithium tích hợp dùng đến 90 giờ",
+      "trong_luong": 0.049,
+      "cong_ket_noi": [
+        "Wireless 2.4GHz không trễ",
+        "Bluetooth 5.1",
+        "Cáp bọc dù Paracord"
+      ],
+      "he_dieu_hanh": "Windows / macOS / Linux",
+      "che_do_bao_hanh": "24 tháng 1 đổi 1"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/gaming_mouse_wireless.jpg"
+    ],
+    "ton_kho": [
+      {
+        "ten_chi_nhanh": "LaptopNew Chi nhánh 1 - Q.10, TP.HCM",
+        "dia_chi": "29 Tân Phước, Phường 8, Quận 10, TP.HCM",
+        "so_dien_thoai": "0948.37.79.79",
+        "con_hang": true,
+        "so_luong_con": 40
+      }
+    ]
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8dc",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Chứa vừa laptop gaming khủng 18 inch",
+      "Vải Nylon Ballistic chống rạch và chống thấm",
+      "Khóa bảo mật TSA chuẩn hải quan Mỹ"
+    ],
+    "danh_muc": [
+      "balo-tui-chong-soc",
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 2490000,
+    "gia_khuyen_mai": 1890000,
+    "hang_san_xuat": "asus",
+    "hinh_anh_chinh": "/images/sp/balo_gaming_rog.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "balo-gaming-rog-ranger-18",
+    "la_ban_chay": true,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "BP-ROGR-18",
+    "mo_ta_chi_tiet": "Balo laptop gaming cao cấp chuyên dụng cho game thủ và chuyên gia đồ họa.",
+    "phan_tram_giam_gia": 24,
+    "so_luong_da_ban": 142,
+    "so_luong_danh_gia": 38,
+    "so_luong_ton_kho": 35,
+    "ten_san_pham": "Balo Gaming ROG Ranger 18 inch Chống Nước Chuẩn Quân Đội - Đệm Khí 5 Lớp",
+    "thong_so": {
+      "cpu": "Balo Gaming 18\"",
+      "ram": "Nylon 1680D",
+      "o_cung": "Chống sốc 5 lớp",
+      "trong_luong": 1.2,
+      "dung_luong_pin": "Chống nước IPX4",
+      "che_do_bao_hanh": "BH 24 tháng chính hãng"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/balo_gaming_rog.jpg"
+    ]
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8dd",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Hạ nhiệt độ CPU & GPU laptop tức thì từ 12-18°C",
+      "Màn hình LED hiển thị nhiệt độ và tốc độ quạt thời gian thực",
+      "Đèn LED RGB 16.8 triệu màu đồng bộ gaming"
+    ],
+    "danh_muc": [
+      "de-tan-gia-do",
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 4.8,
+    "gia_goc": 1590000,
+    "gia_khuyen_mai": 1190000,
+    "hang_san_xuat": "deepcool",
+    "hinh_anh_chinh": "/images/sp/gia_do_tan_nhiet.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "gia-do-tan-nhiet-so-lanh-icepro",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "PAD-ICE-RGB",
+    "mo_ta_chi_tiet": "Giải pháp tản nhiệt tối thượng cho laptop gaming và render 3D nặng.",
+    "phan_tram_giam_gia": 25,
+    "so_luong_da_ban": 210,
+    "so_luong_danh_gia": 45,
+    "so_luong_ton_kho": 50,
+    "ten_san_pham": "Đế Tản Nhiệt Laptop Sò Lạnh ICE-PRO RGB Nhôm CNC - Quạt Kép 2800 RPM",
+    "thong_so": {
+      "cpu": "Sò lạnh đóng băng",
+      "ram": "Nhôm CNC",
+      "o_cung": "Quạt 2800 RPM",
+      "trong_luong": 0.85,
+      "dung_luong_pin": "Hạ 15°C",
+      "che_do_bao_hanh": "BH 12 tháng 1 đổi 1"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/gia_do_tan_nhiet.jpg"
+    ]
+  },
+  {
+    "_id": "6aa02f98c2ea9243a450b8de",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Chuẩn sạc PD 3.1 công suất tối đa 140W cho MacBook Pro 16 và Laptop Gaming",
+      "Kích thước siêu nhỏ gọn nhờ công nghệ bán dẫn GaNPrime",
+      "Màn hình màu TFT hiển thị công suất sạc từng cổng"
+    ],
+    "danh_muc": [
+      "sac-cap-hub",
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 5,
+    "gia_goc": 2390000,
+    "gia_khuyen_mai": 1790000,
+    "hang_san_xuat": "anker",
+    "hinh_anh_chinh": "/images/sp/cu_sac_gan_140w.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "cu-sac-gan-anker-140w-pd31",
+    "la_ban_chay": true,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "ANK-GAN-140W",
+    "mo_ta_chi_tiet": "Củ sạc du lịch tất-cả-trong-một cho laptop, iPad và điện thoại.",
+    "phan_tram_giam_gia": 25,
+    "so_luong_da_ban": 185,
+    "so_luong_danh_gia": 52,
+    "so_luong_ton_kho": 40,
+    "ten_san_pham": "Củ Sạc Nhanh GaN Anker Prime 140W 3 Cổng Type-C PD 3.1 Màn Hình LED Màu",
+    "thong_so": {
+      "cpu": "Công suất 140W",
+      "ram": "GaNPrime",
+      "o_cung": "3 Cổng Type-C",
+      "trong_luong": 0.28,
+      "dung_luong_pin": "PD 3.1 140W",
+      "che_do_bao_hanh": "BH 18 tháng chính hãng"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/cu_sac_gan_140w.jpg"
+    ]
+  },
+  {
+    "_id": "6aa02f99c2ea9243a450b8df",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Driver màng loa Graphene 50mm tái tạo âm trường cực kỳ chính xác",
+      "Kết nối không dây kép 2.4GHz Lightspeed siêu tốc và Bluetooth 5.3",
+      "Thời lượng pin ấn tượng lên tới 60 giờ liên tục"
+    ],
+    "danh_muc": [
+      "tai-nghe-loa",
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 3490000,
+    "gia_khuyen_mai": 2690000,
+    "hang_san_xuat": "logitech",
+    "hinh_anh_chinh": "/images/sp/tai_nghe_gaming_pro.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "tai-nghe-gaming-aether-pro-71",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "EP-AETH-71",
+    "mo_ta_chi_tiet": "Tai nghe gaming đẳng cấp esports định vị tiếng bước chân chuẩn xác.",
+    "phan_tram_giam_gia": 23,
+    "so_luong_da_ban": 96,
+    "so_luong_danh_gia": 29,
+    "so_luong_ton_kho": 25,
+    "ten_san_pham": "Tai Nghe Gaming Không Dây Aether Pro 7.1 Wireless - Màng Loa Graphene 50mm",
+    "thong_so": {
+      "cpu": "Âm vòm 7.1",
+      "ram": "Driver 50mm",
+      "o_cung": "Pin 60 giờ",
+      "trong_luong": 0.26,
+      "dung_luong_pin": "Pin 60h",
+      "che_do_bao_hanh": "BH 24 tháng chính hãng"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/tai_nghe_gaming_pro.jpg"
+    ]
+  },
+  {
+    "_id": "6aa02f99c2ea9243a450b8e0",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Kích thước siêu lớn 900x400mm bao trọn bàn phím và chuột",
+      "Sợi dệt siêu mịn Micro-Weave tối ưu cho mắt đọc quang học",
+      "Viền LED RGB phát sáng 14 chế độ chuyển màu gaming"
+    ],
+    "danh_muc": [
+      "chuot-lot-chuot",
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 690000,
+    "gia_khuyen_mai": 490000,
+    "hang_san_xuat": "razer",
+    "hinh_anh_chinh": "/images/sp/lot_chuot_gaming_rgb.jpg",
+    "ho_tro_tra_gop_0_phan_tram": false,
+    "id": "lot-chuot-gaming-speed-rgb-xxl",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "PAD-SPEED-RGB",
+    "mo_ta_chi_tiet": "Bàn di chuột gaming khổ lớn chuyên dụng cho game thủ FPS và thiết kế đồ họa.",
+    "phan_tram_giam_gia": 29,
+    "so_luong_da_ban": 320,
+    "so_luong_danh_gia": 78,
+    "so_luong_ton_kho": 60,
+    "ten_san_pham": "Lót Chuột Gaming Speed RGB XXL 900x400mm - Bề Mặt Vải Micro-Weave Chống Nước",
+    "thong_so": {
+      "cpu": "900 x 400mm",
+      "ram": "Vải Speed Micro",
+      "o_cung": "LED RGB 14 Mode",
+      "trong_luong": 0.65,
+      "dung_luong_pin": "Đáy cao su 4mm",
+      "che_do_bao_hanh": "BH 12 tháng chính hãng"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/lot_chuot_gaming_rgb.jpg"
+    ]
+  },
+  {
+    "_id": "6aa02f99c2ea9243a450b8e1",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Đế xoay 360 độ phát ra tiếng click cơ học cực kỳ thỏa mãn",
+      "Chất liệu hợp kim nhôm hàng không CNC phay xước cao cấp",
+      "Nâng cao màn hình ngang tầm mắt chống mỏi cổ vai gáy"
+    ],
+    "danh_muc": [
+      "de-tan-gia-do",
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 990000,
+    "gia_khuyen_mai": 690000,
+    "hang_san_xuat": "moft",
+    "hinh_anh_chinh": "/images/sp/gia_do_laptop_360.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "gia-do-laptop-nhom-ergonomic-360",
+    "la_ban_chay": true,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "STD-ERGO-360",
+    "mo_ta_chi_tiet": "Giá đỡ laptop công thái học cao cấp cho góc làm việc chuyên nghiệp.",
+    "phan_tram_giam_gia": 30,
+    "so_luong_da_ban": 195,
+    "so_luong_danh_gia": 42,
+    "so_luong_ton_kho": 45,
+    "ten_san_pham": "Giá Đỡ Laptop Nhôm CNC Công Thái Học Ergonomic Stand 360 - Xoay 360 Độ Gập Gọn",
+    "thong_so": {
+      "cpu": "Nhôm CNC phay",
+      "ram": "Xoay 360 độ",
+      "o_cung": "Chịu lực 10kg",
+      "trong_luong": 0.95,
+      "dung_luong_pin": "Laptop 10-18 inch",
+      "che_do_bao_hanh": "BH 24 tháng chính hãng"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/gia_do_laptop_360.jpg"
+    ]
+  },
+  {
+    "_id": "6aa02f99c2ea9243a450b8e2",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Mở rộng 10 cổng: HDMI 4K60Hz, 3x USB 3.2, SD/TF, LAN RJ45, Audio, PD 100W",
+      "Vỏ nhôm nguyên khối Space Gray tản nhiệt siêu tốc",
+      "Tương thích hoàn hảo MacBook M-Series, Dell XPS, ThinkPad"
+    ],
+    "danh_muc": [
+      "sac-cap-hub",
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 4.8,
+    "gia_goc": 1890000,
+    "gia_khuyen_mai": 1390000,
+    "hang_san_xuat": "anker",
+    "hinh_anh_chinh": "/images/sp/hub_typec_10in1.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "hub-chuyen-doi-typec-10in1-hyperdrive",
+    "la_ban_chay": true,
+    "la_flash_sale": true,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "HUB-10IN1-PRO",
+    "mo_ta_chi_tiet": "Trạm kết nối đa năng tất cả trong 1 cho laptop hiện đại.",
+    "phan_tram_giam_gia": 26,
+    "so_luong_da_ban": 168,
+    "so_luong_danh_gia": 36,
+    "so_luong_ton_kho": 35,
+    "ten_san_pham": "Cáp Chuyển Đổi Type-C Hub 10-in-1 HyperDrive PRO - Xuất 4K 60Hz, Sạc PD 100W, Gigabit LAN",
+    "thong_so": {
+      "cpu": "10 Cổng kết nối",
+      "ram": "HDMI 4K 60Hz",
+      "o_cung": "Sạc PD 100W",
+      "trong_luong": 0.18,
+      "dung_luong_pin": "LAN 1Gbps",
+      "che_do_bao_hanh": "BH 24 tháng 1 đổi 1"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/hub_typec_10in1.jpg"
+    ]
+  },
+  {
+    "_id": "6aa02f99c2ea9243a450b8e3",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Xung nhịp phá kỷ lục thế giới lên tới 6.2GHz xuất xưởng",
+      "24 nhân kiến trúc Raptor Lake Refresh (8 P-core + 16 E-core)",
+      "Hộp Special Edition polygon pha lê cực kỳ đẳng cấp"
+    ],
+    "danh_muc": [
+      "linh-kien-nang-cap",
+      "linh-kien"
+    ],
+    "diem_danh_gia_tb": 5,
+    "gia_goc": 18990000,
+    "gia_khuyen_mai": 16490000,
+    "hang_san_xuat": "intel",
+    "hinh_anh_chinh": "/images/sp/cpu_intel_i9_14900ks.jpg",
+    "ho_tro_tra_gop_0_phan_tram": true,
+    "id": "cpu-intel-core-i9-14900ks-box",
+    "la_ban_chay": true,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "CPU-I9-14900KS",
+    "mo_ta_chi_tiet": "Bộ vi xử lý desktop mạnh nhất hành tinh cho máy trạm và gaming đỉnh cao.",
+    "phan_tram_giam_gia": 13,
+    "so_luong_da_ban": 64,
+    "so_luong_danh_gia": 22,
+    "so_luong_ton_kho": 15,
+    "ten_san_pham": "Vi Xử Lý Intel Core i9-14900KS Special Edition (24 Nhân 32 Luồng | Up to 6.2GHz | 36MB Cache)",
+    "thong_so": {
+      "cpu": "Max 6.2 GHz",
+      "ram": "24 Nhân 32 Luồng",
+      "o_cung": "36MB SmartCache",
+      "trong_luong": 0.15,
+      "dung_luong_pin": "LGA1700 150W",
+      "che_do_bao_hanh": "BH 36 tháng chính hãng"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/cpu_intel_i9_14900ks.jpg"
+    ]
+  },
+  {
+    "_id": "6aa02f99c2ea9243a450b8e4",
+    "__v": 0,
+    "con_hang": true,
+    "dac_diem_noi_bat": [
+      "Công nghệ đệm góc CornerArmor chống sốc đạt chuẩn rơi tự do quân sự Mỹ",
+      "Vải Cordura cao cấp chống mài mòn và kháng nước vượt trội",
+      "Khóa kéo YKK Nhật Bản trơn tru bền bỉ theo thời gian"
+    ],
+    "danh_muc": [
+      "balo-tui-chong-soc",
+      "phu-kien-gear"
+    ],
+    "diem_danh_gia_tb": 4.9,
+    "gia_goc": 950000,
+    "gia_khuyen_mai": 720000,
+    "hang_san_xuat": "tomtoc",
+    "hinh_anh_chinh": "/images/sp/tui_chong_soc_tomtoc.jpg",
+    "ho_tro_tra_gop_0_phan_tram": false,
+    "id": "tui-chong-soc-tomtoc-defender",
+    "la_ban_chay": true,
+    "la_flash_sale": false,
+    "la_san_pham_moi": true,
+    "ma_san_pham": "BAG-TOMTOC-360",
+    "mo_ta_chi_tiet": "Túi chống sốc số 1 thế giới bảo vệ máy tính đắt tiền an toàn tuyệt đối.",
+    "phan_tram_giam_gia": 24,
+    "so_luong_da_ban": 240,
+    "so_luong_danh_gia": 65,
+    "so_luong_ton_kho": 40,
+    "ten_san_pham": "Túi Chống Sốc Laptop Tomtoc Defender 360 Chống Rơi Vỡ Góc Chuẩn Quân Đội Mỹ",
+    "thong_so": {
+      "cpu": "CornerArmor 360",
+      "ram": "Khóa kéo YKK",
+      "o_cung": "Cho máy 14-16\"",
+      "trong_luong": 0.35,
+      "dung_luong_pin": "Vải Cordura kháng nước",
+      "che_do_bao_hanh": "BH 12 tháng chính hãng"
+    },
+    "thu_vien_hinh_anh": [
+      "/images/sp/tui_chong_soc_tomtoc.jpg"
+    ]
+  }
+]
