@@ -134,10 +134,15 @@ export default function TrangChiTietSanPham({ params }) {
     const tienTietKiem = tinhTienTietKiem(giaGocHienTai, giaHienTai);
     const daTrongSoSanh = kiemTraDaCoTrongSoSanh(sanPham.id);
     const daYeuThich = kiemTraDaThich(sanPham.id);
-    // Mua ngay chuyển thẳng đến giỏ hàng / thanh toán
+    // Mua ngay: Bắt buộc đăng nhập trước khi tiến hành thanh toán
     const xuLyMuaNgay = () => {
         themVaoGioHang(sanPham, tuyChonChon, 1);
-        router.push('/gio-hang');
+        if (!nguoiDung) {
+            toast.info('Quý khách vui lòng đăng nhập tài khoản để tiếp tục mua hàng & thanh toán!');
+            moModalDangNhap();
+            return;
+        }
+        router.push('/thanh-toan');
     };
 
     // Mua trả góp kiểm tra đăng nhập trước khi vào thanh toán

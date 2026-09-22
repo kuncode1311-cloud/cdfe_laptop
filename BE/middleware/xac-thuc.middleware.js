@@ -63,7 +63,43 @@ const chiAdmin = (req, res, next) => {
     next();
 };
 
+/**
+ * Middleware nhận diện người dùng tùy chọn (Optional Auth)
+ * Nếu có token hợp lệ thì gắn req.user, nếu không có token hoặc token không hợp lệ thì gán req.user = null
+ */
+const nhanDienNguoiDungTuyChon = async (req, res, next) => {
+    try {
+        let token = null;
+
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+
+        if (!token) {
+            req.user = null;
+            return next();
+        }
+
+        const secret = process.env.JWT_SECRET || 'TNTP_LAPTOP_SECURITY_KEY_2026';
+        const decoded = jwt.verify(token, secret);
+
+        const orConditions = [{ id: decoded.userId }, { email: decoded.email }];
+        if (decoded.userId && /^[0-9a-fA-F]{24}$/.test(decoded.userId)) {
+            orConditions.push({ _id: decoded.userId });
+        }
+        const nguoiDung = await NguoiDung.findOne({ $or: orConditions });
+
+        req.user = nguoiDung || null;
+        next();
+    } catch (loi) {
+        req.user = null;
+        next();
+    }
+};
+
 module.exports = {
     xacThucToken,
-    chiAdmin
+    chiAdmin,
+    nhanDienNguoiDungTuyChon
 };
+

@@ -59,6 +59,17 @@ function NoiDungTrangThanhToan() {
         }
     }, [nguoiDung]);
 
+    // Tự động nhắc nhở và bật modal đăng nhập nếu khách chưa đăng nhập khi vào thanh toán
+    useEffect(() => {
+        if (!nguoiDung) {
+            const timer = setTimeout(() => {
+                toast.info('Quý khách vui lòng Đăng Nhập tài khoản để hoàn tất đơn hàng!');
+                moModalDangNhap();
+            }, 600);
+            return () => clearTimeout(timer);
+        }
+    }, [nguoiDung]);
+
     const [laFormHopLe, setLaFormHopLe] = useState(false);
     const [phuongThucThanhToan, setPhuongThucThanhToan] = useState('chuyen_khoan_vietqr');
     const [dangXuLy, setDangXuLy] = useState(false);

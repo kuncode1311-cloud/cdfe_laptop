@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const DonHang = require('../models/don-hang.model');
+const { guiMailXacNhanDonHang } = require('../services/email.service');
 
 // Thông tin cấu hình PayOS & MBBank
 const PAYOS_CLIENT_ID = process.env.PAYOS_CLIENT_ID || '8bfb42f3-2194-4060-bd73-2a7324c5e8f2';
@@ -346,7 +347,7 @@ const xuLyWebhookPayOS = async (req, res) => {
             amountPaid: amount
         });
 
-        DonHang.updateOne(
+        DonHang.findOneAndUpdate(
             {
                 $or: [
                     { payos_order_code: orderNum },
@@ -359,9 +360,13 @@ const xuLyWebhookPayOS = async (req, res) => {
                     trang_thai_thanh_toan: 'da_thanh_toan',
                     trang_thai: 'da_xac_nhan'
                 }
-            }
-        ).then(() => {
+            },
+            { new: true }
+        ).then((donHangDaCapNhat) => {
             console.log(`✅ [PayOS Webhook] Đã lưu vào MongoDB đơn hàng #${orderCode}`);
+            if (donHangDaCapNhat && (donHangDaCapNhat.thong_tin_giao_hang?.email || donHangDaCapNhat.email)) {
+                guiMailXacNhanDonHang(donHangDaCapNhat).catch(e => console.warn('⚠️ Lỗi gửi mail sau webhook:', e.message));
+            }
         }).catch(err => console.warn('⚠️ Lỗi cập nhật Webhook vào DB:', err.message));
 
     } catch (error) {

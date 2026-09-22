@@ -317,6 +317,7 @@ export function AuthProvider({ children }) {
     };
 
     // Đăng xuất và xóa sạch Token & Toàn bộ Session
+    // Đăng xuất và xóa sạch Token, Giỏ hàng, Cache đơn hàng & Toàn bộ Session
     const dangXuat = () => {
         setNguoiDung(null);
         setToken(null);
@@ -328,10 +329,15 @@ export function AuthProvider({ children }) {
                 localStorage.removeItem(TOKEN_STORAGE_KEY);
                 localStorage.removeItem('tnt_laptop_user');
                 localStorage.removeItem('tnt_laptop_token');
+                localStorage.removeItem('laptopnew_user');
+                localStorage.removeItem('nguoi_dung');
                 localStorage.removeItem('user');
                 localStorage.removeItem('token');
                 localStorage.removeItem('auth_user');
+                localStorage.removeItem('laptopnew_danh_sach_don_hang');
+                localStorage.removeItem('laptopnew_gio_hang_data');
                 sessionStorage.clear();
+                window.dispatchEvent(new Event('auth:logout'));
             } catch (e) {
                 console.warn('Lỗi xóa storage khi logout:', e);
             }

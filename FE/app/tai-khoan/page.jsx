@@ -792,6 +792,19 @@ function NoiDungTrangTaiKhoan() {
         taiDonHang();
     }, [nguoiDung]);
 
+    // Xóa sạch trạng thái đơn hàng khi người dùng bấm đăng xuất
+    useEffect(() => {
+        const xuLyDangXuat = () => {
+            setDanhSachDonHang([]);
+            setDonHangDangXemChiTiet(null);
+            setDonHangThanhToanQR(null);
+        };
+        if (typeof window !== 'undefined') {
+            window.addEventListener('auth:logout', xuLyDangXuat);
+            return () => window.removeEventListener('auth:logout', xuLyDangXuat);
+        }
+    }, []);
+
     // Đếm số lượng đơn hàng theo từng trạng thái chuẩn xác cho các tab filter
     const soLuongTheoTrangThai = useMemo(() => {
         const counts = {
@@ -3641,19 +3654,17 @@ function NoiDungTrangTaiKhoan() {
                             });
                             toast.success(`🎉 Đã xác nhận thanh toán thành công đơn #${donHangThanhToanQR.ma_don_hang}!`);
                             setDonHangThanhToanQR(null);
-                            // Cập nhật lại danh sách đơn hàng
-                            const tatCaMoi = await DonHangService.layTatCaDonHangAsync();
+                            // Cập nhật lại danh sách đơn hàng đúng tài khoản từ MongoDB
                             const laAdmin = nguoiDung?.vaiTro === 'admin' || nguoiDung?.role === 'admin' || nguoiDung?.email === 'admin@laptopnew.vn';
                             if (laAdmin) {
-                                setDanhSachDonHang(tatCaMoi);
+                                const tatCaMoi = await DonHangService.layTatCaDonHangAsync();
+                                setDanhSachDonHang(tatCaMoi || []);
                             } else if (nguoiDung) {
-                                const donCuaToi = tatCaMoi.filter((dh) => {
-                                    if (dh.id_nguoi_dung && (dh.id_nguoi_dung === nguoiDung.id || dh.id_nguoi_dung === nguoiDung._id)) return true;
-                                    if (nguoiDung.email && dh.thong_tin_giao_hang?.email === nguoiDung.email) return true;
-                                    if (nguoiDung.soDienThoai && dh.thong_tin_giao_hang?.so_dien_thoai === nguoiDung.soDienThoai) return true;
-                                    return false;
-                                });
-                                setDanhSachDonHang(donCuaToi);
+                                const idUsr = nguoiDung.id || nguoiDung._id || '';
+                                const emailUsr = (nguoiDung.email || '').trim().toLowerCase();
+                                const sdtUsr = (nguoiDung.soDienThoai || nguoiDung.so_dien_thoai || '').trim();
+                                const donCuaToi = await DonHangService.layDonHangTheoNguoiDungAsync(idUsr, emailUsr, sdtUsr);
+                                setDanhSachDonHang(donCuaToi || []);
                             }
                         } catch (e) {
                             console.error('Lỗi sau khi thanh toán QR:', e);

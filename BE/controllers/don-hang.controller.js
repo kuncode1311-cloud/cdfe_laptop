@@ -1,6 +1,7 @@
 const DonHang = require('../models/don-hang.model');
 const SanPham = require('../models/san-pham.model');
 const mongoose = require('mongoose');
+const { guiMailXacNhanDonHang } = require('../services/email.service');
 
 /**
  * Controller xử lý nghiệp vụ cho Đơn hàng & Tồn kho
@@ -92,8 +93,13 @@ const taoDonHangMoi = async (req, res) => {
     try {
         const duLieuDonHang = req.body;
 
-        // Bắt buộc đăng nhập: Khách hàng phải có id_nguoi_dung mới được tạo đơn hàng
-        const idNguoiDung = duLieuDonHang.id_nguoi_dung;
+        // Bắt buộc đăng nhập: Khách hàng phải có id_nguoi_dung hoặc token đăng nhập
+        let idNguoiDung = duLieuDonHang.id_nguoi_dung;
+        if (req.user) {
+            idNguoiDung = req.user.id || String(req.user._id) || idNguoiDung;
+            duLieuDonHang.id_nguoi_dung = idNguoiDung;
+        }
+
         if (!idNguoiDung || String(idNguoiDung).trim() === '') {
             return res.status(401).json({
                 thong_diep: 'Quý khách vui lòng đăng nhập tài khoản trước khi đặt hàng!',
@@ -141,7 +147,16 @@ const taoDonHangMoi = async (req, res) => {
         const donHangMoi = new DonHang(duLieuDonHang);
         const ketQua = await donHangMoi.save();
 
-        console.log(`📦 Tạo đơn hàng mới thành công: ${ketQua.ma_don_hang} | Hình thức: ${ketQua.hinh_thuc_thanh_toan} | Trạng thái TT: ${ketQua.trang_thai_thanh_toan}`);
+        console.log(`📦 Tạo đơn hàng mới thành công: ${ketQua.ma_don_hang} | ID User: ${ketQua.id_nguoi_dung} | Hình thức: ${ketQua.hinh_thuc_thanh_toan} | Trạng thái TT: ${ketQua.trang_thai_thanh_toan}`);
+
+        // Tự động gửi email xác nhận đơn hàng cho khách hàng trong nền (bất đồng bộ, an toàn không gây nghẽn)
+        const emailKhach = ketQua.thong_tin_giao_hang?.email || req.user?.email;
+        if (emailKhach && String(emailKhach).includes('@')) {
+            guiMailXacNhanDonHang(ketQua).catch(errMail => {
+                console.warn('⚠️ [Email Service] Không thể gửi email xác nhận đơn:', errMail?.message);
+            });
+        }
+
         return res.status(201).json(ketQua);
     } catch (loi) {
         console.error('Lỗi tạo đơn hàng:', loi);
@@ -149,7 +164,7 @@ const taoDonHangMoi = async (req, res) => {
     }
 };
 
-// 2. Lấy danh sách tất cả các đơn hàng
+// 2. Lấy danh sách đơn hàng (Phân quyền bảo mật: Admin xem toàn bộ, Khách hàng chỉ xem của mình)
 const layDanhSachDonHang = async (req, res) => {
     try {
         const { trang_thai, id_nguoi_dung, email, sdt } = req.query;
@@ -157,15 +172,45 @@ const layDanhSachDonHang = async (req, res) => {
 
         if (trang_thai && trang_thai !== 'tat_ca') filter.trang_thai = trang_thai;
 
-        if (id_nguoi_dung) {
-            const conditions = [{ id_nguoi_dung: id_nguoi_dung }];
-            if (email && email.trim()) {
-                conditions.push({ 'thong_tin_giao_hang.email': email.trim().toLowerCase() });
+        const laAdmin = req.user && req.user.vaiTro === 'admin';
+
+        if (laAdmin) {
+            // Admin có quyền xem toàn bộ đơn hàng trong MongoDB hoặc lọc theo tài khoản nếu truyền
+            if (id_nguoi_dung) {
+                const conditions = [{ id_nguoi_dung: id_nguoi_dung }];
+                if (email && email.trim()) {
+                    conditions.push({ 'thong_tin_giao_hang.email': email.trim().toLowerCase() });
+                }
+                if (sdt && sdt.trim()) {
+                    conditions.push({ 'thong_tin_giao_hang.so_dien_thoai': sdt.trim() });
+                }
+                filter.$or = conditions;
             }
-            if (sdt && sdt.trim()) {
-                conditions.push({ 'thong_tin_giao_hang.so_dien_thoai': sdt.trim() });
+        } else if (req.user) {
+            // Khách hàng đã đăng nhập: CHỈ ĐƯỢC XEM ĐƠN HÀNG CỦA CHÍNH TÀI KHOẢN MÌNH
+            const userId = req.user.id || String(req.user._id);
+            const userEmail = (req.user.email || '').trim().toLowerCase();
+            const userSdt = (req.user.soDienThoai || req.user.so_dien_thoai || '').trim();
+
+            const userConditions = [{ id_nguoi_dung: userId }];
+            if (req.user._id) userConditions.push({ id_nguoi_dung: String(req.user._id) });
+            if (userEmail) userConditions.push({ 'thong_tin_giao_hang.email': userEmail });
+            if (userSdt) userConditions.push({ 'thong_tin_giao_hang.so_dien_thoai': userSdt });
+
+            filter.$or = userConditions;
+        } else {
+            // Khách chưa đăng nhập / không có token:
+            // Chỉ tra cứu nếu có truyền rõ id_nguoi_dung hoặc email hoặc sdt
+            if (id_nguoi_dung || email || sdt) {
+                const conditions = [];
+                if (id_nguoi_dung) conditions.push({ id_nguoi_dung: id_nguoi_dung });
+                if (email && email.trim()) conditions.push({ 'thong_tin_giao_hang.email': email.trim().toLowerCase() });
+                if (sdt && sdt.trim()) conditions.push({ 'thong_tin_giao_hang.so_dien_thoai': sdt.trim() });
+                filter.$or = conditions;
+            } else {
+                // TUYỆT ĐỐI KHÔNG TRẢ VỀ TẤT CẢ ĐƠN CHO KHÁCH VÃNG LAI KHÔNG XÁC THỰC
+                return res.status(200).json([]);
             }
-            filter.$or = conditions;
         }
 
         const danhSachDonHang = await DonHang.find(filter).sort({ createdAt: -1 });
@@ -215,7 +260,7 @@ const layDonHangTheoIdHoacMa = async (req, res) => {
     }
 };
 
-// 4. Cập nhật trạng thái hoặc thông tin đơn hàng
+// 4. Cập nhật trạng thái hoặc thông tin đơn hàng (Admin hoặc chính chủ đơn)
 const capNhatTrangThaiDonHang = async (req, res) => {
     try {
         const { id } = req.params;
@@ -233,6 +278,41 @@ const capNhatTrangThaiDonHang = async (req, res) => {
             return res.status(404).json({ thong_diep: `Không tìm thấy đơn hàng: ${id}` });
         }
 
+        const laAdmin = req.user && req.user.vaiTro === 'admin';
+        const laChuDon = req.user && (
+            String(donHangHienTai.id_nguoi_dung) === String(req.user.id) ||
+            String(donHangHienTai.id_nguoi_dung) === String(req.user._id) ||
+            (req.user.email && donHangHienTai.thong_tin_giao_hang?.email && req.user.email.toLowerCase() === donHangHienTai.thong_tin_giao_hang.email.toLowerCase())
+        );
+
+        if (!laAdmin && !laChuDon) {
+            return res.status(403).json({
+                thong_diep: 'Truy cập bị từ chối: Bạn không có quyền cập nhật đơn hàng này!'
+            });
+        }
+
+        // Nếu là khách hàng (chủ đơn nhưng không phải admin), chỉ cho phép cập nhật trạng thái thanh toán hoặc hủy đơn khi còn chờ xác nhận
+        if (!laAdmin && laChuDon) {
+            const allowedFields = ['da_thanh_toan', 'trang_thai_thanh_toan', 'noi_dung_chuyen_khoan', 'payos_order_code'];
+            // Khách có thể hủy đơn nếu đơn đang ở trạng thái cho_xac_nhan
+            if (duLieuCapNhat.trang_thai === 'da_huy' && donHangHienTai.trang_thai === 'cho_xac_nhan') {
+                allowedFields.push('trang_thai');
+            }
+            const filteredUpdate = {};
+            for (const key of allowedFields) {
+                if (duLieuCapNhat[key] !== undefined) {
+                    filteredUpdate[key] = duLieuCapNhat[key];
+                }
+            }
+            const donHang = await DonHang.findByIdAndUpdate(
+                donHangHienTai._id,
+                { $set: filteredUpdate },
+                { new: true, runValidators: true }
+            );
+            return res.status(200).json(donHang);
+        }
+
+        // Admin: Cho phép cập nhật toàn quyền, bao gồm trạng thái giao hàng và tồn kho
         const trangThaiMoi = duLieuCapNhat.trang_thai;
         const danhSachSp = (Array.isArray(duLieuCapNhat.danh_sach_san_pham) && duLieuCapNhat.danh_sach_san_pham.length > 0)
             ? duLieuCapNhat.danh_sach_san_pham
@@ -249,7 +329,6 @@ const capNhatTrangThaiDonHang = async (req, res) => {
                 }
             }
             // Case B: Đơn hàng đã từng trừ tồn kho (da_tru_ton_kho === true) nhưng trạng thái mới không còn là "da_giao"
-            // (ví dụ: chuyển sang "da_huy", hoặc trả về "dang_giao", "da_xac_nhan", "cho_xac_nhan")
             else if (trangThaiMoi !== 'da_giao' && donHangHienTai.da_tru_ton_kho) {
                 await capNhatTonKhoTheoDonHang(danhSachSp, 'hoan');
                 duLieuCapNhat.da_tru_ton_kho = false;

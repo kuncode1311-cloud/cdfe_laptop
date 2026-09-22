@@ -1,3 +1,5 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 
@@ -18,7 +20,10 @@ function taoTransporter() {
         },
         tls: {
             rejectUnauthorized: false
-        }
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 5000,
+        socketTimeout: 15000
     });
 }
 
@@ -165,7 +170,128 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
     }
 }
 
+/**
+ * Gửi email xác nhận đơn hàng khi khách đặt hàng thành công
+ */
+async function guiMailXacNhanDonHang(donHang) {
+    const emailNhan = donHang?.thong_tin_giao_hang?.email;
+    if (!emailNhan || !emailNhan.includes('@')) return { thanhCong: false, lyDo: 'Không có email' };
+
+    const transporter = taoTransporter();
+    const tenKhach = donHang?.thong_tin_giao_hang?.ho_ten || donHang?.thong_tin_giao_hang?.ho_va_ten || 'Quý khách';
+    const maDon = donHang?.ma_don_hang || donHang?.id || 'LPN-ORDER';
+    const tongTien = Number(donHang?.tong_tien_thanh_toan || 0).toLocaleString('vi-VN') + ' đ';
+    const hinhThucTT = donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? 'Chuyển khoản Ngân hàng (VietQR Pro)' : 'Thanh toán tiền mặt khi nhận hàng (COD)';
+    const trangThaiTT = donHang?.da_thanh_toan ? 'ĐÃ THANH TOÁN THÀNH CÔNG' : (donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? 'Chờ chuyển khoản VietQR' : 'Thanh toán khi nhận hàng');
+
+    const danhSachItemHtml = (donHang?.danh_sach_san_pham || []).map(sp => {
+        const ten = sp.ten_san_pham || 'Laptop';
+        const sl = sp.so_luong || 1;
+        const gia = Number(sp.gia_hien_tai || sp.gia_tai_thoi_diem_them || sp.gia || 0).toLocaleString('vi-VN') + ' đ';
+        const tongMuc = Number(sp.tong_tien_muc || (sp.gia_hien_tai || 0) * sl).toLocaleString('vi-VN') + ' đ';
+        return `
+            <tr>
+                <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #1e293b;">${ten}</td>
+                <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 13px; color: #64748b;">${sl}</td>
+                <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 13px; font-weight: 700; color: #0052cc;">${tongMuc}</td>
+            </tr>
+        `;
+    }).join('');
+
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
+            .container { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+            .header { background: linear-gradient(135deg, #0052cc 0%, #1d4ed8 100%); padding: 28px 24px; text-align: center; color: #ffffff; }
+            .logo-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 8px; font-weight: 900; font-size: 13px; letter-spacing: 1px; margin-bottom: 8px; }
+            .title { font-size: 20px; font-weight: 800; margin: 0; }
+            .body-content { padding: 28px 24px; }
+            .greeting { font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 10px; }
+            .order-badge { display: inline-block; background: #eff6ff; color: #0052cc; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 10px; font-family: monospace; font-weight: 900; font-size: 14px; margin: 8px 0; }
+            .table-wrap { width: 100%; border-collapse: collapse; margin: 16px 0; }
+            .total-box { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 14px; }
+            .total-amount { font-size: 20px; font-weight: 900; color: #dc2626; font-family: monospace; }
+            .footer { background: #f8fafc; padding: 20px 24px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo-badge">TNTP LAPTOP</div>
+                <h1 class="title">Xác Nhận Đơn Hàng #${maDon}</h1>
+            </div>
+            <div class="body-content">
+                <div class="greeting">Kính gửi ${tenKhach},</div>
+                <p style="font-size: 13.5px; color: #64748b; line-height: 1.5; margin: 6px 0 14px;">
+                    Cảm ơn quý khách đã tin tưởng mua sắm tại <strong>TNTP Laptop Store</strong>. Đơn hàng của quý khách đã được ghi nhận thành công và đang được chuẩn bị đóng gói niêm phong.
+                </p>
+
+                <div style="background: #f8fafc; padding: 14px; border-radius: 12px; margin-bottom: 16px; font-size: 12.5px; line-height: 1.6; border: 1px solid #e2e8f0;">
+                    <div><strong>Mã đơn hàng:</strong> <span class="order-badge">${maDon}</span></div>
+                    <div><strong>Thời gian đặt:</strong> ${donHang?.ngay_tao || new Date().toLocaleString('vi-VN')}</div>
+                    <div><strong>Người nhận:</strong> ${tenKhach} (${donHang?.thong_tin_giao_hang?.so_dien_thoai || ''})</div>
+                    <div><strong>Địa chỉ:</strong> ${[donHang?.thong_tin_giao_hang?.dia_chi_chi_tiet, donHang?.thong_tin_giao_hang?.phuong_xa, donHang?.thong_tin_giao_hang?.quan_huyen, donHang?.thong_tin_giao_hang?.tinh_thanh].filter(Boolean).join(', ')}</div>
+                    <div><strong>Hình thức:</strong> ${hinhThucTT}</div>
+                    <div><strong>Trạng thái thanh toán:</strong> <span style="font-weight: 800; color: #0052cc;">${trangThaiTT}</span></div>
+                </div>
+
+                <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 12px 0 8px;">Chi tiết kiện hàng:</h3>
+                <table class="table-wrap">
+                    <thead>
+                        <tr style="background: #f1f5f9; text-align: left;">
+                            <th style="padding: 8px; font-size: 11px; text-transform: uppercase; color: #475569;">Sản phẩm</th>
+                            <th style="padding: 8px; font-size: 11px; text-transform: uppercase; color: #475569; text-align: center;">SL</th>
+                            <th style="padding: 8px; font-size: 11px; text-transform: uppercase; color: #475569; text-align: right;">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${danhSachItemHtml}
+                    </tbody>
+                </table>
+
+                <div class="total-box">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td style="font-size: 14px; font-weight: 800; color: #0f172a;">TỔNG CỘNG:</td>
+                            <td style="text-align: right;"><span class="total-amount">${tongTien}</span></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <p style="font-size: 12px; color: #10b981; font-weight: 700; margin-top: 14px;">
+                    🛡️ Cam kết: 100% Sản phẩm chính hãng nguyên seal • Mở hộp test máy trước khi thanh toán • Bảo hành 12-24 tháng.
+                </p>
+            </div>
+            <div class="footer">
+                TNTP Laptop Store // Hệ thống Laptop Gaming, AI PC & Đồ Họa hàng đầu 2026<br>
+                Hotline hỗ trợ: 1900.8946 • Email: support@tntplaptop.vn
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    try {
+        const info = await transporter.sendMail({
+            from: `"TNTP Laptop Store" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
+            to: emailNhan,
+            subject: `[TNTP Laptop] Xác nhận đơn hàng #${maDon} thành công - ${tenKhach}`,
+            html: htmlContent
+        });
+        console.log(`✉️ [Nodemailer] Đã gửi email xác nhận đơn #${maDon} đến ${emailNhan} - MsgId: ${info.messageId}`);
+        return { thanhCong: true, messageId: info.messageId };
+    } catch (err) {
+        console.warn(`⚠️ [Nodemailer] Không thể gửi email xác nhận đơn #${maDon}:`, err.message);
+        return { thanhCong: false, loi: err.message };
+    }
+}
+
 module.exports = {
     guiMailOTPQuenMatKhau,
-    guiMailKichHoatTaiKhoan
+    guiMailKichHoatTaiKhoan,
+    guiMailXacNhanDonHang
 };

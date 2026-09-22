@@ -7,15 +7,16 @@ const {
     capNhatTrangThaiDonHang,
     xoaDonHang
 } = require('../controllers/don-hang.controller');
-const { xacThucToken, chiAdmin } = require('../middleware/xac-thuc.middleware');
+const { xacThucToken, chiAdmin, nhanDienNguoiDungTuyChon } = require('../middleware/xac-thuc.middleware');
 
-// Tuyến đường Công khai: Khách xem và tạo đơn hàng
-router.get('/', layDanhSachDonHang);
-router.get('/:id', layDonHangTheoIdHoacMa);
-router.post('/', taoDonHangMoi);
+// Tuyến đường Đơn hàng: Tự động nhận diện tài khoản để cách ly dữ liệu
+router.get('/', nhanDienNguoiDungTuyChon, layDanhSachDonHang);
+router.get('/:id', nhanDienNguoiDungTuyChon, layDonHangTheoIdHoacMa);
+router.post('/', nhanDienNguoiDungTuyChon, taoDonHangMoi);
 
-// Tuyến đường Bảo vệ: Chỉ Admin mới được cập nhật trạng thái đơn hoặc xóa đơn
-router.put('/:id', xacThucToken, chiAdmin, capNhatTrangThaiDonHang);
+// Tuyến đường Bảo vệ: Cập nhật đơn hàng (Admin hoặc chính chủ đơn đã xác thực)
+router.put('/:id', xacThucToken, capNhatTrangThaiDonHang);
+// Xóa đơn hàng (Chỉ Admin mới có quyền xóa)
 router.delete('/:id', xacThucToken, chiAdmin, xoaDonHang);
 
 module.exports = router;

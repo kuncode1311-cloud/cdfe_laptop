@@ -151,35 +151,40 @@ export const DonHangService = {
     },
 
     /**
-     * Lấy danh sách tất cả các đơn hàng đã đặt (từ Express API Async)
+     * Xóa cache đơn hàng cục bộ khi đăng xuất để bảo mật tuyệt đối giữa các tài khoản
      */
-    async layTatCaDonHangAsync() {
-        const local = this.layTatCaDonHang();
-        try {
-            const serverOrders = await apiFetch('/don-hang', { cache: 'no-store' }, local);
-            if (Array.isArray(serverOrders) && serverOrders.length > 0) {
-                if (typeof window !== 'undefined') {
-                    try {
-                        localStorage.setItem(KHOA_LUU_TRU_DON_HANG, JSON.stringify(serverOrders));
-                    } catch {}
-                }
-                return serverOrders;
-            }
-            return local;
-        } catch {
-            return local;
+    xoaCacheDonHang() {
+        if (typeof window !== 'undefined') {
+            try {
+                localStorage.removeItem(KHOA_LUU_TRU_DON_HANG);
+            } catch {}
         }
     },
 
     /**
-     * Lấy danh sách đơn hàng của một người dùng cụ thể từ Server API (Async)
+     * Lấy danh sách tất cả các đơn hàng đã đặt (dành cho Admin từ Express API Async)
+     */
+    async layTatCaDonHangAsync() {
+        try {
+            const serverOrders = await apiFetch('/don-hang', { cache: 'no-store' });
+            if (Array.isArray(serverOrders)) {
+                return serverOrders;
+            }
+            return [];
+        } catch {
+            return this.layTatCaDonHang();
+        }
+    },
+
+    /**
+     * Lấy danh sách đơn hàng của một người dùng cụ thể từ Server API MongoDB (Async)
      */
     async layDonHangTheoNguoiDungAsync(idNguoiDung, email, sdt) {
         if (!idNguoiDung && !email && !sdt) return [];
         const params = new URLSearchParams();
-        if (idNguoiDung) params.append('id_nguoi_dung', idNguoiDung);
-        if (email) params.append('email', email.trim().toLowerCase());
-        if (sdt) params.append('sdt', sdt.trim());
+        if (idNguoiDung) params.append('id_nguoi_dung', String(idNguoiDung));
+        if (email) params.append('email', String(email).trim().toLowerCase());
+        if (sdt) params.append('sdt', String(sdt).trim());
 
         try {
             const serverOrders = await apiFetch(`/don-hang?${params.toString()}`, { cache: 'no-store' });
@@ -192,11 +197,12 @@ export const DonHangService = {
 
         // Fallback kiểm tra chặt chẽ nếu offline
         const local = this.layTatCaDonHang();
-        const emailLower = email ? email.trim().toLowerCase() : '';
-        const sdtTrim = sdt ? sdt.trim() : '';
+        const emailLower = email ? String(email).trim().toLowerCase() : '';
+        const sdtTrim = sdt ? String(sdt).trim() : '';
+        const idStr = idNguoiDung ? String(idNguoiDung) : '';
 
         return local.filter(dh => {
-            if (idNguoiDung && dh.id_nguoi_dung === idNguoiDung) return true;
+            if (idStr && String(dh.id_nguoi_dung) === idStr) return true;
             if (emailLower && dh.thong_tin_giao_hang?.email && dh.thong_tin_giao_hang.email.toLowerCase() === emailLower) return true;
             if (sdtTrim && dh.thong_tin_giao_hang?.so_dien_thoai && dh.thong_tin_giao_hang.so_dien_thoai === sdtTrim) return true;
             return false;

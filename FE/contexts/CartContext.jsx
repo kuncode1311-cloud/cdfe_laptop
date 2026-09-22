@@ -32,6 +32,23 @@ export function CartProvider({ children }) {
         setDaKhoiTao(true);
     }, []);
 
+    // Lắng nghe sự kiện đăng xuất để xóa sạch giỏ hàng của phiên cũ
+    useEffect(() => {
+        const xuLyDangXuat = () => {
+            setDanhSachMuc([]);
+            setMaGiamGiaDaDung(undefined);
+            setTienGiamGia(0);
+            try {
+                localStorage.removeItem(CART_STORAGE_KEY);
+            } catch (e) {}
+        };
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('auth:logout', xuLyDangXuat);
+            return () => window.removeEventListener('auth:logout', xuLyDangXuat);
+        }
+    }, []);
+
     // Tự động lưu vào LocalStorage mỗi khi giỏ hàng thay đổi
     useEffect(() => {
         if (!daKhoiTao) return;
