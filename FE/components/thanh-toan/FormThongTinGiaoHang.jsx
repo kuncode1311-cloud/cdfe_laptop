@@ -19,7 +19,12 @@ import {
     ChevronDown 
 } from 'lucide-react';
 import { AuthContext } from '@/contexts/AuthContext';
-import { DiaGioiHanhChinhService, khopTuKhoaDiaChi, DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP } from '@/services/dia-gioi-hanh-chinh.service';
+import { 
+    DiaGioiHanhChinhService, 
+    khopTuKhoaDiaChi, 
+    DANH_SACH_63_TINH_THANH_CHUAN,
+    DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP 
+} from '@/services/dia-gioi-hanh-chinh.service';
 
 // Helper chuẩn hóa tiếng Việt không dấu để tìm kiếm gõ nhanh
 const xoaDauTiengViet = (str = '') => {
@@ -220,12 +225,12 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
     const [daCham, setDaCham] = useState({});
     const [luuDiaChiMoi, setLuuDiaChiMoi] = useState(true);
 
-    // Dữ liệu API Địa giới hành chính Chuẩn Sau Sáp Nhập (34 Tỉnh/TP)
-    const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP);
+    // Dữ liệu API Địa giới hành chính Chuẩn Quốc Gia (63 Tỉnh/TP - 3 Cấp)
+    const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_63_TINH_THANH_CHUAN);
     const [danhSachQuan, setDanhSachQuan] = useState([]);
     const [danhSachXa, setDanhSachXa] = useState([]);
 
-    // 1. Đồng bộ dữ liệu Tỉnh Thành từ API v2 DiaGioiHanhChinhService
+    // 1. Đồng bộ dữ liệu Tỉnh Thành từ DiaGioiHanhChinhService
     useEffect(() => {
         let isMounted = true;
         DiaGioiHanhChinhService.layDanhSachTinhThanhAsync().then(res => {
@@ -308,7 +313,12 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(thongTin.email.trim())
         ),
         tinh_thanh: Boolean(thongTin.tinh_thanh && thongTin.tinh_thanh.trim().length >= 2),
-        quan_huyen: Boolean(thongTin.quan_huyen && thongTin.quan_huyen.trim().length >= 2),
+        quan_huyen: Boolean(
+            thongTin.quan_huyen 
+                ? thongTin.quan_huyen.trim().length >= 2 
+                : Boolean(thongTin.tinh_thanh && thongTin.phuong_xa)
+        ),
+        phuong_xa: Boolean(thongTin.phuong_xa && thongTin.phuong_xa.trim().length >= 2),
         dia_chi_chi_tiet: Boolean(thongTin.dia_chi_chi_tiet && thongTin.dia_chi_chi_tiet.trim().length >= 3)
     };
 

@@ -64,8 +64,13 @@ import { useNguoiDung } from '@/contexts/AuthContext';
 import { useGioHang } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 import { DonHangService } from '@/services/don-hang.service';
-import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
-import { DiaGioiHanhChinhService, khopTuKhoaDiaChi, DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP } from '@/services/dia-gioi-hanh-chinh.service';
+import { 
+    DiaGioiHanhChinhService, 
+    khopTuKhoaDiaChi, 
+    DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP,
+    DANH_SACH_63_TINH_THANH_CHUAN,
+    TRA_CUU_SAP_NHAP_V2
+} from '@/services/dia-gioi-hanh-chinh.service';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import ModalThanhToanQR from '@/components/thanh-toan/ModalThanhToanQR';
 
@@ -315,7 +320,7 @@ function BoChonDiaGioi({
                                 const isSelected = giaTri === ten;
                                 return (
                                     <button
-                                        key={item.code || ten}
+                                        key={item.code ? `cd-${item.code}` : ten}
                                         type="button"
                                         onClick={() => {
                                             onChon(item);
@@ -328,7 +333,14 @@ function BoChonDiaGioi({
                                                 : 'hover:bg-slate-50 text-slate-700 hover:text-emerald-700'
                                         }`}
                                     >
-                                        <span className="truncate">{ten}</span>
+                                        <div className="flex flex-col min-w-0 pr-2">
+                                            <span className="truncate">{ten}</span>
+                                            {item.phuDe && (
+                                                <span className="text-[10px] text-amber-700 font-medium truncate">
+                                                    📌 {item.phuDe}
+                                                </span>
+                                            )}
+                                        </div>
                                         {isSelected && <Check className="w-4 h-4 text-emerald-600 shrink-0 ml-1.5 stroke-[2.5]" />}
                                     </button>
                                 );
@@ -934,19 +946,45 @@ function NoiDungTrangTaiKhoan() {
         return '';
     }, [formDiaChi.diaChiChiTiet, daChamDiaChi.diaChiChiTiet]);
 
+    const [cheDoDiaGioi, setCheDoDiaGioi] = useState('v2'); // 'v2' (API v2 - 34 Tỉnh sau sáp nhập) hoặc 'v1' (63 Tỉnh truyền thống)
     const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP);
     const [danhSachQuan, setDanhSachQuan] = useState([]);
     const [danhSachXa, setDanhSachXa] = useState([]);
 
+    // 1. Tải danh sách tỉnh thành theo chuẩn đang chọn (mặc định V2 - 34 Tỉnh/TP sau sáp nhập)
     useEffect(() => {
         let isMounted = true;
-        DiaGioiHanhChinhService.layDanhSachTinhThanhAsync().then(res => {
-            if (isMounted && Array.isArray(res) && res.length > 0) {
-                setDanhSachTinh(res);
-            }
-        });
+        if (cheDoDiaGioi === 'v2') {
+            DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async().then(res => {
+                if (isMounted && Array.isArray(res) && res.length > 0) {
+                    setDanhSachTinh(res);
+                }
+            });
+        } else {
+            DiaGioiHanhChinhService.layDanhSachTinhThanhAsync().then(res => {
+                if (isMounted && Array.isArray(res) && res.length > 0) {
+                    setDanhSachTinh(res);
+                }
+            });
+        }
         return () => { isMounted = false; };
-    }, []);
+    }, [cheDoDiaGioi]);
+
+    // Chuyển đổi giữa 2 chuẩn địa giới (v2 34 tỉnh vs v1 63 tỉnh)
+    const doiCheDoDiaGioi = async (cheDoMoi) => {
+        if (cheDoMoi === cheDoDiaGioi) return;
+        setCheDoDiaGioi(cheDoMoi);
+        setFormDiaChi(prev => ({ ...prev, tinhThanh: '', quanHuyen: '', phuongXa: '' }));
+        setDanhSachQuan([]);
+        setDanhSachXa([]);
+        if (cheDoMoi === 'v2') {
+            const dsV2 = await DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async();
+            setDanhSachTinh(dsV2 || DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP);
+        } else {
+            const dsV1 = await DiaGioiHanhChinhService.layDanhSachTinhThanhAsync();
+            setDanhSachTinh(dsV1 || DANH_SACH_63_TINH_THANH_CHUAN);
+        }
+    };
 
     useEffect(() => {
         if (nguoiDung?.danhSachDiaChi && nguoiDung.danhSachDiaChi.length > 0) {
@@ -970,18 +1008,29 @@ function NoiDungTrangTaiKhoan() {
 
     const chonTinhThanh = async (tinh) => {
         setFormDiaChi(prev => ({ ...prev, tinhThanh: tinh.name, quanHuyen: '', phuongXa: '' }));
+        setDanhSachQuan([]);
         setDanhSachXa([]);
-        if (tinh.code) {
-            const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(tinh.code);
-            setDanhSachXa(dsXa || []);
+
+        if (cheDoDiaGioi === 'v2') {
+            if (tinh.code) {
+                const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(tinh.code);
+                setDanhSachXa(dsXa || []);
+            }
+        } else {
+            if (tinh.code) {
+                const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(tinh.code);
+                setDanhSachQuan(dsQuan || []);
+            }
         }
     };
 
     const chonQuanHuyen = async (quan) => {
         setFormDiaChi(prev => ({ ...prev, quanHuyen: quan.name, phuongXa: '' }));
         setDanhSachXa([]);
-        const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(quan.code);
-        setDanhSachXa(dsXa || []);
+        if (quan.code) {
+            const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(quan.code);
+            setDanhSachXa(dsXa || []);
+        }
     };
 
     const chonPhuongXa = (xa) => {
@@ -991,6 +1040,7 @@ function NoiDungTrangTaiKhoan() {
     const batDauThemDiaChi = () => {
         setIdDiaChiSua(null);
         setDaChamDiaChi({ hoTen: false, soDienThoai: false, diaChiChiTiet: false });
+        setCheDoDiaGioi('v2');
         setFormDiaChi({
             hoTen: hoTen || '',
             soDienThoai: soDienThoai || '',
@@ -1001,6 +1051,7 @@ function NoiDungTrangTaiKhoan() {
             macDinh: danhSachDiaChi.length === 0,
             loaiDiaChi: 'nha_rieng'
         });
+        setDanhSachQuan([]);
         setDanhSachXa([]);
         setDangMoFormDiaChi(true);
     };
@@ -1008,6 +1059,10 @@ function NoiDungTrangTaiKhoan() {
     const batDauSuaDiaChi = async (dc) => {
         setIdDiaChiSua(dc.id);
         setDaChamDiaChi({ hoTen: false, soDienThoai: false, diaChiChiTiet: false });
+        const laV1 = Boolean(dc.quanHuyen && dc.quanHuyen.trim());
+        const cheDo = laV1 ? 'v1' : 'v2';
+        setCheDoDiaGioi(cheDo);
+
         setFormDiaChi({
             hoTen: dc.hoTen,
             soDienThoai: dc.soDienThoai,
@@ -1020,12 +1075,32 @@ function NoiDungTrangTaiKhoan() {
         });
         setDangMoFormDiaChi(true);
 
-        if (dc.tinhThanh) {
-            const listTinh = danhSachTinh.length > 0 ? danhSachTinh : DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP;
-            const foundTinh = listTinh.find(t => khopTuKhoaDiaChi(t, dc.tinhThanh));
-            if (foundTinh) {
-                const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(foundTinh.code);
-                setDanhSachXa(dsXa || []);
+        if (cheDo === 'v2') {
+            const listTinhV2 = await DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async();
+            setDanhSachTinh(listTinhV2);
+            if (dc.tinhThanh) {
+                const foundTinh = listTinhV2.find(t => khopTuKhoaDiaChi(t, dc.tinhThanh));
+                if (foundTinh) {
+                    const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(foundTinh.code);
+                    setDanhSachXa(dsXa || []);
+                }
+            }
+        } else {
+            const listTinhV1 = await DiaGioiHanhChinhService.layDanhSachTinhThanhAsync();
+            setDanhSachTinh(listTinhV1);
+            if (dc.tinhThanh) {
+                const foundTinh = listTinhV1.find(t => khopTuKhoaDiaChi(t, dc.tinhThanh));
+                if (foundTinh) {
+                    const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(foundTinh.code);
+                    setDanhSachQuan(dsQuan || []);
+                    if (dc.quanHuyen) {
+                        const foundQuan = (dsQuan || []).find(q => khopTuKhoaDiaChi(q, dc.quanHuyen));
+                        if (foundQuan) {
+                            const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(foundQuan.code);
+                            setDanhSachXa(dsXa || []);
+                        }
+                    }
+                }
             }
         }
     };
@@ -1045,8 +1120,18 @@ function NoiDungTrangTaiKhoan() {
             return;
         }
 
-        if (!formDiaChi.tinhThanh || !formDiaChi.phuongXa) {
-            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn đầy đủ Tỉnh/Thành phố và Phường/Xã!' });
+        if (!formDiaChi.tinhThanh) {
+            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Tỉnh/Thành phố!' });
+            return;
+        }
+
+        if (cheDoDiaGioi === 'v1' && !formDiaChi.quanHuyen) {
+            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Quận/Huyện!' });
+            return;
+        }
+
+        if (!formDiaChi.phuongXa) {
+            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Phường/Xã!' });
             return;
         }
 
@@ -2591,38 +2676,124 @@ function NoiDungTrangTaiKhoan() {
                                         </div>
                                     </div>
 
-                                    {/* PHÂN VÙNG 2: ĐỊA GIỚI HÀNH CHÍNH (TONE EMERALD/TEAL) - CHUẨN API V2 SAU SÁP NHẬP */}
+                                    {/* PHÂN VÙNG 2: ĐỊA GIỚI HÀNH CHÍNH (TONE EMERALD/TEAL) - CHUẨN API V2 VÀ V1 */}
                                     <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200/80 space-y-2.5">
-                                        <div className="flex flex-wrap items-center justify-between gap-1.5">
+                                        <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-emerald-200/60">
                                             <div className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
                                                 <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                                                <span>2. Địa Giới Hành Chính (Chuẩn Sau Sáp Nhập)</span>
+                                                <span>2. Địa Giới Hành Chính</span>
                                             </div>
-                                            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black border border-emerald-300 flex items-center gap-1">
-                                                <Zap className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                                                <span>API v2 Mới Nhất • 34 Tỉnh/TP</span>
-                                            </span>
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <BoChonDiaGioi
-                                                label="Tỉnh / Thành phố (Sau sáp nhập) *"
-                                                icon={Building2}
-                                                danhSach={danhSachTinh}
-                                                giaTri={formDiaChi.tinhThanh}
-                                                onChon={chonTinhThanh}
-                                                placeholder="Chọn Tỉnh / TP..."
-                                            />
 
-                                            <BoChonDiaGioi
-                                                label="Phường / Xã (Chuẩn hành chính mới) *"
-                                                icon={Home}
-                                                danhSach={danhSachXa}
-                                                giaTri={formDiaChi.phuongXa}
-                                                onChon={chonPhuongXa}
-                                                placeholder={formDiaChi.tinhThanh ? `Chọn Phường / Xã (${danhSachXa.length} nơi)...` : "Vui lòng chọn Tỉnh / TP trước"}
-                                                disabled={!formDiaChi.tinhThanh}
-                                            />
+                                            {/* Tab chuyển đổi chuẩn địa giới: Chuẩn Mới 34 Tỉnh/TP vs Chuẩn 63 Tỉnh/TP */}
+                                            <div className="flex items-center gap-1 p-0.5 bg-emerald-100/80 rounded-xl border border-emerald-300">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => doiCheDoDiaGioi('v2')}
+                                                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black transition-all cursor-pointer flex items-center gap-1 ${
+                                                        cheDoDiaGioi === 'v2'
+                                                            ? 'bg-emerald-700 text-white shadow-xs'
+                                                            : 'text-emerald-900 hover:bg-emerald-200/60'
+                                                    }`}
+                                                    title="Chuẩn API v2 sau sáp nhập - 34 Tỉnh/Thành phố trực thuộc Trung ương"
+                                                >
+                                                    <Zap className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                                                    <span>API v2 (34 Tỉnh/TP Mới)</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => doiCheDoDiaGioi('v1')}
+                                                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black transition-all cursor-pointer flex items-center gap-1 ${
+                                                        cheDoDiaGioi === 'v1'
+                                                            ? 'bg-blue-700 text-white shadow-xs'
+                                                            : 'text-emerald-900 hover:bg-emerald-200/60'
+                                                    }`}
+                                                    title="Chuẩn hành chính 63 Tỉnh/Thành phố truyền thống (Có Tỉnh Bến Tre, Tiền Giang, Long An...)"
+                                                >
+                                                    <span>63 Tỉnh/TP (Truyền Thống)</span>
+                                                </button>
+                                            </div>
                                         </div>
+
+                                        {/* Ghi chú chỉ dẫn sáp nhập thông minh khi ở chế độ V2 */}
+                                        {cheDoDiaGioi === 'v2' ? (
+                                            <>
+                                                <div className="p-2 rounded-lg bg-emerald-100/60 border border-emerald-300/80 text-[10.5px] text-emerald-900 flex items-start gap-1.5 leading-relaxed">
+                                                    <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <span className="font-black">Lưu ý chuẩn API v2: </span>
+                                                        <span>
+                                                            Theo cấu trúc mới, 63 tỉnh cũ được sáp nhập thành 34 tỉnh/TP. 
+                                                            Khu vực <strong>Bến Tre, Trà Vinh</strong> thuộc <strong>Tỉnh Vĩnh Long</strong>; 
+                                                            <strong> Tiền Giang</strong> thuộc <strong>Tỉnh Đồng Tháp</strong>; 
+                                                            <strong> Bình Dương</strong> thuộc <strong>TP. Hồ Chí Minh</strong>; 
+                                                            <strong> Long An</strong> thuộc <strong>Tây Ninh</strong>.
+                                                            (Hoặc bấm tab <strong>63 Tỉnh/TP (Truyền Thống)</strong> ở trên nếu muốn chọn riêng Tỉnh Bến Tre).
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    <BoChonDiaGioi
+                                                        label="Tỉnh / Thành phố (34 Tỉnh/TP Sau Sáp Nhập) *"
+                                                        icon={Building2}
+                                                        danhSach={danhSachTinh}
+                                                        giaTri={formDiaChi.tinhThanh}
+                                                        onChon={chonTinhThanh}
+                                                        placeholder="Gõ tìm Tỉnh/TP (VD: Vĩnh Long, Hà Nội, HCM...)"
+                                                    />
+
+                                                    <BoChonDiaGioi
+                                                        label="Phường / Xã (Chuẩn hành chính mới) *"
+                                                        icon={Home}
+                                                        danhSach={danhSachXa}
+                                                        giaTri={formDiaChi.phuongXa}
+                                                        onChon={chonPhuongXa}
+                                                        placeholder={formDiaChi.tinhThanh ? `Chọn Phường / Xã (${danhSachXa.length} nơi)...` : "Vui lòng chọn Tỉnh / TP trước"}
+                                                        disabled={!formDiaChi.tinhThanh}
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-[10.5px] text-blue-900 flex items-center gap-1.5 leading-tight">
+                                                    <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                                    <span>
+                                                        Chuẩn 63 Tỉnh/Thành phố truyền thống (3 cấp: Tỉnh ➔ Quận/Huyện ➔ Phường/Xã đầy đủ như Tỉnh Bến Tre, Tiền Giang, Long An...).
+                                                    </span>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                    <BoChonDiaGioi
+                                                        label="Tỉnh / Thành phố (63 Tỉnh) *"
+                                                        icon={Building2}
+                                                        danhSach={danhSachTinh}
+                                                        giaTri={formDiaChi.tinhThanh}
+                                                        onChon={chonTinhThanh}
+                                                        placeholder="Chọn Tỉnh / TP..."
+                                                    />
+
+                                                    <BoChonDiaGioi
+                                                        label="Quận / Huyện *"
+                                                        icon={Compass}
+                                                        danhSach={danhSachQuan}
+                                                        giaTri={formDiaChi.quanHuyen}
+                                                        onChon={chonQuanHuyen}
+                                                        placeholder={formDiaChi.tinhThanh ? `Chọn Quận / Huyện (${danhSachQuan.length})...` : "Chọn Tỉnh trước"}
+                                                        disabled={!formDiaChi.tinhThanh}
+                                                    />
+
+                                                    <BoChonDiaGioi
+                                                        label="Phường / Xã *"
+                                                        icon={Home}
+                                                        danhSach={danhSachXa}
+                                                        giaTri={formDiaChi.phuongXa}
+                                                        onChon={chonPhuongXa}
+                                                        placeholder={formDiaChi.quanHuyen ? `Chọn Phường / Xã (${danhSachXa.length})...` : "Chọn Huyện trước"}
+                                                        disabled={!formDiaChi.quanHuyen}
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
 
                                     {/* PHÂN VÙNG 3: ĐỊA CHỈ CHI TIẾT (TONE PURPLE) */}

@@ -8,6 +8,8 @@ import { formatCurrency, dinhDangTienVND, calculateSavings, tinhTienTietKiem } f
 import { useCart, useGioHang } from '@/contexts/CartContext';
 import { useCompare, useSoSanh } from '@/contexts/CompareContext';
 import { useWishlist, useYeuThich } from '@/contexts/WishlistContext';
+import { useNguoiDung } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import ThuVienAnhSanPham from '@/components/san-pham/ThuVienAnhSanPham';
 import BangThongSoKyThuat from '@/components/san-pham/BangThongSoKyThuat';
 import KhoHangChiNhanh from '@/components/san-pham/KhoHangChiNhanh';
@@ -15,6 +17,7 @@ import DanhGiaSanPham from '@/components/san-pham/DanhGiaSanPham';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 export default function TrangChiTietSanPham({ params }) {
     const router = useRouter();
+    const { nguoiDung, moModalDangNhap } = useNguoiDung();
     const rawParams = use(params);
     const id = rawParams?.id ? decodeURIComponent(rawParams.id).trim() : '';
 
@@ -135,6 +138,18 @@ export default function TrangChiTietSanPham({ params }) {
     const xuLyMuaNgay = () => {
         themVaoGioHang(sanPham, tuyChonChon, 1);
         router.push('/gio-hang');
+    };
+
+    // Mua trả góp kiểm tra đăng nhập trước khi vào thanh toán
+    const xuLyMuaTraGop = (e) => {
+        if (e && e.preventDefault) e.preventDefault();
+        themVaoGioHang(sanPham, tuyChonChon, 1);
+        if (!nguoiDung) {
+            toast.info('Quý khách vui lòng đăng nhập tài khoản để mua hàng & xét duyệt trả góp!');
+            moModalDangNhap();
+            return;
+        }
+        router.push('/thanh-toan');
     };
     const sanPhamLienQuan = SanPhamService.laySanPhamTuongTu(sanPham.id, 4);
     const thuVienAnh = Array.isArray(sanPham.thu_vien_hinh_anh) && sanPham.thu_vien_hinh_anh.length > 0
@@ -355,14 +370,14 @@ export default function TrangChiTietSanPham({ params }) {
                 <span>THÊM VÀO GIỎ HÀNG</span>
               </button>
 
-              <Link
-                href="/thanh-toan"
-                onClick={() => themVaoGioHang(sanPham, tuyChonChon, 1)}
-                className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white border border-slate-800 dark:border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-colors text-center"
+              <button
+                type="button"
+                onClick={xuLyMuaTraGop}
+                className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white border border-slate-800 dark:border-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition-colors text-center cursor-pointer"
               >
                 <CreditCard className="w-4 h-4 text-amber-400"/>
                 <span>MUA TRẢ GÓP 0% LÃI SUẤT</span>
-              </Link>
+              </button>
             </div>
 
             {/* Nút So Sánh & Yêu Thích Nhanh */}

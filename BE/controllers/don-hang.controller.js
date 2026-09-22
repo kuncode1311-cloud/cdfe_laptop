@@ -92,6 +92,15 @@ const taoDonHangMoi = async (req, res) => {
     try {
         const duLieuDonHang = req.body;
 
+        // Bắt buộc đăng nhập: Khách hàng phải có id_nguoi_dung mới được tạo đơn hàng
+        const idNguoiDung = duLieuDonHang.id_nguoi_dung;
+        if (!idNguoiDung || String(idNguoiDung).trim() === '') {
+            return res.status(401).json({
+                thong_diep: 'Quý khách vui lòng đăng nhập tài khoản trước khi đặt hàng!',
+                yeu_cau_dang_nhap: true
+            });
+        }
+
         // Tự sinh id và mã đơn nếu FE chưa truyền
         if (!duLieuDonHang.id) {
             duLieuDonHang.id = `dh-${Date.now()}`;

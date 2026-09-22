@@ -67,6 +67,10 @@ export const DonHangService = {
                 } catch {}
             }
 
+            if (!idNguoiDung) {
+                throw new Error('Quý khách vui lòng đăng nhập tài khoản trước khi đặt hàng!');
+            }
+
             donHangMoi = {
                 id: `dh-${Date.now()}`,
                 ma_don_hang: maDon,

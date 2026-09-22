@@ -2973,6 +2973,7 @@ export default function TrangQuanTriCuaHang() {
             const payloadDonHang = {
                 id: donHangDangSua ? (donHangDangSua.id || donHangDangSua._id) : `dh_admin_${Date.now()}`,
                 ma_don_hang: donHangDangSua ? donHangDangSua.ma_don_hang : `LPN-${Date.now().toString().slice(-4)}`,
+                id_nguoi_dung: donHangDangSua?.id_nguoi_dung || 'admin_root',
                 thong_tin_giao_hang: {
                     ho_ten: formDonHang.ho_ten,
                     so_dien_thoai: formDonHang.so_dien_thoai,

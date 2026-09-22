@@ -71,7 +71,59 @@ export const DANH_SACH_63_TINH_THANH_CHUAN = [
     { code: 96, name: 'Tỉnh Cà Mau', codename: 'tinh_ca_mau' }
 ];
 
-export const DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP = DANH_SACH_63_TINH_THANH_CHUAN;
+// Danh mục 34 Tỉnh / Thành phố Việt Nam Chuẩn API v2 (Sau sáp nhập hành chính)
+// API endpoint nguồn chính thức: https://provinces.open-api.vn/api/v2/
+export const DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP = [
+    { code: 1, name: 'Thành phố Hà Nội', codename: 'ha_noi', division_type: 'thành phố trung ương' },
+    { code: 4, name: 'Tỉnh Cao Bằng', codename: 'cao_bang', division_type: 'tỉnh' },
+    { code: 8, name: 'Tỉnh Tuyên Quang', codename: 'tuyen_quang', division_type: 'tỉnh', phuDe: 'Bao gồm Hà Giang cũ' },
+    { code: 11, name: 'Tỉnh Điện Biên', codename: 'dien_bien', division_type: 'tỉnh' },
+    { code: 12, name: 'Tỉnh Lai Châu', codename: 'lai_chau', division_type: 'tỉnh' },
+    { code: 14, name: 'Tỉnh Sơn La', codename: 'son_la', division_type: 'tỉnh' },
+    { code: 15, name: 'Tỉnh Lào Cai', codename: 'lao_cai', division_type: 'tỉnh', phuDe: 'Bao gồm Yên Bái cũ' },
+    { code: 19, name: 'Tỉnh Thái Nguyên', codename: 'thai_nguyen', division_type: 'tỉnh', phuDe: 'Bao gồm Bắc Kạn cũ' },
+    { code: 20, name: 'Tỉnh Lạng Sơn', codename: 'lang_son', division_type: 'tỉnh' },
+    { code: 22, name: 'Thành phố Quảng Ninh', codename: 'quang_ninh', division_type: 'thành phố trung ương' },
+    { code: 24, name: 'Thành phố Bắc Ninh', codename: 'bac_ninh', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Bắc Giang cũ' },
+    { code: 25, name: 'Tỉnh Phú Thọ', codename: 'phu_tho', division_type: 'tỉnh', phuDe: 'Bao gồm Hòa Bình, Vĩnh Phúc cũ' },
+    { code: 31, name: 'Thành phố Hải Phòng', codename: 'hai_phong', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Hải Dương cũ' },
+    { code: 33, name: 'Tỉnh Hưng Yên', codename: 'hung_yen', division_type: 'tỉnh', phuDe: 'Bao gồm Thái Bình cũ' },
+    { code: 37, name: 'Tỉnh Ninh Bình', codename: 'ninh_binh', division_type: 'tỉnh', phuDe: 'Bao gồm Hà Nam, Nam Định cũ' },
+    { code: 38, name: 'Tỉnh Thanh Hóa', codename: 'thanh_hoa', division_type: 'tỉnh' },
+    { code: 40, name: 'Tỉnh Nghệ An', codename: 'nghe_an', division_type: 'tỉnh' },
+    { code: 42, name: 'Tỉnh Hà Tĩnh', codename: 'ha_tinh', division_type: 'tỉnh' },
+    { code: 44, name: 'Tỉnh Quảng Trị', codename: 'quang_tri', division_type: 'tỉnh', phuDe: 'Bao gồm Quảng Bình cũ' },
+    { code: 46, name: 'Thành phố Huế', codename: 'hue', division_type: 'thành phố trung ương' },
+    { code: 48, name: 'Thành phố Đà Nẵng', codename: 'da_nang', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Quảng Nam cũ' },
+    { code: 51, name: 'Tỉnh Quảng Ngãi', codename: 'quang_ngai', division_type: 'tỉnh', phuDe: 'Bao gồm Bình Định, Phú Yên cũ' },
+    { code: 52, name: 'Tỉnh Gia Lai', codename: 'gia_lai', division_type: 'tỉnh', phuDe: 'Bao gồm Kon Tum cũ' },
+    { code: 56, name: 'Tỉnh Khánh Hòa', codename: 'khanh_hoa', division_type: 'tỉnh', phuDe: 'Bao gồm Ninh Thuận, Bình Thuận cũ' },
+    { code: 66, name: 'Tỉnh Đắk Lắk', codename: 'dak_lak', division_type: 'tỉnh', phuDe: 'Bao gồm Đắk Nông cũ' },
+    { code: 68, name: 'Tỉnh Lâm Đồng', codename: 'lam_dong', division_type: 'tỉnh' },
+    { code: 75, name: 'Thành phố Đồng Nai', codename: 'dong_nai', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Bà Rịa - Vũng Tàu, Bình Phước cũ' },
+    { code: 79, name: 'Thành phố Hồ Chí Minh', codename: 'ho_chi_minh', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Bình Dương cũ' },
+    { code: 80, name: 'Tỉnh Tây Ninh', codename: 'tay_ninh', division_type: 'tỉnh', phuDe: 'Bao gồm Long An cũ' },
+    { code: 82, name: 'Tỉnh Đồng Tháp', codename: 'dong_thap', division_type: 'tỉnh', phuDe: 'Bao gồm Tiền Giang cũ' },
+    { code: 86, name: 'Tỉnh Vĩnh Long', codename: 'vinh_long', division_type: 'tỉnh', phuDe: 'Bao gồm Bến Tre, Trà Vinh cũ' },
+    { code: 91, name: 'Tỉnh An Giang', codename: 'an_giang', division_type: 'tỉnh', phuDe: 'Bao gồm Kiên Giang cũ' },
+    { code: 92, name: 'Thành phố Cần Thơ', codename: 'can_tho', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Hậu Giang cũ' },
+    { code: 96, name: 'Tỉnh Cà Mau', codename: 'ca_mau', division_type: 'tỉnh', phuDe: 'Bao gồm Sóc Trăng, Bạc Liêu cũ' }
+];
+
+// Bản đồ tra cứu nhanh địa giới cũ sang tỉnh mới theo chuẩn API v2
+export const TRA_CUU_SAP_NHAP_V2 = {
+    'ben_tre': { tenMoi: 'Tỉnh Vĩnh Long', codeMoi: 86, ghiChu: 'Bến Tre sáp nhập vào Tỉnh Vĩnh Long (gồm Phường Bến Tre, Xã Mỏ Cày, Xã Ba Tri...)' },
+    'tra_vinh': { tenMoi: 'Tỉnh Vĩnh Long', codeMoi: 86, ghiChu: 'Trà Vinh sáp nhập vào Tỉnh Vĩnh Long' },
+    'tien_giang': { tenMoi: 'Tỉnh Đồng Tháp', codeMoi: 82, ghiChu: 'Tiền Giang sáp nhập vào Tỉnh Đồng Tháp (gồm Phường Mỹ Tho, Gò Công...)' },
+    'long_an': { tenMoi: 'Tỉnh Tây Ninh', codeMoi: 80, ghiChu: 'Long An sáp nhập vào Tỉnh Tây Ninh (gồm Phường Tân An, Xã Bến Lức...)' },
+    'binh_duong': { tenMoi: 'Thành phố Hồ Chí Minh', codeMoi: 79, ghiChu: 'Bình Dương sáp nhập vào TP. Hồ Chí Minh (gồm Phường Thủ Dầu Một...)' },
+    'ba_ria_vung_tau': { tenMoi: 'Thành phố Đồng Nai', codeMoi: 75, ghiChu: 'Bà Rịa - Vũng Tàu sáp nhập vào TP. Đồng Nai' },
+    'binh_phuoc': { tenMoi: 'Thành phố Đồng Nai', codeMoi: 75, ghiChu: 'Bình Phước sáp nhập vào TP. Đồng Nai' },
+    'soc_trang': { tenMoi: 'Tỉnh Cà Mau', codeMoi: 96, ghiChu: 'Sóc Trăng sáp nhập vào Tỉnh Cà Mau' },
+    'bac_lieu': { tenMoi: 'Tỉnh Cà Mau', codeMoi: 96, ghiChu: 'Bạc Liêu sáp nhập vào Tỉnh Cà Mau' },
+    'hau_giang': { tenMoi: 'Thành phố Cần Thơ', codeMoi: 92, ghiChu: 'Hậu Giang sáp nhập vào TP. Cần Thơ' },
+    'kien_giang': { tenMoi: 'Tỉnh An Giang', codeMoi: 91, ghiChu: 'Kiên Giang sáp nhập vào Tỉnh An Giang' }
+};
 
 // Helper xóa dấu tiếng Việt chuẩn quốc tế
 export const xoaDauTiengViet = (str = '') => {
@@ -101,11 +153,13 @@ const TU_KHOA_VIET_TAT = {
     bn: 'bac ninh'
 };
 
-// Hàm lọc tìm kiếm Realtime thông minh (khớp chính xác, không dấu, từng từ, viết tắt)
+// Hàm lọc tìm kiếm Realtime thông minh (khớp chính xác, không dấu, từng từ, viết tắt, phụ đề sáp nhập)
 export const khopTuKhoaDiaChi = (item, tuKhoa = '') => {
     if (!tuKhoa || !tuKhoa.trim()) return true;
     const ten = typeof item === 'string' ? item : (item?.name || item?.ten || '');
-    const tenKhongDau = xoaDauTiengViet(ten);
+    const phuDe = typeof item === 'object' ? (item?.phuDe || item?.ghiChu || '') : '';
+    const chuoiTongHop = `${ten} ${phuDe}`;
+    const tenKhongDau = xoaDauTiengViet(chuoiTongHop);
     const tuKhoaRaw = xoaDauTiengViet(tuKhoa);
 
     if (!tuKhoaRaw) return true;
@@ -116,7 +170,7 @@ export const khopTuKhoaDiaChi = (item, tuKhoa = '') => {
         return true;
     }
 
-    // 2. Khớp từng từ tách biệt (Ví dụ "ben tre" -> ["ben", "tre"] đều xuất hiện trong "tinh ben tre")
+    // 2. Khớp từng từ tách biệt (Ví dụ "ben tre" -> ["ben", "tre"] đều xuất hiện trong "tinh vinh long bao gom ben tre")
     const cacTu = tuKhoaRaw.split(/\s+/).filter(Boolean);
     if (cacTu.length > 0 && cacTu.every(tu => tenKhongDau.includes(tu))) {
         return true;
@@ -128,8 +182,11 @@ export const khopTuKhoaDiaChi = (item, tuKhoa = '') => {
 // Bộ nhớ đệm tĩnh chống race condition và duplicate items
 let cacheTinhThanhData = null;
 let cacheTinhThanhPromise = null;
+let cacheTinhThanhV2Data = null;
+let cacheTinhThanhV2Promise = null;
 const cacheQuanHuyenMap = new Map();
 const cachePhuongXaMap = new Map();
+const cachePhuongXaV2Map = new Map();
 
 // Hàm loại bỏ phần tử trùng lặp theo `code` hoặc `name`
 const khuTrungLap = (danhSach = []) => {
@@ -146,7 +203,7 @@ const khuTrungLap = (danhSach = []) => {
 
 export const DiaGioiHanhChinhService = {
     /**
-     * Lấy danh sách 63 Tỉnh/Thành phố Việt Nam (Có chống tải lặp & khử trùng key)
+     * Lấy danh sách 63 Tỉnh/Thành phố Việt Nam (API v1 - Chuẩn truyền thống 3 cấp)
      */
     async layDanhSachTinhThanhAsync() {
         if (cacheTinhThanhData && cacheTinhThanhData.length > 0) {
@@ -183,7 +240,79 @@ export const DiaGioiHanhChinhService = {
     },
 
     /**
-     * Lấy danh sách Quận / Huyện theo mã Tỉnh
+     * Lấy danh sách 34 Tỉnh/Thành phố Việt Nam Chuẩn API v2 (Sau sáp nhập hành chính)
+     */
+    async layDanhSachTinhThanhV2Async() {
+        if (cacheTinhThanhV2Data && cacheTinhThanhV2Data.length > 0) {
+            return cacheTinhThanhV2Data;
+        }
+
+        if (cacheTinhThanhV2Promise) {
+            return cacheTinhThanhV2Promise;
+        }
+
+        cacheTinhThanhV2Promise = (async () => {
+            try {
+                const res = await fetch('https://provinces.open-api.vn/api/v2/', { cache: 'force-cache' });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        const dataV2 = data.map(tinh => {
+                            const found = DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP.find(s => s.code === tinh.code);
+                            return {
+                                ...tinh,
+                                phuDe: found?.phuDe || ''
+                            };
+                        });
+                        cacheTinhThanhV2Data = khuTrungLap(dataV2);
+                        return cacheTinhThanhV2Data;
+                    }
+                }
+            } catch (err) {
+                console.warn('Sử dụng bộ 34 tỉnh thành chuẩn API v2 dự phòng:', err.message);
+            }
+
+            cacheTinhThanhV2Data = khuTrungLap(DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP);
+            return cacheTinhThanhV2Data;
+        })();
+
+        try {
+            return await cacheTinhThanhV2Promise;
+        } finally {
+            cacheTinhThanhV2Promise = null;
+        }
+    },
+
+    /**
+     * Lấy danh sách Phường/Xã trực tiếp theo mã Tỉnh (API v2 - Mô hình 2 Cấp Hành Chính)
+     * Ví dụ: Mã 86 (Tỉnh Vĩnh Long) sẽ trả về toàn bộ Phường/Xã gồm cả Phường Bến Tre, Xã Mỏ Cày, Xã Ba Tri...
+     */
+    async layDanhSachPhuongXaTheoTinhAsync(maTinh) {
+        if (!maTinh) return [];
+        const key = `v2_p_${maTinh}`;
+        if (cachePhuongXaV2Map.has(key)) {
+            return cachePhuongXaV2Map.get(key);
+        }
+
+        try {
+            const res = await fetch(`https://provinces.open-api.vn/api/v2/p/${maTinh}?depth=2`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && Array.isArray(data.wards)) {
+                    const danhSach = khuTrungLap(data.wards);
+                    cachePhuongXaV2Map.set(key, danhSach);
+                    return danhSach;
+                }
+            }
+        } catch (err) {
+            console.warn(`Lỗi nạp Phường/Xã API v2 của tỉnh ${maTinh}:`, err.message);
+        }
+
+        return [];
+    },
+
+    /**
+     * Lấy danh sách Quận / Huyện theo mã Tỉnh (API v1)
      */
     async layDanhSachQuanHuyenAsync(maTinh) {
         if (!maTinh) return [];
@@ -210,7 +339,7 @@ export const DiaGioiHanhChinhService = {
     },
 
     /**
-     * Lấy danh sách Phường / Xã theo mã Quận
+     * Lấy danh sách Phường / Xã theo mã Quận (API v1)
      */
     async layDanhSachPhuongXaAsync(maQuan) {
         if (!maQuan) return [];
@@ -236,3 +365,4 @@ export const DiaGioiHanhChinhService = {
         return [];
     }
 };
+

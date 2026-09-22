@@ -1,12 +1,27 @@
 'use client';
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowRight, ShieldCheck, Truck, Lock, Sparkles, CheckCircle2, Award, Zap } from 'lucide-react';
 import { useGioHang } from '@/contexts/CartContext';
+import { useNguoiDung } from '@/contexts/AuthContext';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
+import { toast } from 'sonner';
 
 export default function TomTatThanhToan() {
+    const router = useRouter();
     const { gio_hang } = useGioHang();
+    const { nguoiDung, moModalDangNhap } = useNguoiDung();
+
+    const xuLyTienHanhThanhToan = (e) => {
+        e.preventDefault();
+        if (!nguoiDung) {
+            toast.error('Quý khách vui lòng Đăng Nhập tài khoản để tiến hành đặt hàng!');
+            moModalDangNhap();
+            return;
+        }
+        router.push('/thanh-toan');
+    };
 
     return (
         <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 shadow-md overflow-hidden bg-white dark:bg-slate-900">
@@ -87,14 +102,19 @@ export default function TomTatThanhToan() {
 
                 {/* Nút Tiến Hành Thanh Toán To Bự Rực Rỡ */}
                 {gio_hang.danh_sach_muc.length > 0 ? (
-                    <Link
-                        href="/thanh-toan"
-                        className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-700 hover:to-rose-700 text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-xl shadow-red-500/30 transition-all hover:scale-[1.01] text-center cursor-pointer active:scale-98"
+                    <button
+                        type="button"
+                        onClick={xuLyTienHanhThanhToan}
+                        className={`w-full py-4 px-4 rounded-xl text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-xl transition-all hover:scale-[1.01] text-center cursor-pointer active:scale-98 ${
+                            !nguoiDung
+                                ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-700 hover:to-orange-700 shadow-amber-500/30'
+                                : 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-700 hover:to-rose-700 shadow-red-500/30'
+                        }`}
                     >
                         <Lock className="w-4 h-4" />
-                        <span>TIẾN HÀNH THANH TOÁN</span>
+                        <span>{!nguoiDung ? 'ĐĂNG NHẬP ĐỂ THANH TOÁN' : 'TIẾN HÀNH THANH TOÁN'}</span>
                         <ArrowRight className="w-4 h-4" />
-                    </Link>
+                    </button>
                 ) : (
                     <button
                         disabled
