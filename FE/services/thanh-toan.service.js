@@ -19,7 +19,8 @@ export const ThanhToanService = {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(thongTinDon)
+                body: JSON.stringify(thongTinDon),
+                signal: AbortSignal.timeout(3000)
             });
 
             if (res.ok) {
@@ -29,10 +30,10 @@ export const ThanhToanService = {
                 }
             }
         } catch (err) {
-            console.warn('⚠️ Lỗi gọi API tạo link PayOS Backend, chuyển sang chế độ dự phòng VietQR:', err.message);
+            console.warn('⚠️ Backend PayOS phản hồi chậm (>3s), lập tức kích hoạt VietQR tức thì:', err.message);
         }
 
-        // Dự phòng tự tạo VietQR trực tiếp nếu Backend chưa phản hồi
+        // Dự phòng tự tạo VietQR trực tiếp siêu tốc 0ms nếu Backend chưa kịp phản hồi
         const amount = Math.max(1000, Math.round(Number(thongTinDon.tong_tien) || 0));
         const codeSuffix = thongTinDon.ma_don_hang ? thongTinDon.ma_don_hang.slice(-6) : Math.floor(100000 + Math.random() * 900000);
         const noiDung = `TRIKUN ${codeSuffix}`.slice(0, 25);
@@ -57,17 +58,19 @@ export const ThanhToanService = {
     },
 
     /**
-     * Kiểm tra trạng thái thanh toán từ PayOS
+     * Kiểm tra trạng thái thanh toán từ PayOS & Backend
      * @param {number|string} orderCode 
      */
     async kiemTraTrangThai(orderCode) {
         try {
-            const res = await fetch(`${API_BASE_URL}/thanh-toan/kiem-tra/${encodeURIComponent(orderCode)}`);
+            const res = await fetch(`${API_BASE_URL}/thanh-toan/kiem-tra/${encodeURIComponent(orderCode)}`, {
+                signal: AbortSignal.timeout(2500)
+            });
             if (res.ok) {
                 return await res.json();
             }
         } catch (err) {
-            console.warn('⚠️ Lỗi gọi API kiểm tra trạng thái thanh toán:', err.message);
+            // Im lặng bỏ qua timeout để polling tiếp tục chu kỳ sau mượt mà
         }
         return { success: false, da_thanh_toan: false };
     }

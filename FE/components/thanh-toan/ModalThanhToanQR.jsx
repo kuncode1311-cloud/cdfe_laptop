@@ -99,7 +99,7 @@ export default function ModalThanhToanQR({
             }
         };
 
-        pollingRef.current = setInterval(kiemTra, 2500);
+        pollingRef.current = setInterval(kiemTra, 3000);
 
         return () => {
             if (pollingRef.current) clearInterval(pollingRef.current);
@@ -270,6 +270,7 @@ export default function ModalThanhToanQR({
                                         fill
                                         className="object-contain"
                                         priority
+                                        unoptimized
                                     />
                                     {/* Tia quét Laser Scan Line */}
                                     <div className="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-lg shadow-cyan-400/80 animate-[scan_2.5s_ease-in-out_infinite] pointer-events-none" />
