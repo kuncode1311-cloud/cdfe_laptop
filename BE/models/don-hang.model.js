@@ -86,6 +86,20 @@ const DonHangSchema = new mongoose.Schema(
             type: Boolean,
             default: false
         },
+        trang_thai_thanh_toan: {
+            type: String,
+            enum: ['chua_thanh_toan', 'cho_thanh_toan', 'da_thanh_toan', 'that_bai'],
+            default: 'chua_thanh_toan'
+        },
+        payos_order_code: {
+            type: Number,
+            default: null,
+            index: true
+        },
+        noi_dung_chuyen_khoan: {
+            type: String,
+            default: ''
+        },
         da_tru_ton_kho: {
             type: Boolean,
             default: false
@@ -104,6 +118,12 @@ const DonHangSchema = new mongoose.Schema(
         versionKey: false
     }
 );
+
+// Đánh Index tăng tốc độ truy vấn kiểm tra thanh toán tức thì
+DonHangSchema.index({ payos_order_code: 1 });
+DonHangSchema.index({ ma_don_hang: 1 });
+DonHangSchema.index({ id_nguoi_dung: 1 });
+DonHangSchema.index({ da_thanh_toan: 1 });
 
 const DonHang = mongoose.model('DonHang', DonHangSchema, 'don_hang');
 
