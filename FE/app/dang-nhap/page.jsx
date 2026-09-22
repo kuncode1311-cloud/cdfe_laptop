@@ -90,14 +90,46 @@ export default function TrangDangNhap() {
                 toast.success('Kích hoạt tài khoản thành công! 🎉 Chào mừng bạn gia nhập VIP.');
                 router.push('/khuyen-mai');
             } else {
-                if (!hoTen || !email || !soDienThoai || !matKhau) {
+                const hoTenClean = hoTen.trim();
+                const emailClean = email.trim().toLowerCase();
+                const sdtClean = soDienThoai.trim().replace(/\s+/g, '');
+                const mkClean = matKhau.trim();
+
+                if (!hoTenClean || !emailClean || !sdtClean || !mkClean) {
                     toast.error('Vui lòng điền đầy đủ các trường thông tin');
                     setDangXuLy(false);
                     return;
                 }
-                const res = await dangKy(hoTen, email, soDienThoai, matKhau);
+
+                if (hoTenClean.length < 2) {
+                    toast.error('Họ và tên phải có tối thiểu 2 ký tự!');
+                    setDangXuLy(false);
+                    return;
+                }
+
+                const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!regexEmail.test(emailClean)) {
+                    toast.error('Địa chỉ Email không đúng định dạng (VD: example@gmail.com)!');
+                    setDangXuLy(false);
+                    return;
+                }
+
+                const regexSdt = /^(0|\+84)[0-9]{9}$/;
+                if (!regexSdt.test(sdtClean)) {
+                    toast.error('Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số (VD: 0912345678).');
+                    setDangXuLy(false);
+                    return;
+                }
+
+                if (mkClean.length < 6) {
+                    toast.error('Mật khẩu phải có tối thiểu 6 ký tự!');
+                    setDangXuLy(false);
+                    return;
+                }
+
+                const res = await dangKy(hoTenClean, emailClean, sdtClean, mkClean);
                 if (res?.yeuCauOtp) {
-                    toast.success(res.thong_diep || `Mã kích hoạt OTP đã gửi tới ${email}. Vui lòng kiểm tra hộp thư!`);
+                    toast.success(res.thong_diep || `Mã kích hoạt OTP đã gửi tới ${emailClean}. Vui lòng kiểm tra hộp thư!`);
                     setCheDo('xac_thuc_otp');
                     setDemNguoc(90);
                     return;

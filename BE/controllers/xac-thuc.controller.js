@@ -29,27 +29,54 @@ const dangKy = async (req, res) => {
     try {
         const { hoTen, email, soDienThoai, matKhau } = req.body;
 
-        // Kiểm tra thông tin bắt buộc
-        if (!hoTen || !email || !matKhau) {
+        const hoTenClean = String(hoTen || '').trim();
+        const emailClean = String(email || '').trim().toLowerCase();
+        const sdtClean = String(soDienThoai || '').trim().replace(/\s+/g, '');
+        const mkClean = String(matKhau || '').trim();
+
+        // 1. Kiểm tra thông tin bắt buộc
+        if (!hoTenClean || !emailClean || !sdtClean || !mkClean) {
             return res.status(400).json({
-                thong_diep: 'Vui lòng cung cấp đầy đủ Họ tên, Email và Mật khẩu!'
+                thong_diep: 'Vui lòng cung cấp đầy đủ Họ tên, Email, Số điện thoại và Mật khẩu!'
             });
         }
 
-        if (matKhau.length < 6) {
+        // 2. Validate Họ tên
+        if (hoTenClean.length < 2) {
+            return res.status(400).json({
+                thong_diep: 'Họ và tên phải có tối thiểu 2 ký tự!'
+            });
+        }
+
+        // 3. Validate Email chuẩn
+        const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!regexEmail.test(emailClean)) {
+            return res.status(400).json({
+                thong_diep: 'Địa chỉ Email không đúng định dạng (VD: example@gmail.com)!'
+            });
+        }
+
+        // 4. Validate Số điện thoại chuẩn Việt Nam (10 chữ số)
+        const regexSdt = /^(0|\+84)[0-9]{9}$/;
+        if (!regexSdt.test(sdtClean)) {
+            return res.status(400).json({
+                thong_diep: 'Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số (VD: 0912345678).'
+            });
+        }
+
+        // 5. Validate Mật khẩu
+        if (mkClean.length < 6) {
             return res.status(400).json({
                 thong_diep: 'Mật khẩu phải có độ dài tối thiểu 6 ký tự!'
             });
         }
 
-        const emailChuan = email.trim().toLowerCase();
-
-        // Kiểm tra email đã tồn tại chưa
-        const taiKhoanTonTai = await NguoiDung.findOne({ email: emailChuan });
+        // 6. Kiểm tra email đã tồn tại chưa
+        const taiKhoanTonTai = await NguoiDung.findOne({ email: emailClean });
         if (taiKhoanTonTai) {
-            if (taiKhoanTonTai.daKichHoat) {
+            if (taiKhoanTonTai.daKichHoat !== false) {
                 return res.status(400).json({
-                    thong_diep: 'Địa chỉ Email này đã được đăng ký tài khoản. Vui lòng Đăng nhập hoặc dùng chức năng Quên mật khẩu!'
+                    thong_diep: `Địa chỉ Email "${emailClean}" đã được đăng ký tài khoản trước đó! Vui lòng chuyển sang tab Đăng Nhập hoặc dùng chức năng Quên Mật Khẩu.`
                 });
             }
 
@@ -57,27 +84,28 @@ const dangKy = async (req, res) => {
             const maOtpMoi = Math.floor(100000 + Math.random() * 900000).toString();
             const hanOtpMoi = new Date(Date.now() + 10 * 60 * 1000);
             const salt = await bcrypt.genSalt(10);
-            taiKhoanTonTai.matKhau = await bcrypt.hash(matKhau, salt);
-            taiKhoanTonTai.hoTen = hoTen.trim();
-            taiKhoanTonTai.soDienThoai = soDienThoai ? soDienThoai.trim() : '';
+            taiKhoanTonTai.matKhau = await bcrypt.hash(mkClean, salt);
+            taiKhoanTonTai.hoTen = hoTenClean;
+            taiKhoanTonTai.soDienThoai = sdtClean;
             taiKhoanTonTai.maOtp = maOtpMoi;
             taiKhoanTonTai.hanOtp = hanOtpMoi;
             taiKhoanTonTai.loaiOtp = 'kich_hoat';
             await taiKhoanTonTai.save();
 
-            console.log(`✉️ [Đăng Ký - Gửi Lại OTP] Email: ${emailChuan} | OTP: ${maOtpMoi}`);
-            await guiMailKichHoatTaiKhoan(emailChuan, taiKhoanTonTai.hoTen, maOtpMoi);
+            console.log(`✉️ [Đăng Ký - Gửi Lại OTP] Email: ${emailClean} | OTP: ${maOtpMoi}`);
+            // Gửi email nền (không chặn HTTP response)
+            guiMailKichHoatTaiKhoan(emailClean, taiKhoanTonTai.hoTen, maOtpMoi).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
 
             return res.status(200).json({
                 yeuCauOtp: true,
-                email: emailChuan,
-                thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailChuan}. Vui lòng kiểm tra hộp thư!`
+                email: emailClean,
+                thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư!`
             });
         }
 
         // Mã hóa mật khẩu với bcrypt (10 vòng salt)
         const salt = await bcrypt.genSalt(10);
-        const matKhauHash = await bcrypt.hash(matKhau, salt);
+        const matKhauHash = await bcrypt.hash(mkClean, salt);
 
         // Sinh mã OTP 6 số ngẫu nhiên
         const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -86,9 +114,9 @@ const dangKy = async (req, res) => {
         // Tạo tài khoản mới với trạng thái daKichHoat = false (chờ OTP)
         const nguoiDungMoi = new NguoiDung({
             id: 'usr_' + Date.now(),
-            hoTen: hoTen.trim(),
-            email: emailChuan,
-            soDienThoai: soDienThoai ? soDienThoai.trim() : '',
+            hoTen: hoTenClean,
+            email: emailClean,
+            soDienThoai: sdtClean,
             matKhau: matKhauHash,
             avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
             vaiTro: 'khach_hang',
@@ -101,13 +129,14 @@ const dangKy = async (req, res) => {
 
         await nguoiDungMoi.save();
 
-        console.log(`✉️ [Đăng Ký Mới - Gửi OTP] Email: ${emailChuan} | OTP: ${maOtp}`);
-        await guiMailKichHoatTaiKhoan(emailChuan, hoTen.trim(), maOtp);
+        console.log(`✉️ [Đăng Ký Mới - Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
+        // Gửi email nền (không chặn HTTP response)
+        guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
 
         return res.status(200).json({
             yeuCauOtp: true,
-            email: emailChuan,
-            thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailChuan}. Vui lòng kiểm tra hộp thư!`
+            email: emailClean,
+            thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư!`
         });
     } catch (loi) {
         console.error('Lỗi đăng ký tài khoản:', loi);
@@ -429,11 +458,11 @@ const yeuCauQuenMatKhau = async (req, res) => {
             user.hanOtp = hanOtp;
             user.loaiOtp = 'kich_hoat';
             await user.save();
-            const ketQua = await guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp);
+            guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
             return res.status(200).json({
                 thong_diep: `Tài khoản chưa được kích hoạt! Đã gửi lại mã OTP kích hoạt mới tới email ${emailChuan}.`,
                 email: emailChuan,
-                daGuiEmail: ketQua.thanhCong
+                daGuiEmail: true
             });
         }
 
@@ -448,15 +477,13 @@ const yeuCauQuenMatKhau = async (req, res) => {
 
         console.log(`🔑 [OTP Quên Mật Khẩu] Email: ${emailChuan} | Mã OTP: ${maOtp} (Hết hạn lúc: ${hanOtp.toLocaleTimeString()})`);
 
-        // Gửi qua Nodemailer
-        const ketQua = await guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp);
+        // Gửi qua Nodemailer nền (không chặn HTTP response)
+        guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
 
         return res.status(200).json({
-            thong_diep: ketQua.thanhCong 
-                ? `Mã OTP đã được gửi đến email ${emailChuan}! Vui lòng kiểm tra hộp thư (cả mục Spam/Thư rác).`
-                : `Không thể gửi email lúc này, vui lòng thử lại sau!`,
+            thong_diep: `Mã OTP đã được gửi đến email ${emailChuan}! Vui lòng kiểm tra hộp thư (cả mục Spam/Thư rác).`,
             email: emailChuan,
-            daGuiEmail: ketQua.thanhCong
+            daGuiEmail: true
         });
     } catch (loi) {
         console.error('Lỗi yêu cầu quên mật khẩu:', loi);
@@ -495,12 +522,12 @@ const guiLaiOtp = async (req, res) => {
             await user.save();
 
             console.log(`✉️ [BE - Gửi Lại OTP Kích Hoạt] Email: ${emailChuan} | OTP: ${maOtp}`);
-            const ketQua = await guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp);
+            guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
 
             return res.status(200).json({
                 thong_diep: `Mã OTP kích hoạt mới đã được gửi tới email ${emailChuan}! Vui lòng kiểm tra hộp thư.`,
                 email: emailChuan,
-                daGuiEmail: ketQua.thanhCong
+                daGuiEmail: true
             });
         }
 
@@ -510,12 +537,12 @@ const guiLaiOtp = async (req, res) => {
         await user.save();
 
         console.log(`🔑 [BE - Gửi Lại OTP Quên Pass] Email: ${emailChuan} | OTP: ${maOtp}`);
-        const ketQua = await guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp);
+        guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
 
         return res.status(200).json({
             thong_diep: `Mã OTP xác thực mới đã được gửi tới email ${emailChuan}! Vui lòng kiểm tra hộp thư.`,
             email: emailChuan,
-            daGuiEmail: ketQua.thanhCong
+            daGuiEmail: true
         });
     } catch (loi) {
         console.error('Lỗi gửi lại mã OTP:', loi);

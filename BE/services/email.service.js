@@ -23,7 +23,10 @@ async function guiMailBangTransporter(mailOptions) {
         const transporterGmail = nodemailer.createTransport({
             service: 'gmail',
             auth: { user, pass },
-            tls: { rejectUnauthorized: false }
+            tls: { rejectUnauthorized: false },
+            connectionTimeout: 8000,
+            greetingTimeout: 4000,
+            socketTimeout: 10000
         });
         return await transporterGmail.sendMail(mailOptions);
     } catch (err1) {
@@ -34,7 +37,10 @@ async function guiMailBangTransporter(mailOptions) {
             port: 587,
             secure: false,
             auth: { user, pass },
-            tls: { rejectUnauthorized: false }
+            tls: { rejectUnauthorized: false },
+            connectionTimeout: 8000,
+            greetingTimeout: 4000,
+            socketTimeout: 10000
         });
         return await transporter587.sendMail(mailOptions);
     }

@@ -355,17 +355,19 @@ export default function ModalDangNhapDangKy() {
     // ==========================================
     const xuLyGuiOtpQuenPass = async (e) => {
         if (e) e.preventDefault();
-        if (!email || !email.includes('@')) {
-            setThongBaoLoi('Vui lòng nhập địa chỉ Email hợp lệ!');
+        const emailClean = email.trim().toLowerCase();
+        const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailClean || !regexEmail.test(emailClean)) {
+            setThongBaoLoi('Vui lòng nhập địa chỉ Email hợp lệ (VD: example@gmail.com)!');
             return;
         }
         setThongBaoLoi('');
         setThongBaoThanhCong('');
         setDangXuLy(true);
         try {
-            const res = await guiOtpQuenMatKhau(email);
-            setThongBaoThanhCong(res.thong_diep || `Đã gửi mã xác thực tới ${email}`);
+            const res = await guiOtpQuenMatKhau(emailClean);
             chuyenCheDo('quen_mat_khau', 2);
+            setThongBaoThanhCong(res.thong_diep || `Đã gửi mã xác thực tới ${emailClean}`);
             setDemNguoc(90);
         } catch (err) {
             setThongBaoLoi(err.message || 'Không thể gửi mã OTP, vui lòng kiểm tra lại email!');
@@ -430,24 +432,49 @@ export default function ModalDangNhapDangKy() {
         setThongBaoLoi('');
         setThongBaoThanhCong('');
 
-        if (!hoTen.trim() || !email.trim() || !soDienThoai.trim() || !matKhau || !matKhauXacNhan) {
-            setThongBaoLoi('Vui lòng điền đầy đủ tất cả các thông tin!');
+        const hoTenClean = hoTen.trim();
+        const emailClean = email.trim().toLowerCase();
+        const sdtClean = soDienThoai.trim().replace(/\s+/g, '');
+        const mkClean = matKhau.trim();
+        const mkXacNhanClean = matKhauXacNhan.trim();
+
+        if (!hoTenClean || !emailClean || !sdtClean || !mkClean || !mkXacNhanClean) {
+            setThongBaoLoi('Vui lòng điền đầy đủ tất cả các trường thông tin!');
             return;
         }
-        if (matKhau.length < 6) {
+
+        if (hoTenClean.length < 2) {
+            setThongBaoLoi('Họ và tên phải có tối thiểu 2 ký tự!');
+            return;
+        }
+
+        const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!regexEmail.test(emailClean)) {
+            setThongBaoLoi('Địa chỉ Email không đúng định dạng (VD: example@gmail.com)!');
+            return;
+        }
+
+        const regexSdt = /^(0|\+84)[0-9]{9}$/;
+        if (!regexSdt.test(sdtClean)) {
+            setThongBaoLoi('Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số (VD: 0912345678).');
+            return;
+        }
+
+        if (mkClean.length < 6) {
             setThongBaoLoi('Mật khẩu phải có tối thiểu 6 ký tự!');
             return;
         }
-        if (matKhau !== matKhauXacNhan) {
+
+        if (mkClean !== mkXacNhanClean) {
             setThongBaoLoi('Mật khẩu xác nhận không trùng khớp với mật khẩu đã nhập!');
             return;
         }
 
         setDangXuLy(true);
         try {
-            const res = await dangKy(hoTen.trim(), email.trim(), soDienThoai.trim(), matKhau);
-            setThongBaoThanhCong(res.thong_diep || `Mã kích hoạt đã gửi tới ${email}. Vui lòng kiểm tra email!`);
+            const res = await dangKy(hoTenClean, emailClean, sdtClean, mkClean);
             chuyenCheDo('dang_ky', 2);
+            setThongBaoThanhCong(res.thong_diep || `Mã kích hoạt đã được gửi tới ${emailClean}. Vui lòng kiểm tra hộp thư!`);
             setDemNguoc(90);
         } catch (err) {
             setThongBaoLoi(err.message || 'Đăng ký tài khoản thất bại!');
