@@ -10,56 +10,66 @@ function layThongTinEmail() {
 }
 
 async function guiMailBangTransporter(mailOptions) {
-    const { user, pass } = layThongTinEmail();
+    const resendApiKey = process.env.RESEND_API_KEY;
 
-    // Phương thức 1: Port 465 SSL (Railway & nhiều cloud thường mở port này)
+    // Ưu tiên 1: Resend API (HTTP - hoạt động trên mọi cloud, Railway, Vercel...)
+    if (resendApiKey) {
+        try {
+            const res = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${resendApiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: mailOptions.from || 'TNTP Laptop Store <onboarding@resend.dev>',
+                    to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
+                    subject: mailOptions.subject,
+                    html: mailOptions.html,
+                    text: mailOptions.text
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.message || `Resend API error ${res.status}`);
+            console.log('✅ [Email] Gửi thành công qua Resend API, id:', data.id);
+            return { messageId: data.id };
+        } catch (errResend) {
+            console.warn('⚠️ Resend API thất bại, fallback SMTP...', errResend.message);
+        }
+    }
+
+    // Fallback: SMTP Gmail port 465 SSL (cho localhost dev)
+    const { user, pass } = layThongTinEmail();
     try {
         const transporter465 = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 465,
-            secure: true, // SSL
+            secure: true,
             auth: { user, pass },
             tls: { rejectUnauthorized: false },
-            connectionTimeout: 10000,
-            greetingTimeout: 5000,
-            socketTimeout: 15000
+            connectionTimeout: 8000,
+            greetingTimeout: 4000,
+            socketTimeout: 10000
         });
         const info = await transporter465.sendMail(mailOptions);
-        console.log('✅ [Email] Gửi thành công qua port 465 SSL');
+        console.log('✅ [Email] Gửi thành công qua SMTP port 465 SSL');
         return info;
     } catch (err1) {
-        console.warn('⚠️ Port 465 thất bại, thử port 587 STARTTLS...', err1.message);
+        console.warn('⚠️ Port 465 thất bại, thử port 587...', err1.message);
     }
 
-    // Phương thức 2: Port 587 STARTTLS
-    try {
-        const transporter587 = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: { user, pass },
-            tls: { rejectUnauthorized: false },
-            connectionTimeout: 10000,
-            greetingTimeout: 5000,
-            socketTimeout: 15000
-        });
-        const info = await transporter587.sendMail(mailOptions);
-        console.log('✅ [Email] Gửi thành công qua port 587 STARTTLS');
-        return info;
-    } catch (err2) {
-        console.warn('⚠️ Port 587 thất bại, thử service:gmail...', err2.message);
-    }
-
-    // Phương thức 3: service: 'gmail' (fallback cuối cùng)
-    const transporterGmail = nodemailer.createTransport({
-        service: 'gmail',
+    // Fallback cuối: port 587 STARTTLS
+    const transporter587 = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
         auth: { user, pass },
         tls: { rejectUnauthorized: false },
-        connectionTimeout: 10000,
-        greetingTimeout: 5000,
-        socketTimeout: 15000
+        connectionTimeout: 8000,
+        greetingTimeout: 4000,
+        socketTimeout: 10000
     });
-    return await transporterGmail.sendMail(mailOptions);
+    return await transporter587.sendMail(mailOptions);
 }
 
 
