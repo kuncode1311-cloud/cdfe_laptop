@@ -16,7 +16,7 @@ import {
     ArrowLeft,
     RefreshCw,
     Sparkles,
-    LifeBuoy
+    Check
 } from 'lucide-react';
 import { useNguoiDung } from '@/contexts/AuthContext';
 
@@ -26,12 +26,15 @@ const GOOGLE_CLIENT_ID =
     '789044829668-4uhe7csc4tq093jifv1vul2ofgm5vkt7.apps.googleusercontent.com';
 
 /**
- * Modal Đăng Nhập / Đăng Ký / Quên Mật Khẩu Siêu Mượt - Khắc Phục Triệt Để Giật & Nhảy Giao Diện
- * 1. Dùng React Portal render vào document.body với z-[999999], hoàn toàn độc lập khỏi stacking context.
- * 2. Khóa cuộn overflow='hidden' thuần túy, tuyệt đối không dùng position='fixed' gây nhảy layout trang.
- * 3. Chuyển đổi tab 0ms mượt mà chuẩn CSS GPU-accelerated, triệt tiêu canvas lặp gây giật lag.
- * 4. Đồng bộ chiều cao khung chứa, nút bấm và inputs giữa Đăng Nhập & Đăng Ký -> Card đứng yên 100% không nhảy dọc.
- * 5. Google Sign-In button được cố định trong khung dùng chung, không bị unmount/mount liên tục gây pop-in.
+ * Modal Đăng Nhập / Đăng Ký / Quên Mật Khẩu Chuẩn Công Nghệ Siêu Mượt
+ * 1. Pháo hoa bùng nổ rực rỡ (Lightweight 60fps/120fps Particle Fireworks Engine):
+ *    - Tối ưu GPU canvas, không dùng shadowBlur gây tụt fps.
+ *    - Bắn pháo hoa lung linh mỗi khi chuyển tab, mở form hoặc thành công.
+ * 2. Triệt tiêu 100% hiện tượng nhảy giật (Zero Layout Shift):
+ *    - Cố định chiều cao form h-[290px] đồng nhất tuyệt đối giữa Đăng Nhập & Đăng Ký.
+ *    - Khung modal đứng im bất động ở trung tâm màn hình, không nảy lên thụt xuống 1 pixel nào.
+ *    - Nút Google Sign-In được cố định h-[44px], không pop-in giật layout.
+ * 3. React Portal cách ly độc lập ra document.body với z-[999999].
  */
 export default function ModalDangNhapDangKy() {
     const {
@@ -56,6 +59,7 @@ export default function ModalDangNhapDangKy() {
     const [hoTen, setHoTen] = useState('');
     const [soDienThoai, setSoDienThoai] = useState('');
     const [maOtp, setMaOtp] = useState('');
+    const [ghiNho, setGhiNho] = useState(true);
     const [buocDangKy, setBuocDangKy] = useState(1); // 1: điền form, 2: nhập OTP
     const [buocQuenPass, setBuocQuenPass] = useState(1); // 1: nhập email, 2: OTP, 3: pass mới
     const [demNguoc, setDemNguoc] = useState(0);
@@ -72,15 +76,109 @@ export default function ModalDangNhapDangKy() {
 
     const googleBtnRef = useRef(null);
     const prevMoModalRef = useRef(false);
+    const canvasRef = useRef(null);
+    const animFrameRef = useRef(null);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    // Tự động đóng modal sau 1.8 giây khi đăng nhập thành công và reset trạng thái
+    // =========================================================================
+    // ENGINE PHÁO HOA RỰC RỠ 60FPS (SIÊU NHẸ, KHÔNG GIẬT LAG)
+    // =========================================================================
+    const banPhaoHoa = (xCustom, yCustom) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const rect = canvas.getBoundingClientRect();
+        if (canvas.width !== rect.width || canvas.height !== rect.height) {
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        if (animFrameRef.current) {
+            cancelAnimationFrame(animFrameRef.current);
+        }
+
+        const colors = [
+            '#00f0ff', '#38bdf8', '#3b82f6', '#6366f1',
+            '#8b5cf6', '#a855f7', '#ec4899', '#f43f5e',
+            '#fbbf24', '#f59e0b', '#10b981', '#ffffff'
+        ];
+
+        const cx = xCustom !== undefined ? xCustom : canvas.width / 2;
+        const cy = yCustom !== undefined ? yCustom : canvas.height * 0.4;
+
+        // Tạo 85 hạt pháo hoa bùng nở hình cầu đa sắc
+        const particles = [];
+        for (let i = 0; i < 85; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 5.2 + 1.2;
+            particles.push({
+                x: cx,
+                y: cy,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed - 1.2,
+                size: Math.random() * 3.2 + 1.4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                alpha: 1,
+                decay: Math.random() * 0.022 + 0.012,
+                gravity: 0.11,
+                sparkle: Math.random() * 10
+            });
+        }
+
+        const loop = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = 0;
+
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                if (p.alpha <= 0) continue;
+                active++;
+
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += p.gravity;
+                p.vx *= 0.98;
+                p.alpha -= p.decay;
+                p.sparkle += 0.25;
+
+                const twinkle = Math.sin(p.sparkle) * 0.35 + 0.65;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha * twinkle);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            if (active > 0) {
+                animFrameRef.current = requestAnimationFrame(loop);
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        };
+
+        animFrameRef.current = requestAnimationFrame(loop);
+    };
+
+    // Dọn dẹp animation frame khi unmount
+    useEffect(() => {
+        return () => {
+            if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+        };
+    }, []);
+
+    // Tự động đóng modal sau 1.8 giây khi thành công
     useEffect(() => {
         let timer;
         if (thanhCong) {
+            banPhaoHoa();
             timer = setTimeout(() => {
                 setThanhCong(false);
                 dongModalAuth();
@@ -89,7 +187,7 @@ export default function ModalDangNhapDangKy() {
         return () => clearTimeout(timer);
     }, [thanhCong, dongModalAuth]);
 
-    // Chỉ reset trạng thái KHI MỞ MỚI MODAL (tránh reset làm giật form khi đổi tab bên trong)
+    // Chỉ reset trạng thái KHI MỞ MỚI MODAL
     useEffect(() => {
         if (dangMoModalAuth && !prevMoModalRef.current) {
             setThanhCong(false);
@@ -103,6 +201,8 @@ export default function ModalDangNhapDangKy() {
             if (cheDoAuth) {
                 setCheDoHienTai(cheDoAuth);
             }
+            // Bắn pháo hoa chào đón nhẹ nhàng khi mở modal
+            setTimeout(() => banPhaoHoa(), 150);
         }
         prevMoModalRef.current = dangMoModalAuth;
     }, [dangMoModalAuth, cheDoAuth]);
@@ -121,7 +221,7 @@ export default function ModalDangNhapDangKy() {
         return () => clearInterval(timer);
     }, [demNguoc]);
 
-    // Khóa cuộn trang mượt mà - KHÔNG dùng position='fixed' gây nhảy giật layout
+    // Khóa cuộn trang mượt mà - KHÔNG dùng position='fixed' gây nhảy layout
     useEffect(() => {
         if (dangMoModalAuth) {
             const originalOverflow = document.body.style.overflow;
@@ -182,22 +282,22 @@ export default function ModalDangNhapDangKy() {
 
         let timer;
         if (window.google?.accounts?.id) {
-            timer = setTimeout(khoiTaoNutGoogle, 50);
+            timer = setTimeout(khoiTaoNutGoogle, 40);
         } else if (!document.getElementById('gsi-script')) {
             const s = document.createElement('script');
             s.id = 'gsi-script';
             s.src = 'https://accounts.google.com/gsi/client';
             s.async = true;
             s.defer = true;
-            s.onload = () => setTimeout(khoiTaoNutGoogle, 50);
+            s.onload = () => setTimeout(khoiTaoNutGoogle, 40);
             document.head.appendChild(s);
         }
 
         return () => clearTimeout(timer);
     }, [dangMoModalAuth, mounted, dangNhapGoogle, cheDoHienTai, buocDangKy]);
 
-    // Chuyển đổi chế độ tức thời 0ms, không lag, không gián đoạn
-    const chuyenCheDo = (cheDoMoi, buocMoi = 1) => {
+    // Chuyển đổi chế độ kèm pháo hoa rực rỡ và phản hồi tức thời 0ms
+    const chuyenCheDo = (cheDoMoi, buocMoi = 1, e) => {
         if (cheDoHienTai === cheDoMoi && (cheDoMoi !== 'dang_ky' || buocDangKy === buocMoi) && (cheDoMoi !== 'quen_mat_khau' || buocQuenPass === buocMoi)) return;
         setThongBaoLoi('');
         setThongBaoThanhCong('');
@@ -205,6 +305,14 @@ export default function ModalDangNhapDangKy() {
         if (cheDoMoi === 'dang_ky') setBuocDangKy(buocMoi);
         if (cheDoMoi === 'quen_mat_khau') setBuocQuenPass(buocMoi);
         if (chuyenDoiCheDoAuth) chuyenDoiCheDoAuth(cheDoMoi);
+
+        // Kích hoạt pháo hoa tại vị trí bấm hoặc giữa thẻ
+        if (e && e.clientX && canvasRef.current) {
+            const rect = canvasRef.current.getBoundingClientRect();
+            banPhaoHoa(e.clientX - rect.left, e.clientY - rect.top);
+        } else {
+            banPhaoHoa();
+        }
     };
 
     // ==========================================
@@ -369,6 +477,11 @@ export default function ModalDangNhapDangKy() {
                 onClick={(e) => e.target === e.currentTarget && dongModalVaReset()}
             >
                 <div className="relative bg-white dark:bg-slate-900 rounded-[30px] p-8 text-center max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200 overflow-hidden">
+                    <canvas
+                        ref={canvasRef}
+                        className="absolute inset-0 pointer-events-none z-50 w-full h-full"
+                    />
+
                     <button
                         onClick={dongModalVaReset}
                         aria-label="Đóng"
@@ -409,10 +522,16 @@ export default function ModalDangNhapDangKy() {
             className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto"
             onClick={(e) => e.target === e.currentTarget && dongModalVaReset()}
         >
-            {/* THẺ MODAL ĐẲNG CẤP - CHIỀU CAO VÀ VỊ TRÍ ỔN ĐỊNH 100%, KHÔNG NHẢY DỌC */}
-            <div className="relative w-full max-w-[450px] my-auto bg-white dark:bg-slate-900 rounded-[28px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)] border-2 border-slate-300/80 dark:border-slate-700 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* THẺ MODAL CÔNG NGHỆ - CỐ ĐỊNH CHIỀU CAO VÀ VỊ TRÍ, BẤT ĐỘNG 100% KHÔNG NHẢY DỌC */}
+            <div className="relative w-full max-w-[450px] bg-white dark:bg-slate-900 rounded-[28px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)] border-2 border-slate-300/80 dark:border-slate-700 overflow-hidden">
                 {/* Viền neon rực rỡ trên đỉnh */}
                 <div className="h-1.5 w-full bg-gradient-to-r from-cyan-400 via-blue-600 to-purple-600" />
+
+                {/* CANVAS PHÁO HOA RỰC RỠ 60FPS */}
+                <canvas
+                    ref={canvasRef}
+                    className="absolute inset-0 pointer-events-none z-50 w-full h-full"
+                />
 
                 {/* HEADER SANG TRỌNG */}
                 <div className="relative p-5 pb-3.5 bg-gradient-to-b from-blue-50/80 via-slate-50/40 to-transparent dark:from-slate-800/60 dark:via-slate-800/20 dark:to-transparent border-b-2 border-slate-200 dark:border-slate-800">
@@ -448,12 +567,12 @@ export default function ModalDangNhapDangKy() {
                         )}
                     </h2>
 
-                    {/* TAB CHUYỂN ĐỔI CAO CẤP - PHẢN HỒI TỨC THỜI 0MS */}
+                    {/* TAB CHUYỂN ĐỔI CAO CẤP */}
                     {laFormChinh && (
                         <div className="mt-3.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border-2 border-slate-300 dark:border-slate-700 flex items-center gap-1 shadow-inner">
                             <button
                                 type="button"
-                                onClick={() => chuyenCheDo('dang_nhap')}
+                                onClick={(e) => chuyenCheDo('dang_nhap', 1, e)}
                                 className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer ${
                                     cheDoHienTai === 'dang_nhap'
                                         ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-blue-500/35'
@@ -464,7 +583,7 @@ export default function ModalDangNhapDangKy() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => chuyenCheDo('dang_ky', 1)}
+                                onClick={(e) => chuyenCheDo('dang_ky', 1, e)}
                                 className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer ${
                                     cheDoHienTai === 'dang_ky'
                                         ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-blue-500/35'
@@ -493,10 +612,10 @@ export default function ModalDangNhapDangKy() {
 
                 {/* THÂN MODAL */}
                 <div className="p-5 pt-4">
-                    {/* KHUNG GOOGLE SIGN-IN DÙNG CHUNG CỐ ĐỊNH (Không bị unmount/mount lại khi đổi tab) */}
+                    {/* KHUNG GOOGLE SIGN-IN DÙNG CHUNG CỐ ĐỊNH h-[44px] */}
                     {laFormChinh && (
                         <div className="mb-3">
-                            <div className="relative min-h-[44px] flex justify-center">
+                            <div className="relative h-[44px] min-h-[44px] flex justify-center overflow-hidden">
                                 <div ref={googleBtnRef} className="w-full flex justify-center" />
                                 {dangXuLyGoogle && (
                                     <div className="absolute inset-0 bg-white/95 dark:bg-slate-900/95 flex items-center justify-center gap-2 rounded-full border border-blue-200">
@@ -520,7 +639,7 @@ export default function ModalDangNhapDangKy() {
 
                     {/* Thông báo lỗi */}
                     {thongBaoLoi && (
-                        <div className="mb-3 p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-start gap-2">
+                        <div className="mb-2.5 p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-start gap-2">
                             <span className="text-sm shrink-0">⚠️</span>
                             <span className="flex-1">{thongBaoLoi}</span>
                         </div>
@@ -528,20 +647,20 @@ export default function ModalDangNhapDangKy() {
 
                     {/* Thông báo thành công */}
                     {thongBaoThanhCong && (
-                        <div className="mb-3 p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-start gap-2">
+                        <div className="mb-2.5 p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-start gap-2">
                             <span className="text-sm shrink-0">✅</span>
                             <span className="flex-1">{thongBaoThanhCong}</span>
                         </div>
                     )}
 
-                    {/* KHUNG NỘI DUNG CHUYỂN FORM - ĐỒNG BỘ CHIỀU CAO VỮNG CHẮC KHÔNG NHẢY */}
-                    <div className="min-h-[265px] flex flex-col justify-between">
+                    {/* KHUNG NỘI DUNG CHUYỂN FORM - ĐỒNG BỘ CHIỀU CAO CỐ ĐỊNH h-[290px] KHÔNG NHẢY 1 PIXEL */}
+                    <div className="min-h-[290px] h-[290px] flex flex-col justify-between overflow-hidden">
                         {/* ==================================================== */}
                         {/* 1. FORM ĐĂNG NHẬP                                    */}
                         {/* ==================================================== */}
                         {cheDoHienTai === 'dang_nhap' && (
-                            <form onSubmit={xuLyDangNhap} className="space-y-3 animate-in fade-in duration-200 flex flex-col justify-between flex-1">
-                                <div className="space-y-2.5">
+                            <form onSubmit={xuLyDangNhap} className="animate-in fade-in duration-200 flex flex-col justify-between h-full">
+                                <div className="space-y-3">
                                     <div className="space-y-1">
                                         <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                             <Mail className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
@@ -553,24 +672,15 @@ export default function ModalDangNhapDangKy() {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="name@example.com"
-                                            className="w-full px-3.5 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/15 transition-all"
+                                            className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/15 transition-all"
                                         />
                                     </div>
 
                                     <div className="space-y-1">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                                                <Lock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                                                <span>Mật Khẩu</span>
-                                            </label>
-                                            <button
-                                                type="button"
-                                                onClick={() => chuyenCheDo('quen_mat_khau')}
-                                                className="text-xs text-blue-600 dark:text-cyan-400 hover:underline font-extrabold cursor-pointer"
-                                            >
-                                                Quên mật khẩu?
-                                            </button>
-                                        </div>
+                                        <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                            <Lock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                                            <span>Mật Khẩu</span>
+                                        </label>
                                         <div className="relative">
                                             <input
                                                 type={hienMatKhau ? 'text' : 'password'}
@@ -578,7 +688,7 @@ export default function ModalDangNhapDangKy() {
                                                 onChange={(e) => setMatKhau(e.target.value)}
                                                 required
                                                 placeholder="Nhập mật khẩu..."
-                                                className="w-full pl-3.5 pr-10 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/15 transition-all"
+                                                className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/15 transition-all"
                                             />
                                             <button
                                                 type="button"
@@ -589,13 +699,33 @@ export default function ModalDangNhapDangKy() {
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* Hàng Ghi nhớ đăng nhập + Quên mật khẩu cân bằng không gian */}
+                                    <div className="flex items-center justify-between text-xs pt-0.5">
+                                        <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-semibold cursor-pointer select-none">
+                                            <input
+                                                type="checkbox"
+                                                checked={ghiNho}
+                                                onChange={(e) => setGhiNho(e.target.checked)}
+                                                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-600 cursor-pointer"
+                                            />
+                                            <span className="text-[11.5px]">Ghi nhớ đăng nhập</span>
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => chuyenCheDo('quen_mat_khau', 1, e)}
+                                            className="text-xs text-blue-600 dark:text-cyan-400 hover:underline font-extrabold cursor-pointer"
+                                        >
+                                            Quên mật khẩu?
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-2 pt-1">
+                                <div className="space-y-2 pt-2">
                                     <button
                                         type="submit"
                                         disabled={dangXuLy || dangXuLyGoogle}
-                                        className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                     >
                                         {dangXuLy ? (
                                             <>
@@ -614,7 +744,7 @@ export default function ModalDangNhapDangKy() {
                                         <span className="text-xs text-slate-500 dark:text-slate-400">Bạn chưa có tài khoản? </span>
                                         <button
                                             type="button"
-                                            onClick={() => chuyenCheDo('dang_ky')}
+                                            onClick={(e) => chuyenCheDo('dang_ky', 1, e)}
                                             className="text-xs font-black text-blue-600 dark:text-cyan-400 hover:underline cursor-pointer"
                                         >
                                             Đăng ký ngay
@@ -628,12 +758,12 @@ export default function ModalDangNhapDangKy() {
                         {/* 2. FORM ĐĂNG KÝ (XÁC NHẬN MẬT KHẨU 2 LẦN)          */}
                         {/* ==================================================== */}
                         {cheDoHienTai === 'dang_ky' && (
-                            <div className="animate-in fade-in duration-200 flex-1 flex flex-col justify-between">
+                            <div className="animate-in fade-in duration-200 h-full flex flex-col justify-between">
                                 {buocDangKy === 1 ? (
-                                    <form onSubmit={xuLyDangKyGuiOtp} className="space-y-2 flex flex-col justify-between flex-1">
-                                        <div className="space-y-2">
+                                    <form onSubmit={xuLyDangKyGuiOtp} className="flex flex-col justify-between h-full">
+                                        <div className="space-y-2.5">
                                             {/* Hàng 1: Họ tên + SĐT (2 cột) */}
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-2 gap-2.5">
                                                 <div className="space-y-1">
                                                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                                                         <User className="w-3.5 h-3.5 text-amber-500" />
@@ -645,7 +775,7 @@ export default function ModalDangNhapDangKy() {
                                                         value={hoTen}
                                                         onChange={(e) => setHoTen(e.target.value)}
                                                         placeholder="Nguyễn Văn An"
-                                                        className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
+                                                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
                                                     />
                                                 </div>
 
@@ -660,7 +790,7 @@ export default function ModalDangNhapDangKy() {
                                                         value={soDienThoai}
                                                         onChange={(e) => setSoDienThoai(e.target.value)}
                                                         placeholder="0912 345 678"
-                                                        className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
+                                                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
                                                     />
                                                 </div>
                                             </div>
@@ -677,12 +807,12 @@ export default function ModalDangNhapDangKy() {
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
                                                     placeholder="name@example.com"
-                                                    className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
+                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
                                                 />
                                             </div>
 
                                             {/* Hàng 3: Mật Khẩu + Xác Nhận Mật Khẩu (2 LẦN) */}
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-2 gap-2.5">
                                                 <div className="space-y-1">
                                                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                                                         <Lock className="w-3.5 h-3.5 text-indigo-500" />
@@ -695,7 +825,7 @@ export default function ModalDangNhapDangKy() {
                                                             onChange={(e) => setMatKhau(e.target.value)}
                                                             required
                                                             placeholder="≥ 6 ký tự..."
-                                                            className="w-full pl-3 pr-7 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
+                                                            className="w-full pl-3 pr-7 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
                                                         />
                                                         <button
                                                             type="button"
@@ -719,7 +849,7 @@ export default function ModalDangNhapDangKy() {
                                                             onChange={(e) => setMatKhauXacNhan(e.target.value)}
                                                             required
                                                             placeholder="Khớp mật khẩu"
-                                                            className="w-full pl-3 pr-7 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
+                                                            className="w-full pl-3 pr-7 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-3 focus:ring-blue-500/20 transition-all"
                                                         />
                                                         <button
                                                             type="button"
@@ -733,11 +863,11 @@ export default function ModalDangNhapDangKy() {
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2 pt-1">
+                                        <div className="space-y-2 pt-2">
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -756,7 +886,7 @@ export default function ModalDangNhapDangKy() {
                                                 <span className="text-xs text-slate-500 dark:text-slate-400">Bạn đã có tài khoản rồi? </span>
                                                 <button
                                                     type="button"
-                                                    onClick={() => chuyenCheDo('dang_nhap')}
+                                                    onClick={(e) => chuyenCheDo('dang_nhap', 1, e)}
                                                     className="text-xs font-black text-blue-600 dark:text-cyan-400 hover:underline cursor-pointer"
                                                 >
                                                     Đăng nhập ngay
@@ -766,18 +896,18 @@ export default function ModalDangNhapDangKy() {
                                     </form>
                                 ) : (
                                     /* Bước 2: Nhập OTP kích hoạt */
-                                    <form onSubmit={xuLyKichHoatDangKy} className="space-y-3.5 flex flex-col justify-between flex-1">
+                                    <form onSubmit={xuLyKichHoatDangKy} className="flex flex-col justify-between h-full animate-in fade-in duration-200">
                                         <div className="space-y-3">
                                             <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-center">
                                                 <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
                                                     Mã OTP kích hoạt đã gửi tới email:
                                                 </div>
-                                                <div className="text-sm font-black text-blue-950 dark:text-blue-200">
+                                                <div className="text-sm font-black text-blue-950 dark:text-blue-200 truncate">
                                                     {email}
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-1">
+                                            <div className="space-y-1.5">
                                                 <div className="flex items-center justify-between">
                                                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                                         <KeyRound className="w-3.5 h-3.5 text-blue-600" />
@@ -800,16 +930,16 @@ export default function ModalDangNhapDangKy() {
                                                     value={maOtp}
                                                     onChange={(e) => setMaOtp(e.target.value.replace(/\D/g, ''))}
                                                     placeholder="••••••"
-                                                    className="w-full py-2.5 rounded-xl border-2 border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-slate-800 text-blue-700 dark:text-cyan-400 text-lg font-black tracking-[8px] text-center focus:outline-none focus:border-blue-600 transition-all"
+                                                    className="w-full py-3 rounded-xl border-2 border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-slate-800 text-blue-700 dark:text-cyan-400 text-lg font-black tracking-[8px] text-center focus:outline-none focus:border-blue-600 transition-all"
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2 pt-1">
+                                        <div className="space-y-2 pt-2">
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -826,7 +956,7 @@ export default function ModalDangNhapDangKy() {
 
                                             <button
                                                 type="button"
-                                                onClick={() => chuyenCheDo('dang_ky', 1)}
+                                                onClick={(e) => chuyenCheDo('dang_ky', 1, e)}
                                                 className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center gap-1.5 py-1 cursor-pointer"
                                             >
                                                 <ArrowLeft className="w-3.5 h-3.5" /> Thay đổi thông tin đăng ký
@@ -841,9 +971,9 @@ export default function ModalDangNhapDangKy() {
                         {/* 3. FORM QUÊN MẬT KHẨU                                */}
                         {/* ==================================================== */}
                         {cheDoHienTai === 'quen_mat_khau' && (
-                            <div className="animate-in fade-in duration-200 flex-1 flex flex-col justify-between">
+                            <div className="animate-in fade-in duration-200 h-full flex flex-col justify-between">
                                 {buocQuenPass === 1 && (
-                                    <form onSubmit={xuLyGuiOtpQuenPass} className="space-y-3.5 flex flex-col justify-between flex-1">
+                                    <form onSubmit={xuLyGuiOtpQuenPass} className="flex flex-col justify-between h-full">
                                         <div className="space-y-3">
                                             <div className="space-y-1">
                                                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
@@ -881,7 +1011,7 @@ export default function ModalDangNhapDangKy() {
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -898,7 +1028,7 @@ export default function ModalDangNhapDangKy() {
 
                                             <button
                                                 type="button"
-                                                onClick={() => chuyenCheDo('dang_nhap')}
+                                                onClick={(e) => chuyenCheDo('dang_nhap', 1, e)}
                                                 className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center gap-1.5 py-1 cursor-pointer"
                                             >
                                                 <ArrowLeft className="w-3.5 h-3.5" /> Quay lại Đăng nhập
@@ -908,18 +1038,18 @@ export default function ModalDangNhapDangKy() {
                                 )}
 
                                 {buocQuenPass === 2 && (
-                                    <form onSubmit={xuLyXacNhanOtpQuenPass} className="space-y-3.5 flex flex-col justify-between flex-1">
+                                    <form onSubmit={xuLyXacNhanOtpQuenPass} className="flex flex-col justify-between h-full animate-in fade-in duration-200">
                                         <div className="space-y-3">
                                             <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-center">
                                                 <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
                                                     Mã OTP đã gửi đến hộp thư:
                                                 </div>
-                                                <div className="text-sm font-black text-blue-950 dark:text-blue-200">
+                                                <div className="text-sm font-black text-blue-950 dark:text-blue-200 truncate">
                                                     {email}
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-1">
+                                            <div className="space-y-1.5">
                                                 <div className="flex items-center justify-between">
                                                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                                         <KeyRound className="w-3.5 h-3.5 text-blue-600" />
@@ -951,7 +1081,7 @@ export default function ModalDangNhapDangKy() {
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -968,7 +1098,7 @@ export default function ModalDangNhapDangKy() {
 
                                             <button
                                                 type="button"
-                                                onClick={() => chuyenCheDo('quen_mat_khau', 1)}
+                                                onClick={(e) => chuyenCheDo('quen_mat_khau', 1, e)}
                                                 className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center gap-1.5 py-1 cursor-pointer"
                                             >
                                                 <ArrowLeft className="w-3.5 h-3.5" /> Nhập lại email
@@ -978,8 +1108,8 @@ export default function ModalDangNhapDangKy() {
                                 )}
 
                                 {buocQuenPass === 3 && (
-                                    <form onSubmit={xuLyDoiMatKhau} className="space-y-3 flex flex-col justify-between flex-1">
-                                        <div className="space-y-2.5">
+                                    <form onSubmit={xuLyDoiMatKhau} className="flex flex-col justify-between h-full animate-in fade-in duration-200">
+                                        <div className="space-y-3">
                                             <div className="space-y-1">
                                                 <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                                     Mật Khẩu Mới
@@ -991,7 +1121,7 @@ export default function ModalDangNhapDangKy() {
                                                         onChange={(e) => setMatKhau(e.target.value)}
                                                         required
                                                         placeholder="Tối thiểu 6 ký tự..."
-                                                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
+                                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
                                                     />
                                                     <button
                                                         type="button"
@@ -1014,7 +1144,7 @@ export default function ModalDangNhapDangKy() {
                                                         onChange={(e) => setMatKhauXacNhan(e.target.value)}
                                                         required
                                                         placeholder="Khớp mật khẩu mới..."
-                                                        className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
+                                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
                                                     />
                                                     <button
                                                         type="button"
@@ -1031,7 +1161,7 @@ export default function ModalDangNhapDangKy() {
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -1048,7 +1178,7 @@ export default function ModalDangNhapDangKy() {
 
                                             <button
                                                 type="button"
-                                                onClick={() => chuyenCheDo('dang_nhap')}
+                                                onClick={(e) => chuyenCheDo('dang_nhap', 1, e)}
                                                 className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center justify-center gap-1.5 py-1 cursor-pointer"
                                             >
                                                 <ArrowLeft className="w-3.5 h-3.5" /> Quay lại Đăng nhập
