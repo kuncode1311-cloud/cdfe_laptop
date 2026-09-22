@@ -19,6 +19,7 @@ import {
     Menu,
     ChevronRight,
     ChevronLeft,
+    ArrowRight,
     ArrowUpRight,
     TrendingUp,
     DollarSign,
@@ -7275,7 +7276,7 @@ export default function TrangQuanTriCuaHang() {
                                             <input
                                                 type="datetime-local"
                                                 required
-                                                value={formCaiDatKm.thoi_gian_ket_thuc ? formCaiDatKm.thoi_gian_ket_thuc.substring(0, 16) : '2026-09-30T23:59'}
+                                                value={typeof formCaiDatKm?.thoi_gian_ket_thuc === 'string' ? formCaiDatKm.thoi_gian_ket_thuc.substring(0, 16) : '2026-09-30T23:59'}
                                                 onChange={(e) => setFormCaiDatKm({ ...formCaiDatKm, thoi_gian_ket_thuc: e.target.value })}
                                                 className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-black text-sm sm:text-base font-mono text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none cursor-pointer"
                                             />
@@ -7478,7 +7479,15 @@ export default function TrangQuanTriCuaHang() {
                                                         <ArrowRight className="w-2.5 h-2.5" />
                                                     </span>
                                                     <span className="text-[10px] text-slate-500 font-medium">
-                                                        ⏳ Hạn: {formCaiDatKm.thoi_gian_ket_thuc ? new Date(formCaiDatKm.thoi_gian_ket_thuc).toLocaleDateString('vi-VN') : '—'}
+                                                        ⏳ Hạn: {(() => {
+                                                            try {
+                                                                if (!formCaiDatKm?.thoi_gian_ket_thuc) return '—';
+                                                                const d = new Date(formCaiDatKm.thoi_gian_ket_thuc);
+                                                                return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('vi-VN');
+                                                            } catch {
+                                                                return '—';
+                                                            }
+                                                        })()}
                                                     </span>
                                                 </div>
                                             </div>
