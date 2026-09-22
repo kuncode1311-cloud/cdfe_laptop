@@ -31,7 +31,7 @@ async function guiMailBangTransporter(mailOptions) {
                 },
                 body: JSON.stringify({
                     sender: {
-                        name: 'TNTP Laptop Store',
+                        name: process.env.BREVO_SENDER_NAME || 'Trí Kun',
                         email: brevoSender
                     },
                     to: danhSachTo,
@@ -77,7 +77,7 @@ async function guiMailBangTransporter(mailOptions) {
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
         try {
-            const resendFrom = process.env.RESEND_FROM || 'TNTP Laptop Store <onboarding@resend.dev>';
+            const resendFrom = process.env.RESEND_FROM || 'Trí Kun <onboarding@resend.dev>';
             const res = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
@@ -169,13 +169,13 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo-badge">TNTP LAPTOP</div>
+                <div class="logo-badge">TRÍ KUN LAPTOP</div>
                 <h1 class="title">Yêu Cầu Đặt Lại Mật Khẩu</h1>
             </div>
             <div class="body-content">
                 <div class="greeting">Xin chào ${hoTen || 'Quý khách'},</div>
                 <div class="desc">
-                    Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>${emailNhan}</strong> tại hệ thống <strong>TNTP Laptop Store</strong>.
+                    Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>${emailNhan}</strong> tại hệ thống <strong>Trí Kun Laptop Store</strong>.
                     <br><br>
                     Vui lòng sử dụng mã OTP dưới đây để hoàn tất việc xác thực và đặt lại mật khẩu mới:
                 </div>
@@ -190,7 +190,7 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
                 </div>
             </div>
             <div class="footer">
-                TNTP Laptop Store // Hệ thống Laptop Gaming, AI PC & Đồ Họa hàng đầu 2026<br>
+                Trí Kun Laptop // Hệ thống Laptop Gaming, AI PC & Đồ Họa hàng đầu 2026<br>
                 Hotline hỗ trợ: 1900.8946 • Email: support@tntplaptop.vn
             </div>
         </div>
@@ -200,9 +200,9 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
 
     try {
         const info = await guiMailBangTransporter({
-            from: `"TNTP Laptop Store" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
+            from: `"Trí Kun" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
             to: emailNhan,
-            subject: `[TNTP Laptop] Mã OTP đặt lại mật khẩu của bạn là: ${maOtp}`,
+            subject: `[Trí Kun] Mã OTP đặt lại mật khẩu của bạn là: ${maOtp}`,
             text: `Mã xác thực OTP của bạn là: ${maOtp}. Mã có hiệu lực trong 10 phút. Tuyệt đối không chia sẻ mã này cho ai.`,
             html: htmlContent
         });
@@ -242,11 +242,11 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo-badge">TNTP LAPTOP</div>
+                <div class="logo-badge">TRÍ KUN LAPTOP</div>
                 <h1 class="title">Xác Thực & Kích Hoạt Tài Khoản</h1>
             </div>
             <div class="body-content">
-                <div class="greeting">Chào mừng ${hoTen || 'bạn'} gia nhập TNTP Laptop! 🎉</div>
+                <div class="greeting">Chào mừng ${hoTen || 'bạn'} gia nhập Trí Kun Laptop! 🎉</div>
                 <div class="desc">
                     Cảm ơn bạn đã đăng ký tài khoản thành viên. Hãy nhập mã OTP bên dưới để kích hoạt tài khoản và nhận ngay ưu đãi <strong>Voucher 200K</strong> cho đơn hàng đầu tiên:
                 </div>
@@ -257,7 +257,7 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
                 </div>
             </div>
             <div class="footer">
-                TNTP Laptop Store // Hệ thống Laptop Gaming, AI PC & Đồ Họa hàng đầu 2026
+                Trí Kun Laptop // Hệ thống Laptop Gaming, AI PC & Đồ Họa hàng đầu 2026
             </div>
         </div>
     </body>
@@ -266,9 +266,9 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
 
     try {
         const info = await guiMailBangTransporter({
-            from: `"TNTP Laptop Store" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
+            from: `"Trí Kun" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
             to: emailNhan,
-            subject: `[TNTP Laptop] Mã OTP kích hoạt tài khoản của bạn: ${maOtp}`,
+            subject: `[Trí Kun] Mã OTP kích hoạt tài khoản của bạn: ${maOtp}`,
             text: `Mã kích hoạt tài khoản của bạn là: ${maOtp}`,
             html: htmlContent
         });
@@ -329,13 +329,13 @@ async function guiMailXacNhanDonHang(donHang) {
     <body>
         <div class="container">
             <div class="header">
-                <div class="logo-badge">TNTP LAPTOP</div>
+                <div class="logo-badge">TRÍ KUN LAPTOP</div>
                 <h1 class="title">Xác Nhận Đơn Hàng #${maDon}</h1>
             </div>
             <div class="body-content">
                 <div class="greeting">Kính gửi ${tenKhach},</div>
                 <p style="font-size: 13.5px; color: #64748b; line-height: 1.5; margin: 6px 0 14px;">
-                    Cảm ơn quý khách đã tin tưởng mua sắm tại <strong>TNTP Laptop Store</strong>. Đơn hàng của quý khách đã được ghi nhận thành công và đang được chuẩn bị đóng gói niêm phong.
+                    Cảm ơn quý khách đã tin tưởng mua sắm tại <strong>Trí Kun Laptop Store</strong>. Đơn hàng của quý khách đã được ghi nhận thành công và đang được chuẩn bị đóng gói niêm phong.
                 </p>
 
                 <div style="background: #f8fafc; padding: 14px; border-radius: 12px; margin-bottom: 16px; font-size: 12.5px; line-height: 1.6; border: 1px solid #e2e8f0;">
@@ -375,7 +375,7 @@ async function guiMailXacNhanDonHang(donHang) {
                 </p>
             </div>
             <div class="footer">
-                TNTP Laptop Store // Hệ thống Laptop Gaming, AI PC & Đồ Họa hàng đầu 2026<br>
+                Trí Kun Laptop // Hệ thống Laptop Gaming, AI PC & Đồ Họa hàng đầu 2026<br>
                 Hotline hỗ trợ: 1900.8946 • Email: support@tntplaptop.vn
             </div>
         </div>
@@ -385,9 +385,9 @@ async function guiMailXacNhanDonHang(donHang) {
 
     try {
         const info = await guiMailBangTransporter({
-            from: `"TNTP Laptop Store" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
+            from: `"Trí Kun" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
             to: emailNhan,
-            subject: `[TNTP Laptop] Xác nhận đơn hàng #${maDon} thành công - ${tenKhach}`,
+            subject: `[Trí Kun] Xác nhận đơn hàng #${maDon} thành công - ${tenKhach}`,
             html: htmlContent
         });
         console.log(`✉️ [Nodemailer] Đã gửi email xác nhận đơn #${maDon} đến ${emailNhan} - MsgId: ${info.messageId}`);
