@@ -20,7 +20,7 @@ export default function BannerDangKyVip() {
 
     const handleCopyMa = () => {
         if (navigator.clipboard) {
-            navigator.clipboard.writeText('TNTPVIP500K');
+            navigator.clipboard.writeText('TNTP500K');
             setDaCopy(true);
             setTimeout(() => setDaCopy(false), 2500);
         }
@@ -39,7 +39,7 @@ export default function BannerDangKyVip() {
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[10.5px] font-black uppercase tracking-wider shadow-xs border border-white/30 flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-                            ĐẶC QUYỀN THÀNH VIÊN TNTP VIP
+                            ĐẶC QUYỀN THÀNH VIÊN TNTP
                         </span>
                         <span className="px-2.5 py-0.5 rounded-full bg-amber-300 text-amber-950 text-[10px] font-black flex items-center gap-1 shadow-sm">
                             <Gift className="w-3 h-3 text-amber-950" />
@@ -48,7 +48,7 @@ export default function BannerDangKyVip() {
                     </div>
 
                     <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-black tracking-tight leading-snug uppercase !text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-                        Gia Nhập VIP Club – Nhận Ngay{' '}
+                        Đăng Ký Thành Viên – Nhận Ngay{' '}
                         <span className="text-[#FFE500] drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)] block sm:inline">
                             Voucher 500.000đ
                         </span>
@@ -103,7 +103,7 @@ export default function BannerDangKyVip() {
                         <div className="p-4 sm:p-5 rounded-2xl bg-white/20 border-2 border-white/40 backdrop-blur-md space-y-3 animate-fade-in shadow-2xl">
                             <div className="flex items-center gap-2 text-white font-black text-xs sm:text-sm">
                                 <CheckCircle2 className="w-4.5 h-4.5 text-emerald-300" />
-                                <span>Chúc mừng bạn đã gia nhập VIP Club!</span>
+                                <span>Chúc mừng bạn đã đăng ký thành viên thành công!</span>
                             </div>
 
                             <p className="text-[11.5px] text-white/90">
@@ -112,7 +112,7 @@ export default function BannerDangKyVip() {
 
                             <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/90 border border-amber-300/60 shadow-inner">
                                 <span className="font-mono font-black text-amber-300 text-base sm:text-lg tracking-widest pl-2">
-                                    TNTPVIP500K
+                                    TNTP500K
                                 </span>
                                 <button
                                     type="button"

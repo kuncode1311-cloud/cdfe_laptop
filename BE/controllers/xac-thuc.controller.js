@@ -411,7 +411,7 @@ const dangNhapGoogle = async (req, res) => {
                 matKhau: matKhauHash,
                 avatar: googleAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
                 vaiTro: 'khach_hang',
-                hangThanhVien: 'Thành Viên VIP',
+                hangThanhVien: 'Thành Viên',
                 viVoucher: [],
                 googleId: googleSub,
                 authProvider: 'google'

@@ -91,7 +91,7 @@ const traCuuBaoHanh = async (req, res) => {
                         trang_thai: conHieuLuc
                             ? `Còn hiệu lực bảo hành chính hãng (${soThangConLai} tháng còn lại)`
                             : 'Đã hết thời hạn bảo hành chính hãng',
-                        goi_dich_vu: 'Bảo hành vàng VIP On-site tận nơi 24 tháng chính hãng tại hệ thống TNTP Laptop',
+                        goi_dich_vu: 'Bảo hành vàng On-site tận nơi 24 tháng chính hãng tại hệ thống TNTP Laptop',
                         trung_tam_bao_hanh: [
                             'Chi nhánh 1: 29 Tân Phước, P.8, Q.10, TP.HCM (Hotline: 0948.37.79.79)',
                             'Chi nhánh 2: 12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM (Trường ITC)'

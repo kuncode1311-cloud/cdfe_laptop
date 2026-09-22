@@ -1456,14 +1456,12 @@ export default function TrangQuanTriCuaHang() {
             const soDonHang = cacDonKhach.length;
 
             const laTiemNang = tongChiTieu >= 20000000 || soDonHang >= 2;
-            const laVip = tongChiTieu >= 50000000;
 
             return {
                 ...user,
                 tongChiTieu,
                 soDonHang,
-                laTiemNang,
-                laVip
+                laTiemNang
             };
         });
     }, [danhSachNguoiDung, danhSachDonHang]);
@@ -1483,8 +1481,6 @@ export default function TrangQuanTriCuaHang() {
                 matchLoai = u.soDonHang > 0;
             } else if (locKhachHang === 'chua_mua') {
                 matchLoai = !u.soDonHang || u.soDonHang === 0;
-            } else if (locKhachHang === 'vip') {
-                matchLoai = u.laVip;
             } else if (locKhachHang === 'admin') {
                 matchLoai = u.vaiTro === 'admin';
             } else if (locKhachHang === 'bi_khoa') {
@@ -11374,7 +11370,7 @@ export default function TrangQuanTriCuaHang() {
                                         <input
                                             type="text"
                                             required
-                                            placeholder="SALE2026 / TRIKUNVIP..."
+                                            placeholder="SALE2026 / TRIKUN500K..."
                                             value={formVoucher.ma_code}
                                             onChange={(e) => setFormVoucher({ ...formVoucher, ma_code: e.target.value.toUpperCase() })}
                                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono font-black text-rose-600 uppercase text-xs"
@@ -11489,7 +11485,7 @@ export default function TrangQuanTriCuaHang() {
                                         <label className="font-bold text-slate-700 dark:text-slate-300">Nhãn Badge Nổi Bật</label>
                                         <input
                                             type="text"
-                                            placeholder="HOT DEAL / VIP..."
+                                            placeholder="HOT DEAL / GIẢM SỐC..."
                                             value={formVoucher.badge || ''}
                                             onChange={(e) => setFormVoucher({ ...formVoucher, badge: e.target.value.toUpperCase() })}
                                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs uppercase"

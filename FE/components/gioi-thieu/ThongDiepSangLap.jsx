@@ -43,7 +43,7 @@ const FOUNDERS = [
     glowColor: 'group-hover:shadow-[0_15px_35px_rgba(244,63,94,0.25)]',
     borderColor: 'group-hover:border-rose-400/60',
     trietLy: 'Sự hài lòng tuyệt đối của khách hàng là thước đo duy nhất cho thành công và sự phát triển bền vững của TNTP LAPTOP.',
-    chuyenMon: ['Vận hành Showroom chuẩn hãng', 'Dịch vụ khách hàng VIP 5★', 'Cam kết 1 đổi 1 30 ngày'],
+    chuyenMon: ['Vận hành Showroom chuẩn hãng', 'Dịch vụ khách hàng tận tâm 5★', 'Cam kết 1 đổi 1 30 ngày'],
     anh: '/images/founder-nhat.jpg'
   },
   {

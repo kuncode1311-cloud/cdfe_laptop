@@ -318,7 +318,7 @@ export default function TrangDangNhap() {
     return (
         <div className="max-w-5xl mx-auto py-4 sm:py-8">
             <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
-                {/* CỘT TRÁI: BANNER THƯƠNG HIỆU & QUYỀN LỢI VIP */}
+                {/* CỘT TRÁI: BANNER THƯƠNG HIỆU & QUYỀN LỢI THÀNH VIÊN */}
                 <div className="lg:col-span-5 bg-gradient-to-br from-[#00276e] via-[#0040a8] to-[#0052cc] p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
                     {/* Họa tiết phát sáng nền */}
                     <div className="absolute -top-16 -left-16 w-52 h-52 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none" />

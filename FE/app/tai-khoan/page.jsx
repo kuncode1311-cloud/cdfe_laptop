@@ -1321,7 +1321,7 @@ function NoiDungTrangTaiKhoan() {
                 </span>
                 <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                 <span className="font-extrabold text-blue-600">
-                    {tabHienTai === 'ho-so' && 'Hồ Sơ Cá Nhân & VIP'}
+                    {tabHienTai === 'ho-so' && 'Hồ Sơ Cá Nhân'}
                     {tabHienTai === 'don-hang' && 'Lịch Sử Đơn Hàng & Lộ Trình'}
                     {tabHienTai === 'voucher' && 'Ví Mã Giảm Giá Đã Săn'}
                     {tabHienTai === 'dia-chi' && 'Sổ Địa Chỉ Giao Hàng'}
@@ -1441,7 +1441,7 @@ function NoiDungTrangTaiKhoan() {
                                     <div className="text-left">
                                         <div className="text-xs sm:text-sm">Hồ Sơ Cá Nhân</div>
                                         <div className={`text-[10px] font-bold ${tabHienTai === 'ho-so' ? 'text-blue-100' : 'text-slate-400'}`}>
-                                            Thông tin & Thẻ VIP
+                                            Thông tin & Thẻ Thành Viên
                                         </div>
                                     </div>
                                 </div>
@@ -1578,7 +1578,7 @@ function NoiDungTrangTaiKhoan() {
                 {/* ========================================================================= */}
                 <div className="lg:col-span-8">
                     {/* ========================================================================= */}
-                    {/* TAB 1: HỒ SƠ CÁ NHÂN & THẺ HỘI VIÊN VIP SANG TRỌNG HOÀNG GIA              */}
+                    {/* TAB 1: HỒ SƠ CÁ NHÂN & THẺ HỘI VIÊN CHÍNH THỨC                             */}
                     {/* ========================================================================= */}
                     {tabHienTai === 'ho-so' && (
                         <div className="rounded-3xl bg-white border-2 border-blue-300 shadow-xl overflow-hidden space-y-0">
@@ -1590,37 +1590,37 @@ function NoiDungTrangTaiKhoan() {
                                     </div>
                                     <div>
                                         <h2 className="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
-                                            <span>Hồ Sơ Cá Nhân & Đặc Quyền VIP</span>
+                                            <span>Hồ Sơ Cá Nhân & Thẻ Thành Viên</span>
                                         </h2>
                                         <p className="text-xs text-blue-100 font-medium mt-0.5">
-                                            Cập nhật thông tin chính xác để nhận bảo hành chính hãng và đặc quyền VIP
+                                            Cập nhật thông tin chính xác để nhận bảo hành chính hãng và ưu đãi thành viên
                                         </p>
                                     </div>
                                 </div>
                                 <span className="px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black self-start sm:self-auto flex items-center gap-1.5 shadow-xs">
                                     <Crown className="w-3.5 h-3.5 fill-slate-950" />
-                                    <span>Hội Viên VIP Club</span>
+                                    <span>Hội Viên TNTP</span>
                                 </span>
                             </div>
 
                             <div className="p-5 sm:p-7 space-y-6 bg-gradient-to-b from-slate-50/40 to-white">
 
-                            {/* THẺ HỘI VIÊN VIP TONE SÁNG CAO CẤP: ĐỒNG ĐIỆU GIAO DIỆN, SANG TRỌNG, GỌN GÀNG */}
+                            {/* THẺ HỘI VIÊN TONE SÁNG CAO CẤP: ĐỒNG ĐIỆU GIAO DIỆN, SANG TRỌNG, GỌN GÀNG */}
                             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50 via-sky-50/70 to-indigo-50 border-2 border-blue-300/90 shadow-sm relative overflow-hidden space-y-3.5">
                                 <div className="absolute -right-6 -bottom-6 w-36 h-36 rounded-full bg-blue-200/25 blur-xl pointer-events-none" />
                                 <div className="absolute right-4 top-2 text-blue-200/50 pointer-events-none">
                                     <Crown className="w-24 h-24 stroke-[1.2]" />
                                 </div>
 
-                                {/* Dòng 1: Huy hiệu VIP */}
+                                {/* Dòng 1: Huy hiệu thành viên */}
                                 <div className="flex items-center justify-between relative z-10">
                                     <div className="flex items-center gap-2">
-                                        <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-500 text-slate-950 font-black text-xs tracking-wider shadow-xs flex items-center gap-1">
-                                            <Crown className="w-3.5 h-3.5 fill-slate-950" />
-                                            <span>TNTP VIP CLUB</span>
+                                        <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 text-white font-black text-xs tracking-wider shadow-xs flex items-center gap-1">
+                                            <Crown className="w-3.5 h-3.5 fill-white" />
+                                            <span>TNTP STORE</span>
                                         </span>
                                         <span className="text-[11px] font-black text-blue-800 font-mono tracking-widest px-2.5 py-0.5 rounded-lg bg-white border border-blue-200 shadow-2xs">
-                                            PLATINUM MEMBER
+                                            {nguoiDung?.hangThanhVien || 'THÀNH VIÊN'}
                                         </span>
                                     </div>
                                     <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 border border-blue-200 text-blue-900 text-xs font-black shadow-2xs">
@@ -1636,10 +1636,10 @@ function NoiDungTrangTaiKhoan() {
                                         <div className="text-xl sm:text-2xl font-black text-slate-900 tracking-wide">{hoTen || 'Thành Viên TNTP'}</div>
                                     </div>
                                     <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-700 bg-white px-3 py-1.5 rounded-xl border border-blue-200 shadow-2xs self-start sm:self-auto">
-                                        <span>Mã KH: {nguoiDung?.id || nguoiDung?._id || 'usr_vip_2026'}</span>
+                                        <span>Mã KH: {nguoiDung?.id || nguoiDung?._id || 'usr_2026'}</span>
                                         <button
                                             type="button"
-                                            onClick={() => saoChepMaId(nguoiDung?.id || nguoiDung?._id || 'usr_vip_2026')}
+                                            onClick={() => saoChepMaId(nguoiDung?.id || nguoiDung?._id || 'usr_2026')}
                                             className="p-0.5 text-blue-600 hover:text-blue-800 transition-transform active:scale-90 cursor-pointer"
                                             title="Sao chép mã"
                                         >
@@ -1649,10 +1649,10 @@ function NoiDungTrangTaiKhoan() {
                                     </div>
                                 </div>
 
-                                {/* Dòng 3: 2 Ô đặc quyền VIP cao cấp (Đã loại bỏ điểm thưởng thừa) */}
+                                {/* Dòng 3: 2 Ô đặc quyền ưu đãi */}
                                 <div className="grid grid-cols-2 gap-3 pt-3 border-t border-blue-200/80 text-xs relative z-10">
                                     <div className="bg-white border-2 border-blue-300 p-2.5 rounded-xl text-center shadow-2xs">
-                                        <span className="text-blue-900 text-[10px] block font-black uppercase tracking-wider">Chiết khấu VIP</span>
+                                        <span className="text-blue-900 text-[10px] block font-black uppercase tracking-wider">Ưu đãi thành viên</span>
                                         <b className="text-blue-600 font-black text-base sm:text-lg">Giảm thêm 5%</b>
                                     </div>
                                     <div className="bg-white border-2 border-emerald-300 p-2.5 rounded-xl text-center shadow-2xs">
