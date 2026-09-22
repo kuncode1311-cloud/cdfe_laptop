@@ -9,25 +9,31 @@ function layThongTinEmail() {
     return { user, pass };
 }
 
-function taoTransporter() {
+async function guiMailBangTransporter(mailOptions) {
     const { user, pass } = layThongTinEmail();
 
-    return nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // SSL
-        auth: {
-            user,
-            pass
-        },
-        tls: {
-            rejectUnauthorized: false
-        },
-        connectionTimeout: 10000,
-        greetingTimeout: 5000,
-        socketTimeout: 15000
-    });
+    // Phương thức 1: Sử dụng cấu hình chuẩn service: 'gmail' (Tối ưu nhất cho Google SMTP)
+    try {
+        const transporterGmail = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user, pass },
+            tls: { rejectUnauthorized: false }
+        });
+        return await transporterGmail.sendMail(mailOptions);
+    } catch (err1) {
+        console.warn('⚠️ Gửi qua service gmail thất bại, thử lại qua port 587 STARTTLS...', err1.message);
+        // Phương thức 2: Dự phòng qua smtp.gmail.com port 587 STARTTLS
+        const transporter587 = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            auth: { user, pass },
+            tls: { rejectUnauthorized: false }
+        });
+        return await transporter587.sendMail(mailOptions);
+    }
 }
+
 
 /**
  * Gửi email mã OTP kích hoạt tài khoản
@@ -40,7 +46,6 @@ export async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
     }
 
     const { user } = layThongTinEmail();
-    const transporter = taoTransporter();
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -94,7 +99,7 @@ export async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
     `;
 
     try {
-        const info = await transporter.sendMail({
+        const info = await guiMailBangTransporter({
             from: `"TNTP Laptop Store" <${user}>`,
             to: emailGuiToi,
             subject: `[TNTP Laptop] Mã OTP kích hoạt tài khoản của bạn: ${maOtp}`,
@@ -121,7 +126,6 @@ export async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
     }
 
     const { user } = layThongTinEmail();
-    const transporter = taoTransporter();
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -177,7 +181,7 @@ export async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
     `;
 
     try {
-        const info = await transporter.sendMail({
+        const info = await guiMailBangTransporter({
             from: `"TNTP Laptop Store" <${user}>`,
             to: emailGuiToi,
             subject: `[TNTP Laptop] Mã OTP đặt lại mật khẩu của bạn là: ${maOtp}`,
@@ -202,7 +206,6 @@ export async function guiMailXacNhanDonHang(donHang) {
     if (!emailNhan || !String(emailNhan).includes('@')) return { thanhCong: false, lyDo: 'Không có email' };
 
     const { user } = layThongTinEmail();
-    const transporter = taoTransporter();
     const tenKhach = donHang?.thong_tin_giao_hang?.ho_ten || donHang?.thong_tin_giao_hang?.ho_va_ten || 'Quý khách';
     const maDon = donHang?.ma_don_hang || donHang?.id || 'LPN-ORDER';
     const tongTien = Number(donHang?.tong_tien_thanh_toan || 0).toLocaleString('vi-VN') + ' đ';
@@ -301,7 +304,7 @@ export async function guiMailXacNhanDonHang(donHang) {
     `;
 
     try {
-        const info = await transporter.sendMail({
+        const info = await guiMailBangTransporter({
             from: `"TNTP Laptop Store" <${user}>`,
             to: emailNhan,
             subject: `[TNTP Laptop] Xác nhận đơn hàng #${maDon} thành công - ${tenKhach}`,

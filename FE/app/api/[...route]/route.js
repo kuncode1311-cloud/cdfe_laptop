@@ -360,12 +360,14 @@ export async function POST(request, { params }) {
                 );
 
                 console.log(`✉️ [Đăng Ký - Gửi lại OTP] Email: ${emailClean} | OTP: ${maOtp}`);
-                await guiMailKichHoatTaiKhoan(emailClean, String(hoTen).trim(), maOtp);
+                const kqMail = await guiMailKichHoatTaiKhoan(emailClean, String(hoTen).trim(), maOtp);
 
                 return NextResponse.json({
                     yeuCauOtp: true,
                     email: emailClean,
-                    thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam)!`
+                    thong_diep: kqMail?.thanhCong
+                        ? `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam)!`
+                        : `Gửi email gặp sự cố (${kqMail?.loi || 'lỗi mạng'}). Vui lòng bấm Gửi lại mã.`
                 });
             }
 
@@ -390,14 +392,17 @@ export async function POST(request, { params }) {
 
             await db.collection('nguoi_dung').insertOne(newUser);
             console.log(`✉️ [Đăng Ký Mới - Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
-            await guiMailKichHoatTaiKhoan(emailClean, String(hoTen).trim(), maOtp);
+            const kqMail = await guiMailKichHoatTaiKhoan(emailClean, String(hoTen).trim(), maOtp);
 
             return NextResponse.json({
                 yeuCauOtp: true,
                 email: emailClean,
-                thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam)!`
+                thong_diep: kqMail?.thanhCong
+                    ? `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam)!`
+                    : `Tài khoản đã tạo nhưng gửi email gặp sự cố (${kqMail?.loi || 'lỗi kết nối SMTP'}). Vui lòng kiểm tra lại địa chỉ email hoặc bấm Gửi lại mã.`
             });
         }
+
 
         // 2.1. AUTH: /api/auth/kich-hoat (Xác thực OTP kích hoạt tài khoản)
         if (primary === 'auth' && secondary === 'kich-hoat') {
