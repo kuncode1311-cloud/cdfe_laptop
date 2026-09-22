@@ -33,7 +33,7 @@ export const TOKEN_STORAGE_KEY = 'tnt_laptop_token';
  * Hàm gửi request API an toàn, có JWT header, timeout chuẩn
  */
 export async function apiFetch(endpoint, options = {}) {
-    const { timeoutMs = 8000, ...fetchOptions } = options;
+    const { timeoutMs = 20000, ...fetchOptions } = options;
 
     const base = layApiBaseUrl();
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -88,7 +88,11 @@ export async function apiFetch(endpoint, options = {}) {
             } catch {}
         }
 
-        console.error(`❌ [API Error] Lỗi kết nối API (${url}):`, error.message);
+        if (error.name === 'AbortError') {
+            console.warn(`⚠️ [API Timeout] Yêu cầu tới (${url}) vượt quá thời gian ${timeoutMs}ms.`);
+        } else {
+            console.error(`❌ [API Error] Lỗi kết nối API (${url}):`, error.message);
+        }
         throw error;
     }
 }

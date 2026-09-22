@@ -82,8 +82,8 @@ function NoiDungDanhSachSanPham() {
     }, [hangParam, danhMucParam, tuKhoaParam]);
 
     // Đồng bộ sản phẩm 100% từ MongoDB Atlas qua API
-    const [tatCaSanPham, setTatCaSanPham] = useState(() => SanPhamService.layTatCaSanPham());
-    const [dangTaiSanPham, setDangTaiSanPham] = useState(tatCaSanPham.length === 0);
+    const [tatCaSanPham, setTatCaSanPham] = useState([]);
+    const [dangTaiSanPham, setDangTaiSanPham] = useState(true);
     const [loiKetNoi, setLoiKetNoi] = useState(null);
 
     const taiLaiDuLieu = () => {
@@ -104,6 +104,13 @@ function NoiDungDanhSachSanPham() {
 
     useEffect(() => {
         let daHuy = false;
+        // Kiểm tra bộ nhớ đệm nếu đã có
+        const cache = SanPhamService.layTatCaSanPham();
+        if (cache && cache.length > 0) {
+            setTatCaSanPham(cache);
+            setDangTaiSanPham(false);
+        }
+
         SanPhamService.layTatCaSanPhamAsync()
             .then((data) => {
                 if (!daHuy) {

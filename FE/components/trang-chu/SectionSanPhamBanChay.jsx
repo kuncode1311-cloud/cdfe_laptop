@@ -6,12 +6,19 @@ import { SanPhamService } from '@/services/san-pham.service';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 export default function SectionSanPhamBanChay() {
     const [tabHienTai, setTabHienTai] = useState('tat_ca');
-    const [tatCaSanPham, setTatCaSanPham] = useState(() => SanPhamService.layTatCaSanPham() || []);
-    const [dangTai, setDangTai] = useState(tatCaSanPham.length === 0);
+    const [tatCaSanPham, setTatCaSanPham] = useState([]);
+    const [dangTai, setDangTai] = useState(true);
 
     // Đồng bộ danh sách sản phẩm từ MongoDB Atlas theo thời gian thực
     useEffect(() => {
         let daHuy = false;
+        // Nếu đã có dữ liệu trong bộ nhớ đệm, hiển thị ngay
+        const cached = SanPhamService.layTatCaSanPham();
+        if (cached && cached.length > 0) {
+            setTatCaSanPham(cached);
+            setDangTai(false);
+        }
+
         SanPhamService.layTatCaSanPhamAsync().then((data) => {
             if (!daHuy && Array.isArray(data) && data.length > 0) {
                 setTatCaSanPham(data);

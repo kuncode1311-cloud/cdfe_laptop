@@ -18,8 +18,8 @@ export async function connectToDatabase() {
     }
 
     const client = new MongoClient(MONGODB_URI, {
-        serverSelectionTimeoutMS: 7000,
-        connectTimeoutMS: 7000,
+        serverSelectionTimeoutMS: 15000,
+        connectTimeoutMS: 15000,
         maxPoolSize: 10
     });
 
