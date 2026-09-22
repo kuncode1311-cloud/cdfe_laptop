@@ -33,6 +33,12 @@ function taoTransporter() {
  * Gửi email mã OTP kích hoạt tài khoản
  */
 export async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
+    const emailGuiToi = String(emailNhan || '').trim().toLowerCase();
+    if (!emailGuiToi || !emailGuiToi.includes('@')) {
+        console.error(`❌ [Nodemailer FE] Email người nhận không hợp lệ: "${emailNhan}"`);
+        return { thanhCong: false, loi: 'Địa chỉ Email người nhận không hợp lệ' };
+    }
+
     const { user } = layThongTinEmail();
     const transporter = taoTransporter();
 
@@ -64,9 +70,9 @@ export async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
                 <h1 class="title">Xác Thực & Kích Hoạt Tài Khoản</h1>
             </div>
             <div class="body-content">
-                <div class="greeting">Chào mừng ${hoTen || 'bạn'} gia nhập TNTP Laptop! 🎉</div>
+                <div class="greeting">Chào mừng ${hoTen || 'Quý khách'} gia nhập TNTP Laptop! 🎉</div>
                 <div class="desc">
-                    Cảm ơn bạn đã đăng ký tài khoản thành viên. Hãy nhập mã OTP bên dưới để kích hoạt tài khoản và nhận ngay ưu đãi <strong>Voucher 200K</strong> cho đơn hàng đầu tiên:
+                    Cảm ơn bạn đã đăng ký tài khoản với email <strong>${emailGuiToi}</strong>. Hãy nhập mã OTP bên dưới để kích hoạt tài khoản và nhận ngay ưu đãi <strong>Voucher 200K</strong> cho đơn hàng đầu tiên:
                 </div>
                 
                 <div class="otp-box">
@@ -90,23 +96,30 @@ export async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
     try {
         const info = await transporter.sendMail({
             from: `"TNTP Laptop Store" <${user}>`,
-            to: emailNhan,
+            to: emailGuiToi,
             subject: `[TNTP Laptop] Mã OTP kích hoạt tài khoản của bạn: ${maOtp}`,
             text: `Mã kích hoạt tài khoản của bạn là: ${maOtp}. Mã có hiệu lực trong 10 phút.`,
             html: htmlContent
         });
-        console.log(`✉️ [Nodemailer FE] Gửi email kích hoạt đến ${emailNhan} thành công - MsgId: ${info.messageId}`);
-        return { thanhCong: true, messageId: info.messageId };
+        console.log(`✉️ [Nodemailer FE] Đã gửi mã OTP đến EMAIL KHÁCH HÀNG: ${emailGuiToi} (Người gửi hệ thống: ${user}) - MsgId: ${info.messageId}`);
+        return { thanhCong: true, messageId: info.messageId, emailNhan: emailGuiToi };
     } catch (err) {
-        console.error(`❌ [Nodemailer FE] Lỗi gửi email kích hoạt đến ${emailNhan}:`, err.message);
+        console.error(`❌ [Nodemailer FE] Lỗi gửi email kích hoạt đến ${emailGuiToi}:`, err.message);
         return { thanhCong: false, loi: err.message };
     }
 }
+
 
 /**
  * Gửi email mã OTP Quên Mật Khẩu
  */
 export async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
+    const emailGuiToi = String(emailNhan || '').trim().toLowerCase();
+    if (!emailGuiToi || !emailGuiToi.includes('@')) {
+        console.error(`❌ [Nodemailer FE] Email người nhận không hợp lệ: "${emailNhan}"`);
+        return { thanhCong: false, loi: 'Địa chỉ Email người nhận không hợp lệ' };
+    }
+
     const { user } = layThongTinEmail();
     const transporter = taoTransporter();
 
@@ -140,7 +153,7 @@ export async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
             <div class="body-content">
                 <div class="greeting">Xin chào ${hoTen || 'Quý khách'},</div>
                 <div class="desc">
-                    Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>${emailNhan}</strong> tại hệ thống <strong>TNTP Laptop Store</strong>.
+                    Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản <strong>${emailGuiToi}</strong> tại hệ thống <strong>TNTP Laptop Store</strong>.
                     <br><br>
                     Vui lòng sử dụng mã OTP dưới đây để hoàn tất việc xác thực và đặt lại mật khẩu mới:
                 </div>
@@ -166,19 +179,20 @@ export async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
     try {
         const info = await transporter.sendMail({
             from: `"TNTP Laptop Store" <${user}>`,
-            to: emailNhan,
+            to: emailGuiToi,
             subject: `[TNTP Laptop] Mã OTP đặt lại mật khẩu của bạn là: ${maOtp}`,
             text: `Mã xác thực OTP của bạn là: ${maOtp}. Mã có hiệu lực trong 10 phút. Tuyệt đối không chia sẻ mã này cho ai.`,
             html: htmlContent
         });
 
-        console.log(`✅ [Nodemailer FE] Gửi mã OTP quên mật khẩu đến ${emailNhan} thành công - MsgId: ${info.messageId}`);
-        return { thanhCong: true, messageId: info.messageId };
+        console.log(`✅ [Nodemailer FE] Đã gửi mã OTP quên mật khẩu đến EMAIL KHÁCH HÀNG: ${emailGuiToi} (Người gửi hệ thống: ${user}) - MsgId: ${info.messageId}`);
+        return { thanhCong: true, messageId: info.messageId, emailNhan: emailGuiToi };
     } catch (err) {
-        console.error(`❌ [Nodemailer FE] Lỗi gửi OTP đến ${emailNhan}:`, err.message);
+        console.error(`❌ [Nodemailer FE] Lỗi gửi OTP đến ${emailGuiToi}:`, err.message);
         return { thanhCong: false, loi: err.message };
     }
 }
+
 
 /**
  * Gửi email xác nhận đơn hàng khi khách đặt hàng thành công
