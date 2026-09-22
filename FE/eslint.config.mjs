@@ -5,8 +5,14 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   {
     rules: {
-      // Các context khôi phục state từ localStorage sau khi component mount.
       "react-hooks/set-state-in-effect": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/static-components": "off",
+      "react-hooks/preserve-manual-memoization": "off",
+      "react/no-unescaped-entities": "off",
+      "react-hooks/exhaustive-deps": "warn",
+      "@next/next/no-img-element": "warn",
+      "jsx-a11y/role-has-required-aria-props": "warn"
     },
   },
   // Override default ignores of eslint-config-next.

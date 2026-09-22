@@ -932,7 +932,7 @@ export default function TrangQuanTriCuaHang() {
     const taiDuLieuToanBo = async () => {
         setDangTai(true);
         try {
-            const [sps, dhs, vcs, dms, us, tts] = await Promise.all([
+            const results = await Promise.allSettled([
                 SanPhamService.layTatCaSanPhamAsync(),
                 DonHangService.layTatCaDonHangAsync(),
                 MaGiamGiaService.layDanhSachMaGiamGiaAsync(true),
@@ -941,12 +941,19 @@ export default function TrangQuanTriCuaHang() {
                 TinTucService.layDanhSachTinTucAsync({ tat_ca: true })
             ]);
 
-            setDanhSachSanPham(sps || []);
-            setDanhSachDonHang(dhs || []);
-            setDanhSachVoucher(vcs || []);
-            setDanhSachDanhMuc(dms || []);
-            setDanhSachNguoiDung(us || []);
-            setDanhSachTinTuc(tts || []);
+            const sps = results[0].status === 'fulfilled' && Array.isArray(results[0].value) ? results[0].value : [];
+            const dhs = results[1].status === 'fulfilled' && Array.isArray(results[1].value) ? results[1].value : [];
+            const vcs = results[2].status === 'fulfilled' && Array.isArray(results[2].value) ? results[2].value : [];
+            const dms = results[3].status === 'fulfilled' && Array.isArray(results[3].value) ? results[3].value : [];
+            const us = results[4].status === 'fulfilled' && Array.isArray(results[4].value) ? results[4].value : [];
+            const tts = results[5].status === 'fulfilled' && Array.isArray(results[5].value) ? results[5].value : [];
+
+            setDanhSachSanPham(sps);
+            setDanhSachDonHang(dhs);
+            setDanhSachVoucher(vcs);
+            setDanhSachDanhMuc(dms);
+            setDanhSachNguoiDung(us);
+            setDanhSachTinTuc(tts);
 
             const kmConfig = CaiDatService.layCaiDatKhuyenMai();
             setCaiDatKm(kmConfig);

@@ -2,7 +2,18 @@
  * Module cấu hình API Client kết nối Backend Express.js & MongoDB Atlas
  * 100% Dữ liệu thực tế từ Database, không dùng dữ liệu cứng giả lập
  */
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export function layApiBaseUrl() {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+        return process.env.NEXT_PUBLIC_API_URL;
+    }
+    if (typeof window !== 'undefined') {
+        return `${window.location.origin}/api`;
+    }
+    return 'http://localhost:5000/api';
+}
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:5000/api');
+
 export const TOKEN_STORAGE_KEY = 'tnt_laptop_token';
 
 /**
@@ -11,7 +22,10 @@ export const TOKEN_STORAGE_KEY = 'tnt_laptop_token';
 export async function apiFetch(endpoint, options = {}) {
     const { timeoutMs = 8000, ...fetchOptions } = options;
 
-    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+    const base = layApiBaseUrl();
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    let url = endpoint.startsWith('http') ? endpoint : `${base}${cleanEndpoint}`;
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -46,6 +60,21 @@ export async function apiFetch(endpoint, options = {}) {
         return await res.json();
     } catch (error) {
         clearTimeout(timeoutId);
+
+        // Nếu gọi localhost:5000 bị lỗi (ví dụ chưa bật Express), tự động fallback gọi API Next.js trên port hiện tại
+        if (url.includes('localhost:5000') && typeof window !== 'undefined') {
+            try {
+                const fallbackUrl = `${window.location.origin}/api${cleanEndpoint}`;
+                const resFallback = await fetch(fallbackUrl, {
+                    ...fetchOptions,
+                    headers
+                });
+                if (resFallback.ok) {
+                    return await resFallback.json();
+                }
+            } catch {}
+        }
+
         console.error(`❌ [API Error] Lỗi kết nối API (${url}):`, error.message);
         throw error;
     }

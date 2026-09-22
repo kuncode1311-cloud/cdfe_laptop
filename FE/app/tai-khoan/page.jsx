@@ -869,7 +869,7 @@ function NoiDungTrangTaiKhoan() {
     const danhSachVoucherTrongVi = useMemo(() => {
         const viCodes = Array.isArray(nguoiDung?.viVoucher) ? nguoiDung.viVoucher : [];
         return danhSachVoucher.filter(vc => viCodes.includes(vc.ma_code));
-    }, [danhSachVoucher, nguoiDung?.viVoucher]);
+    }, [danhSachVoucher, nguoiDung]);
 
     const soLuongVoucherVi = Array.isArray(nguoiDung?.viVoucher) ? nguoiDung.viVoucher.length : 0;
 
