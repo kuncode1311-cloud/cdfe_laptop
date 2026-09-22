@@ -30,6 +30,17 @@ export default function TrangDangNhap() {
         return () => clearInterval(timer);
     }, [demNguoc]);
 
+    // Định dạng thời gian đếm ngược (90s -> 1p30s, 45s -> 45s)
+    const dinhDangDemNguoc = (giay) => {
+        if (giay <= 0) return '';
+        if (giay >= 60) {
+            const p = Math.floor(giay / 60);
+            const s = (giay % 60).toString().padStart(2, '0');
+            return `${p}p${s}s`;
+        }
+        return `${giay}s`;
+    };
+
     // Nếu đã đăng nhập thì điều hướng về trang chủ
     if (daDangNhap) {
         return (
@@ -88,7 +99,7 @@ export default function TrangDangNhap() {
                 if (res?.yeuCauOtp) {
                     toast.success(res.thong_diep || `Mã kích hoạt OTP đã gửi tới ${email}. Vui lòng kiểm tra hộp thư!`);
                     setCheDo('xac_thuc_otp');
-                    setDemNguoc(60);
+                    setDemNguoc(90);
                     return;
                 }
                 toast.success('Đăng ký tài khoản VIP thành công! Đã tặng 200 điểm.');
@@ -98,7 +109,7 @@ export default function TrangDangNhap() {
             if (err.message && err.message.toLowerCase().includes('chưa được kích hoạt')) {
                 toast.info('Tài khoản chưa kích hoạt. Vui lòng nhập mã OTP đã gửi về email!');
                 setCheDo('xac_thuc_otp');
-                setDemNguoc(60);
+                setDemNguoc(90);
             } else {
                 toast.error(err.message || 'Thao tác không thành công, vui lòng thử lại!');
             }
@@ -116,7 +127,7 @@ export default function TrangDangNhap() {
         try {
             const res = await guiLaiOtp(email.trim());
             toast.success(res.thong_diep || `Đã gửi lại mã OTP tới ${email}`);
-            setDemNguoc(60);
+            setDemNguoc(90);
         } catch (err) {
             toast.error(err.message || 'Không thể gửi lại mã OTP');
         } finally {
@@ -314,8 +325,8 @@ export default function TrangDangNhap() {
                                                 onClick={xuLyGuiLaiOtp}
                                                 className="text-[11px] font-bold text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
                                             >
-                                                <RefreshCw className="w-3 h-3" />
-                                                {demNguoc > 0 ? `Gửi lại (${demNguoc}s)` : 'Gửi lại mã'}
+                                                <RefreshCw className={`w-3 h-3 ${dangXuLy ? 'animate-spin' : ''}`} />
+                                                {demNguoc > 0 ? `Gửi lại (${dinhDangDemNguoc(demNguoc)})` : 'Gửi lại mã'}
                                             </button>
                                         </div>
                                         <input

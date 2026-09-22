@@ -224,6 +224,17 @@ export default function ModalDangNhapDangKy() {
         return () => clearInterval(timer);
     }, [demNguoc]);
 
+    // Định dạng thời gian đếm ngược (ví dụ: 90s -> 1p30s, 45s -> 45s)
+    const dinhDangDemNguoc = (giay) => {
+        if (giay <= 0) return '';
+        if (giay >= 60) {
+            const p = Math.floor(giay / 60);
+            const s = (giay % 60).toString().padStart(2, '0');
+            return `${p}p${s}s`;
+        }
+        return `${giay}s`;
+    };
+
     // Khóa cuộn trang mượt mà - KHÔNG dùng position='fixed' gây nhảy layout
     useEffect(() => {
         if (dangMoModalAuth) {
@@ -355,7 +366,7 @@ export default function ModalDangNhapDangKy() {
             const res = await guiOtpQuenMatKhau(email);
             setThongBaoThanhCong(res.thong_diep || `Đã gửi mã xác thực tới ${email}`);
             chuyenCheDo('quen_mat_khau', 2);
-            setDemNguoc(60);
+            setDemNguoc(90);
         } catch (err) {
             setThongBaoLoi(err.message || 'Không thể gửi mã OTP, vui lòng kiểm tra lại email!');
         } finally {
@@ -437,7 +448,7 @@ export default function ModalDangNhapDangKy() {
             const res = await dangKy(hoTen.trim(), email.trim(), soDienThoai.trim(), matKhau);
             setThongBaoThanhCong(res.thong_diep || `Mã kích hoạt đã gửi tới ${email}. Vui lòng kiểm tra email!`);
             chuyenCheDo('dang_ky', 2);
-            setDemNguoc(60);
+            setDemNguoc(90);
         } catch (err) {
             setThongBaoLoi(err.message || 'Đăng ký tài khoản thất bại!');
         } finally {
@@ -479,7 +490,7 @@ export default function ModalDangNhapDangKy() {
         try {
             const res = await guiLaiOtp(email.trim());
             setThongBaoThanhCong(res.thong_diep || `Đã gửi lại mã OTP mới tới email ${email}! Vui lòng kiểm tra hộp thư.`);
-            setDemNguoc(60);
+            setDemNguoc(90);
         } catch (err) {
             setThongBaoLoi(err.message || 'Không thể gửi lại mã OTP, vui lòng thử lại!');
         } finally {
@@ -508,7 +519,7 @@ export default function ModalDangNhapDangKy() {
             if (err.message && err.message.toLowerCase().includes('chưa được kích hoạt')) {
                 setThongBaoThanhCong('Tài khoản chưa được kích hoạt! Hệ thống đã gửi lại mã OTP, vui lòng nhập mã bên dưới để kích hoạt.');
                 chuyenCheDo('dang_ky', 2);
-                setDemNguoc(60);
+                setDemNguoc(90);
                 return;
             }
             setThongBaoLoi(err.message || 'Tài khoản hoặc mật khẩu không chính xác!');
@@ -975,7 +986,7 @@ export default function ModalDangNhapDangKy() {
                                                         className="text-[11px] font-black text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
                                                     >
                                                         <RefreshCw className={`w-3 h-3 ${dangXuLy ? 'animate-spin' : ''}`} />
-                                                        {demNguoc > 0 ? `Gửi lại (${demNguoc}s)` : 'Gửi lại mã'}
+                                                        {demNguoc > 0 ? `Gửi lại (${dinhDangDemNguoc(demNguoc)})` : 'Gửi lại mã'}
                                                     </button>
                                                 </div>
                                                 <input
@@ -1116,8 +1127,8 @@ export default function ModalDangNhapDangKy() {
                                                         onClick={xuLyGuiOtpQuenPass}
                                                         className="text-[11px] font-black text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
                                                     >
-                                                        <RefreshCw className="w-3 h-3" />
-                                                        {demNguoc > 0 ? `Gửi lại (${demNguoc}s)` : 'Gửi lại mã'}
+                                                        <RefreshCw className={`w-3 h-3 ${dangXuLy ? 'animate-spin' : ''}`} />
+                                                        {demNguoc > 0 ? `Gửi lại (${dinhDangDemNguoc(demNguoc)})` : 'Gửi lại mã'}
                                                     </button>
                                                 </div>
                                                 <input
