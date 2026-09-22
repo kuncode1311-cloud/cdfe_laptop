@@ -264,6 +264,7 @@ export default function ModalDangNhapDangKy() {
 
     const dongModalVaReset = () => {
         setThanhCong(false);
+        setDangXuLyGoogle(false);
         setCheDoHienTai('dang_nhap');
         if (chuyenDoiCheDoAuth) chuyenDoiCheDoAuth('dang_nhap');
         dongModalAuth();
@@ -319,6 +320,11 @@ export default function ModalDangNhapDangKy() {
         setDangXuLyGoogle(true);
         setThongBaoLoi('');
 
+        // Tự động hủy trạng thái chờ sau 12 giây nếu popup bị tắt bất ngờ
+        const timerSafety = setTimeout(() => {
+            setDangXuLyGoogle(false);
+        }, 12000);
+
         const clientId = GOOGLE_CLIENT_ID;
         if (typeof window !== 'undefined' && window.google?.accounts?.oauth2 && clientId) {
             try {
@@ -326,6 +332,7 @@ export default function ModalDangNhapDangKy() {
                     client_id: clientId,
                     scope: 'email profile openid',
                     callback: async (tokenResponse) => {
+                        clearTimeout(timerSafety);
                         if (tokenResponse?.error) {
                             setDangXuLyGoogle(false);
                             if (tokenResponse.error !== 'popup_closed_by_user') {
@@ -357,6 +364,7 @@ export default function ModalDangNhapDangKy() {
                 tokenClient.requestAccessToken({ prompt: 'select_account' });
                 return;
             } catch (e) {
+                clearTimeout(timerSafety);
                 console.warn('Lỗi khởi tạo Google OAuth2:', e);
                 setThongBaoLoi('Không thể mở cửa sổ đăng nhập Google. Vui lòng thử lại!');
                 setDangXuLyGoogle(false);
@@ -364,7 +372,7 @@ export default function ModalDangNhapDangKy() {
             }
         }
 
-        // Thông báo nếu Google SDK chưa sẵn sàng
+        clearTimeout(timerSafety);
         setThongBaoLoi('Đang kết nối dịch vụ Google Sign-In, vui lòng thử lại sau 2 giây!');
         setDangXuLyGoogle(false);
     };
@@ -372,6 +380,7 @@ export default function ModalDangNhapDangKy() {
     // Chuyển đổi chế độ kèm pháo hoa rực rỡ và phản hồi tức thời 0ms
     const chuyenCheDo = (cheDoMoi, buocMoi = 1, e) => {
         if (cheDoHienTai === cheDoMoi && (cheDoMoi !== 'dang_ky' || buocDangKy === buocMoi) && (cheDoMoi !== 'quen_mat_khau' || buocQuenPass === buocMoi)) return;
+        setDangXuLyGoogle(false);
         setThongBaoLoi('');
         setThongBaoThanhCong('');
         setCheDoHienTai(cheDoMoi);
@@ -648,8 +657,8 @@ export default function ModalDangNhapDangKy() {
             className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto"
             onClick={(e) => e.target === e.currentTarget && dongModalVaReset()}
         >
-            {/* THẺ MODAL CÔNG NGHỆ - CỐ ĐỊNH CHIỀU CAO VÀ VỊ TRÍ, BẤT ĐỘNG 100% KHÔNG NHẢY DỌC */}
-            <div className="relative w-full max-w-[450px] bg-white dark:bg-slate-900 rounded-[28px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)] border-2 border-slate-300/80 dark:border-slate-700 overflow-hidden">
+            {/* THẺ MODAL CÔNG NGHỆ - CÂN ĐỐI TỰ NHIÊN, PHÂN BỐ ĐỀU ĐẶN, 0 PIXEL NHẢY DỌC */}
+            <div className="relative w-full max-w-[430px] bg-white dark:bg-slate-900 rounded-[26px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.8)] border border-slate-300/80 dark:border-slate-700 overflow-hidden">
                 {/* Viền neon rực rỡ trên đỉnh */}
                 <div className="h-1.5 w-full bg-gradient-to-r from-cyan-400 via-blue-600 to-purple-600" />
 
@@ -660,19 +669,19 @@ export default function ModalDangNhapDangKy() {
                 />
 
                 {/* HEADER SANG TRỌNG */}
-                <div className="relative p-5 pb-3.5 bg-gradient-to-b from-blue-50/80 via-slate-50/40 to-transparent dark:from-slate-800/60 dark:via-slate-800/20 dark:to-transparent border-b-2 border-slate-200 dark:border-slate-800">
+                <div className="relative px-5 pt-4 pb-3 bg-gradient-to-b from-blue-50/70 via-slate-50/30 to-transparent dark:from-slate-800/60 dark:via-slate-800/20 dark:to-transparent border-b border-slate-200/80 dark:border-slate-800">
                     {/* Nút đóng */}
                     <button
                         onClick={dongModalVaReset}
                         aria-label="Đóng"
-                        className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 border-2 border-slate-300 dark:border-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 shadow-2xs cursor-pointer"
+                        className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-300 dark:border-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 shadow-2xs cursor-pointer"
                     >
                         <X className="w-4 h-4" />
                     </button>
 
                     {/* Badge & Thương hiệu */}
-                    <div className="flex items-center gap-2 mb-1.5">
-                        <span className="px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-[11px] tracking-wider shadow-sm shadow-blue-500/30">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-[10.5px] tracking-wider shadow-xs shadow-blue-500/30">
                             TNTP
                         </span>
                         <span className="text-xs font-black tracking-wider uppercase bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-600 dark:from-cyan-400 dark:to-blue-400 bg-clip-text text-transparent flex items-center gap-1">
@@ -681,7 +690,7 @@ export default function ModalDangNhapDangKy() {
                         </span>
                     </div>
 
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                    <h2 className="text-xl sm:text-[22px] font-black text-slate-900 dark:text-white tracking-tight">
                         {cheDoHienTai === 'dang_nhap' && 'Đăng Nhập Tài Khoản'}
                         {cheDoHienTai === 'dang_ky' && (buocDangKy === 1 ? 'Đăng Ký Thành Viên' : 'Xác Thực Mã OTP')}
                         {cheDoHienTai === 'quen_mat_khau' && (
@@ -695,13 +704,13 @@ export default function ModalDangNhapDangKy() {
 
                     {/* TAB CHUYỂN ĐỔI CAO CẤP */}
                     {laFormChinh && (
-                        <div className="mt-3.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border-2 border-slate-300 dark:border-slate-700 flex items-center gap-1 shadow-inner">
+                        <div className="mt-2.5 p-1 rounded-xl bg-slate-100/90 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 flex items-center gap-1 shadow-inner">
                             <button
                                 type="button"
                                 onClick={(e) => chuyenCheDo('dang_nhap', 1, e)}
-                                className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer ${
+                                className={`flex-1 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer ${
                                     cheDoHienTai === 'dang_nhap'
-                                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-blue-500/35'
+                                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-sm shadow-blue-500/30'
                                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-700/60'
                                 }`}
                             >
@@ -710,9 +719,9 @@ export default function ModalDangNhapDangKy() {
                             <button
                                 type="button"
                                 onClick={(e) => chuyenCheDo('dang_ky', 1, e)}
-                                className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-200 cursor-pointer ${
+                                className={`flex-1 py-1.5 rounded-lg text-xs font-black transition-all duration-200 cursor-pointer ${
                                     cheDoHienTai === 'dang_ky'
-                                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-blue-500/35'
+                                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-sm shadow-blue-500/30'
                                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-700/60'
                                 }`}
                             >
@@ -736,11 +745,11 @@ export default function ModalDangNhapDangKy() {
                     )}
                 </div>
 
-                {/* THÂN MODAL */}
-                <div className="p-5 pt-4">
+                {/* THÂN MODAL - PHÂN BỐ ĐỀU ĐẶN & HÀI HÒA */}
+                <div className="px-5 pt-3.5 pb-4">
                     {/* Thông báo lỗi chung */}
                     {thongBaoLoi && (
-                        <div className="mb-2.5 p-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-start gap-2">
+                        <div className="mb-2.5 p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold flex items-start gap-2">
                             <span className="text-sm shrink-0">⚠️</span>
                             <span className="flex-1">{thongBaoLoi}</span>
                         </div>
@@ -748,19 +757,19 @@ export default function ModalDangNhapDangKy() {
 
                     {/* Thông báo thành công chung */}
                     {thongBaoThanhCong && (
-                        <div className="mb-2.5 p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-start gap-2">
+                        <div className="mb-2.5 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold flex items-start gap-2">
                             <span className="text-sm shrink-0">✅</span>
                             <span className="flex-1">{thongBaoThanhCong}</span>
                         </div>
                     )}
 
-                    {/* KHUNG NỘI DUNG CHUYỂN FORM - BỐ CỤC ĐỀU ĐẶN, CÂN BẰNG TỰ NHIÊN, KHÔNG KHOẢNG TRỐNG */}
+                    {/* KHUNG NỘI DUNG CHUYỂN FORM */}
                     <div className="transition-all duration-200">
                         {/* ==================================================== */}
                         {/* 1. FORM ĐĂNG NHẬP                                    */}
                         {/* ==================================================== */}
                         {cheDoHienTai === 'dang_nhap' && (
-                            <form onSubmit={xuLyDangNhap} className="animate-in fade-in duration-200 space-y-3">
+                            <form onSubmit={xuLyDangNhap} className="animate-in fade-in duration-200 space-y-2.5">
                                 {/* Nút Đăng Nhập Với Google Chuẩn UI Sang Trọng - Không hiển thị trước tài khoản gây hiểu lầm */}
                                 <button
                                     type="button"
@@ -789,7 +798,7 @@ export default function ModalDangNhapDangKy() {
                                 {/* Dòng phân cách "Hoặc với email" */}
                                 <div className="relative flex items-center justify-center my-0.5">
                                     <div className="border-t border-slate-200 dark:border-slate-700 w-full" />
-                                    <span className="bg-white dark:bg-slate-900 px-3 text-[10.5px] text-slate-400 dark:text-slate-500 font-bold shrink-0 uppercase tracking-wider">
+                                    <span className="bg-white dark:bg-slate-900 px-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold shrink-0 uppercase tracking-wider">
                                         Hoặc với email
                                     </span>
                                     <div className="border-t border-slate-200 dark:border-slate-700 w-full" />
@@ -854,7 +863,7 @@ export default function ModalDangNhapDangKy() {
                                     </button>
                                 </div>
 
-                                <div className="space-y-2 pt-1">
+                                <div className="space-y-1.5 pt-1">
                                     <button
                                         type="submit"
                                         disabled={dangXuLy || dangXuLyGoogle}
@@ -893,7 +902,7 @@ export default function ModalDangNhapDangKy() {
                         {cheDoHienTai === 'dang_ky' && (
                             <div className="animate-in fade-in duration-200">
                                 {buocDangKy === 1 ? (
-                                    <form onSubmit={xuLyDangKyGuiOtp} className="space-y-3">
+                                    <form onSubmit={xuLyDangKyGuiOtp} className="space-y-2.5">
                                         {/* Hàng 1: Họ tên + SĐT (2 cột) */}
                                         <div className="grid grid-cols-2 gap-2.5">
                                             <div className="space-y-1">
@@ -903,11 +912,11 @@ export default function ModalDangNhapDangKy() {
                                                         <span>Họ và Tên</span>
                                                     </label>
                                                     {validationDangKy.errors.hoTen ? (
-                                                        <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                             <span className="text-[9px]">⚠️</span> {validationDangKy.errors.hoTen}
                                                         </span>
                                                     ) : validationDangKy.isValidHoTen ? (
-                                                        <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                             <Check className="w-3 h-3" /> Hợp lệ
                                                         </span>
                                                     ) : null}
@@ -918,7 +927,7 @@ export default function ModalDangNhapDangKy() {
                                                     value={hoTen}
                                                     onChange={(e) => setHoTen(e.target.value)}
                                                     placeholder="Nguyễn Văn An"
-                                                    className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none transition-all ${
+                                                    className={`w-full px-3 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none transition-all ${
                                                         validationDangKy.errors.hoTen
                                                             ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-2 focus:ring-rose-500/20'
                                                             : validationDangKy.isValidHoTen
@@ -935,11 +944,11 @@ export default function ModalDangNhapDangKy() {
                                                         <span>Số Điện Thoại</span>
                                                     </label>
                                                     {validationDangKy.errors.soDienThoai ? (
-                                                        <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                             <span className="text-[9px]">⚠️</span> {validationDangKy.errors.soDienThoai}
                                                         </span>
                                                     ) : validationDangKy.isValidSdt ? (
-                                                        <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                             <Check className="w-3 h-3" /> Hợp lệ
                                                         </span>
                                                     ) : null}
@@ -950,7 +959,7 @@ export default function ModalDangNhapDangKy() {
                                                     value={soDienThoai}
                                                     onChange={(e) => setSoDienThoai(e.target.value)}
                                                     placeholder="0912 345 678"
-                                                    className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none transition-all ${
+                                                    className={`w-full px-3 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none transition-all ${
                                                         validationDangKy.errors.soDienThoai
                                                             ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-2 focus:ring-rose-500/20'
                                                             : validationDangKy.isValidSdt
@@ -969,11 +978,11 @@ export default function ModalDangNhapDangKy() {
                                                     <span>Email Nhận Mã OTP</span>
                                                 </label>
                                                 {validationDangKy.errors.email ? (
-                                                    <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                    <span className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                         <span className="text-[9px]">⚠️</span> {validationDangKy.errors.email}
                                                     </span>
                                                 ) : validationDangKy.isValidEmail ? (
-                                                    <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                         <Check className="w-3 h-3" /> Hợp lệ
                                                     </span>
                                                 ) : null}
@@ -984,7 +993,7 @@ export default function ModalDangNhapDangKy() {
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="name@example.com"
-                                                className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none transition-all ${
+                                                className={`w-full px-3.5 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none transition-all ${
                                                     validationDangKy.errors.email
                                                         ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-2 focus:ring-rose-500/20'
                                                         : validationDangKy.isValidEmail
@@ -1003,11 +1012,11 @@ export default function ModalDangNhapDangKy() {
                                                         <span>Mật Khẩu</span>
                                                     </label>
                                                     {validationDangKy.errors.matKhau ? (
-                                                        <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                             <span className="text-[9px]">⚠️</span> {validationDangKy.errors.matKhau}
                                                         </span>
                                                     ) : validationDangKy.isValidMatKhau ? (
-                                                        <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                             <Check className="w-3 h-3" /> Đạt
                                                         </span>
                                                     ) : null}
@@ -1019,7 +1028,7 @@ export default function ModalDangNhapDangKy() {
                                                         onChange={(e) => setMatKhau(e.target.value)}
                                                         required
                                                         placeholder="≥ 6 ký tự..."
-                                                        className={`w-full pl-3.5 pr-8 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none transition-all ${
+                                                        className={`w-full pl-3 pr-8 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none transition-all ${
                                                             validationDangKy.errors.matKhau
                                                                 ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-2 focus:ring-rose-500/20'
                                                                 : validationDangKy.isValidMatKhau
@@ -1030,7 +1039,7 @@ export default function ModalDangNhapDangKy() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setHienMatKhau(!hienMatKhau)}
-                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                                                     >
                                                         {hienMatKhau ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                                     </button>
@@ -1044,11 +1053,11 @@ export default function ModalDangNhapDangKy() {
                                                         <span>Nhập Lại Pass</span>
                                                     </label>
                                                     {validationDangKy.errors.matKhauXacNhan ? (
-                                                        <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                             <span className="text-[9px]">⚠️</span> {validationDangKy.errors.matKhauXacNhan}
                                                         </span>
                                                     ) : validationDangKy.isValidXacNhan ? (
-                                                        <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
                                                             <Check className="w-3 h-3" /> Khớp
                                                         </span>
                                                     ) : null}
@@ -1060,7 +1069,7 @@ export default function ModalDangNhapDangKy() {
                                                         onChange={(e) => setMatKhauXacNhan(e.target.value)}
                                                         required
                                                         placeholder="Khớp mật khẩu"
-                                                        className={`w-full pl-3.5 pr-8 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none transition-all ${
+                                                        className={`w-full pl-3 pr-8 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none transition-all ${
                                                             validationDangKy.errors.matKhauXacNhan
                                                                 ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-2 focus:ring-rose-500/20'
                                                                 : validationDangKy.isValidXacNhan
@@ -1071,7 +1080,7 @@ export default function ModalDangNhapDangKy() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setHienMatKhauXacNhan(!hienMatKhauXacNhan)}
-                                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
                                                     >
                                                         {hienMatKhauXacNhan ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                                     </button>
@@ -1079,21 +1088,24 @@ export default function ModalDangNhapDangKy() {
                                             </div>
                                         </div>
 
-                                        {/* Hàng 4: Đồng ý điều khoản & chính sách bảo mật */}
-                                        <div className="pt-0.5">
-                                            <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium cursor-pointer select-none text-xs">
+                                        {/* Hàng 4: Đồng ý điều khoản & chính sách bảo mật + Badge bảo mật */}
+                                        <div className="flex items-center justify-between text-xs pt-0.5">
+                                            <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium cursor-pointer select-none">
                                                 <input
                                                     type="checkbox"
                                                     defaultChecked
                                                     className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-600 cursor-pointer"
                                                 />
                                                 <span className="text-[11.5px]">
-                                                    Tôi đồng ý với <a href="/chinh-sach" target="_blank" className="text-blue-600 dark:text-cyan-400 font-bold hover:underline">Điều khoản</a> & <a href="/chinh-sach" target="_blank" className="text-blue-600 dark:text-cyan-400 font-bold hover:underline">Chính sách bảo mật</a>
+                                                    Tôi đồng ý <a href="/chinh-sach" target="_blank" className="text-blue-600 dark:text-cyan-400 font-bold hover:underline">Điều khoản & Bảo mật</a>
                                                 </span>
                                             </label>
+                                            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                                                <ShieldCheck className="w-3 h-3 text-emerald-500" /> SSL 256-bit
+                                            </span>
                                         </div>
 
-                                        <div className="space-y-2 pt-1">
+                                        <div className="space-y-1.5 pt-1">
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
@@ -1126,50 +1138,48 @@ export default function ModalDangNhapDangKy() {
                                     </form>
                                 ) : (
                                     /* Bước 2: Nhập OTP kích hoạt */
-                                    <form onSubmit={xuLyKichHoatDangKy} className="flex flex-col justify-between h-full animate-in fade-in duration-200">
-                                        <div className="space-y-3">
-                                            <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-center">
-                                                <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
-                                                    Mã OTP kích hoạt đã gửi tới email:
-                                                </div>
-                                                <div className="text-sm font-black text-blue-950 dark:text-blue-200 truncate">
-                                                    {email}
-                                                </div>
+                                    <form onSubmit={xuLyKichHoatDangKy} className="space-y-3 animate-in fade-in duration-200">
+                                        <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-center">
+                                            <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                                                Mã OTP kích hoạt đã gửi tới email:
                                             </div>
-
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                                        <KeyRound className="w-3.5 h-3.5 text-blue-600" />
-                                                        <span>Mã Xác Thực OTP (6 số)</span>
-                                                    </label>
-                                                    <button
-                                                        type="button"
-                                                        disabled={demNguoc > 0 || dangXuLy}
-                                                        onClick={xuLyGuiLaiOtpDangKy}
-                                                        className="text-[11px] font-black text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
-                                                    >
-                                                        <RefreshCw className={`w-3 h-3 ${dangXuLy ? 'animate-spin' : ''}`} />
-                                                        {demNguoc > 0 ? `Gửi lại (${dinhDangDemNguoc(demNguoc)})` : 'Gửi lại mã'}
-                                                    </button>
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    maxLength={6}
-                                                    required
-                                                    value={maOtp}
-                                                    onChange={(e) => setMaOtp(e.target.value.replace(/\D/g, ''))}
-                                                    placeholder="••••••"
-                                                    className="w-full py-3 rounded-xl border-2 border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-slate-800 text-blue-700 dark:text-cyan-400 text-lg font-black tracking-[8px] text-center focus:outline-none focus:border-blue-600 transition-all"
-                                                />
+                                            <div className="text-sm font-black text-blue-950 dark:text-blue-200 truncate mt-0.5">
+                                                {email}
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2 pt-2">
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                    <KeyRound className="w-3.5 h-3.5 text-blue-600" />
+                                                    <span>Mã Xác Thực OTP (6 số)</span>
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    disabled={demNguoc > 0 || dangXuLy}
+                                                    onClick={xuLyGuiLaiOtpDangKy}
+                                                    className="text-[11px] font-black text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
+                                                >
+                                                    <RefreshCw className={`w-3 h-3 ${dangXuLy ? 'animate-spin' : ''}`} />
+                                                    {demNguoc > 0 ? `Gửi lại (${dinhDangDemNguoc(demNguoc)})` : 'Gửi lại mã'}
+                                                </button>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                maxLength={6}
+                                                required
+                                                value={maOtp}
+                                                onChange={(e) => setMaOtp(e.target.value.replace(/\D/g, ''))}
+                                                placeholder="••••••"
+                                                className="w-full py-2.5 rounded-xl border-2 border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-slate-800 text-blue-700 dark:text-cyan-400 text-lg font-black tracking-[8px] text-center focus:outline-none focus:border-blue-600 transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5 pt-1">
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -1201,47 +1211,45 @@ export default function ModalDangNhapDangKy() {
                         {/* 3. FORM QUÊN MẬT KHẨU                                */}
                         {/* ==================================================== */}
                         {cheDoHienTai === 'quen_mat_khau' && (
-                            <div className="animate-in fade-in duration-200 h-full flex flex-col justify-between">
+                            <div className="animate-in fade-in duration-200">
                                 {buocQuenPass === 1 && (
-                                    <form onSubmit={xuLyGuiOtpQuenPass} className="flex flex-col justify-between h-full">
-                                        <div className="space-y-3">
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                                    <Mail className="w-3.5 h-3.5 text-blue-600" />
-                                                    <span>Địa Chỉ Email Của Bạn</span>
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    required
-                                                    value={email}
-                                                    onChange={(e) => setEmail(e.target.value)}
-                                                    placeholder="name@example.com"
-                                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
-                                                />
-                                            </div>
+                                    <form onSubmit={xuLyGuiOtpQuenPass} className="space-y-2.5">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                <Mail className="w-3.5 h-3.5 text-blue-600" />
+                                                <span>Địa Chỉ Email Của Bạn</span>
+                                            </label>
+                                            <input
+                                                type="email"
+                                                required
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                placeholder="name@example.com"
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                            />
+                                        </div>
 
-                                            {/* Quy trình 3 bước */}
-                                            <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-                                                <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60">
-                                                    <span className="w-6 h-6 mx-auto rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center mb-1">1</span>
-                                                    <div className="font-bold text-blue-900 dark:text-blue-200 text-xs">Nhập Email</div>
-                                                </div>
-                                                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                                                    <span className="w-6 h-6 mx-auto rounded-lg bg-slate-400 text-white font-black text-xs flex items-center justify-center mb-1">2</span>
-                                                    <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">Mã OTP</div>
-                                                </div>
-                                                <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                                                    <span className="w-6 h-6 mx-auto rounded-lg bg-slate-400 text-white font-black text-xs flex items-center justify-center mb-1">3</span>
-                                                    <div className="font-bold text-slate-700 dark:text-slate-300 text-xs">Đổi Pass</div>
-                                                </div>
+                                        {/* Quy trình 3 bước */}
+                                        <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                                            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60">
+                                                <span className="w-5 h-5 mx-auto rounded-md bg-blue-600 text-white font-black text-[11px] flex items-center justify-center mb-1">1</span>
+                                                <div className="font-bold text-blue-900 dark:text-blue-200 text-[11px]">Nhập Email</div>
+                                            </div>
+                                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                                <span className="w-5 h-5 mx-auto rounded-md bg-slate-400 text-white font-black text-[11px] flex items-center justify-center mb-1">2</span>
+                                                <div className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">Mã OTP</div>
+                                            </div>
+                                            <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                                <span className="w-5 h-5 mx-auto rounded-md bg-slate-400 text-white font-black text-[11px] flex items-center justify-center mb-1">3</span>
+                                                <div className="font-bold text-slate-700 dark:text-slate-300 text-[11px]">Đổi Pass</div>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2 pt-2">
+                                        <div className="space-y-1.5 pt-1">
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -1268,50 +1276,48 @@ export default function ModalDangNhapDangKy() {
                                 )}
 
                                 {buocQuenPass === 2 && (
-                                    <form onSubmit={xuLyXacNhanOtpQuenPass} className="flex flex-col justify-between h-full animate-in fade-in duration-200">
-                                        <div className="space-y-3">
-                                            <div className="p-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-center">
-                                                <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
-                                                    Mã OTP đã gửi đến hộp thư:
-                                                </div>
-                                                <div className="text-sm font-black text-blue-950 dark:text-blue-200 truncate">
-                                                    {email}
-                                                </div>
+                                    <form onSubmit={xuLyXacNhanOtpQuenPass} className="space-y-2.5 animate-in fade-in duration-200">
+                                        <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-center">
+                                            <div className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                                                Mã OTP đã gửi đến hộp thư:
                                             </div>
-
-                                            <div className="space-y-1.5">
-                                                <div className="flex items-center justify-between">
-                                                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                                        <KeyRound className="w-3.5 h-3.5 text-blue-600" />
-                                                        <span>Mã OTP (6 chữ số)</span>
-                                                    </label>
-                                                    <button
-                                                        type="button"
-                                                        disabled={demNguoc > 0 || dangXuLy}
-                                                        onClick={xuLyGuiOtpQuenPass}
-                                                        className="text-[11px] font-black text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
-                                                    >
-                                                        <RefreshCw className={`w-3 h-3 ${dangXuLy ? 'animate-spin' : ''}`} />
-                                                        {demNguoc > 0 ? `Gửi lại (${dinhDangDemNguoc(demNguoc)})` : 'Gửi lại mã'}
-                                                    </button>
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    maxLength={6}
-                                                    required
-                                                    value={maOtp}
-                                                    onChange={(e) => setMaOtp(e.target.value.replace(/\D/g, ''))}
-                                                    placeholder="••••••"
-                                                    className="w-full py-2.5 rounded-xl border-2 border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-slate-800 text-blue-700 dark:text-cyan-400 text-lg font-black tracking-[8px] text-center focus:outline-none focus:border-blue-600 transition-all"
-                                                />
+                                            <div className="text-sm font-black text-blue-950 dark:text-blue-200 truncate mt-0.5">
+                                                {email}
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2 pt-2">
+                                        <div className="space-y-1.5">
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                    <KeyRound className="w-3.5 h-3.5 text-blue-600" />
+                                                    <span>Mã OTP (6 chữ số)</span>
+                                                </label>
+                                                <button
+                                                    type="button"
+                                                    disabled={demNguoc > 0 || dangXuLy}
+                                                    onClick={xuLyGuiOtpQuenPass}
+                                                    className="text-[11px] font-black text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
+                                                >
+                                                    <RefreshCw className={`w-3 h-3 ${dangXuLy ? 'animate-spin' : ''}`} />
+                                                    {demNguoc > 0 ? `Gửi lại (${dinhDangDemNguoc(demNguoc)})` : 'Gửi lại mã'}
+                                                </button>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                maxLength={6}
+                                                required
+                                                value={maOtp}
+                                                onChange={(e) => setMaOtp(e.target.value.replace(/\D/g, ''))}
+                                                placeholder="••••••"
+                                                className="w-full py-2.5 rounded-xl border-2 border-blue-400 dark:border-blue-600 bg-blue-50/50 dark:bg-slate-800 text-blue-700 dark:text-cyan-400 text-lg font-black tracking-[8px] text-center focus:outline-none focus:border-blue-600 transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5 pt-1">
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -1338,60 +1344,58 @@ export default function ModalDangNhapDangKy() {
                                 )}
 
                                 {buocQuenPass === 3 && (
-                                    <form onSubmit={xuLyDoiMatKhau} className="flex flex-col justify-between h-full animate-in fade-in duration-200">
-                                        <div className="space-y-3">
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                                    Mật Khẩu Mới
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        type={hienMatKhau ? 'text' : 'password'}
-                                                        value={matKhau}
-                                                        onChange={(e) => setMatKhau(e.target.value)}
-                                                        required
-                                                        placeholder="Tối thiểu 6 ký tự..."
-                                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setHienMatKhau(!hienMatKhau)}
-                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                                                    >
-                                                        {hienMatKhau ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                                                    Xác Nhận Mật Khẩu Mới
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        type={hienMatKhauXacNhan ? 'text' : 'password'}
-                                                        value={matKhauXacNhan}
-                                                        onChange={(e) => setMatKhauXacNhan(e.target.value)}
-                                                        required
-                                                        placeholder="Khớp mật khẩu mới..."
-                                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setHienMatKhauXacNhan(!hienMatKhauXacNhan)}
-                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                                                    >
-                                                        {hienMatKhauXacNhan ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                                    </button>
-                                                </div>
+                                    <form onSubmit={xuLyDoiMatKhau} className="space-y-2.5 animate-in fade-in duration-200">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                                Mật Khẩu Mới
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type={hienMatKhau ? 'text' : 'password'}
+                                                    value={matKhau}
+                                                    onChange={(e) => setMatKhau(e.target.value)}
+                                                    required
+                                                    placeholder="Tối thiểu 6 ký tự..."
+                                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setHienMatKhau(!hienMatKhau)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                                >
+                                                    {hienMatKhau ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                </button>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-2 pt-2">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                                Xác Nhận Mật Khẩu Mới
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type={hienMatKhauXacNhan ? 'text' : 'password'}
+                                                    value={matKhauXacNhan}
+                                                    onChange={(e) => setMatKhauXacNhan(e.target.value)}
+                                                    required
+                                                    placeholder="Khớp mật khẩu mới..."
+                                                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setHienMatKhauXacNhan(!hienMatKhauXacNhan)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                                >
+                                                    {hienMatKhauXacNhan ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1.5 pt-1">
                                             <button
                                                 type="submit"
                                                 disabled={dangXuLy}
-                                                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
+                                                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:via-indigo-500 hover:to-purple-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md shadow-indigo-600/30 active:scale-98 transition-all cursor-pointer disabled:opacity-60"
                                             >
                                                 {dangXuLy ? (
                                                     <>
@@ -1421,8 +1425,8 @@ export default function ModalDangNhapDangKy() {
                     </div>
 
                     {/* DÒNG CAM KẾT BẢO MẬT THÂN THIỆN */}
-                    <div className="mt-3.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-[11.5px] font-bold shadow-2xs">
+                    <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-center">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold">
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             <span>Cam kết bảo mật thông tin an toàn 100%</span>
                         </div>
