@@ -10,7 +10,42 @@ function layThongTinEmail() {
 }
 
 async function guiMailBangTransporter(mailOptions) {
-    // Ưu tiên 1: Google Apps Script Web App (Gửi được cho MỌI EMAIL từ chính Gmail của bạn, không cần domain, không bao giờ bị Railway chặn)
+    // Ưu tiên 1: Brevo API (Gửi được cho MỌI EMAIL bất kỳ, miễn phí 300 email/ngày, không bị Cloud chặn)
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    if (brevoApiKey) {
+        try {
+            const brevoSender = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER || 'trikun114@gmail.com';
+            const danhSachTo = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to]).map(e => ({ email: String(e).trim() }));
+            const resBrevo = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'api-key': brevoApiKey,
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: {
+                        name: 'TNTP Laptop Store',
+                        email: brevoSender
+                    },
+                    to: danhSachTo,
+                    subject: mailOptions.subject,
+                    htmlContent: mailOptions.html,
+                    textContent: mailOptions.text
+                })
+            });
+            const dataBrevo = await resBrevo.json();
+            if (!resBrevo.ok) {
+                throw new Error(dataBrevo?.message || `Brevo error ${resBrevo.status}`);
+            }
+            console.log('✅ [Email] Gửi thành công qua Brevo API, messageId:', dataBrevo.messageId);
+            return { messageId: dataBrevo.messageId };
+        } catch (errBrevo) {
+            console.warn('⚠️ Brevo API không gửi được:', errBrevo.message);
+        }
+    }
+
+    // Ưu tiên 2: Google Apps Script Web App (Gửi được cho MỌI EMAIL từ chính Gmail của bạn, không cần domain)
     const gasUrl = process.env.GAS_EMAIL_URL;
     if (gasUrl) {
         try {

@@ -16,7 +16,42 @@ function layThongTinEmail() {
  * Cấu hình Transporter gửi email qua Gmail SMTP với Fallback 2 tầng
  */
 async function guiMailBangTransporter(mailOptions) {
-    // Ưu tiên 1: Google Apps Script Web App
+    // Ưu tiên 1: Brevo API (Gửi được cho MỌI EMAIL bất kỳ, 300 email/ngày)
+    const brevoApiKey = process.env.BREVO_API_KEY;
+    if (brevoApiKey) {
+        try {
+            const brevoSender = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER || 'trikun114@gmail.com';
+            const danhSachTo = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to]).map(e => ({ email: String(e).trim() }));
+            const resBrevo = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'api-key': brevoApiKey,
+                    'Content-Type': 'application/json',
+                    'accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    sender: {
+                        name: 'TNTP Laptop Store',
+                        email: brevoSender
+                    },
+                    to: danhSachTo,
+                    subject: mailOptions.subject,
+                    htmlContent: mailOptions.html,
+                    textContent: mailOptions.text
+                })
+            });
+            const dataBrevo = await resBrevo.json();
+            if (!resBrevo.ok) {
+                throw new Error(dataBrevo?.message || `Brevo error ${resBrevo.status}`);
+            }
+            console.log('✅ [BE Email] Gửi thành công qua Brevo API, messageId:', dataBrevo.messageId);
+            return { messageId: dataBrevo.messageId };
+        } catch (errBrevo) {
+            console.warn('⚠️ [BE Email] Brevo API không gửi được:', errBrevo.message);
+        }
+    }
+
+    // Ưu tiên 2: Google Apps Script Web App
     const gasUrl = process.env.GAS_EMAIL_URL;
     if (gasUrl) {
         try {
