@@ -196,9 +196,15 @@ export default function TrangTinTuc() {
         @media(max-width:640px){.tt-grid{grid-template-columns:1fr;}}
         .tt-hero { display:grid; grid-template-columns:1.1fr 0.9fr; }
         @media(max-width:900px){.tt-hero{grid-template-columns:1fr;}}
-        .dm-bar { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding-top:10px; padding-bottom:10px; }
-        .dm-bar::-webkit-scrollbar{display:none;}
+        .dm-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding-top:10px; padding-bottom:10px; }
+        .dm-btn { padding:7px 14px; border-radius:24px; font-size:12.5px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-sizing:border-box; }
+        @media(max-width:640px){
+          .dm-bar { gap:6px 6px; padding-top:6px; padding-bottom:6px; }
+          .dm-btn { padding:6px 10px !important; font-size:11.5px !important; gap:4px !important; border-radius:20px !important; }
+        }
         .card-tin:hover{box-shadow:0 8px 24px rgba(29,78,216,0.12)!important;transform:translateY(-3px)!important;border-color:#93c5fd!important;}
+        .faq-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+        @media(max-width:768px){.faq-grid{grid-template-columns:1fr;}}
       `}</style>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '14px 16px 48px' }}>
@@ -229,7 +235,7 @@ export default function TrangTinTuc() {
         </div>
 
         {/* Filter tabs */}
-        <div className="dm-bar" style={{ marginBottom: '16px', paddingTop: '10px', paddingBottom: '10px', paddingLeft: '4px', paddingRight: '4px' }}>
+        <div className="dm-bar" style={{ marginBottom: '16px', paddingLeft: '4px', paddingRight: '4px' }}>
           {CHUYEN_MUC.map((cm) => {
             const active = locChon === cm.loc;
             const count = !cm.loc ? danhSachTin.length : danhSachTin.filter(t => t.chuyen_muc === cm.loc).length;
@@ -237,19 +243,10 @@ export default function TrangTinTuc() {
               <button
                 key={cm.ten}
                 type="button"
+                className="dm-btn"
                 onClick={() => { setLocChon(cm.loc); setHienThem(6); }}
                 style={{
-                  padding: '8px 16px',
-                  borderRadius: '24px',
-                  fontSize: '13px',
                   fontWeight: active ? '800' : '700',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                  flexShrink: 0,
                   background: active ? cm.mauGrad : cm.mauNenInactive,
                   color: active ? '#ffffff' : cm.mauChuInactive,
                   border: active ? `2px solid ${cm.mauChinh}` : `2px solid ${cm.mauBorderInactive}`,
@@ -280,10 +277,11 @@ export default function TrangTinTuc() {
                     background: active ? 'rgba(255,255,255,0.28)' : cm.mauBadgeInactive,
                     color: active ? '#ffffff' : cm.mauBadgeTextInactive,
                     borderRadius: '12px',
-                    padding: '1px 8px',
+                    padding: '1px 7px',
                     fontSize: '11px',
                     fontWeight: '900',
-                    border: active ? '1px solid rgba(255,255,255,0.4)' : `1px solid ${cm.mauBorderInactive}`
+                    border: active ? '1px solid rgba(255,255,255,0.4)' : `1px solid ${cm.mauBorderInactive}`,
+                    lineHeight: '1.2'
                   }}
                 >
                   {count}
@@ -396,7 +394,7 @@ export default function TrangTinTuc() {
             <span style={{ width: '4px', height: '18px', background: '#1d4ed8', borderRadius: '2px' }} />
             <h2 style={{ fontSize: '14px', fontWeight: '900', color: '#0f172a', margin: 0, textTransform: 'uppercase', letterSpacing: '0.03em' }}>Câu Hỏi Thường Gặp</h2>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))', gap: '8px' }}>
+          <div className="faq-grid">
             {FAQ_LIST.map((item, idx) => (
               <div key={idx} style={{ background: 'white', borderRadius: '12px', border: moFaq === idx ? '1.5px solid #93c5fd' : '1px solid #e2e8f0', overflow: 'hidden', transition: 'border-color 0.2s' }}>
                 <button onClick={() => setMoFaq(moFaq === idx ? null : idx)}
