@@ -225,6 +225,58 @@ export async function GET(request, { params }) {
             return NextResponse.json(cd || {});
         }
 
+        // 10. LIÊN HỆ & TƯ VẤN: /api/lien-he
+        if (primary === 'lien-he' || primary === 'lien_he') {
+            const boLoc = {};
+            const trangThai = searchParams.get('trang_thai');
+            if (trangThai && trangThai !== 'tat_ca') {
+                boLoc.trang_thai = trangThai;
+            }
+            const chuDe = searchParams.get('chu_de');
+            if (chuDe && chuDe !== 'tat_ca') {
+                boLoc.chu_de = { $regex: chuDe, $options: 'i' };
+            }
+            const tuKhoa = searchParams.get('tu_khoa');
+            if (tuKhoa && tuKhoa.trim()) {
+                const regex = { $regex: tuKhoa.trim(), $options: 'i' };
+                boLoc.$or = [
+                    { ma_yeu_cau: regex },
+                    { ho_ten: regex },
+                    { so_dien_thoai: regex },
+                    { email: regex },
+                    { noi_dung: regex }
+                ];
+            }
+
+            const trang = Math.max(1, parseInt(searchParams.get('trang') || '1', 10));
+            const gioiHan = Math.max(1, parseInt(searchParams.get('gioi_han') || '100', 10));
+            const boQua = (trang - 1) * gioiHan;
+
+            const [danhSach, tongSo, demChuaXuLy, demDangXuLy, demDaHoanThanh] = await Promise.all([
+                db.collection('lien_he').find(boLoc).sort({ ngay_tao: -1, createdAt: -1 }).skip(boQua).limit(gioiHan).toArray(),
+                db.collection('lien_he').countDocuments(boLoc),
+                db.collection('lien_he').countDocuments({ trang_thai: 'chua_xu_ly' }),
+                db.collection('lien_he').countDocuments({ trang_thai: 'dang_xu_ly' }),
+                db.collection('lien_he').countDocuments({ trang_thai: 'da_hoan_thanh' })
+            ]);
+
+            return NextResponse.json({
+                thanh_cong: true,
+                du_lieu: danhSach,
+                thong_ke: {
+                    tong_so: tongSo,
+                    chua_xu_ly: demChuaXuLy,
+                    dang_xu_ly: demDangXuLy,
+                    da_hoan_thanh: demDaHoanThanh
+                },
+                phan_trang: {
+                    tong_so: tongSo,
+                    trang_hien_tai: trang,
+                    tong_so_trang: Math.ceil(tongSo / gioiHan)
+                }
+            });
+        }
+
         return NextResponse.json({ thong_diep: `API ${route.join('/')} sẵn sàng` });
     } catch (err) {
         console.error(`[API Route GET Error] /api/${route.join('/')}:`, err);
@@ -869,6 +921,53 @@ export async function POST(request, { params }) {
             return NextResponse.json({ id: ins.insertedId, ...doc }, { status: 201 });
         }
 
+        // 11. GỬI YÊU CẦU LIÊN HỆ / TƯ VẤN: POST /api/lien-he
+        if (primary === 'lien-he' || primary === 'lien_he') {
+            const { ho_ten, so_dien_thoai, email, chu_de, noi_dung } = body;
+            if (!ho_ten || !ho_ten.trim()) {
+                return NextResponse.json({ thanh_cong: false, thong_diep: 'Vui lòng cung cấp họ và tên của bạn' }, { status: 400 });
+            }
+            if (!so_dien_thoai || !so_dien_thoai.trim()) {
+                return NextResponse.json({ thanh_cong: false, thong_diep: 'Vui lòng cung cấp số điện thoại liên hệ' }, { status: 400 });
+            }
+            if (!noi_dung || !noi_dung.trim()) {
+                return NextResponse.json({ thanh_cong: false, thong_diep: 'Vui lòng nhập nội dung cần tư vấn' }, { status: 400 });
+            }
+
+            const bayGio = new Date();
+            const nam = bayGio.getFullYear().toString().slice(-2);
+            const thang = (bayGio.getMonth() + 1).toString().padStart(2, '0');
+            const ngay = bayGio.getDate().toString().padStart(2, '0');
+            const soNgauNhien = Math.floor(1000 + Math.random() * 9000);
+            const maYeuCau = `LH-${nam}${thang}${ngay}-${soNgauNhien}`;
+
+            const docLienHe = {
+                ma_yeu_cau: maYeuCau,
+                ho_ten: ho_ten.trim(),
+                so_dien_thoai: so_dien_thoai.trim().replace(/\s+/g, ''),
+                email: (email || '').trim().toLowerCase(),
+                chu_de: chu_de || 'Tư vấn mua Laptop Gaming & AI PC',
+                noi_dung: noi_dung.trim(),
+                trang_thai: 'chua_xu_ly',
+                ghi_chu_noi_bo: '',
+                nguon_tiep_nhan: 'website_lien_he',
+                ngay_tao: new Date(),
+                createdAt: new Date(),
+                updatedAt: new Date()
+            };
+
+            const ins = await db.collection('lien_he').insertOne(docLienHe);
+            return NextResponse.json({
+                thanh_cong: true,
+                thong_diep: 'TNTP LAPTOP đã tiếp nhận thông tin! Chuyên viên sẽ gọi điện hỗ trợ bạn trong ít phút.',
+                du_lieu: {
+                    _id: ins.insertedId,
+                    id: ins.insertedId,
+                    ...docLienHe
+                }
+            }, { status: 201 });
+        }
+
         return NextResponse.json({ thanh_cong: true });
     } catch (err) {
         console.error(`[API Route POST Error] /api/${route.join('/')}:`, err);
@@ -989,6 +1088,12 @@ export async function PUT(request, { params }) {
             return NextResponse.json({ thanh_cong: true, ...body });
         }
 
+        if (primary === 'lien-he' || primary === 'lien_he') {
+            const query = oid ? { $or: [{ _id: oid }, { id }, { ma_yeu_cau: id }] } : { $or: [{ id }, { ma_yeu_cau: id }] };
+            await db.collection('lien_he').updateOne(query, { $set: { ...body, updatedAt: new Date() } });
+            return NextResponse.json({ thanh_cong: true, id, ...body });
+        }
+
         return NextResponse.json({ thanh_cong: true });
     } catch (err) {
         console.error(`[API Route PUT Error] /api/${route.join('/')}:`, err);
@@ -1042,9 +1147,20 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ thanh_cong: true, id });
         }
 
+        if (primary === 'lien-he' || primary === 'lien_he') {
+            const query = oid ? { $or: [{ _id: oid }, { id }, { ma_yeu_cau: id }] } : { $or: [{ id }, { ma_yeu_cau: id }] };
+            await db.collection('lien_he').deleteOne(query);
+            return NextResponse.json({ thanh_cong: true, id });
+        }
+
         return NextResponse.json({ thanh_cong: true });
     } catch (err) {
         console.error(`[API Route DELETE Error] /api/${route.join('/')}:`, err);
         return NextResponse.json({ loi: true, thong_diep: err.message }, { status: 500 });
     }
+}
+
+// Xử lý PATCH API (Ủy thác cập nhật một phần sang PUT)
+export async function PATCH(request, { params }) {
+    return PUT(request, { params });
 }

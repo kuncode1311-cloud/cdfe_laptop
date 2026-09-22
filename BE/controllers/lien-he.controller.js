@@ -101,24 +101,46 @@ exports.guiYeuCauLienHe = async (req, res) => {
  */
 exports.layDanhSachLienHe = async (req, res) => {
     try {
-        const { trang = 1, gioi_han = 20, trang_thai } = req.query;
+        const { trang = 1, gioi_han = 50, trang_thai, chu_de, tu_khoa } = req.query;
         const boLoc = {};
-        if (trang_thai) {
+        if (trang_thai && trang_thai !== 'tat_ca') {
             boLoc.trang_thai = trang_thai;
+        }
+        if (chu_de && chu_de !== 'tat_ca') {
+            boLoc.chu_de = new RegExp(chu_de, 'i');
+        }
+        if (tu_khoa && tu_khoa.trim()) {
+            const regex = new RegExp(tu_khoa.trim(), 'i');
+            boLoc.$or = [
+                { ma_yeu_cau: regex },
+                { ho_ten: regex },
+                { so_dien_thoai: regex },
+                { email: regex },
+                { noi_dung: regex }
+            ];
         }
 
         const soTrang = Math.max(1, parseInt(trang, 10));
         const soLuong = Math.max(1, parseInt(gioi_han, 10));
         const boQua = (soTrang - 1) * soLuong;
 
-        const [danhSach, tongSo] = await Promise.all([
+        const [danhSach, tongSo, demChuaXuLy, demDangXuLy, demDaHoanThanh] = await Promise.all([
             LienHe.find(boLoc).sort({ ngay_tao: -1 }).skip(boQua).limit(soLuong).lean(),
-            LienHe.countDocuments(boLoc)
+            LienHe.countDocuments(boLoc),
+            LienHe.countDocuments({ trang_thai: 'chua_xu_ly' }),
+            LienHe.countDocuments({ trang_thai: 'dang_xu_ly' }),
+            LienHe.countDocuments({ trang_thai: 'da_hoan_thanh' })
         ]);
 
         return res.status(200).json({
             thanh_cong: true,
             du_lieu: danhSach,
+            thong_ke: {
+                tong_so: tongSo,
+                chua_xu_ly: demChuaXuLy,
+                dang_xu_ly: demDangXuLy,
+                da_hoan_thanh: demDaHoanThanh
+            },
             phan_trang: {
                 tong_so: tongSo,
                 trang_hien_tai: soTrang,
@@ -130,6 +152,75 @@ exports.layDanhSachLienHe = async (req, res) => {
         return res.status(500).json({
             thanh_cong: false,
             thong_diep: 'Không thể tải danh sách liên hệ'
+        });
+    }
+};
+
+/**
+ * Cập nhật trạng thái và ghi chú nội bộ CSKH
+ * PATCH /api/lien-he/:id
+ */
+exports.capNhatLienHe = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { trang_thai, ghi_chu_noi_bo } = req.body;
+
+        const updateFields = {};
+        if (trang_thai) updateFields.trang_thai = trang_thai;
+        if (ghi_chu_noi_bo !== undefined) updateFields.ghi_chu_noi_bo = ghi_chu_noi_bo;
+
+        const lienHe = await LienHe.findByIdAndUpdate(
+            id,
+            { $set: updateFields },
+            { new: true }
+        );
+
+        if (!lienHe) {
+            return res.status(404).json({
+                thanh_cong: false,
+                thong_diep: 'Không tìm thấy phiếu yêu cầu liên hệ'
+            });
+        }
+
+        return res.status(200).json({
+            thanh_cong: true,
+            thong_diep: 'Cập nhật trạng thái phiếu tư vấn thành công',
+            du_lieu: lienHe
+        });
+    } catch (loi) {
+        console.error('[LỖI CẬP NHẬT LIÊN HỆ]:', loi);
+        return res.status(500).json({
+            thanh_cong: false,
+            thong_diep: 'Không thể cập nhật phiếu liên hệ'
+        });
+    }
+};
+
+/**
+ * Xóa phiếu liên hệ
+ * DELETE /api/lien-he/:id
+ */
+exports.xoaLienHe = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const lienHe = await LienHe.findByIdAndDelete(id);
+
+        if (!lienHe) {
+            return res.status(404).json({
+                thanh_cong: false,
+                thong_diep: 'Không tìm thấy phiếu yêu cầu liên hệ cần xóa'
+            });
+        }
+
+        return res.status(200).json({
+            thanh_cong: true,
+            thong_diep: 'Đã xóa phiếu yêu cầu liên hệ thành công'
+        });
+    } catch (loi) {
+        console.error('[LỖI XÓA LIÊN HỆ]:', loi);
+        return res.status(500).json({
+            thanh_cong: false,
+            thong_diep: 'Không thể xóa phiếu liên hệ'
         });
     }
 };
