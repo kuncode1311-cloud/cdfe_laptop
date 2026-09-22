@@ -196,7 +196,7 @@ export default function TrangTinTuc() {
         @media(max-width:640px){.tt-grid{grid-template-columns:1fr;}}
         .tt-hero { display:grid; grid-template-columns:1.1fr 0.9fr; }
         @media(max-width:900px){.tt-hero{grid-template-columns:1fr;}}
-        .dm-bar { display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; }
+        .dm-bar { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; padding-top:10px; padding-bottom:10px; }
         .dm-bar::-webkit-scrollbar{display:none;}
         .card-tin:hover{box-shadow:0 8px 24px rgba(29,78,216,0.12)!important;transform:translateY(-3px)!important;border-color:#93c5fd!important;}
       `}</style>
@@ -229,7 +229,7 @@ export default function TrangTinTuc() {
         </div>
 
         {/* Filter tabs */}
-        <div className="dm-bar" style={{ marginBottom: '18px', paddingBottom: '4px' }}>
+        <div className="dm-bar" style={{ marginBottom: '16px', paddingTop: '10px', paddingBottom: '10px', paddingLeft: '4px', paddingRight: '4px' }}>
           {CHUYEN_MUC.map((cm) => {
             const active = locChon === cm.loc;
             const count = !cm.loc ? danhSachTin.length : danhSachTin.filter(t => t.chuyen_muc === cm.loc).length;
@@ -261,7 +261,7 @@ export default function TrangTinTuc() {
                 onMouseEnter={e => {
                   if (!active) {
                     e.currentTarget.style.borderColor = cm.mauChinh;
-                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.transform = 'translateY(-1.5px)';
                     e.currentTarget.style.boxShadow = `0 6px 16px ${cm.mauChinh}20`;
                   }
                 }}
