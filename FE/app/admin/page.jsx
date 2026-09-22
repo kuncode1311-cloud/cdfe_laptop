@@ -131,6 +131,78 @@ import { toast } from 'sonner';
 // Helper an toàn tránh runtime ReferenceError khi format tiền tệ
 const dinhDangVND = (so) => dinhDangTienVND(Number(so) || 0);
 
+// Component thanh tiêu đề nhóm thông số kỹ thuật hỗ trợ nút Sửa Tiêu Đề trực tiếp & inline edit
+function ThanhTieuDeNhom({
+    icon: IconComponent,
+    value,
+    defaultValue,
+    onChange,
+    mauBg = 'bg-blue-50 dark:bg-blue-950/60',
+    mauBorder = 'border-blue-200 dark:border-blue-800',
+    mauText = 'text-blue-900 dark:text-blue-300',
+    mauIconBg = 'bg-blue-600',
+    mauBadge = 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300'
+}) {
+    const [dangSua, setDangSua] = useState(false);
+    const tieuDeHienThi = value !== undefined && value !== '' ? value : defaultValue;
+    const daTuyChinh = Boolean(value && value !== defaultValue);
+
+    return (
+        <div className={`p-2.5 sm:p-3 rounded-xl border flex items-center justify-between gap-2 transition-all ${mauBg} ${mauBorder}`}>
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                <span className={`w-6 h-6 rounded-lg text-white flex items-center justify-center text-xs shadow-xs shrink-0 ${mauIconBg}`}>
+                    {IconComponent && <IconComponent className="w-3.5 h-3.5" />}
+                </span>
+                {dangSua ? (
+                    <input
+                        type="text"
+                        autoFocus
+                        value={tieuDeHienThi}
+                        onChange={(e) => onChange(e.target.value)}
+                        onBlur={() => setDangSua(false)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                setDangSua(false);
+                            }
+                        }}
+                        placeholder="Nhập tên tiêu đề nhóm mới..."
+                        className="bg-white dark:bg-slate-800 border-2 border-blue-500 dark:border-blue-400 rounded-lg px-2.5 py-1 text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider focus:outline-none w-full shadow-xs"
+                    />
+                ) : (
+                    <div className="flex items-center gap-2 truncate">
+                        <span
+                            onClick={() => setDangSua(true)}
+                            className={`font-black text-xs uppercase tracking-wider truncate cursor-pointer hover:underline ${mauText}`}
+                            title="Bấm vào đây hoặc nút 'Sửa tiêu đề' bên phải để đổi tên"
+                        >
+                            {tieuDeHienThi}
+                        </span>
+                        {daTuyChinh && (
+                            <span className="px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 text-[10px] font-black shrink-0 border border-amber-300 dark:border-amber-700">
+                                Đã sửa
+                            </span>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            <button
+                type="button"
+                onClick={() => setDangSua(!dangSua)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 cursor-pointer transition-all shrink-0 hover:scale-105 active:scale-95 ${
+                    dangSua
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : `${mauBadge} hover:opacity-90`
+                }`}
+                title={dangSua ? "Xong (Enter)" : "Bấm để đổi tên tiêu đề nhóm"}
+            >
+                <Edit3 className="w-3 h-3" />
+                <span>{dangSua ? 'Xong' : 'Sửa tiêu đề'}</span>
+            </button>
+        </div>
+    );
+}
 
 export default function TrangQuanTriCuaHang() {
     const { nguoiDung, daDangNhap, laAdmin, dangNhap, dangXuat, dangKiemTraPhien } = useNguoiDung();
@@ -654,6 +726,30 @@ export default function TrangQuanTriCuaHang() {
         ban_phim: '',
         am_thanh: '',
         he_dieu_hanh: '',
+
+        // Tiêu đề phân nhóm cấu hình kỹ thuật tùy biến (hỗ trợ đổi tên 100%)
+        tieu_de_nhom_cpu: '1. Bộ Xử Lý & Hiệu Năng (CPU)',
+        tieu_de_nhom_gpu: '2. Đồ Họa & Xử Lý Hình Ảnh (GPU)',
+        tieu_de_nhom_ram: '3. Bộ Nhớ RAM & Ổ Cứng Lưu Trữ',
+        tieu_de_nhom_man_hinh: '4. Màn Hình & Không Gian Hiển Thị',
+        tieu_de_nhom_pin: '5. Hệ Thống Tản Nhiệt & Thời Lượng Pin',
+        tieu_de_nhom_thiet_ke: '6. Thiết Kế Khung Vỏ, Bàn Phím & Cổng Giao Tiếp',
+        tieu_de_nhom_linh_kien_hieu_nang: '1. Hiệu Năng & Tốc Độ Truyền Tải',
+        tieu_de_nhom_linh_kien_chuan: '2. Chuẩn Giao Tiếp & Độ Bền',
+        tieu_de_nhom_balo_ngan_chua: '1. Ngăn Chứa & Kích Thước Máy',
+        tieu_de_nhom_balo_chat_lieu: '2. Chất Liệu & Khả Năng Kháng Nước',
+        tieu_de_nhom_balo_tien_ich: '3. Tiện Ích, Tính Năng & Bảo Hành',
+        tieu_de_nhom_phim_switch: '1. Switch & Cảm Giác Gõ Phím',
+        tieu_de_nhom_phim_layout: '2. Layout, Keycap & Khung Vỏ',
+        tieu_de_nhom_phim_ket_noi: '3. Kết Nối, Đèn LED & Pin',
+        tieu_de_nhom_chuot_cam_bien: '1. Cảm Biến, DPI & Độ Chính Xác',
+        tieu_de_nhom_chuot_ket_noi: '2. Kết Nối, Kích Thước & Thời Lượng Pin',
+        tieu_de_nhom_tai_nghe_am_thanh: '1. Màng Loa, Âm Thanh & Chống Ồn ANC',
+        tieu_de_nhom_tai_nghe_ket_noi: '2. Kết Nối, Micro & Thời Lượng Pin',
+        tieu_de_nhom_tai_nghe_thiet_ke: '3. Thiết Kế, Đệm Tai & Kháng Nước',
+        tieu_de_nhom_sac_cong_suat: '1. Công Suất & Công Nghệ Sạc Nhanh GaN',
+        tieu_de_nhom_sac_cong_ket_noi: '2. Cổng Kết Nối & Băng Thông Truyền Tải',
+        tieu_de_nhom_sac_thiet_ke: '3. Thiết Kế, Dây Cáp & Độ Bền',
 
         // 2. Bàn phím cơ
         loai_switch: '',
@@ -2017,6 +2113,30 @@ export default function TrangQuanTriCuaHang() {
             kich_co_laptop_linh_kien: 'Laptop 14 inch - 18 inch',
             trong_luong_linh_kien: '80g',
 
+            // Tiêu đề phân nhóm cấu hình kỹ thuật tùy biến
+            tieu_de_nhom_cpu: '1. Bộ Xử Lý & Hiệu Năng (CPU)',
+            tieu_de_nhom_gpu: '2. Đồ Họa & Xử Lý Hình Ảnh (GPU)',
+            tieu_de_nhom_ram: '3. Bộ Nhớ RAM & Ổ Cứng Lưu Trữ',
+            tieu_de_nhom_man_hinh: '4. Màn Hình & Không Gian Hiển Thị',
+            tieu_de_nhom_pin: '5. Hệ Thống Tản Nhiệt & Thời Lượng Pin',
+            tieu_de_nhom_thiet_ke: '6. Thiết Kế Khung Vỏ, Bàn Phím & Cổng Giao Tiếp',
+            tieu_de_nhom_linh_kien_hieu_nang: '1. Hiệu Năng & Tốc Độ Truyền Tải',
+            tieu_de_nhom_linh_kien_chuan: '2. Chuẩn Giao Tiếp & Độ Bền',
+            tieu_de_nhom_balo_ngan_chua: '1. Ngăn Chứa & Kích Thước Máy',
+            tieu_de_nhom_balo_chat_lieu: '2. Chất Liệu & Khả Năng Kháng Nước',
+            tieu_de_nhom_balo_tien_ich: '3. Tiện Ích, Tính Năng & Bảo Hành',
+            tieu_de_nhom_phim_switch: '1. Switch & Cảm Giác Gõ Phím',
+            tieu_de_nhom_phim_layout: '2. Layout, Keycap & Khung Vỏ',
+            tieu_de_nhom_phim_ket_noi: '3. Kết Nối, Đèn LED & Pin',
+            tieu_de_nhom_chuot_cam_bien: '1. Cảm Biến, DPI & Độ Chính Xác',
+            tieu_de_nhom_chuot_ket_noi: '2. Kết Nối, Kích Thước & Thời Lượng Pin',
+            tieu_de_nhom_tai_nghe_am_thanh: '1. Màng Loa, Âm Thanh & Chống Ồn ANC',
+            tieu_de_nhom_tai_nghe_ket_noi: '2. Kết Nối, Micro & Thời Lượng Pin',
+            tieu_de_nhom_tai_nghe_thiet_ke: '3. Thiết Kế, Đệm Tai & Kháng Nước',
+            tieu_de_nhom_sac_cong_suat: '1. Công Suất & Công Nghệ Sạc Nhanh GaN',
+            tieu_de_nhom_sac_cong_ket_noi: '2. Cổng Kết Nối & Băng Thông Truyền Tải',
+            tieu_de_nhom_sac_thiet_ke: '3. Thiết Kế, Dây Cáp & Độ Bền',
+
             che_do_bao_hanh: '24 tháng chính hãng'
         });
         setDangMoModalSp(true);
@@ -2061,7 +2181,7 @@ export default function TrangQuanTriCuaHang() {
 
         const customItems = [];
         Object.entries(specs).forEach(([k, v]) => {
-            if (!standardKeys.includes(k) && v !== undefined && v !== null && String(v).trim()) {
+            if (!standardKeys.includes(k) && !k.startsWith('tieu_de_nhom_') && v !== undefined && v !== null && String(v).trim()) {
                 const tenTiengViet = TU_DIEN_THONG_SO_ADMIN[k] || layTenHienThiKey(k);
                 customItems.push({ key: tenTiengViet, value: String(v).trim() });
             }
@@ -2088,6 +2208,30 @@ export default function TrangQuanTriCuaHang() {
             qua_tang: Array.isArray(sp.qua_tang) ? JSON.parse(JSON.stringify(sp.qua_tang)) : [],
             tuy_chon_phien_ban: Array.isArray(sp.tuy_chon_phien_ban) ? JSON.parse(JSON.stringify(sp.tuy_chon_phien_ban)) : [],
             thu_vien_hinh_anh: Array.isArray(sp.thu_vien_hinh_anh) ? [...sp.thu_vien_hinh_anh] : [],
+
+            // Tiêu đề phân nhóm cấu hình kỹ thuật tùy biến (đọc từ MongoDB nếu đã sửa)
+            tieu_de_nhom_cpu: specs.tieu_de_nhom_cpu || '1. Bộ Xử Lý & Hiệu Năng (CPU)',
+            tieu_de_nhom_gpu: specs.tieu_de_nhom_gpu || '2. Đồ Họa & Xử Lý Hình Ảnh (GPU)',
+            tieu_de_nhom_ram: specs.tieu_de_nhom_ram || '3. Bộ Nhớ RAM & Ổ Cứng Lưu Trữ',
+            tieu_de_nhom_man_hinh: specs.tieu_de_nhom_man_hinh || '4. Màn Hình & Không Gian Hiển Thị',
+            tieu_de_nhom_pin: specs.tieu_de_nhom_pin || '5. Hệ Thống Tản Nhiệt & Thời Lượng Pin',
+            tieu_de_nhom_thiet_ke: specs.tieu_de_nhom_thiet_ke || '6. Thiết Kế Khung Vỏ, Bàn Phím & Cổng Giao Tiếp',
+            tieu_de_nhom_linh_kien_hieu_nang: specs.tieu_de_nhom_linh_kien_hieu_nang || '1. Hiệu Năng & Tốc Độ Truyền Tải',
+            tieu_de_nhom_linh_kien_chuan: specs.tieu_de_nhom_linh_kien_chuan || '2. Chuẩn Giao Tiếp & Độ Bền',
+            tieu_de_nhom_balo_ngan_chua: specs.tieu_de_nhom_balo_ngan_chua || '1. Ngăn Chứa & Kích Thước Máy',
+            tieu_de_nhom_balo_chat_lieu: specs.tieu_de_nhom_balo_chat_lieu || '2. Chất Liệu & Khả Năng Kháng Nước',
+            tieu_de_nhom_balo_tien_ich: specs.tieu_de_nhom_balo_tien_ich || '3. Tiện Ích, Tính Năng & Bảo Hành',
+            tieu_de_nhom_phim_switch: specs.tieu_de_nhom_phim_switch || '1. Switch & Cảm Giác Gõ Phím',
+            tieu_de_nhom_phim_layout: specs.tieu_de_nhom_phim_layout || '2. Layout, Keycap & Khung Vỏ',
+            tieu_de_nhom_phim_ket_noi: specs.tieu_de_nhom_phim_ket_noi || '3. Kết Nối, Đèn LED & Pin',
+            tieu_de_nhom_chuot_cam_bien: specs.tieu_de_nhom_chuot_cam_bien || '1. Cảm Biến, DPI & Độ Chính Xác',
+            tieu_de_nhom_chuot_ket_noi: specs.tieu_de_nhom_chuot_ket_noi || '2. Kết Nối, Kích Thước & Thời Lượng Pin',
+            tieu_de_nhom_tai_nghe_am_thanh: specs.tieu_de_nhom_tai_nghe_am_thanh || '1. Màng Loa, Âm Thanh & Chống Ồn ANC',
+            tieu_de_nhom_tai_nghe_ket_noi: specs.tieu_de_nhom_tai_nghe_ket_noi || '2. Kết Nối, Micro & Thời Lượng Pin',
+            tieu_de_nhom_tai_nghe_thiet_ke: specs.tieu_de_nhom_tai_nghe_thiet_ke || '3. Thiết Kế, Đệm Tai & Kháng Nước',
+            tieu_de_nhom_sac_cong_suat: specs.tieu_de_nhom_sac_cong_suat || '1. Công Suất & Công Nghệ Sạc Nhanh GaN',
+            tieu_de_nhom_sac_cong_ket_noi: specs.tieu_de_nhom_sac_cong_ket_noi || '2. Cổng Kết Nối & Băng Thông Truyền Tải',
+            tieu_de_nhom_sac_thiet_ke: specs.tieu_de_nhom_sac_thiet_ke || '3. Thiết Kế, Dây Cáp & Độ Bền',
 
             // 1. Cấu hình chi tiết Laptop
             cpu: specs.cpu || '',
@@ -2417,6 +2561,12 @@ export default function TrangQuanTriCuaHang() {
             };
         }
 
+        Object.keys(formSp).forEach(k => {
+            if (k.startsWith('tieu_de_nhom_') && formSp[k]) {
+                thongSoForm[k] = formSp[k];
+            }
+        });
+
         if (Array.isArray(thongSoTuyChinh)) {
             thongSoTuyChinh.forEach(item => {
                 if (item.key?.trim() && item.value?.trim()) {
@@ -2729,6 +2879,30 @@ export default function TrangQuanTriCuaHang() {
                     che_do_bao_hanh: formSp.che_do_bao_hanh || '24 tháng chính hãng'
                 };
             }
+
+            // Đính kèm các tiêu đề nhóm tùy chỉnh vào payload MongoDB
+            if (formSp.tieu_de_nhom_cpu) thongSoPayload.tieu_de_nhom_cpu = formSp.tieu_de_nhom_cpu;
+            if (formSp.tieu_de_nhom_gpu) thongSoPayload.tieu_de_nhom_gpu = formSp.tieu_de_nhom_gpu;
+            if (formSp.tieu_de_nhom_ram) thongSoPayload.tieu_de_nhom_ram = formSp.tieu_de_nhom_ram;
+            if (formSp.tieu_de_nhom_man_hinh) thongSoPayload.tieu_de_nhom_man_hinh = formSp.tieu_de_nhom_man_hinh;
+            if (formSp.tieu_de_nhom_pin) thongSoPayload.tieu_de_nhom_pin = formSp.tieu_de_nhom_pin;
+            if (formSp.tieu_de_nhom_thiet_ke) thongSoPayload.tieu_de_nhom_thiet_ke = formSp.tieu_de_nhom_thiet_ke;
+            if (formSp.tieu_de_nhom_linh_kien_hieu_nang) thongSoPayload.tieu_de_nhom_linh_kien_hieu_nang = formSp.tieu_de_nhom_linh_kien_hieu_nang;
+            if (formSp.tieu_de_nhom_linh_kien_chuan) thongSoPayload.tieu_de_nhom_linh_kien_chuan = formSp.tieu_de_nhom_linh_kien_chuan;
+            if (formSp.tieu_de_nhom_balo_ngan_chua) thongSoPayload.tieu_de_nhom_balo_ngan_chua = formSp.tieu_de_nhom_balo_ngan_chua;
+            if (formSp.tieu_de_nhom_balo_chat_lieu) thongSoPayload.tieu_de_nhom_balo_chat_lieu = formSp.tieu_de_nhom_balo_chat_lieu;
+            if (formSp.tieu_de_nhom_balo_tien_ich) thongSoPayload.tieu_de_nhom_balo_tien_ich = formSp.tieu_de_nhom_balo_tien_ich;
+            if (formSp.tieu_de_nhom_phim_switch) thongSoPayload.tieu_de_nhom_phim_switch = formSp.tieu_de_nhom_phim_switch;
+            if (formSp.tieu_de_nhom_phim_layout) thongSoPayload.tieu_de_nhom_phim_layout = formSp.tieu_de_nhom_phim_layout;
+            if (formSp.tieu_de_nhom_phim_ket_noi) thongSoPayload.tieu_de_nhom_phim_ket_noi = formSp.tieu_de_nhom_phim_ket_noi;
+            if (formSp.tieu_de_nhom_chuot_cam_bien) thongSoPayload.tieu_de_nhom_chuot_cam_bien = formSp.tieu_de_nhom_chuot_cam_bien;
+            if (formSp.tieu_de_nhom_chuot_ket_noi) thongSoPayload.tieu_de_nhom_chuot_ket_noi = formSp.tieu_de_nhom_chuot_ket_noi;
+            if (formSp.tieu_de_nhom_tai_nghe_am_thanh) thongSoPayload.tieu_de_nhom_tai_nghe_am_thanh = formSp.tieu_de_nhom_tai_nghe_am_thanh;
+            if (formSp.tieu_de_nhom_tai_nghe_ket_noi) thongSoPayload.tieu_de_nhom_tai_nghe_ket_noi = formSp.tieu_de_nhom_tai_nghe_ket_noi;
+            if (formSp.tieu_de_nhom_tai_nghe_thiet_ke) thongSoPayload.tieu_de_nhom_tai_nghe_thiet_ke = formSp.tieu_de_nhom_tai_nghe_thiet_ke;
+            if (formSp.tieu_de_nhom_sac_cong_suat) thongSoPayload.tieu_de_nhom_sac_cong_suat = formSp.tieu_de_nhom_sac_cong_suat;
+            if (formSp.tieu_de_nhom_sac_cong_ket_noi) thongSoPayload.tieu_de_nhom_sac_cong_ket_noi = formSp.tieu_de_nhom_sac_cong_ket_noi;
+            if (formSp.tieu_de_nhom_sac_thiet_ke) thongSoPayload.tieu_de_nhom_sac_thiet_ke = formSp.tieu_de_nhom_sac_thiet_ke;
 
             thongSoTuyChinh.forEach(item => {
                 if (item.key.trim() && item.value.trim()) {
@@ -7564,12 +7738,17 @@ export default function TrangQuanTriCuaHang() {
                                             <div className="space-y-4">
                                                 {/* Nhóm 1: Vi Xử Lý & Hiệu Năng (CPU) */}
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-400 dark:border-blue-600 shadow-md shadow-blue-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-blue-900 dark:text-blue-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Cpu className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>1. Bộ Xử Lý & Hiệu Năng (CPU)</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Cpu}
+                                                        value={formSp.tieu_de_nhom_cpu}
+                                                        defaultValue="1. Bộ Xử Lý & Hiệu Năng (CPU)"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_cpu: val })}
+                                                        mauBg="bg-blue-50 dark:bg-blue-950/60"
+                                                        mauBorder="border-blue-200 dark:border-blue-800"
+                                                        mauText="text-blue-900 dark:text-blue-300"
+                                                        mauIconBg="bg-blue-600"
+                                                        mauBadge="bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="sm:col-span-2 space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -7653,12 +7832,17 @@ export default function TrangQuanTriCuaHang() {
 
                                                 {/* Nhóm 2: Đồ Họa & Xử Lý Hình Ảnh (GPU) */}
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-400 dark:border-purple-600 shadow-md shadow-purple-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-purple-900 dark:text-purple-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Zap className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>2. Đồ Họa & Xử Lý Hình Ảnh (GPU)</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Zap}
+                                                        value={formSp.tieu_de_nhom_gpu}
+                                                        defaultValue="2. Đồ Họa & Xử Lý Hình Ảnh (GPU)"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_gpu: val })}
+                                                        mauBg="bg-purple-50 dark:bg-purple-950/60"
+                                                        mauBorder="border-purple-200 dark:border-purple-800"
+                                                        mauText="text-purple-900 dark:text-purple-300"
+                                                        mauIconBg="bg-purple-600"
+                                                        mauBadge="bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="sm:col-span-2 space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -7717,12 +7901,17 @@ export default function TrangQuanTriCuaHang() {
 
                                                 {/* Nhóm 3: Bộ Nhớ RAM & Ổ Cứng Lưu Trữ */}
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-600 shadow-md shadow-emerald-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <HardDrive className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>3. Bộ Nhớ RAM & Ổ Cứng Lưu Trữ (SSD)</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={HardDrive}
+                                                        value={formSp.tieu_de_nhom_ram}
+                                                        defaultValue="3. Bộ Nhớ RAM & Ổ Cứng Lưu Trữ (SSD)"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_ram: val })}
+                                                        mauBg="bg-emerald-50 dark:bg-emerald-950/60"
+                                                        mauBorder="border-emerald-200 dark:border-emerald-800"
+                                                        mauText="text-emerald-900 dark:text-emerald-300"
+                                                        mauIconBg="bg-emerald-600"
+                                                        mauBadge="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -7806,12 +7995,17 @@ export default function TrangQuanTriCuaHang() {
 
                                                 {/* Nhóm 4: Màn Hình & Công Nghệ Hiển Thị */}
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-sky-400 dark:border-sky-600 shadow-md shadow-sky-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/60 border border-sky-200 dark:border-sky-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-sky-900 dark:text-sky-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-sky-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Monitor className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>4. Màn Hình & Công Nghệ Hiển Thị</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Monitor}
+                                                        value={formSp.tieu_de_nhom_man_hinh}
+                                                        defaultValue="4. Màn Hình & Công Nghệ Hiển Thị"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_man_hinh: val })}
+                                                        mauBg="bg-sky-50 dark:bg-sky-950/60"
+                                                        mauBorder="border-sky-200 dark:border-sky-800"
+                                                        mauText="text-sky-900 dark:text-sky-300"
+                                                        mauIconBg="bg-sky-600"
+                                                        mauBadge="bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="sm:col-span-2 space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -7908,12 +8102,17 @@ export default function TrangQuanTriCuaHang() {
 
                                                 {/* Nhóm 5: Kích Thước, Pin & Tản Nhiệt */}
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-400 dark:border-amber-600 shadow-md shadow-amber-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <BatteryCharging className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>5. Kích Thước, Pin & Hệ Thống Tản Nhiệt</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={BatteryCharging}
+                                                        value={formSp.tieu_de_nhom_pin}
+                                                        defaultValue="5. Kích Thước, Pin & Hệ Thống Tản Nhiệt"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_pin: val })}
+                                                        mauBg="bg-amber-50 dark:bg-amber-950/60"
+                                                        mauBorder="border-amber-200 dark:border-amber-800"
+                                                        mauText="text-amber-900 dark:text-amber-300"
+                                                        mauIconBg="bg-amber-500"
+                                                        mauBadge="bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8011,12 +8210,17 @@ export default function TrangQuanTriCuaHang() {
 
                                                 {/* Nhóm 6: Cổng Kết Nối & Hệ Điều Hành */}
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-600 shadow-md shadow-indigo-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-indigo-900 dark:text-indigo-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Radio className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>6. Cổng Kết Nối, Hệ Điều Hành & Khác</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Radio}
+                                                        value={formSp.tieu_de_nhom_thiet_ke}
+                                                        defaultValue="6. Cổng Kết Nối, Hệ Điều Hành & Khác"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_thiet_ke: val })}
+                                                        mauBg="bg-indigo-50 dark:bg-indigo-950/60"
+                                                        mauBorder="border-indigo-200 dark:border-indigo-800"
+                                                        mauText="text-indigo-900 dark:text-indigo-300"
+                                                        mauIconBg="bg-indigo-600"
+                                                        mauBadge="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="sm:col-span-2 space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8092,12 +8296,17 @@ export default function TrangQuanTriCuaHang() {
                                         {loaiFormSanPham === 'ban_phim' && (
                                             <div className="space-y-4">
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-600 shadow-md shadow-indigo-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-indigo-900 dark:text-indigo-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Keyboard className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Switch & Cảm Giác Gõ Phím</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Keyboard}
+                                                        value={formSp.tieu_de_nhom_phim_switch}
+                                                        defaultValue="1. Switch & Cảm Giác Gõ Phím"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_phim_switch: val })}
+                                                        mauBg="bg-indigo-50 dark:bg-indigo-950/60"
+                                                        mauBorder="border-indigo-200 dark:border-indigo-800"
+                                                        mauText="text-indigo-900 dark:text-indigo-300"
+                                                        mauIconBg="bg-indigo-600"
+                                                        mauBadge="bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8154,12 +8363,17 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-400 dark:border-purple-600 shadow-md shadow-purple-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-purple-900 dark:text-purple-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Layers className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Layout, Keycap & Khung Vỏ</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Layers}
+                                                        value={formSp.tieu_de_nhom_phim_layout}
+                                                        defaultValue="2. Layout, Keycap & Khung Vỏ"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_phim_layout: val })}
+                                                        mauBg="bg-purple-50 dark:bg-purple-950/60"
+                                                        mauBorder="border-purple-200 dark:border-purple-800"
+                                                        mauText="text-purple-900 dark:text-purple-300"
+                                                        mauIconBg="bg-purple-600"
+                                                        mauBadge="bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8217,12 +8431,17 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-600 shadow-md shadow-emerald-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Wifi className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Kết Nối, Đèn LED & Pin</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Wifi}
+                                                        value={formSp.tieu_de_nhom_phim_ket_noi}
+                                                        defaultValue="3. Kết Nối, Đèn LED & Pin"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_phim_ket_noi: val })}
+                                                        mauBg="bg-emerald-50 dark:bg-emerald-950/60"
+                                                        mauBorder="border-emerald-200 dark:border-emerald-800"
+                                                        mauText="text-emerald-900 dark:text-emerald-300"
+                                                        mauIconBg="bg-emerald-600"
+                                                        mauBadge="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8285,12 +8504,17 @@ export default function TrangQuanTriCuaHang() {
                                         {loaiFormSanPham === 'chuot' && (
                                             <div className="space-y-4">
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-violet-400 dark:border-violet-600 shadow-md shadow-violet-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-violet-900 dark:text-violet-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-violet-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Mouse className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Cảm Biến, DPI & Độ Chính Xác</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Mouse}
+                                                        value={formSp.tieu_de_nhom_chuot_cam_bien}
+                                                        defaultValue="1. Cảm Biến, DPI & Độ Chính Xác"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_chuot_cam_bien: val })}
+                                                        mauBg="bg-violet-50 dark:bg-violet-950/60"
+                                                        mauBorder="border-violet-200 dark:border-violet-800"
+                                                        mauText="text-violet-900 dark:text-violet-300"
+                                                        mauIconBg="bg-violet-600"
+                                                        mauBadge="bg-violet-100 dark:bg-violet-900/60 text-violet-700 dark:text-violet-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8398,12 +8622,17 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-600 shadow-md shadow-emerald-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <BatteryCharging className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Kết Nối, Kích Thước & Thời Lượng Pin</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={BatteryCharging}
+                                                        value={formSp.tieu_de_nhom_chuot_ket_noi}
+                                                        defaultValue="2. Kết Nối, Kích Thước & Thời Lượng Pin"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_chuot_ket_noi: val })}
+                                                        mauBg="bg-emerald-50 dark:bg-emerald-950/60"
+                                                        mauBorder="border-emerald-200 dark:border-emerald-800"
+                                                        mauText="text-emerald-900 dark:text-emerald-300"
+                                                        mauIconBg="bg-emerald-600"
+                                                        mauBadge="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8490,12 +8719,17 @@ export default function TrangQuanTriCuaHang() {
                                         {loaiFormSanPham === 'balo' && (
                                             <div className="space-y-4">
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-400 dark:border-amber-600 shadow-md shadow-amber-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Briefcase className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Ngăn Chứa & Kích Thước Máy</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Briefcase}
+                                                        value={formSp.tieu_de_nhom_balo_ngan_chua}
+                                                        defaultValue="1. Ngăn Chứa & Kích Thước Máy"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_balo_ngan_chua: val })}
+                                                        mauBg="bg-amber-50 dark:bg-amber-950/60"
+                                                        mauBorder="border-amber-200 dark:border-amber-800"
+                                                        mauText="text-amber-900 dark:text-amber-300"
+                                                        mauIconBg="bg-amber-500"
+                                                        mauBadge="bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8565,12 +8799,17 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-600 shadow-md shadow-emerald-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Layers className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Chất Liệu, Kháng Nước & Tính Năng</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Layers}
+                                                        value={formSp.tieu_de_nhom_balo_chat_lieu}
+                                                        defaultValue="2. Chất Liệu & Khả Năng Kháng Nước"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_balo_chat_lieu: val })}
+                                                        mauBg="bg-emerald-50 dark:bg-emerald-950/60"
+                                                        mauBorder="border-emerald-200 dark:border-emerald-800"
+                                                        mauText="text-emerald-900 dark:text-emerald-300"
+                                                        mauIconBg="bg-emerald-600"
+                                                        mauBadge="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8658,12 +8897,17 @@ export default function TrangQuanTriCuaHang() {
                                         {loaiFormSanPham === 'tai_nghe' && (
                                             <div className="space-y-4">
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-rose-400 dark:border-rose-600 shadow-md shadow-rose-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-rose-900 dark:text-rose-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-rose-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Headphones className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Màng Loa & Công Nghệ Âm Thanh</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Headphones}
+                                                        value={formSp.tieu_de_nhom_tai_nghe_am_thanh}
+                                                        defaultValue="1. Màng Loa, Âm Thanh & Chống Ồn ANC"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_tai_nghe_am_thanh: val })}
+                                                        mauBg="bg-rose-50 dark:bg-rose-950/60"
+                                                        mauBorder="border-rose-200 dark:border-rose-800"
+                                                        mauText="text-rose-900 dark:text-rose-300"
+                                                        mauIconBg="bg-rose-600"
+                                                        mauBadge="bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8747,12 +8991,17 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-600 shadow-md shadow-emerald-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <BatteryCharging className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Kết Nối, Pin & Thiết Kế</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={BatteryCharging}
+                                                        value={formSp.tieu_de_nhom_tai_nghe_ket_noi}
+                                                        defaultValue="2. Kết Nối, Micro & Thời Lượng Pin"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_tai_nghe_ket_noi: val })}
+                                                        mauBg="bg-emerald-50 dark:bg-emerald-950/60"
+                                                        mauBorder="border-emerald-200 dark:border-emerald-800"
+                                                        mauText="text-emerald-900 dark:text-emerald-300"
+                                                        mauIconBg="bg-emerald-600"
+                                                        mauBadge="bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8851,12 +9100,17 @@ export default function TrangQuanTriCuaHang() {
                                         {loaiFormSanPham === 'sac_hub' && (
                                             <div className="space-y-4">
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-orange-400 dark:border-orange-600 shadow-md shadow-orange-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-orange-50 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-orange-900 dark:text-orange-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Zap className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Công Suất & Công Nghệ Sạc Nhanh</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Zap}
+                                                        value={formSp.tieu_de_nhom_sac_cong_suat}
+                                                        defaultValue="1. Công Suất & Công Nghệ Sạc Nhanh GaN"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_sac_cong_suat: val })}
+                                                        mauBg="bg-orange-50 dark:bg-orange-950/60"
+                                                        mauBorder="border-orange-200 dark:border-orange-800"
+                                                        mauText="text-orange-900 dark:text-orange-300"
+                                                        mauIconBg="bg-orange-600"
+                                                        mauBadge="bg-orange-100 dark:bg-orange-900/60 text-orange-700 dark:text-orange-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -8940,12 +9194,17 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-400 dark:border-blue-600 shadow-md shadow-blue-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-blue-900 dark:text-blue-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Usb className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Cổng Kết Nối & Băng Thông Truyền Tải</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Usb}
+                                                        value={formSp.tieu_de_nhom_sac_cong_ket_noi}
+                                                        defaultValue="2. Cổng Kết Nối & Băng Thông Truyền Tải"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_sac_cong_ket_noi: val })}
+                                                        mauBg="bg-blue-50 dark:bg-blue-950/60"
+                                                        mauBorder="border-blue-200 dark:border-blue-800"
+                                                        mauText="text-blue-900 dark:text-blue-300"
+                                                        mauIconBg="bg-blue-600"
+                                                        mauBadge="bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="sm:col-span-2 space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -9045,12 +9304,17 @@ export default function TrangQuanTriCuaHang() {
                                         {loaiFormSanPham === 'linh_kien' && (
                                             <div className="space-y-4">
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-teal-400 dark:border-teal-600 shadow-md shadow-teal-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-teal-900 dark:text-teal-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-teal-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <HardDrive className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Hiệu Năng & Tốc Độ Truyền Tải</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={HardDrive}
+                                                        value={formSp.tieu_de_nhom_linh_kien_hieu_nang}
+                                                        defaultValue="1. Hiệu Năng & Tốc Độ Truyền Tải"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_linh_kien_hieu_nang: val })}
+                                                        mauBg="bg-teal-50 dark:bg-teal-950/60"
+                                                        mauBorder="border-teal-200 dark:border-teal-800"
+                                                        mauText="text-teal-900 dark:text-teal-300"
+                                                        mauIconBg="bg-teal-600"
+                                                        mauBadge="bg-teal-100 dark:bg-teal-900/60 text-teal-700 dark:text-teal-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
@@ -9158,12 +9422,17 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-cyan-400 dark:border-cyan-600 shadow-md shadow-cyan-500/5 space-y-3.5">
-                                                    <div className="p-3 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 flex items-center gap-2 font-black text-xs uppercase tracking-wider text-cyan-900 dark:text-cyan-300">
-                                                        <span className="w-6 h-6 rounded-lg bg-cyan-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Zap className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Chuẩn Giao Tiếp & Độ Bền</span>
-                                                    </div>
+                                                    <ThanhTieuDeNhom
+                                                        icon={Zap}
+                                                        value={formSp.tieu_de_nhom_linh_kien_chuan}
+                                                        defaultValue="2. Chuẩn Giao Tiếp & Độ Bền"
+                                                        onChange={(val) => setFormSp({ ...formSp, tieu_de_nhom_linh_kien_chuan: val })}
+                                                        mauBg="bg-cyan-50 dark:bg-cyan-950/60"
+                                                        mauBorder="border-cyan-200 dark:border-cyan-800"
+                                                        mauText="text-cyan-900 dark:text-cyan-300"
+                                                        mauIconBg="bg-cyan-600"
+                                                        mauBadge="bg-cyan-100 dark:bg-cyan-900/60 text-cyan-700 dark:text-cyan-300"
+                                                    />
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">

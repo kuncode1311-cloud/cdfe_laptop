@@ -93,7 +93,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             return [
                 {
                     id: 'balo_ngan_chua',
-                    tenNhom: 'Ngăn Chứa & Kích Thước Máy',
+                    tenNhom: ts.tieu_de_nhom_balo_ngan_chua || 'Ngăn Chứa & Kích Thước Máy',
                     icon: Briefcase,
                     mauSac: {
                         border: 'border-l-blue-600',
@@ -110,7 +110,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'balo_chat_lieu',
-                    tenNhom: 'Chất Liệu & Khả Năng Kháng Nước',
+                    tenNhom: ts.tieu_de_nhom_balo_chat_lieu || 'Chất Liệu & Khả Năng Kháng Nước',
                     icon: Layers,
                     mauSac: {
                         border: 'border-l-emerald-600',
@@ -126,7 +126,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'balo_tien_ich',
-                    tenNhom: 'Tiện Ích, Tính Năng & Bảo Hành',
+                    tenNhom: ts.tieu_de_nhom_balo_tien_ich || 'Tiện Ích, Tính Năng & Bảo Hành',
                     icon: ShieldCheck,
                     mauSac: {
                         border: 'border-l-purple-600',
@@ -148,7 +148,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             return [
                 {
                     id: 'keyboard_switch',
-                    tenNhom: 'Switch & Cảm Giác Gõ Phím',
+                    tenNhom: ts.tieu_de_nhom_phim_switch || 'Switch & Cảm Giác Gõ Phím',
                     icon: Keyboard,
                     mauSac: {
                         border: 'border-l-blue-600',
@@ -163,7 +163,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'keyboard_design',
-                    tenNhom: 'Layout, Keycap & Khung Vỏ',
+                    tenNhom: ts.tieu_de_nhom_phim_layout || 'Layout, Keycap & Khung Vỏ',
                     icon: Layers,
                     mauSac: {
                         border: 'border-l-purple-600',
@@ -179,7 +179,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'keyboard_connect',
-                    tenNhom: 'Kết Nối, Đèn LED & Pin',
+                    tenNhom: ts.tieu_de_nhom_phim_ket_noi || 'Kết Nối, Đèn LED & Pin',
                     icon: Wifi,
                     mauSac: {
                         border: 'border-l-emerald-600',
@@ -204,7 +204,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             return [
                 {
                     id: 'mouse_sensor',
-                    tenNhom: 'Cảm Biến, DPI & Độ Chính Xác',
+                    tenNhom: ts.tieu_de_nhom_chuot_cam_bien || 'Cảm Biến, DPI & Độ Chính Xác',
                     icon: Mouse,
                     mauSac: {
                         border: 'border-l-blue-600',
@@ -224,7 +224,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'mouse_connect',
-                    tenNhom: 'Kết Nối, Kích Thước & Thời Lượng Pin',
+                    tenNhom: ts.tieu_de_nhom_chuot_ket_noi || 'Kết Nối, Kích Thước & Thời Lượng Pin',
                     icon: BatteryCharging,
                     mauSac: {
                         border: 'border-l-emerald-600',
@@ -251,7 +251,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             return [
                 {
                     id: 'audio_driver',
-                    tenNhom: 'Màng Loa & Công Nghệ Âm Thanh',
+                    tenNhom: ts.tieu_de_nhom_tai_nghe_am_thanh || 'Màng Loa & Công Nghệ Âm Thanh',
                     icon: Headphones,
                     mauSac: {
                         border: 'border-l-blue-600',
@@ -269,7 +269,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'audio_connect',
-                    tenNhom: 'Kết Nối, Pin & Thiết Kế',
+                    tenNhom: ts.tieu_de_nhom_tai_nghe_ket_noi || 'Kết Nối, Pin & Thiết Kế',
                     icon: BatteryCharging,
                     mauSac: {
                         border: 'border-l-emerald-600',
@@ -297,7 +297,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             return [
                 {
                     id: 'power_specs',
-                    tenNhom: 'Công Suất & Công Nghệ Sạc Nhanh',
+                    tenNhom: ts.tieu_de_nhom_sac_cong_suat || 'Công Suất & Công Nghệ Sạc Nhanh',
                     icon: Zap,
                     mauSac: {
                         border: 'border-l-amber-500',
@@ -315,7 +315,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'hub_ports',
-                    tenNhom: 'Cổng Kết Nối & Băng Thông Truyền Tải',
+                    tenNhom: ts.tieu_de_nhom_sac_cong_ket_noi || 'Cổng Kết Nối & Băng Thông Truyền Tải',
                     icon: Usb,
                     mauSac: {
                         border: 'border-l-blue-600',
@@ -345,7 +345,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             return [
                 {
                     id: 'hardware_perf',
-                    tenNhom: 'Hiệu Năng & Tốc Độ Truyền Tải',
+                    tenNhom: ts.tieu_de_nhom_linh_kien_hieu_nang || 'Hiệu Năng & Tốc Độ Truyền Tải',
                     icon: HardDrive,
                     mauSac: {
                         border: 'border-l-emerald-600',
@@ -367,7 +367,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'hardware_specs',
-                    tenNhom: 'Chuẩn Giao Tiếp & Độ Bền',
+                    tenNhom: ts.tieu_de_nhom_linh_kien_chuan || 'Chuẩn Giao Tiếp & Độ Bền',
                     icon: Zap,
                     mauSac: {
                         border: 'border-l-blue-600',
@@ -392,7 +392,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
         return [
             {
                 id: 'cpu',
-                tenNhom: 'Bộ Xử Lý & Hiệu Năng (CPU)',
+                tenNhom: ts.tieu_de_nhom_cpu || 'Bộ Xử Lý & Hiệu Năng (CPU)',
                 icon: Cpu,
                 mauSac: {
                     border: 'border-l-blue-600',
@@ -410,7 +410,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             },
             {
                 id: 'gpu',
-                tenNhom: 'Đồ Họa & Xử Lý Hình Ảnh (GPU)',
+                tenNhom: ts.tieu_de_nhom_gpu || 'Đồ Họa & Xử Lý Hình Ảnh (GPU)',
                 icon: Zap,
                 mauSac: {
                     border: 'border-l-purple-600',
@@ -426,7 +426,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             },
             {
                 id: 'ram_ssd',
-                tenNhom: 'Bộ Nhớ RAM & Ổ Cứng Lưu Trữ',
+                tenNhom: ts.tieu_de_nhom_ram || 'Bộ Nhớ RAM & Ổ Cứng Lưu Trữ',
                 icon: HardDrive,
                 mauSac: {
                     border: 'border-l-emerald-600',
@@ -443,7 +443,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             },
             {
                 id: 'man_hinh',
-                tenNhom: 'Màn Hình & Công Nghệ Hiển Thị',
+                tenNhom: ts.tieu_de_nhom_man_hinh || 'Màn Hình & Công Nghệ Hiển Thị',
                 icon: Monitor,
                 mauSac: {
                     border: 'border-l-sky-600',
@@ -462,7 +462,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             },
             {
                 id: 'pin_tan_nhiet',
-                tenNhom: 'Kích Thước, Pin & Tản Nhiệt',
+                tenNhom: ts.tieu_de_nhom_pin || 'Kích Thước, Pin & Tản Nhiệt',
                 icon: BatteryCharging,
                 mauSac: {
                     border: 'border-l-amber-500',
@@ -481,7 +481,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             },
             {
                 id: 'ket_noi_os',
-                tenNhom: 'Cổng Kết Nối, Hệ Điều Hành & Bảo Hành',
+                tenNhom: ts.tieu_de_nhom_thiet_ke || 'Cổng Kết Nối, Hệ Điều Hành & Bảo Hành',
                 icon: Radio,
                 mauSac: {
                     border: 'border-l-indigo-600',
@@ -515,7 +515,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             'chuan_giao_tiep', 'dung_luong', 'toc_do_doc_ghi', 'he_thong_tan_nhiet'
         ]);
 
-        const thongSoConLai = Object.entries(ts).filter(([k, v]) => !daCoKey.has(k) && v !== undefined && v !== null && v !== '');
+        const thongSoConLai = Object.entries(ts).filter(([k, v]) => !k.startsWith('tieu_de_nhom_') && !daCoKey.has(k) && v !== undefined && v !== null && v !== '');
         if (thongSoConLai.length > 0) {
             nhomThongSoChuan.push({
                 id: 'thong_so_bo_sung_mo_rong',
