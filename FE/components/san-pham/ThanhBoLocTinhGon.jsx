@@ -45,6 +45,7 @@ export default function ThanhBoLocTinhGon({
         const demGpu = {};
 
         (tatCaSanPham || []).forEach(sp => {
+            if (!sp) return;
             if (sp.hang_san_xuat) {
                 const h = sp.hang_san_xuat.toLowerCase();
                 demHang[h] = (demHang[h] || 0) + 1;

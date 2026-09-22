@@ -271,7 +271,7 @@ export default function ModalDangNhapDangKy() {
                     shape: 'pill',
                     theme: 'outline',
                     size: 'large',
-                    text: 'continue_with',
+                    text: 'signin_with',
                     logo_alignment: 'center',
                     width: chieuRong
                 });

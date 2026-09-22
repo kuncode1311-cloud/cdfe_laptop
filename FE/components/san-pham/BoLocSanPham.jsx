@@ -51,13 +51,15 @@ export default function BoLocSanPhamComponent({
         };
 
         (tatCaSanPham || []).forEach(sp => {
+            if (!sp) return;
             // Đếm hãng
             if (sp.hang_san_xuat) {
                 const h = sp.hang_san_xuat.toLowerCase();
                 dem.hang[h] = (dem.hang[h] || 0) + 1;
             }
             // Đếm danh mục
-            (sp.danh_muc || []).forEach(dm => {
+            const dsDm = Array.isArray(sp.danh_muc) ? sp.danh_muc : (typeof sp.danh_muc === 'string' ? [sp.danh_muc] : []);
+            dsDm.forEach(dm => {
                 dem.danh_muc[dm] = (dem.danh_muc[dm] || 0) + 1;
             });
             // Đếm GPU

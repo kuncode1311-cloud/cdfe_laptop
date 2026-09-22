@@ -316,17 +316,31 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // Đăng xuất và xóa Token
+    // Đăng xuất và xóa sạch Token & Toàn bộ Session
     const dangXuat = () => {
         setNguoiDung(null);
         setToken(null);
-        localStorage.removeItem(USER_STORAGE_KEY);
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
         setDangMoModalAuth(false);
-        if (typeof window !== 'undefined' && window.google?.accounts?.id) {
+
+        if (typeof window !== 'undefined') {
             try {
-                window.google.accounts.id.disableAutoSelect();
-            } catch (_) {}
+                localStorage.removeItem(USER_STORAGE_KEY);
+                localStorage.removeItem(TOKEN_STORAGE_KEY);
+                localStorage.removeItem('tnt_laptop_user');
+                localStorage.removeItem('tnt_laptop_token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                localStorage.removeItem('auth_user');
+                sessionStorage.clear();
+            } catch (e) {
+                console.warn('Lỗi xóa storage khi logout:', e);
+            }
+
+            if (window.google?.accounts?.id) {
+                try {
+                    window.google.accounts.id.disableAutoSelect();
+                } catch (_) {}
+            }
         }
     };
 

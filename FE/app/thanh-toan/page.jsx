@@ -30,7 +30,7 @@ function NoiDungTrangThanhToan() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { gio_hang, xoaSachGioHang } = useGioHang();
-    const { nguoiDung } = useNguoiDung();
+    const { nguoiDung, moModalDangNhap } = useNguoiDung();
 
     const [thongTinGiaoHang, setThongTinGiaoHang] = useState({
         ho_va_ten: '',
@@ -89,6 +89,13 @@ function NoiDungTrangThanhToan() {
 
     const xuLyDatHang = async (e) => {
         e.preventDefault();
+
+        // 1. BẮT BUỘC ĐĂNG NHẬP TRƯỚC KHI ĐẶT HÀNG
+        if (!nguoiDung) {
+            toast.error('Quý khách vui lòng Đăng Nhập tài khoản để hoàn tất đặt hàng!');
+            moModalDangNhap();
+            return;
+        }
 
         if (gio_hang.danh_sach_muc.length === 0) {
             toast.error('Giỏ hàng đang trống! Vui lòng chọn laptop trước khi thanh toán.');
@@ -240,6 +247,32 @@ function NoiDungTrangThanhToan() {
             <form onSubmit={xuLyDatHang} className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
                 {/* Cột Trái (7 Cột): Địa Chỉ Nhận Hàng & Hình Thức Thanh Toán */}
                 <div className="lg:col-span-7 space-y-6">
+                    {/* Banner nhắc đăng nhập nếu là khách vãng lai */}
+                    {!nguoiDung && (
+                        <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-amber-950/40 border-2 border-amber-300 dark:border-amber-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+                                    !
+                                </div>
+                                <div>
+                                    <h4 className="font-black text-slate-900 dark:text-white text-xs sm:text-sm">
+                                        Yêu cầu Đăng nhập để Đặt hàng
+                                    </h4>
+                                    <p className="text-[11.5px] text-slate-600 dark:text-slate-300 mt-0.5">
+                                        Đăng nhập giúp lưu đơn hàng vào tài khoản của bạn và kích hoạt bảo hành điện tử chính hãng.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={moModalDangNhap}
+                                className="px-4 py-2 rounded-xl bg-[#0052cc] hover:bg-[#003da5] text-white font-black text-xs shrink-0 cursor-pointer shadow-sm transition-all self-start sm:self-center"
+                            >
+                                Đăng Nhập Ngay
+                            </button>
+                        </div>
+                    )}
+
                     {/* Form Địa Chỉ & Người Nhận */}
                     <FormThongTinGiaoHang 
                         thongTin={thongTinGiaoHang} 
@@ -353,12 +386,21 @@ function NoiDungTrangThanhToan() {
                         <button
                             type="submit"
                             disabled={dangXuLy || gio_hang.danh_sach_muc.length === 0}
-                            className="w-full py-4 px-4 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-700 hover:to-rose-700 text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-red-500/25 transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                            className={`w-full py-4 px-4 rounded-xl text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl transition-all hover:scale-[1.01] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
+                                !nguoiDung 
+                                    ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-amber-600 hover:from-amber-700 hover:to-orange-700 shadow-amber-500/25' 
+                                    : 'bg-gradient-to-r from-red-600 via-rose-600 to-red-600 hover:from-red-700 hover:to-rose-700 shadow-red-500/25'
+                            }`}
                         >
                             {dangXuLy ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
                                     <span>ĐANG TẠO ĐƠN HÀNG...</span>
+                                </>
+                            ) : !nguoiDung ? (
+                                <>
+                                    <Lock className="w-4 h-4" />
+                                    <span>ĐĂNG NHẬP ĐỂ ĐẶT HÀNG</span>
                                 </>
                             ) : (
                                 <>

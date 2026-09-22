@@ -98,13 +98,15 @@ function NoiDungDanhSachSanPham() {
     const danhSachDanhMucTopbar = useMemo(() => {
         const demDanhMuc = {};
         (tatCaSanPham || []).forEach(sp => {
-            (sp.danh_muc || []).forEach(dm => {
+            if (!sp) return;
+            const dsDm = Array.isArray(sp.danh_muc) ? sp.danh_muc : (typeof sp.danh_muc === 'string' ? [sp.danh_muc] : []);
+            dsDm.forEach(dm => {
                 demDanhMuc[dm] = (demDanhMuc[dm] || 0) + 1;
             });
         });
         return DANH_SACH_DANH_MUC_ANH.map(dm => ({
             ...dm,
-            count: dm.ma ? (demDanhMuc[dm.ma] || 0) : tatCaSanPham.length
+            count: dm.ma ? (demDanhMuc[dm.ma] || 0) : (tatCaSanPham?.length || 0)
         }));
     }, [tatCaSanPham]);
 

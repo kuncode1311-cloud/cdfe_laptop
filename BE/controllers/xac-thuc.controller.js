@@ -220,6 +220,15 @@ const dangNhap = async (req, res) => {
             });
         }
 
+        // Kiểm tra tài khoản có đang bị khóa tạm thời không
+        if (nguoiDung.biKhoa || nguoiDung.trangThai === 'bi_khoa') {
+            return res.status(403).json({
+                thong_diep: nguoiDung.lyDoKhoa
+                    ? `Tài khoản của bạn đã bị tạm khóa! Lý do: ${nguoiDung.lyDoKhoa}. Vui lòng liên hệ CSKH để được hỗ trợ.`
+                    : 'Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên để được mở khóa!'
+            });
+        }
+
         // Tạo JWT Token
         const token = taoToken(nguoiDung);
 
@@ -342,6 +351,15 @@ const dangNhapGoogle = async (req, res) => {
             if (coThayDoi) {
                 await nguoiDung.save();
             }
+        }
+
+        // Kiểm tra tài khoản có đang bị khóa tạm thời không
+        if (nguoiDung.biKhoa || nguoiDung.trangThai === 'bi_khoa') {
+            return res.status(403).json({
+                thong_diep: nguoiDung.lyDoKhoa
+                    ? `Tài khoản của bạn đã bị tạm khóa! Lý do: ${nguoiDung.lyDoKhoa}. Vui lòng liên hệ CSKH để được hỗ trợ.`
+                    : 'Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên để được mở khóa!'
+            });
         }
 
         // Tạo JWT hệ thống

@@ -96,6 +96,26 @@ const NguoiDungSchema = new mongoose.Schema(
         daKichHoat: {
             type: Boolean,
             default: true
+        },
+        trangThai: {
+            type: String,
+            enum: ['hoat_dong', 'bi_khoa'],
+            default: 'hoat_dong'
+        },
+        biKhoa: {
+            type: Boolean,
+            default: false
+        },
+        lyDoKhoa: {
+            type: String,
+            default: ''
+        },
+        ngayTao: {
+            type: String,
+            default: () => {
+                const d = new Date();
+                return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+            }
         }
     },
     {
