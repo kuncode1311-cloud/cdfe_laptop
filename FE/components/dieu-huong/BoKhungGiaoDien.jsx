@@ -25,17 +25,26 @@ export default function BoKhungGiaoDien({ children }) {
     }
 
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen relative">
+            {/* 🌌 Nền Vũ Trụ Hạt Bay Tone Sáng (Light Theme Particle Sky từ MOS) */}
+            <div className="stars-bg-container" aria-hidden="true">
+                <div id="stars"></div>
+                <div id="stars2"></div>
+                <div id="stars3"></div>
+            </div>
+
             <div className="site-sticky-nav sticky top-0 z-[100] w-full">
                 <div className="site-nav-shell">
                     <ThanhDieuHuong />
                     <MenuDanhMuc />
                 </div>
             </div>
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-12">
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-12 relative z-10">
                 {children}
             </main>
-            <ChanTrang />
+            <div className="relative z-10">
+                <ChanTrang />
+            </div>
             <ThanhSoSanhNoi />
             <NutLienHeNoi />
         </div>

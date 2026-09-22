@@ -51,7 +51,7 @@ export const SanPhamService = {
             endpoint += `?${queryString}`;
         }
 
-        const data = await apiFetch(endpoint, { cache: 'default' }, DANH_SACH_LAPTOP);
+        const data = await apiFetch(endpoint, { cache: 'no-store' }, DANH_SACH_LAPTOP);
         if (Array.isArray(data) && data.length > 0 && !queryString) {
             boNhoDemSanPham = data;
         }

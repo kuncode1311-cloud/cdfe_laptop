@@ -23,7 +23,7 @@ const MILESTONES = [
   {
     nam: '2024',
     tieuDe: 'Mở Rộng Flagship Store',
-    noiDung: 'Khai trương 3 không gian trải nghiệm cao cấp tại Quận 10, Bình Thạnh (TP.HCM) và Cầu Giấy (Hà Nội) với phòng Lab kỹ thuật riêng.',
+    noiDung: 'Khai trương 3 không gian trải nghiệm cao cấp tại Quận 10, Tân Phú - ITC (TP.HCM) và Cầu Giấy (Hà Nội) với phòng Lab kỹ thuật riêng.',
     tag: 'Phủ Sóng 2 Miền',
     accent: 'from-purple-600 to-pink-500',
     dotColor: 'bg-purple-600 text-white border-purple-400'

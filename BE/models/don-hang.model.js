@@ -29,7 +29,7 @@ const DonHangSchema = new mongoose.Schema(
         trang_thai: {
             type: String,
             enum: ['cho_xac_nhan', 'da_xac_nhan', 'dang_giao', 'da_giao', 'da_huy'],
-            default: 'da_xac_nhan'
+            default: 'cho_xac_nhan'
         },
         thong_tin_giao_hang: {
             ho_ten: { type: String, default: '' },
@@ -51,6 +51,9 @@ const DonHangSchema = new mongoose.Schema(
                 hinh_anh: { type: String },
                 so_luong: { type: Number, default: 1 },
                 gia_tai_thoi_diem_them: { type: Number },
+                gia_hien_tai: { type: Number },
+                tong_tien_muc: { type: Number },
+                gia: { type: Number },
                 tuy_chon_chon: { type: mongoose.Schema.Types.Mixed }
             }
         ],
@@ -80,6 +83,10 @@ const DonHangSchema = new mongoose.Schema(
             default: 'tien_mat_cod'
         },
         da_thanh_toan: {
+            type: Boolean,
+            default: false
+        },
+        da_tru_ton_kho: {
             type: Boolean,
             default: false
         },

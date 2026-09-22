@@ -97,7 +97,6 @@ export function AuthProvider({ children }) {
                 setNguoiDung(data.nguoiDung);
                 localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
                 localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
-                setDangMoModalAuth(false);
                 return data.nguoiDung;
             }
 
@@ -185,7 +184,6 @@ export function AuthProvider({ children }) {
                 setNguoiDung(data.nguoiDung);
                 localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
                 localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
-                setDangMoModalAuth(false);
                 return data.nguoiDung;
             }
             throw new Error('Không nhận được token từ server');
@@ -252,12 +250,79 @@ export function AuthProvider({ children }) {
         }
     };
 
+    // Cập nhật hồ sơ người dùng
+    const capNhatHoSo = async (duLieuCapNhat) => {
+        try {
+            const tokenHienTai = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+            const res = await fetch(`${API_BASE_URL}/auth/cap-nhat-ho-so`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenHienTai}`
+                },
+                body: JSON.stringify(duLieuCapNhat)
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.thong_diep || 'Cập nhật hồ sơ thất bại!');
+            }
+
+            if (data.nguoiDung) {
+                setNguoiDung(data.nguoiDung);
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Lỗi cập nhật hồ sơ:', error.message);
+            if (nguoiDung) {
+                const userMoi = { ...nguoiDung, ...duLieuCapNhat };
+                setNguoiDung(userMoi);
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userMoi));
+            }
+            throw error;
+        }
+    };
+
+    // Đổi mật khẩu cá nhân
+    const doiMatKhau = async (matKhauCu, matKhauMoi) => {
+        try {
+            const tokenHienTai = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+            const res = await fetch(`${API_BASE_URL}/auth/doi-mat-khau`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenHienTai}`
+                },
+                body: JSON.stringify({ matKhauCu, matKhauMoi })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.thong_diep || 'Đổi mật khẩu thất bại!');
+            }
+
+            if (nguoiDung) {
+                const userMoi = { ...nguoiDung, coMatKhau: true };
+                setNguoiDung(userMoi);
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userMoi));
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Lỗi đổi mật khẩu:', error.message);
+            throw error;
+        }
+    };
+
     // Đăng xuất và xóa Token
     const dangXuat = () => {
         setNguoiDung(null);
         setToken(null);
         localStorage.removeItem(USER_STORAGE_KEY);
         localStorage.removeItem(TOKEN_STORAGE_KEY);
+        setDangMoModalAuth(false);
         if (typeof window !== 'undefined' && window.google?.accounts?.id) {
             try {
                 window.google.accounts.id.disableAutoSelect();
@@ -281,6 +346,8 @@ export function AuthProvider({ children }) {
                 role: nguoiDung?.vaiTro || 'khach_hang',
                 viVoucher: nguoiDung?.viVoucher || [],
                 capNhatViVoucher,
+                capNhatHoSo,
+                doiMatKhau,
                 dangMoModalAuth,
                 cheDoAuth,
                 moModalDangNhap,

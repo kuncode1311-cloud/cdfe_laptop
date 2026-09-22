@@ -89,8 +89,7 @@ const napDuLieu = async () => {
                 matKhau: adminPassHash,
                 avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
                 vaiTro: 'admin',
-                hangThanhVien: 'Admin Toàn Quyền',
-                diemTichLuy: 99999
+                hangThanhVien: 'Admin Toàn Quyền'
             });
 
             await NguoiDung.insertMany(usersWithHash);

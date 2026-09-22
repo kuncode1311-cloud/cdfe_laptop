@@ -101,7 +101,11 @@ import {
     Play,
     Radio,
     Wifi,
-    Usb
+    Usb,
+    Barcode,
+    Building2,
+    CircleDollarSign,
+    Shield
 } from 'lucide-react';
 import { useAuth, useNguoiDung } from '@/contexts/AuthContext';
 import { useTheme, useGiaoDien } from '@/contexts/ThemeContext';
@@ -111,14 +115,17 @@ import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 import { DanhMucService } from '@/services/danh-muc.service';
 import { NguoiDungService } from '@/services/nguoi-dung.service';
 import { TinTucService } from '@/services/tin-tuc.service';
-import { CaiDatService, CAI_DAT_KHUYEN_MAI_MAC_DINH } from '@/services/cai-dat.service';
+import { CaiDatService, CAI_DAT_KHUYEN_MAI_MAC_DINH, DANH_SACH_SHOWROOM_MAC_DINH } from '@/services/cai-dat.service';
 import { formatCurrency, dinhDangTienVND } from '@/utils/formatCurrency';
 import { taoSlug, slugTinTuc } from '@/utils/taoSlug';
+import { inHoaDonBanHang } from '@/utils/inHoaDon';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import BangThongSoKyThuat from '@/components/san-pham/BangThongSoKyThuat';
 import ThuVienAnhSanPham from '@/components/san-pham/ThuVienAnhSanPham';
 import KhoHangChiNhanh from '@/components/san-pham/KhoHangChiNhanh';
 import BieuDoTongQuan from '@/components/admin/BieuDoTongQuan';
+import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import { toast } from 'sonner';
 
 // Helper an toàn tránh runtime ReferenceError khi format tiền tệ
 const dinhDangVND = (so) => dinhDangTienVND(Number(so) || 0);
@@ -128,8 +135,64 @@ export default function TrangQuanTriCuaHang() {
     const { nguoiDung, daDangNhap, laAdmin, dangNhap, dangXuat } = useNguoiDung();
     const { chu_de, chuyenDoiChuDe } = useGiaoDien();
 
-    // Điều hướng Tab: 8 Tabs Quản Trị Toàn Diện
-    const [tabHienTai, setTabHienTai] = useState('tong_quan'); // 'tong_quan' | 'don_hang' | 'san_pham' | 'danh_muc' | 'khach_hang' | 'voucher' | 'tin_tuc' | 'khuyen_mai'
+    // Điều hướng Tab: 9 Tabs Quản Trị Toàn Diện (Tự động ghi nhớ vị trí khi F5 reload)
+    const [tabHienTai, setTabHienTai] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const tabUrl = urlParams.get('tab');
+                const tabStorage = localStorage.getItem('admin_active_tab');
+                const validTabs = ['tong_quan', 'don_hang', 'san_pham', 'danh_muc', 'khach_hang', 'voucher', 'tin_tuc', 'khuyen_mai', 'showroom'];
+                if (validTabs.includes(tabUrl)) return tabUrl;
+                if (validTabs.includes(tabStorage)) return tabStorage;
+            } catch (e) {
+                // Ignore
+            }
+        }
+        return 'tong_quan';
+    });
+
+    // Đồng bộ Tab hiện tại với URL query params và LocalStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabUrl = urlParams.get('tab');
+            const tabStorage = localStorage.getItem('admin_active_tab');
+            const validTabs = ['tong_quan', 'don_hang', 'san_pham', 'danh_muc', 'khach_hang', 'voucher', 'tin_tuc', 'khuyen_mai', 'showroom'];
+
+            const tabTarget = validTabs.includes(tabUrl)
+                ? tabUrl
+                : validTabs.includes(tabStorage)
+                ? tabStorage
+                : 'tong_quan';
+
+            if (tabTarget && tabTarget !== tabHienTai) {
+                setTabHienTai(tabTarget);
+            }
+
+            const handlePopState = () => {
+                const params = new URLSearchParams(window.location.search);
+                const t = params.get('tab');
+                if (validTabs.includes(t)) {
+                    setTabHienTai(t);
+                }
+            };
+            window.addEventListener('popstate', handlePopState);
+            return () => window.removeEventListener('popstate', handlePopState);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && tabHienTai) {
+            localStorage.setItem('admin_active_tab', tabHienTai);
+            const url = new URL(window.location.href);
+            if (url.searchParams.get('tab') !== tabHienTai) {
+                url.searchParams.set('tab', tabHienTai);
+                window.history.replaceState({}, '', url.toString());
+            }
+        }
+    }, [tabHienTai]);
+
     const [sidebarThuGon, setSidebarThuGon] = useState(false);
     const [sidebarMoMobile, setSidebarMoMobile] = useState(false);
 
@@ -141,7 +204,6 @@ export default function TrangQuanTriCuaHang() {
     const [danhSachNguoiDung, setDanhSachNguoiDung] = useState([]);
     const [danhSachTinTuc, setDanhSachTinTuc] = useState([]);
     const [dangTai, setDangTai] = useState(false);
-    const [thongBaoThanhCong, setThongBaoThanhCong] = useState('');
 
     // State Bộ lọc & Tìm kiếm thông minh
     const [tuKhoaGlobal, setTuKhoaGlobal] = useState('');
@@ -179,6 +241,11 @@ export default function TrangQuanTriCuaHang() {
     const [caiDatKm, setCaiDatKm] = useState(() => CaiDatService.layCaiDatKhuyenMai());
     const [formCaiDatKm, setFormCaiDatKm] = useState(() => CaiDatService.layCaiDatKhuyenMai());
 
+    // Cấu hình Hệ Thống Showroom & Tọa Độ GPS Bản Đồ (Dữ liệu động 100%)
+    const [danhSachShowroomAdmin, setDanhSachShowroomAdmin] = useState(DANH_SACH_SHOWROOM_MAC_DINH);
+    const [dangLuuShowroom, setDangLuuShowroom] = useState(false);
+    const [showroomDangXemTruoc, setShowroomDangXemTruoc] = useState(0);
+
     // ==========================================
     // CÁC MODAL QUẢN TRỊ & TRẠNG THÁI LOADING / DISABLE
     // ==========================================
@@ -213,6 +280,83 @@ export default function TrangQuanTriCuaHang() {
     const [daSoSanhXemTruoc, setDaSoSanhXemTruoc] = useState(false);
     const [formSpGoc, setFormSpGoc] = useState(null);
     const [hienOUrlAnhChinh, setHienOUrlAnhChinh] = useState(false);
+
+    // ==========================================
+    // TRẠNG THÁI LOADING CỤC BỘ KHI ĐỔI BỘ LỌC TỪNG BẢNG (FILTER LOADING STATES)
+    // ==========================================
+    const [dangLocDonHang, setDangLocDonHang] = useState(false);
+    const [dangLocSanPham, setDangLocSanPham] = useState(false);
+    const [dangLocDanhMuc, setDangLocDanhMuc] = useState(false);
+    const [dangLocKhachHang, setDangLocKhachHang] = useState(false);
+    const [dangLocVoucher, setDangLocVoucher] = useState(false);
+    const [dangLocTinTuc, setDangLocTinTuc] = useState(false);
+
+    // Kích hoạt hiệu ứng loading khi thay đổi bất kỳ tiêu chí lọc nào
+    const daMountDonHangRef = React.useRef(false);
+    useEffect(() => {
+        if (!daMountDonHangRef.current) {
+            daMountDonHangRef.current = true;
+            return;
+        }
+        setDangLocDonHang(true);
+        const timer = setTimeout(() => setDangLocDonHang(false), 380);
+        return () => clearTimeout(timer);
+    }, [locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang, tuKhoaGlobal]);
+
+    const daMountSanPhamRef = React.useRef(false);
+    useEffect(() => {
+        if (!daMountSanPhamRef.current) {
+            daMountSanPhamRef.current = true;
+            return;
+        }
+        setDangLocSanPham(true);
+        const timer = setTimeout(() => setDangLocSanPham(false), 380);
+        return () => clearTimeout(timer);
+    }, [tuKhoaSanPham, locNganhHang, locHangSanPham, locTonKhoSanPham, sapXepSanPham, tuKhoaGlobal]);
+
+    const daMountDanhMucRef = React.useRef(false);
+    useEffect(() => {
+        if (!daMountDanhMucRef.current) {
+            daMountDanhMucRef.current = true;
+            return;
+        }
+        setDangLocDanhMuc(true);
+        const timer = setTimeout(() => setDangLocDanhMuc(false), 380);
+        return () => clearTimeout(timer);
+    }, [tuKhoaDanhMuc, locLoaiDanhMuc, tuKhoaGlobal]);
+
+    const daMountKhachHangRef = React.useRef(false);
+    useEffect(() => {
+        if (!daMountKhachHangRef.current) {
+            daMountKhachHangRef.current = true;
+            return;
+        }
+        setDangLocKhachHang(true);
+        const timer = setTimeout(() => setDangLocKhachHang(false), 380);
+        return () => clearTimeout(timer);
+    }, [tuKhoaKhachHang, locKhachHang, sapXepKhachHang, tuKhoaGlobal]);
+
+    const daMountVoucherRef = React.useRef(false);
+    useEffect(() => {
+        if (!daMountVoucherRef.current) {
+            daMountVoucherRef.current = true;
+            return;
+        }
+        setDangLocVoucher(true);
+        const timer = setTimeout(() => setDangLocVoucher(false), 380);
+        return () => clearTimeout(timer);
+    }, [tuKhoaVoucher, locTrangThaiVoucher, tuKhoaGlobal]);
+
+    const daMountTinTucRef = React.useRef(false);
+    useEffect(() => {
+        if (!daMountTinTucRef.current) {
+            daMountTinTucRef.current = true;
+            return;
+        }
+        setDangLocTinTuc(true);
+        const timer = setTimeout(() => setDangLocTinTuc(false), 380);
+        return () => clearTimeout(timer);
+    }, [tuKhoaTinTuc, locChuyenMucTinTuc, locTrangThaiTinTuc, tuKhoaGlobal]);
 
     // Kiểm tra xem ô/trường này có bị sửa đổi so với ban đầu hay không
     const kiemTraDaSua = (key) => {
@@ -648,7 +792,6 @@ export default function TrangQuanTriCuaHang() {
         matKhau: '123456',
         soDienThoai: '',
         hangThanhVien: 'Đồng',
-        diemTichLuy: 100,
         vaiTro: 'khach_hang'
     });
 
@@ -695,9 +838,39 @@ export default function TrangQuanTriCuaHang() {
     const [loiLogin, setLoiLogin] = useState('');
     const [dangXuLyLogin, setDangXuLyLogin] = useState(false);
 
-    const hienThongBao = (msg) => {
-        setThongBaoThanhCong(msg);
-        setTimeout(() => setThongBaoThanhCong(''), 3000);
+    const rutGonTen = (str, maxLen = 45) => {
+        if (!str) return '';
+        return str.length > maxLen ? str.slice(0, maxLen).trim() + '...' : str;
+    };
+
+    // Hệ thống thông báo đồng bộ toàn sàn (Sonner Toaster tại góc dưới bên phải)
+    const hienThongBao = (msg, type = 'success', title = '') => {
+        let noiDung = msg;
+        if (typeof msg === 'string' && (msg.includes('Failed to fetch') || msg.includes('NetworkError'))) {
+            noiDung = 'Không thể kết nối máy chủ API (Backend chưa chạy hoặc đang khởi động)';
+        }
+
+        let tieuDeChinh = noiDung;
+        let moTaPhu = undefined;
+
+        if (title && title !== 'Thành Công' && title !== 'Thông Báo') {
+            tieuDeChinh = title;
+            moTaPhu = noiDung;
+        }
+
+        const options = moTaPhu ? { description: moTaPhu } : {};
+
+        if (type === 'danger' || type === 'error') {
+            toast.error(tieuDeChinh, options);
+        } else if (type === 'warning') {
+            toast.warning(tieuDeChinh, options);
+        } else if (type === 'info') {
+            toast.info(tieuDeChinh, options);
+        } else if (type === 'deal') {
+            toast.success(tieuDeChinh, { description: moTaPhu || '⚡ Flash Sale Cửa Hàng' });
+        } else {
+            toast.success(tieuDeChinh, options);
+        }
     };
 
     // Xử lý upload ảnh chính sản phẩm trực tiếp từ máy tính
@@ -1176,7 +1349,7 @@ export default function TrangQuanTriCuaHang() {
             const tongChiTieu = cacDonKhach.reduce((sum, dh) => sum + (Number(dh.tong_tien_thanh_toan) || 0), 0);
             const soDonHang = cacDonKhach.length;
 
-            const laTiemNang = tongChiTieu >= 20000000 || soDonHang >= 2 || (user.diemTichLuy || 0) >= 500;
+            const laTiemNang = tongChiTieu >= 20000000 || soDonHang >= 2;
             const laVip = tongChiTieu >= 50000000 || ['Vàng', 'Kim Cương', 'VIP Gold', 'VIP Platinum'].includes(user.hangThanhVien);
 
             return {
@@ -1212,7 +1385,7 @@ export default function TrangQuanTriCuaHang() {
         if (sapXepKhachHang === 'doanh_thu_giam') {
             list.sort((a, b) => (b.tongChiTieu || 0) - (a.tongChiTieu || 0));
         } else if (sapXepKhachHang === 'diem_giam') {
-            list.sort((a, b) => (b.diemTichLuy || 0) - (a.diemTichLuy || 0));
+            list.sort((a, b) => (b.soDonHang || 0) - (a.soDonHang || 0));
         } else if (sapXepKhachHang === 'ten_az') {
             list.sort((a, b) => (a.hoTen || '').localeCompare(b.hoTen || ''));
         }
@@ -2646,41 +2819,69 @@ export default function TrangQuanTriCuaHang() {
 
     const xuLyToggleConHang = async (sp) => {
         const id = sp.id || sp._id;
-        setDangXuLySpId(id);
+        const dangBanHienTai = sp.con_hang !== false;
+        const trangThaiMoi = !dangBanHienTai;
+
+        // 1. Cập nhật state ngay lập tức (Realtime tức thì 0ms, không chờ API)
+        setDanhSachSanPham(prev => prev.map(item => {
+            const itemId = item.id || item._id;
+            return itemId === id ? { ...item, con_hang: trangThaiMoi } : item;
+        }));
+
+        // 2. Thông báo Toast gọn gàng, chuẩn form hệ thống
+        const tenNgan = rutGonTen(sp.ten_san_pham, 48);
+        hienThongBao(
+            trangThaiMoi ? `Đã mở bán: "${tenNgan}"` : `Đã tạm ẩn: "${tenNgan}"`,
+            trangThaiMoi ? 'success' : 'info',
+            'Trạng Thái Sản Phẩm'
+        );
+
+        // 3. Đồng bộ API ngầm trong nền
         try {
             await SanPhamService.capNhatSanPham(id, {
-                con_hang: !sp.con_hang
+                con_hang: trangThaiMoi
             });
-            taiDuLieuToanBo();
         } catch (err) {
-            canhBao({
-                tieuDe: 'Lỗi Cập Nhật',
-                noiDung: err.message,
-                loai: 'danger'
-            });
-        } finally {
-            setDangXuLySpId(null);
+            // Hoàn tác nếu có lỗi
+            setDanhSachSanPham(prev => prev.map(item => {
+                const itemId = item.id || item._id;
+                return itemId === id ? { ...item, con_hang: dangBanHienTai } : item;
+            }));
+            hienThongBao(`Lỗi lưu trạng thái: ${err.message}`, 'danger', 'Lỗi Cập Nhật');
         }
     };
 
     const xuLyToggleFlashSale = async (sp) => {
         const id = sp.id || sp._id;
-        setDangXuLySpId(id);
+        const flashSaleHienTai = Boolean(sp.la_flash_sale);
+        const trangThaiMoi = !flashSaleHienTai;
+
+        // 1. Cập nhật state ngay lập tức (Realtime tức thì 0ms)
+        setDanhSachSanPham(prev => prev.map(item => {
+            const itemId = item.id || item._id;
+            return itemId === id ? { ...item, la_flash_sale: trangThaiMoi } : item;
+        }));
+
+        // 2. Thông báo Toast gọn gàng chuẩn phong cách Flash Sale
+        const tenNgan = rutGonTen(sp.ten_san_pham, 48);
+        hienThongBao(
+            trangThaiMoi ? `Đã kích hoạt Flash Sale: "${tenNgan}"` : `Đã tắt Flash Sale: "${tenNgan}"`,
+            trangThaiMoi ? 'deal' : 'info',
+            'Flash Sale & Hot Deal'
+        );
+
+        // 3. Đồng bộ API ngầm trong nền
         try {
-            const trangThaiMoi = !sp.la_flash_sale;
             await SanPhamService.capNhatSanPham(id, {
                 la_flash_sale: trangThaiMoi
             });
-            hienThongBao(`${trangThaiMoi ? '🔥 Đã bật' : 'Đã tắt'} Flash Sale cho "${sp.ten_san_pham}"!`);
-            taiDuLieuToanBo();
         } catch (err) {
-            canhBao({
-                tieuDe: 'Lỗi Cập Nhật',
-                noiDung: err.message,
-                loai: 'danger'
-            });
-        } finally {
-            setDangXuLySpId(null);
+            // Hoàn tác nếu có lỗi
+            setDanhSachSanPham(prev => prev.map(item => {
+                const itemId = item.id || item._id;
+                return itemId === id ? { ...item, la_flash_sale: flashSaleHienTai } : item;
+            }));
+            hienThongBao(`Lỗi lưu Flash Sale: ${err.message}`, 'danger', 'Lỗi Cập Nhật');
         }
     };
 
@@ -2815,10 +3016,42 @@ export default function TrangQuanTriCuaHang() {
                 trang_thai: trangThaiMoi,
                 da_thanh_toan: trangThaiMoi === 'da_giao' ? true : undefined
             });
-            hienThongBao('Đã cập nhật trạng thái đơn hàng!');
+            const thongBaoText = trangThaiMoi === 'da_giao'
+                ? 'Giao hàng thành công! Đã tự động trừ tồn kho & tăng số lượng đã bán.'
+                : trangThaiMoi === 'da_huy'
+                    ? 'Đã hủy đơn hàng! Đã hoàn trả tồn kho & điều chỉnh lại số lượng.'
+                    : 'Đã cập nhật trạng thái đơn hàng thành công!';
+            const kieuThongBao = trangThaiMoi === 'da_giao' ? 'success' : trangThaiMoi === 'da_huy' ? 'warning' : 'info';
+            hienThongBao(thongBaoText, kieuThongBao, 'Kho & Đơn Hàng');
             taiDuLieuToanBo();
         } catch (err) {
             alert(`Lỗi: ${err.message}`);
+        } finally {
+            setDangXuLyDonHangId(null);
+        }
+    };
+
+    const xuLyDoiTrangThaiThanhToan = async (id, daThanhToanMoi, hinhThuc) => {
+        setDangXuLyDonHangId(id);
+        try {
+            const trangThaiThanhToan = daThanhToanMoi
+                ? 'da_thanh_toan'
+                : hinhThuc === 'tien_mat_cod'
+                ? 'thanh_toan_khi_nhan_hang'
+                : 'cho_thanh_toan';
+
+            await DonHangService.capNhatDonHang(id, {
+                da_thanh_toan: daThanhToanMoi,
+                trang_thai_thanh_toan: trangThaiThanhToan
+            });
+
+            const thongBaoText = daThanhToanMoi
+                ? 'Đã xác nhận thanh toán thành công (Thủ công)!'
+                : 'Đã chuyển đơn về trạng thái chưa thanh toán!';
+            hienThongBao(thongBaoText, daThanhToanMoi ? 'success' : 'warning', 'Thanh Toán');
+            taiDuLieuToanBo();
+        } catch (err) {
+            alert(`Lỗi cập nhật thanh toán: ${err.message}`);
         } finally {
             setDangXuLyDonHangId(null);
         }
@@ -2914,16 +3147,33 @@ export default function TrangQuanTriCuaHang() {
 
     const xuLyToggleDanhMuc = async (dm) => {
         const id = dm.id || dm._id || dm.ma_danh_muc;
-        setDangXuLyDmId(id);
+        const kichHoatHienTai = dm.kich_hoat !== false;
+        const trangThaiMoi = !kichHoatHienTai;
+
+        // 1. Cập nhật state tức thì (Realtime 0ms)
+        setDanhSachDanhMuc(prev => prev.map(item => {
+            const itemId = item.id || item._id || item.ma_danh_muc;
+            return itemId === id ? { ...item, kich_hoat: trangThaiMoi } : item;
+        }));
+
+        // 2. Toast đồng bộ gọn gàng
+        hienThongBao(
+            trangThaiMoi ? `Đã kích hoạt: "${dm.ten_danh_muc}"` : `Đã tạm ngưng: "${dm.ten_danh_muc}"`,
+            trangThaiMoi ? 'success' : 'info',
+            'Hãng & Phân Khúc'
+        );
+
+        // 3. Gọi API nền
         try {
             await DanhMucService.capNhatDanhMuc(id, {
-                kich_hoat: !dm.kich_hoat
+                kich_hoat: trangThaiMoi
             });
-            taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi: ${err.message}`);
-        } finally {
-            setDangXuLyDmId(null);
+            setDanhSachDanhMuc(prev => prev.map(item => {
+                const itemId = item.id || item._id || item.ma_danh_muc;
+                return itemId === id ? { ...item, kich_hoat: kichHoatHienTai } : item;
+            }));
+            hienThongBao(`Lỗi: ${err.message}`, 'danger', 'Lỗi Cập Nhật');
         }
     };
 
@@ -2964,7 +3214,6 @@ export default function TrangQuanTriCuaHang() {
             matKhau: '123456',
             soDienThoai: '',
             hangThanhVien: 'Đồng',
-            diemTichLuy: 100,
             vaiTro: 'khach_hang'
         });
         setDangMoModalUser(true);
@@ -2978,7 +3227,6 @@ export default function TrangQuanTriCuaHang() {
             matKhau: '',
             soDienThoai: u.soDienThoai || '',
             hangThanhVien: u.hangThanhVien || 'Đồng',
-            diemTichLuy: u.diemTichLuy || 0,
             vaiTro: u.vaiTro || 'khach_hang'
         });
         setDangMoModalUser(true);
@@ -2993,7 +3241,6 @@ export default function TrangQuanTriCuaHang() {
                 email: formUser.email.trim().toLowerCase(),
                 soDienThoai: formUser.soDienThoai.trim(),
                 hangThanhVien: formUser.hangThanhVien,
-                diemTichLuy: Number(formUser.diemTichLuy) || 0,
                 vaiTro: formUser.vaiTro
             };
 
@@ -3155,16 +3402,33 @@ export default function TrangQuanTriCuaHang() {
 
     const xuLyToggleVoucher = async (voucher) => {
         const id = voucher.id || voucher.ma_code || voucher._id;
-        setDangXuLyVoucherId(id);
+        const kichHoatHienTai = voucher.kich_hoat !== false;
+        const trangThaiMoi = !kichHoatHienTai;
+
+        // 1. Cập nhật state tức thì (Realtime 0ms)
+        setDanhSachVoucher(prev => prev.map(item => {
+            const itemId = item.id || item.ma_code || item._id;
+            return itemId === id ? { ...item, kich_hoat: trangThaiMoi } : item;
+        }));
+
+        // 2. Toast đồng bộ gọn gàng
+        hienThongBao(
+            trangThaiMoi ? `Đã kích hoạt mã: "${voucher.ma_code}"` : `Đã tạm ẩn mã: "${voucher.ma_code}"`,
+            trangThaiMoi ? 'success' : 'info',
+            'Mã Khuyến Mãi'
+        );
+
+        // 3. Gọi API nền
         try {
             await MaGiamGiaService.capNhatMaGiamGia(id, {
-                kich_hoat: !voucher.kich_hoat
+                kich_hoat: trangThaiMoi
             });
-            taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi: ${err.message}`);
-        } finally {
-            setDangXuLyVoucherId(null);
+            setDanhSachVoucher(prev => prev.map(item => {
+                const itemId = item.id || item.ma_code || item._id;
+                return itemId === id ? { ...item, kich_hoat: kichHoatHienTai } : item;
+            }));
+            hienThongBao(`Lỗi: ${err.message}`, 'danger', 'Lỗi Cập Nhật');
         }
     };
 
@@ -3264,16 +3528,67 @@ export default function TrangQuanTriCuaHang() {
 
     const xuLyToggleXuatBanTinTuc = async (tin) => {
         const id = tin.id || tin._id;
-        setDangXuLyTinTucId(id);
+        const xuatBanHienTai = tin.xuat_ban !== false;
+        const trangThaiMoi = !xuatBanHienTai;
+
+        // 1. Cập nhật state tức thì (Realtime 0ms)
+        setDanhSachTinTuc(prev => prev.map(item => {
+            const itemId = item.id || item._id;
+            return itemId === id ? { ...item, xuat_ban: trangThaiMoi } : item;
+        }));
+
+        // 2. Toast đồng bộ gọn gàng
+        const tieuDeNgan = rutGonTen(tin.tieu_de, 26);
+        hienThongBao(
+            trangThaiMoi ? `Đã xuất bản: "${tieuDeNgan}"` : `Đã chuyển về bản nháp: "${tieuDeNgan}"`,
+            trangThaiMoi ? 'success' : 'info',
+            'Tin Tức & Bài Viết'
+        );
+
+        // 3. Gọi API nền
         try {
             await TinTucService.capNhatTinTuc(id, {
-                xuat_ban: !tin.xuat_ban
+                xuat_ban: trangThaiMoi
             });
-            taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi: ${err.message}`);
-        } finally {
-            setDangXuLyTinTucId(null);
+            setDanhSachTinTuc(prev => prev.map(item => {
+                const itemId = item.id || item._id;
+                return itemId === id ? { ...item, xuat_ban: xuatBanHienTai } : item;
+            }));
+            hienThongBao(`Lỗi: ${err.message}`, 'danger', 'Lỗi Cập Nhật');
+        }
+    };
+
+    const xuLyToggleTieuDiemTinTuc = async (tin) => {
+        const id = tin.id || tin._id;
+        const tieuDiemHienTai = Boolean(tin.la_tieu_diem);
+        const trangThaiMoi = !tieuDiemHienTai;
+
+        // 1. Cập nhật state tức thì (Realtime 0ms)
+        setDanhSachTinTuc(prev => prev.map(item => {
+            const itemId = item.id || item._id;
+            return itemId === id ? { ...item, la_tieu_diem: trangThaiMoi } : item;
+        }));
+
+        // 2. Toast đồng bộ
+        const tieuDeNgan = rutGonTen(tin.tieu_de, 26);
+        hienThongBao(
+            trangThaiMoi ? `Đã ghim Tiêu Điểm: "${tieuDeNgan}"` : `Đã bỏ ghim Tiêu Điểm: "${tieuDeNgan}"`,
+            trangThaiMoi ? 'deal' : 'info',
+            'Tin Tiêu Điểm Hot'
+        );
+
+        // 3. Gọi API nền
+        try {
+            await TinTucService.capNhatTinTuc(id, {
+                la_tieu_diem: trangThaiMoi
+            });
+        } catch (err) {
+            setDanhSachTinTuc(prev => prev.map(item => {
+                const itemId = item.id || item._id;
+                return itemId === id ? { ...item, la_tieu_diem: tieuDiemHienTai } : item;
+            }));
+            hienThongBao(`Lỗi: ${err.message}`, 'danger', 'Lỗi Cập Nhật');
         }
     };
 
@@ -3387,15 +3702,7 @@ export default function TrangQuanTriCuaHang() {
     // GIAO DIỆN CHÍNH ADMIN (7 TABS HOÀN THIỆN)
     // ==========================================
     return (
-        <div className="h-screen w-screen overflow-hidden bg-[#f1f5f9] dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex font-sans antialiased">
-            {/* Toast Notification */}
-            {thongBaoThanhCong && (
-                <div className="fixed top-5 right-5 z-50 px-5 py-3 rounded-2xl bg-slate-950 text-white dark:bg-white dark:text-slate-900 text-sm font-bold shadow-2xl flex items-center gap-2.5 border border-emerald-500/50 animate-in fade-in slide-in-from-top-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 dark:text-emerald-600 shrink-0" />
-                    <span>{thongBaoThanhCong}</span>
-                </div>
-            )}
-
+        <div className="h-screen w-screen overflow-hidden bg-[#e8ecf4] dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex font-sans antialiased">
             {/* Custom Dialog Box (Hộp thoại xác nhận & cảnh báo thay thế alert / confirm trình duyệt) */}
             {hopThoai.hien && (
                 <div 
@@ -3478,7 +3785,7 @@ export default function TrangQuanTriCuaHang() {
 
             {/* SIDEBAR RỰC RỠ 7 TABS ĐẲNG CẤP (PINNED 100VH - KHÔNG BỊ TRỐNG HOẶC RỚT NÚT XUỐNG ĐÁY) */}
             <aside
-                className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-[#0d1527] border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen md:h-full justify-between transition-all duration-300 md:static shrink-0 ${sidebarMoMobile ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full md:translate-x-0'
+                className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-[#0d1527] border-r-2 border-slate-300 dark:border-slate-800 flex flex-col h-screen md:h-full justify-between transition-all duration-300 md:static shrink-0 ${sidebarMoMobile ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full md:translate-x-0'
                     } ${sidebarThuGon ? 'md:w-20' : 'md:w-64'}`}
             >
                 {/* 1. Header & Logo với nút thu gọn trực tiếp */}
@@ -3700,6 +4007,26 @@ export default function TrangQuanTriCuaHang() {
                                     </span>
                                 )}
                             </button>
+
+                            {/* 9. Hệ Thống Showroom & Bản Đồ */}
+                            <button
+                                onClick={() => { setTabHienTai('showroom'); setSidebarMoMobile(false); }}
+                                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl transition-all cursor-pointer ${tabHienTai === 'showroom'
+                                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 font-black scale-[1.02]'
+                                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-blue-600'
+                                    } ${sidebarThuGon ? 'justify-center px-0' : ''}`}
+                                title="Hệ Thống Showroom & Tọa Độ Bản Đồ"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <MapPin className="w-5 h-5 shrink-0" />
+                                    {!sidebarThuGon && <span>Showroom & Bản Đồ</span>}
+                                </div>
+                                {!sidebarThuGon && (
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-black ${tabHienTai === 'showroom' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-950 dark:bg-blue-950 dark:text-blue-300'}`}>
+                                        {danhSachShowroomAdmin.length}
+                                    </span>
+                                )}
+                            </button>
                         </nav>
                     </div>
 
@@ -3748,6 +4075,15 @@ export default function TrangQuanTriCuaHang() {
                         {!sidebarThuGon && <span>Xem Trang Tin Tức</span>}
                     </Link>
                     <Link
+                        href="/lien-he"
+                        target="_blank"
+                        className={`w-full flex items-center gap-2 py-2 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 text-indigo-800 dark:text-indigo-300 font-bold text-xs transition-colors border border-indigo-200 dark:border-indigo-800 ${sidebarThuGon ? 'justify-center px-0' : 'px-3'}`}
+                        title="Xem Trang Liên Hệ & Bản Đồ"
+                    >
+                        <MapPin className="w-4 h-4 shrink-0 text-indigo-600" />
+                        {!sidebarThuGon && <span>Xem Trang Liên Hệ</span>}
+                    </Link>
+                    <Link
                         href="/"
                         target="_blank"
                         className={`w-full flex items-center gap-2 py-2 rounded-2xl bg-slate-50 hover:bg-blue-50 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors border border-slate-200 dark:border-slate-700 ${sidebarThuGon ? 'justify-center px-0' : 'px-3'}`}
@@ -3780,7 +4116,7 @@ export default function TrangQuanTriCuaHang() {
             {/* MAIN CONTENT AREA (PINNED HEADER & SCROLLABLE BODY) */}
             <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
                 {/* TOPBAR RỰC RỠ & SANG TRỌNG (LUÔN GHIM CỐ ĐỊNH Ở ĐỈNH) */}
-                <header className="h-16 bg-white dark:bg-[#0d1527] border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-xs z-30">
+                <header className="h-16 bg-white dark:bg-[#0d1527] border-b-2 border-slate-300 dark:border-slate-700 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-sm z-30">
                     <div className="flex items-center gap-3.5">
                         <button
                             onClick={() => {
@@ -3805,7 +4141,8 @@ export default function TrangQuanTriCuaHang() {
                                                 tabHienTai === 'khach_hang' ? 'Danh Sách Tài Khoản Khách Hàng' :
                                                     tabHienTai === 'voucher' ? 'Mã Giảm Giá & Voucher' :
                                                         tabHienTai === 'khuyen_mai' ? 'Cấu Hình Banner & Khuyến Mãi' :
-                                                            'Quản Lý Tin Tức & Cẩm Nang Công Nghệ'}
+                                                            tabHienTai === 'showroom' ? 'Hệ Thống Showroom & Tọa Độ Bản Đồ' :
+                                                                'Quản Lý Tin Tức & Cẩm Nang Công Nghệ'}
                             </h1>
                         </div>
                     </div>
@@ -3819,9 +4156,9 @@ export default function TrangQuanTriCuaHang() {
                                 value={tuKhoaGlobal}
                                 onChange={(e) => setTuKhoaGlobal(e.target.value)}
                                 placeholder="Tìm kiếm tên, SKU, hãng, bài viết..."
-                                className="w-full pl-4 pr-9 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600"
+                                className="w-full pl-4 pr-9 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600"
                             />
-                            <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-slate-500" />
                         </div>
 
                         {/* Reload */}
@@ -3867,25 +4204,32 @@ export default function TrangQuanTriCuaHang() {
                 </header>
 
                 {/* SCROLLABLE VIEWPORT */}
-                <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 pb-24 space-y-6 bg-slate-100/70 dark:bg-[#060a14]">
+                <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 pb-24 space-y-6 bg-[#e8ecf4] dark:bg-[#060a14]">
                     {/* ========================================= */}
                     {/* TAB 1: TỔNG QUAN */}
                     {/* ========================================= */}
                     {tabHienTai === 'tong_quan' && (
                         <div className="space-y-6 animate-in fade-in duration-200">
-                            {/* Quick Action Bar */}
-                            <div className="flex flex-wrap items-center justify-between gap-4 bg-white dark:bg-[#0d1527] p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                <div>
-                                    <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                                        Xin chào, {nguoiDung?.hoTen || 'Quản Trị Viên Hệ Thống'} 👋
-                                    </h2>
-                                    <p className="text-xs text-slate-500 font-semibold mt-0.5">Báo cáo tình hình kinh doanh, kho hàng & bài viết theo thời gian thực</p>
+                            {/* Quick Action Bar: Thẻ Trắng Sáng Sang Trọng (Không Dùng Tone Tối) */}
+                            <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 flex flex-wrap items-center justify-between gap-5">
+                                <div className="space-y-1">
+                                    <div className="flex items-center gap-2.5 flex-wrap">
+                                        <h2 className="text-lg sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                                            Xin chào, {nguoiDung?.hoTen || 'Quản Trị Viên Hệ Thống'} 👋
+                                        </h2>
+                                        <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-cyan-300 text-xs font-black uppercase tracking-wider border border-blue-300 dark:border-blue-800">
+                                            Admin Control Center
+                                        </span>
+                                    </div>
+                                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-semibold">
+                                        Báo cáo toàn cảnh hoạt động kinh doanh, biến động kho hàng & tương tác thời gian thực
+                                    </p>
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-2.5">
                                     <button
                                         onClick={moModalThemSp}
-                                        className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition-all cursor-pointer"
+                                        className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 !text-white font-black text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                                     >
                                         <Plus className="w-4 h-4 !text-white" />
                                         <span className="!text-white">+ Thêm Sản Phẩm</span>
@@ -3893,7 +4237,7 @@ export default function TrangQuanTriCuaHang() {
 
                                     <button
                                         onClick={moModalTaoDonHang}
-                                        className="px-4 py-2.5 rounded-2xl bg-orange-500 hover:bg-orange-600 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-orange-500/25 transition-all cursor-pointer"
+                                        className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 !text-white font-black text-xs flex items-center gap-2 shadow-md shadow-orange-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                                     >
                                         <ShoppingBag className="w-4 h-4 !text-white" />
                                         <span className="!text-white">+ Tạo Đơn Hàng</span>
@@ -3901,7 +4245,7 @@ export default function TrangQuanTriCuaHang() {
 
                                     <button
                                         onClick={moModalThemTinTuc}
-                                        className="px-4 py-2.5 rounded-2xl bg-teal-600 hover:bg-teal-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-teal-500/25 transition-all cursor-pointer"
+                                        className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 !text-white font-black text-xs flex items-center gap-2 shadow-md shadow-teal-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                                     >
                                         <Newspaper className="w-4 h-4 !text-white" />
                                         <span className="!text-white">+ Viết Bài Tin Tức</span>
@@ -3909,7 +4253,7 @@ export default function TrangQuanTriCuaHang() {
 
                                     <button
                                         onClick={moModalThemVoucher}
-                                        className="px-4 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-rose-500/25 transition-all cursor-pointer"
+                                        className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 !text-white font-black text-xs flex items-center gap-2 shadow-md shadow-rose-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                                     >
                                         <Ticket className="w-4 h-4 !text-white" />
                                         <span className="!text-white">+ Tạo Voucher</span>
@@ -3917,147 +4261,189 @@ export default function TrangQuanTriCuaHang() {
 
                                     <button
                                         onClick={() => setTabHienTai('khuyen_mai')}
-                                        className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-pink-500/25 transition-all cursor-pointer"
+                                        className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 font-black text-xs flex items-center gap-2 shadow-xs border border-slate-300 dark:border-slate-700 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                                     >
-                                        <Sparkles className="w-4 h-4 !text-white" />
-                                        <span className="!text-white">⚙️ Banner Khuyến Mãi</span>
+                                        <Sparkles className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+                                        <span>⚙️ Banner Khuyến Mãi</span>
                                     </button>
                                 </div>
                             </div>
 
-                            {/* 4 Cards Thống Kê Nổi Bật */}
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                {/* Card 1: Doanh Thu */}
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all space-y-2">
+                            {/* 4 Cards Thống Kê Nổi Bật Đậm Tone Sang & Trực Quan */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                {/* Card 1: Doanh Thu (Sapphire Tech) */}
+                                <div className="relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-blue-300 dark:border-blue-800/80 shadow-md shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 hover:border-blue-500 hover:-translate-y-1 transition-all space-y-2 group">
+                                    <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600" />
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-black uppercase tracking-wider text-slate-500">DOANH THU</span>
-                                        <div className="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 flex items-center justify-center text-base font-bold">
+                                        <span className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
+                                            <DollarSign className="w-4 h-4 text-blue-600" />
+                                            DOANH THU
+                                        </span>
+                                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-lg shadow-md shadow-blue-500/30 group-hover:scale-110 transition-transform">
                                             💰
                                         </div>
                                     </div>
-                                    <div className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white">
+                                    <div className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight">
                                         {dinhDangTienVND(thongKe.tongDoanhThu)}
                                     </div>
-                                    <div className="text-xs text-slate-500 font-semibold flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                                        <span className="text-emerald-600 font-bold">Đã thu:</span>
-                                        <span>{dinhDangTienVND(thongKe.doanhThuThanhCong)}</span>
+                                    <div className="text-xs font-semibold flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+                                        <span className="text-slate-600 font-bold">Đã thực thu:</span>
+                                        <span className="px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 font-black text-xs border border-emerald-300 dark:border-emerald-800">
+                                            {dinhDangTienVND(thongKe.doanhThuThanhCong)}
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Card 2: Đơn Hàng */}
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all space-y-2">
+                                {/* Card 2: Đơn Hàng (Amber Flame) */}
+                                <div className="relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-amber-300 dark:border-amber-800/80 shadow-md shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 hover:border-amber-500 hover:-translate-y-1 transition-all space-y-2 group">
+                                    <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500" />
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-black uppercase tracking-wider text-slate-500">ĐƠN HÀNG</span>
-                                        <div className="w-9 h-9 rounded-2xl bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400 flex items-center justify-center text-base font-bold">
+                                        <span className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                                            <ShoppingBag className="w-4 h-4 text-amber-600" />
+                                            ĐƠN HÀNG
+                                        </span>
+                                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-lg shadow-md shadow-orange-500/30 group-hover:scale-110 transition-transform">
                                             🛍️
                                         </div>
                                     </div>
-                                    <div className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white">
+                                    <div className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight">
                                         {thongKe.tongDonHang} Đơn
                                     </div>
-                                    <div className="text-xs text-slate-500 font-semibold flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                                        <span className="text-orange-600 font-bold">{thongKe.donChoXacNhan} đơn</span>
-                                        <span>chờ gọi xác nhận</span>
+                                    <div className="text-xs font-semibold flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+                                        <span className="text-slate-600 font-bold">Cần xử lý:</span>
+                                        <span className="px-2.5 py-1 rounded-xl bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-300 font-black text-xs border border-orange-300 dark:border-orange-800">
+                                            {thongKe.donChoXacNhan} đơn chờ xác nhận
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Card 3: Khách Hàng */}
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all space-y-2">
+                                {/* Card 3: Khách Hàng (Royal Amethyst) */}
+                                <div className="relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-purple-300 dark:border-purple-800/80 shadow-md shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 hover:border-purple-500 hover:-translate-y-1 transition-all space-y-2 group">
+                                    <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500" />
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-black uppercase tracking-wider text-slate-500">KHÁCH HÀNG</span>
-                                        <div className="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 flex items-center justify-center text-base font-bold">
+                                        <span className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
+                                            <Users className="w-4 h-4 text-purple-600" />
+                                            KHÁCH HÀNG
+                                        </span>
+                                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-600 text-white flex items-center justify-center text-lg shadow-md shadow-purple-500/30 group-hover:scale-110 transition-transform">
                                             👥
                                         </div>
                                     </div>
-                                    <div className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white">
+                                    <div className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight">
                                         {thongKe.tongKhachHang} Tài Khoản
                                     </div>
-                                    <div className="text-xs text-slate-500 font-semibold pt-1 border-t border-slate-100 dark:border-slate-800">
-                                        Thành viên đã đăng ký
+                                    <div className="text-xs font-semibold flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+                                        <span className="text-slate-600 font-bold">Phân loại:</span>
+                                        <span className="px-2.5 py-1 rounded-xl bg-purple-100 text-purple-900 dark:bg-purple-950 dark:text-purple-300 font-black text-xs border border-purple-300 dark:border-purple-800">
+                                            Thành viên đã kích hoạt
+                                        </span>
                                     </div>
                                 </div>
 
-                                {/* Card 4: Kho Hàng */}
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all space-y-2">
+                                {/* Card 4: Kho Hàng (Emerald Vault) */}
+                                <div className="relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-teal-300 dark:border-teal-800/80 shadow-md shadow-teal-500/10 hover:shadow-xl hover:shadow-teal-500/20 hover:border-teal-500 hover:-translate-y-1 transition-all space-y-2 group">
+                                    <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs font-black uppercase tracking-wider text-slate-500">KHO HÀNG</span>
-                                        <div className="w-9 h-9 rounded-2xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950/60 dark:text-cyan-400 flex items-center justify-center text-base font-bold">
+                                        <span className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                                            <Package className="w-4 h-4 text-teal-600" />
+                                            KHO HÀNG
+                                        </span>
+                                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-teal-600 to-emerald-600 text-white flex items-center justify-center text-lg shadow-md shadow-teal-500/30 group-hover:scale-110 transition-transform">
                                             📦
                                         </div>
                                     </div>
-                                    <div className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white">
+                                    <div className="text-xl sm:text-2xl font-black text-slate-950 dark:text-white tracking-tight">
                                         {thongKe.tongSanPham} Mặt Hàng
                                     </div>
-                                    <div className="text-xs text-slate-500 font-semibold flex items-center gap-1.5 pt-1 border-t border-slate-100 dark:border-slate-800">
-                                        <span className="text-blue-600 font-bold">Tồn kho:</span>
-                                        <span>{thongKe.tongTonKho} chiếc</span>
+                                    <div className="text-xs font-semibold flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+                                        <span className="text-slate-600 font-bold">Tồn kho khả dụng:</span>
+                                        <span className="px-2.5 py-1 rounded-xl bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-300 font-black text-xs border border-teal-300 dark:border-teal-800">
+                                            {thongKe.tongTonKho} chiếc sẵn sàng
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             {/* HỆ THỐNG BIỂU ĐỒ TRỰC QUAN ĐA CHIỀU (RECHARTS) */}
-                            <BieuDoTongQuan
-                                danhSachDonHang={danhSachDonHang}
-                                danhSachSanPham={danhSachSanPham}
-                                thongKe={thongKe}
-                                dinhDangTienVND={dinhDangTienVND}
-                                xacDinhLoaiSanPham={xacDinhLoaiSanPham}
-                            />
+                            <div className="relative min-h-[360px]">
+                                <KhuVucDangTaiTable
+                                    dangTai={dangTai}
+                                    tieuDe="Đang tải dữ liệu biểu đồ phân tích..."
+                                    moTa="Tính toán doanh thu, cơ cấu ngành hàng và phân phối đơn hàng"
+                                />
+                                <div className={`transition-opacity duration-300 ${dangTai ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                    <BieuDoTongQuan
+                                        danhSachDonHang={danhSachDonHang}
+                                        danhSachSanPham={danhSachSanPham}
+                                        thongKe={thongKe}
+                                        dinhDangTienVND={dinhDangTienVND}
+                                        xacDinhLoaiSanPham={xacDinhLoaiSanPham}
+                                    />
+                                </div>
+                            </div>
 
                             {/* Bảng Đơn Mới & Top Bán Chạy */}
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                                 {/* Đơn Hàng Mới Nhất */}
-                                <div className="lg:col-span-7 bg-white dark:bg-[#0d1527] rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                                <div className="lg:col-span-7 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 space-y-4">
                                     <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                                        <h3 className="font-black text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200">ĐƠN HÀNG MỚI NHẤT</h3>
+                                        <h3 className="font-black text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-xs" />
+                                            ĐƠN HÀNG MỚI NHẤT
+                                        </h3>
                                         <button
                                             onClick={() => setTabHienTai('don_hang')}
-                                            className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                                            className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
                                         >
                                             <span>Xem tất cả ({danhSachDonHang.length})</span>
                                             <ArrowUpRight className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
 
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left text-xs">
+                                    <div className="relative overflow-x-auto rounded-2xl border-2 border-slate-300 dark:border-slate-700 min-h-[200px]">
+                                        <KhuVucDangTaiTable
+                                            dangTai={dangTai}
+                                            tieuDe="Đang tải đơn hàng mới nhất..."
+                                            moTa="Cập nhật nhanh 5 đơn hàng vừa phát sinh"
+                                        />
+                                        <table className={`w-full min-w-[540px] text-left text-xs border-collapse transition-opacity duration-300 ${dangTai ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
                                             <thead>
-                                                <tr className="text-slate-500 font-bold border-b border-slate-100 dark:border-slate-800">
-                                                    <th className="py-2.5 px-3">Mã Đơn</th>
-                                                    <th className="py-2.5 px-3">Khách Hàng</th>
-                                                    <th className="py-2.5 px-3">Tổng Tiền</th>
-                                                    <th className="py-2.5 px-3">Trạng Thái</th>
-                                                    <th className="py-2.5 px-3 text-right">Xem</th>
+                                                <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider">
+                                                    <th className="py-2.5 px-3 border-b-2 border-r border-slate-300 dark:border-slate-700">Mã Đơn</th>
+                                                    <th className="py-2.5 px-3 border-b-2 border-r border-slate-300 dark:border-slate-700">Khách Hàng</th>
+                                                    <th className="py-2.5 px-3 border-b-2 border-r border-slate-300 dark:border-slate-700">Tổng Tiền</th>
+                                                    <th className="py-2.5 px-3 border-b-2 border-r border-slate-300 dark:border-slate-700">Trạng Thái</th>
+                                                    <th className="py-2.5 px-3 text-center border-b-2 border-slate-300 dark:border-slate-700">Xem</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                            <tbody>
                                                 {danhSachDonHang.slice(0, 5).map((dh) => (
-                                                    <tr key={dh.id || dh._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                                        <td className="py-3 px-3 font-mono font-black text-blue-600 dark:text-cyan-400">
-                                                            {dh.ma_don_hang}
+                                                    <tr key={dh.id || dh._id} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
+                                                        <td className="py-2.5 px-3 font-mono font-black text-blue-600 dark:text-cyan-400 border-b border-r border-slate-200 dark:border-slate-800">
+                                                             {dh.ma_don_hang}
                                                         </td>
-                                                        <td className="py-3 px-3">
-                                                            <div className="font-bold text-slate-900 dark:text-white text-sm">{dh.thong_tin_giao_hang?.ho_ten}</div>
+                                                        <td className="py-2.5 px-3 border-b border-r border-slate-200 dark:border-slate-800">
+                                                            <div className="font-bold text-slate-900 dark:text-white text-xs">{dh.thong_tin_giao_hang?.ho_ten}</div>
                                                             <div className="text-[11px] text-slate-500 font-mono">{dh.thong_tin_giao_hang?.so_dien_thoai}</div>
                                                         </td>
-                                                        <td className="py-3 px-3 font-black text-sm text-red-600 dark:text-red-400">
+                                                        <td className="py-2.5 px-3 font-black text-xs text-red-600 dark:text-red-400 border-b border-r border-slate-200 dark:border-slate-800">
                                                             {dinhDangTienVND(dh.tong_tien_thanh_toan)}
                                                         </td>
-                                                        <td className="py-3 px-3">
-                                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${dh.trang_thai === 'da_giao' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' :
-                                                                dh.trang_thai === 'dang_giao' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300' :
-                                                                    dh.trang_thai === 'da_huy' ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300' :
-                                                                        'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                                                        <td className="py-2.5 px-3 border-b border-r border-slate-200 dark:border-slate-800">
+                                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${dh.trang_thai === 'da_giao' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300/80' :
+                                                                dh.trang_thai === 'dang_giao' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 border-blue-300/80' :
+                                                                    dh.trang_thai === 'da_huy' ? 'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300 border-red-300/80' :
+                                                                        'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border-amber-300/80'
                                                                 }`}>
                                                                 {dh.trang_thai === 'da_giao' ? 'Thành công' :
                                                                     dh.trang_thai === 'dang_giao' ? 'Đang giao' :
                                                                         dh.trang_thai === 'da_huy' ? 'Đã hủy' : 'Chờ duyệt'}
                                                             </span>
                                                         </td>
-                                                        <td className="py-3 px-3 text-right">
+                                                        <td className="py-2.5 px-3 text-center border-b border-slate-200 dark:border-slate-800">
                                                             <button
                                                                 onClick={() => setDonHangChiTiet(dh)}
-                                                                className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 dark:bg-slate-800 dark:hover:bg-slate-700 cursor-pointer"
+                                                                className="p-1.5 rounded-xl bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 dark:bg-slate-800 dark:hover:bg-blue-600 transition-colors cursor-pointer shadow-2xs"
                                                             >
                                                                 <Eye className="w-4 h-4" />
                                                             </button>
@@ -4070,44 +4456,54 @@ export default function TrangQuanTriCuaHang() {
                                 </div>
 
                                 {/* Top Bán Chạy */}
-                                <div className="lg:col-span-5 bg-white dark:bg-[#0d1527] rounded-3xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                                <div className="lg:col-span-5 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 space-y-4">
                                     <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                                        <h3 className="font-black text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200">TOP BÁN CHẠY</h3>
+                                        <h3 className="font-black text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-xs" />
+                                            TOP BÁN CHẠY
+                                        </h3>
                                         <button
                                             onClick={() => setTabHienTai('san_pham')}
-                                            className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                                            className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
                                         >
                                             <span>Xem kho máy</span>
                                             <ArrowUpRight className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
 
-                                    <div className="space-y-3">
-                                        {topSanPhamBanChay.map((sp, idx) => (
-                                            <div key={sp.id || sp._id} className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <span className={`w-6 h-6 rounded-lg font-black text-xs flex items-center justify-center shrink-0 ${idx === 0 ? 'bg-amber-400 text-slate-950' : idx === 1 ? 'bg-slate-300 text-slate-900' : idx === 2 ? 'bg-amber-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                                                        {idx + 1}
-                                                    </span>
-                                                    <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 p-0.5 relative border border-slate-200 dark:border-slate-700 shrink-0">
-                                                        <Image src={sp.hinh_anh_chinh} alt={sp.ten_san_pham} fill className="object-contain p-0.5" />
+                                    <div className="relative space-y-3 min-h-[200px]">
+                                        <KhuVucDangTaiTable
+                                            dangTai={dangTai}
+                                            tieuDe="Đang tải top sản phẩm bán chạy..."
+                                            moTa="Xếp hạng theo sản lượng tiêu thụ"
+                                        />
+                                        <div className={`space-y-3 transition-opacity duration-300 ${dangTai ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                            {topSanPhamBanChay.map((sp, idx) => (
+                                                <div key={sp.id || sp._id} className="flex items-center justify-between p-2.5 rounded-2xl bg-gradient-to-r from-slate-50 to-white dark:from-slate-800/60 dark:to-slate-900 border border-slate-200/80 dark:border-slate-800 hover:border-blue-400 hover:shadow-sm transition-all">
+                                                    <div className="flex items-center gap-3 min-w-0">
+                                                        <span className={`w-6 h-6 rounded-lg font-black text-xs flex items-center justify-center shrink-0 ${idx === 0 ? 'bg-amber-400 text-slate-950 shadow-xs' : idx === 1 ? 'bg-slate-300 text-slate-900' : idx === 2 ? 'bg-amber-600 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                                                            {idx + 1}
+                                                        </span>
+                                                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 p-0.5 relative border border-slate-200 dark:border-slate-700 shrink-0">
+                                                            <Image src={sp.hinh_anh_chinh} alt={sp.ten_san_pham} fill className="object-contain p-0.5" />
+                                                        </div>
+                                                        <div className="min-w-0 truncate">
+                                                            <div className="font-bold text-xs text-slate-900 dark:text-white truncate">{sp.ten_san_pham}</div>
+                                                            <div className="text-xs text-red-600 dark:text-red-400 font-extrabold">{dinhDangTienVND(sp.gia_khuyen_mai)}</div>
+                                                        </div>
                                                     </div>
-                                                    <div className="min-w-0 truncate">
-                                                        <div className="font-bold text-xs text-slate-900 dark:text-white truncate">{sp.ten_san_pham}</div>
-                                                        <div className="text-xs text-red-600 dark:text-red-400 font-extrabold">{dinhDangTienVND(sp.gia_khuyen_mai)}</div>
-                                                    </div>
-                                                </div>
 
-                                                <div className="text-right shrink-0 pl-2">
-                                                    <div className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400">
-                                                        {sp.so_luong_da_ban || 0} đã bán
-                                                    </div>
-                                                    <div className="text-[11px] text-slate-500 font-semibold">
-                                                        Còn: {sp.so_luong_ton_kho || 0}
+                                                    <div className="text-right shrink-0 pl-2">
+                                                        <div className="font-extrabold text-xs text-emerald-600 dark:text-emerald-400">
+                                                            {sp.so_luong_da_ban || 0} đã bán
+                                                        </div>
+                                                        <div className="text-[11px] text-slate-500 font-semibold">
+                                                            Còn: {sp.so_luong_ton_kho || 0}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -4193,22 +4589,24 @@ export default function TrangQuanTriCuaHang() {
                                     </div>
                                 </div>
 
-                                {/* KPI 4: DOANH SỐ ĐƠN HÀNG (Màu Tím Đậm / Royal Navy Slate) */}
-                                <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-950 border-2 border-indigo-500/60 text-white shadow-xl shadow-indigo-950/30">
+                                {/* KPI 4: DOANH SỐ ĐƠN HÀNG (Màu Tím Thạch Anh Sáng Đẹp Đồng Bộ) */}
+                                <div className="p-3.5 sm:p-4 rounded-3xl bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50/80 dark:from-purple-950/70 dark:via-fuchsia-900/40 dark:to-purple-950/60 border-2 border-purple-300 dark:border-purple-700 shadow-sm shadow-purple-500/5 transition-all cursor-pointer hover:shadow-lg hover:scale-[1.01]">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[11px] sm:text-xs font-black text-indigo-300 uppercase tracking-wider">Doanh Số Đơn Hàng</span>
-                                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/30">
+                                        <span className="text-[11px] sm:text-xs font-black text-purple-950 dark:text-purple-200 uppercase tracking-wider">Doanh Số Đơn Hàng</span>
+                                        <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-purple-600 text-white flex items-center justify-center shadow-md shadow-purple-600/30">
                                             <DollarSign className="w-4 h-4 text-white" />
                                         </div>
                                     </div>
                                     <div className="mt-2 flex items-baseline gap-1">
-                                        <span className="text-xl sm:text-2xl lg:text-3xl font-black font-mono tracking-tight text-emerald-400 drop-shadow-md truncate">
+                                        <span className="text-xl sm:text-2xl lg:text-3xl font-black font-mono tracking-tight text-purple-700 dark:text-purple-300 drop-shadow-xs truncate">
                                             {dinhDangTienVND(danhSachDonHang.reduce((sum, d) => sum + (Number(d.tong_tien_thanh_toan) || Number(d.tong_tien) || 0), 0))}
                                         </span>
                                     </div>
-                                    <div className="mt-1.5 text-[10px] sm:text-[11px] text-indigo-200 font-bold flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                                        <span>{danhSachDonHang.filter(d => d.da_thanh_toan).length} đơn đã thanh toán</span>
+                                    <div className="mt-1.5 flex items-center">
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black bg-purple-600/15 text-purple-900 dark:text-purple-100 flex items-center gap-1.5">
+                                            <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400"></span>
+                                            <span>{danhSachDonHang.filter(d => d.da_thanh_toan).length} đơn đã thanh toán</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -4382,8 +4780,8 @@ export default function TrangQuanTriCuaHang() {
                                 </div>
                             </div>
 
-                            {/* 3. SECTION BẢNG DỮ LIỆU ĐƠN HÀNG (Màu Xanh Navy & Biển Sâu) */}
-                            <div className="bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-blue-200/90 dark:border-blue-900/60 shadow-lg shadow-blue-500/5 overflow-hidden">
+                            {/* 3. SECTION BẢNG DỮ LIỆU ĐƠN HÀNG (Excel-Style Grid Sắc Nét) */}
+                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
                                 {/* Banner Tiêu Đề Bảng */}
                                 <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
                                     <div className="flex items-center gap-2">
@@ -4401,58 +4799,44 @@ export default function TrangQuanTriCuaHang() {
                                     </div>
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
+                                <KhuVucDangTaiTable
+                                    dangTai={dangTai || dangLocDonHang}
+                                    tieuDe={dangLocDonHang ? "Đang áp dụng bộ lọc đơn hàng..." : "Đang tải danh sách đơn hàng toàn hệ thống..."}
+                                    moTa={dangLocDonHang ? `Tìm thấy ${donHangHienThi.length} đơn hàng phù hợp` : "Đồng bộ hóa đơn, thông tin thanh toán và trạng thái giao hàng"}
+                                />
+
+                                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocDonHang ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                    <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className="bg-blue-50/80 dark:bg-slate-800 text-blue-950 dark:text-blue-100 font-black uppercase text-[11px] border-b-2 border-blue-200 dark:border-blue-800 tracking-wider">
-                                                <th className="py-2.5 px-2 w-20 text-center whitespace-nowrap">
-                                                    <div className="flex items-center justify-center gap-1">
-                                                        <span className="px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-mono text-[9px] font-black">#</span>
-                                                        <span>MÃ ĐƠN</span>
-                                                    </div>
+                                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                                <th className="py-2.5 px-2 w-20 text-center whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                    # MÃ ĐƠN
                                                 </th>
-                                                <th className="py-2.5 px-2.5 w-44 whitespace-nowrap">
-                                                    <div className="flex items-center gap-1.5 text-blue-950 dark:text-blue-100">
-                                                        <span className="px-1.5 py-0.5 rounded bg-blue-200/80 dark:bg-blue-900/60 text-blue-900 dark:text-blue-200 font-black text-[9px]">KHÁCH</span>
-                                                        <span>KHÁCH HÀNG</span>
-                                                    </div>
+                                                <th className="py-2.5 px-2.5 min-w-[130px] whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                    KHÁCH HÀNG
                                                 </th>
-                                                <th className="py-2.5 px-2.5 min-w-[140px]">
-                                                    <div className="flex items-center gap-1.5 text-rose-950 dark:text-rose-100">
-                                                        <span className="px-1.5 py-0.5 rounded bg-rose-200/80 dark:bg-rose-900/60 text-rose-900 dark:text-rose-200 font-black text-[9px]">ĐỊA CHỈ</span>
-                                                        <span>ĐỊA CHỈ & KIỆN</span>
-                                                    </div>
+                                                <th className="py-2.5 px-2.5 min-w-[140px] border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                    ĐỊA CHỈ & KIỆN HÀNG
                                                 </th>
-                                                <th className="py-2.5 px-2 w-28 whitespace-nowrap">
-                                                    <div className="flex items-center gap-1.5 text-emerald-950 dark:text-emerald-100">
-                                                        <span className="px-1.5 py-0.5 rounded bg-emerald-200/80 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-200 font-black text-[9px]">TIỀN</span>
-                                                        <span>TỔNG TIỀN</span>
-                                                    </div>
+                                                <th className="py-2.5 px-2 w-28 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                    TỔNG TIỀN
                                                 </th>
-                                                <th className="py-2.5 px-2 w-28 whitespace-nowrap">
-                                                    <div className="flex items-center gap-1.5 text-purple-950 dark:text-purple-100">
-                                                        <span className="px-1.5 py-0.5 rounded bg-purple-200/80 dark:bg-purple-900/60 text-purple-900 dark:text-purple-200 font-black text-[9px]">CỔNG</span>
-                                                        <span>THANH TOÁN</span>
-                                                    </div>
+                                                <th className="py-2.5 px-2 w-36 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                    THANH TOÁN
                                                 </th>
-                                                <th className="py-2.5 px-2 w-36 whitespace-nowrap">
-                                                    <div className="flex items-center gap-1.5 text-cyan-950 dark:text-cyan-100">
-                                                        <span className="px-1.5 py-0.5 rounded bg-cyan-200/80 dark:bg-cyan-900/60 text-cyan-900 dark:text-cyan-200 font-black text-[9px]">VẬN ĐƠN</span>
-                                                        <span>TRẠNG THÁI</span>
-                                                    </div>
+                                                <th className="py-2.5 px-2 w-36 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                    TRẠNG THÁI
                                                 </th>
-                                                <th className="py-2.5 px-1.5 w-16 text-center whitespace-nowrap">
-                                                    <div className="flex items-center justify-center gap-1 text-slate-800 dark:text-slate-200">
-                                                        <span>LỆNH</span>
-                                                    </div>
+                                                <th className="py-2.5 px-1.5 w-16 text-center whitespace-nowrap border-b-2 border-slate-300 dark:border-slate-700">
+                                                    THAO TÁC
                                                 </th>
                                             </tr>
                                         </thead>
 
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                                        <tbody>
                                             {donHangHienThi.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={7} className="py-10 text-center">
+                                                    <td colSpan={7} className="py-10 text-center border-b border-slate-200 dark:border-slate-800">
                                                         <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
                                                             <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                                                                 <Package className="w-5 h-5" />
@@ -4515,9 +4899,9 @@ export default function TrangQuanTriCuaHang() {
                                                     const thoiGianTao = dinhDangThoiGianDonHang(dh.ngay_tao || dh.createdAt);
 
                                                     return (
-                                                        <tr key={donHangId} className="odd:bg-white even:bg-slate-50/60 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/70 dark:hover:!bg-blue-950/40 transition-colors group">
+                                                        <tr key={donHangId} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors group">
                                                             {/* Cột 1: Mã & Thứ tự */}
-                                                            <td className="py-2.5 px-2 text-center whitespace-nowrap">
+                                                            <td className="py-2.5 px-2 text-center whitespace-nowrap border-b border-r border-slate-200 dark:border-slate-800">
                                                                 <div className="flex flex-col items-center justify-center">
                                                                     <span className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-mono font-black text-[10px] shadow-2xs">
                                                                         #{idx + 1}
@@ -4533,7 +4917,7 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 2: Khách hàng */}
-                                                            <td className="py-2.5 px-2.5 whitespace-nowrap">
+                                                            <td className="py-2.5 px-3 whitespace-nowrap border-b border-r border-slate-200 dark:border-slate-800">
                                                                 <div className="flex items-center gap-2">
                                                                     <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${avatarBg} text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-2xs`}>
                                                                         {initials}
@@ -4557,7 +4941,7 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 3: Địa chỉ & Kiện hàng */}
-                                                            <td className="py-2.5 px-2.5">
+                                                            <td className="py-2.5 px-3 border-b border-r border-slate-200 dark:border-slate-800">
                                                                 <div className="flex items-start gap-1 text-slate-700 dark:text-slate-300 font-medium text-xs leading-snug">
                                                                     <MapPin className="w-3 h-3 text-rose-500 shrink-0 mt-0.5" />
                                                                     <div className="line-clamp-2" title={dh.thong_tin_giao_hang?.dia_chi_chi_tiet}>
@@ -4587,7 +4971,7 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 4: Tổng tiền */}
-                                                            <td className="py-2.5 px-2 whitespace-nowrap">
+                                                            <td className="py-2.5 px-3 whitespace-nowrap border-b border-r border-slate-200 dark:border-slate-800">
                                                                 <div className="font-mono font-black text-xs sm:text-sm text-red-600 dark:text-red-400">
                                                                     {dinhDangTienVND(dh.tong_tien_thanh_toan)}
                                                                 </div>
@@ -4604,44 +4988,74 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 5: Thanh toán */}
-                                                            <td className="py-2.5 px-2 whitespace-nowrap">
-                                                                <div className="space-y-1">
-                                                                    {dh.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? (
-                                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black bg-violet-50 dark:bg-violet-950/70 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 whitespace-nowrap">
-                                                                            <QrCode className="w-3 h-3 text-violet-600 dark:text-violet-400" />
-                                                                            <span>VietQR Pro</span>
-                                                                        </span>
-                                                                    ) : (
-                                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
-                                                                            <Banknote className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                                                                            <span>COD Tiền Mặt</span>
-                                                                        </span>
-                                                                    )}
-
-                                                                    <div>
-                                                                        {dh.da_thanh_toan ? (
-                                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 whitespace-nowrap">
-                                                                                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
-                                                                                <span>Đã thanh toán</span>
+                                                            <td className="py-2 px-2 whitespace-nowrap border-b border-r border-slate-200 dark:border-slate-800">
+                                                                <div className="space-y-1.5">
+                                                                    <div className="flex items-center justify-between gap-1">
+                                                                        {dh.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? (
+                                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black bg-violet-50 dark:bg-violet-950/70 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800 whitespace-nowrap">
+                                                                                <QrCode className="w-3 h-3 text-violet-600 dark:text-violet-400" />
+                                                                                <span>VietQR Pro</span>
                                                                             </span>
                                                                         ) : (
-                                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
-                                                                                <Clock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />
-                                                                                <span>Thu tiền COD</span>
+                                                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-50 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 whitespace-nowrap">
+                                                                                <Banknote className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                                                                                <span>COD Tiền Mặt</span>
                                                                             </span>
                                                                         )}
+                                                                        <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">
+                                                                            {dh.da_thanh_toan ? 'Đã thu' : 'Chưa thu'}
+                                                                        </span>
+                                                                    </div>
+
+                                                                    {/* Dropdown chỉnh sửa trạng thái thanh toán thủ công (dành cho Admin khi webhook lỗi) */}
+                                                                    <div className="relative inline-block w-full">
+                                                                        <select
+                                                                            disabled={dangXuLyDonHangId === donHangId}
+                                                                            value={dh.da_thanh_toan ? 'da_thanh_toan' : 'chua_thanh_toan'}
+                                                                            onChange={(e) => xuLyDoiTrangThaiThanhToan(donHangId, e.target.value === 'da_thanh_toan', dh.hinh_thuc_thanh_toan)}
+                                                                            className={`w-full appearance-none pl-6 pr-6 py-1.5 rounded-xl border text-[10.5px] font-black tracking-tight transition-all ${
+                                                                                dangXuLyDonHangId === donHangId ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer shadow-2xs hover:shadow-xs'
+                                                                            } ${
+                                                                                dh.da_thanh_toan
+                                                                                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-700'
+                                                                                    : dh.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr'
+                                                                                    ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700'
+                                                                                    : 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-200 border-blue-300 dark:border-blue-700'
+                                                                            }`}
+                                                                        >
+                                                                            <option value="chua_thanh_toan">
+                                                                                {dh.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? '⏳ Chờ chuyển khoản' : '💵 Thu tiền COD'}
+                                                                            </option>
+                                                                            <option value="da_thanh_toan">
+                                                                                ✅ Đã thanh toán
+                                                                            </option>
+                                                                        </select>
+
+                                                                        <div className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                            {dangXuLyDonHangId === donHangId ? (
+                                                                                <Loader2 className="w-3 h-3 animate-spin text-slate-500" />
+                                                                            ) : dh.da_thanh_toan ? (
+                                                                                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                                                            ) : (
+                                                                                <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                                                                            )}
+                                                                        </div>
+
+                                                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                                                                            <ChevronDown className="w-3 h-3 text-slate-500 dark:text-slate-400" />
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </td>
 
                                                             {/* Cột 6: Trạng thái */}
-                                                            <td className="py-2.5 px-2 whitespace-nowrap">
-                                                                <div className="relative inline-block w-full max-w-[145px]">
+                                                            <td className="py-2 px-2 whitespace-nowrap border-b border-r border-slate-200 dark:border-slate-800">
+                                                                <div className="relative inline-block w-full">
                                                                     <select
                                                                         disabled={dangXuLy}
                                                                         value={dh.trang_thai}
                                                                         onChange={(e) => xuLyDoiTrangThaiDonHang(donHangId, e.target.value)}
-                                                                        className={`w-full appearance-none pl-6 pr-5 py-1.5 rounded-xl border text-[11px] font-black transition-all ${
+                                                                        className={`w-full appearance-none pl-7 pr-6 py-1.5 rounded-xl border text-[11px] font-black tracking-tight transition-all ${
                                                                             dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer shadow-2xs hover:shadow-xs'
                                                                         } ${
                                                                             dh.trang_thai === 'da_giao'
@@ -4665,17 +5079,17 @@ export default function TrangQuanTriCuaHang() {
                                                                     {/* Left Status Icon */}
                                                                     <div className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none">
                                                                         {dangXuLy ? (
-                                                                            <Loader2 className="w-3 h-3 animate-spin text-slate-500" />
+                                                                            <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-500" />
                                                                         ) : dh.trang_thai === 'da_giao' ? (
-                                                                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                                                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                                                                         ) : dh.trang_thai === 'dang_giao' ? (
-                                                                            <Truck className="w-3 h-3 text-sky-600 dark:text-sky-400" />
+                                                                            <Truck className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
                                                                         ) : dh.trang_thai === 'da_xac_nhan' ? (
-                                                                            <PackageCheck className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                                                            <PackageCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                                                                         ) : dh.trang_thai === 'da_huy' ? (
-                                                                            <XCircle className="w-3 h-3 text-rose-600 dark:text-rose-400" />
+                                                                            <XCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                                                                         ) : (
-                                                                            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                                                                            <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                                                                         )}
                                                                     </div>
 
@@ -4685,7 +5099,7 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 7: Thao tác */}
-                                                            <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
+                                                            <td className="py-2.5 px-2 text-center whitespace-nowrap border-b border-slate-200 dark:border-slate-800">
                                                                 <div className="flex items-center justify-center gap-1.5">
                                                                     <button
                                                                         onClick={() => setDonHangChiTiet(dh)}
@@ -4820,159 +5234,180 @@ export default function TrangQuanTriCuaHang() {
                                 </div>
                             </div>
 
-                            {/* Bảng Danh Sách Sản Phẩm */}
-                            <div className="bg-white dark:bg-[#0d1527] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
+                            {/* Bảng Danh Sách Sản Phẩm (Excel-Style Grid Sắc Nét) */}
+                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
+                                {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
+                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                                    <div className="flex items-center gap-2">
+                                        <Boxes className="w-4 h-4 text-blue-200" />
+                                        <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
+                                            Kho Hàng & Danh Sách Sản Phẩm
+                                        </h3>
+                                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black">
+                                            {sanPhamHienThi.length} sản phẩm
+                                        </span>
+                                    </div>
+                                    <div className="text-[11px] text-blue-100 font-bold flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                        <span>Đồng bộ kho thực tế</span>
+                                    </div>
+                                </div>
+
+                                <KhuVucDangTaiTable
+                                    dangTai={dangTai || dangLocSanPham}
+                                    tieuDe={dangLocSanPham ? "Đang áp dụng bộ lọc kho máy..." : "Đang đồng bộ kho sản phẩm..."}
+                                    moTa={dangLocSanPham ? `Tìm thấy ${sanPhamHienThi.length} sản phẩm phù hợp` : "Hệ thống đang tải số lượng tồn kho, giá bán và cấu hình máy"}
+                                />
+
+                                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocSanPham ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                    <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className="bg-[#0f172a] text-white font-black uppercase text-xs border-b border-slate-800 tracking-wider">
-                                                <th className="py-3.5 px-4 w-12 text-center">#</th>
-                                                <th className="py-3.5 px-4 w-16 text-center">ẢNH</th>
-                                                <th className="py-3.5 px-4">TÊN SẢN PHẨM & CẤU HÌNH</th>
-                                                <th className="py-3.5 px-4">HÃNG</th>
-                                                <th className="py-3.5 px-4">GIÁ BÁN</th>
-                                                <th className="py-3.5 px-4 text-center">KHO</th>
-                                                <th className="py-3.5 px-4 text-center">FLASH SALE</th>
-                                                <th className="py-3.5 px-4 text-center">TRẠNG THÁI</th>
-                                                <th className="py-3.5 px-4 text-center">THAO TÁC</th>
+                                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
+                                                <th className="py-2.5 px-2 w-14 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ẢNH</th>
+                                                <th className="py-2.5 px-2.5 min-w-[160px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÊN SẢN PHẨM & CẤU HÌNH</th>
+                                                <th className="py-2.5 px-2 w-20 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">HÃNG</th>
+                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">GIÁ BÁN</th>
+                                                <th className="py-2.5 px-2 w-16 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHO</th>
+                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">FLASH SALE</th>
+                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                            {sanPhamHienThi.map((sp, idx) => {
-                                                const thongTin = layThongSoNhanhAdmin(sp);
-                                                const idSp = sp.id || sp._id;
-                                                const dangXuLyItem = dangXuLySpId === idSp;
-                                                const dangXuLyChung = dangXuLySpId !== null || dangLuuSp;
+                                        <tbody>
+                                            {sanPhamHienThi.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={9} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                                        <div className="flex flex-col items-center justify-center gap-2">
+                                                            <Package className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                                                            <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy sản phẩm nào</div>
+                                                            <div className="text-xs">Vui lòng thử đổi bộ lọc hoặc từ khóa tìm kiếm</div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                sanPhamHienThi.map((sp, idx) => {
+                                                    const thongTin = layThongSoNhanhAdmin(sp);
+                                                    const idSp = sp.id || sp._id;
+                                                    const dangXuLyItem = dangXuLySpId === idSp;
+                                                    const dangXuLyChung = dangXuLySpId !== null || dangLuuSp;
 
-                                                return (
-                                                    <tr key={idSp} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                                                        <td className="py-3 px-4 text-center font-bold text-slate-400">
-                                                             #{idx + 1}
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <div
-                                                                onClick={() => setModalXemAnh({
-                                                                    url: sp.hinh_anh_chinh,
-                                                                    ten: sp.ten_san_pham,
-                                                                    gia: sp.gia_khuyen_mai,
-                                                                    gia_goc: sp.gia_goc,
-                                                                    sku: sp.ma_san_pham,
-                                                                    hang: sp.hang_san_xuat,
-                                                                    variants: sp.tuy_chon_phien_ban || [],
-                                                                    activeVariantIndex: 0
-                                                                })}
-                                                                className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 p-1 mx-auto relative border border-slate-200 dark:border-slate-700 shrink-0 shadow-xs cursor-pointer group hover:border-blue-500 transition-all hover:scale-110"
-                                                                title="Bấm để phóng to xem ảnh sắc nét"
-                                                            >
-                                                                <Image src={sp.hinh_anh_chinh} alt={sp.ten_san_pham} fill className="object-contain p-0.5" />
-                                                                <div className="absolute inset-0 bg-slate-950/45 rounded-2xl opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                                                    <ZoomIn className="w-4 h-4 text-white drop-shadow-md" />
+                                                    return (
+                                                        <tr key={idSp} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
+                                                            <td className="py-2 px-3 text-center font-bold text-slate-400 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                #{idx + 1}
+                                                            </td>
+                                                            <td className="py-2 px-3 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div
+                                                                    onClick={() => setModalXemAnh({
+                                                                        url: sp.hinh_anh_chinh,
+                                                                        ten: sp.ten_san_pham,
+                                                                        gia: sp.gia_khuyen_mai,
+                                                                        gia_goc: sp.gia_goc,
+                                                                        sku: sp.ma_san_pham,
+                                                                        hang: sp.hang_san_xuat,
+                                                                        variants: sp.tuy_chon_phien_ban || [],
+                                                                        activeVariantIndex: 0
+                                                                    })}
+                                                                    className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 p-1 mx-auto relative border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs cursor-pointer group hover:border-blue-500 transition-all hover:scale-105"
+                                                                    title="Bấm để phóng to xem ảnh sắc nét"
+                                                                >
+                                                                    <Image src={sp.hinh_anh_chinh} alt={sp.ten_san_pham} fill className="object-contain p-0.5" />
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4 max-w-sm">
-                                                            <div className="font-extrabold text-sm text-slate-900 dark:text-white line-clamp-1" title={sp.ten_san_pham}>
-                                                                {sp.ten_san_pham}
-                                                            </div>
-                                                            <div className="text-xs text-slate-600 dark:text-slate-300 font-semibold line-clamp-1 mt-0.5 flex items-center gap-1.5">
-                                                                <span className="shrink-0">{thongTin.icon}</span>
-                                                                <span className="truncate">{thongTin.text}</span>
-                                                            </div>
-                                                            {/* Badges biến thể / màu sắc phụ */}
-                                                            {sp.tuy_chon_phien_ban && sp.tuy_chon_phien_ban.length > 0 && (
-                                                                <div className="flex items-center gap-1.5 mt-1.5">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => moModalSuaSp(sp, 'bien_the')}
-                                                                        className="px-2 py-0.5 rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900/80 text-purple-700 dark:text-purple-300 font-extrabold text-[11px] border border-purple-200 dark:border-purple-800 flex items-center gap-1 cursor-pointer transition-all hover:scale-102"
-                                                                        title="Bấm để xem và chỉnh sửa các màu sắc / phiên bản phụ này"
+                                                            </td>
+                                                            <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800">
+                                                                <div className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-1 hover:text-blue-600 transition-colors" title={sp.ten_san_pham}>
+                                                                    {sp.ten_san_pham}
+                                                                </div>
+                                                                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold line-clamp-1 mt-0.5 flex items-center gap-1.5">
+                                                                    <span className="shrink-0">{thongTin.icon}</span>
+                                                                    <span className="truncate">{thongTin.text}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <span className="inline-block px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-black uppercase text-xs border border-indigo-100 dark:border-indigo-900 whitespace-nowrap">
+                                                                    {sp.hang_san_xuat}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                                                    <span className="font-black text-xs text-red-600 dark:text-red-400">
+                                                                        {dinhDangTienVND(sp.gia_khuyen_mai)}
+                                                                    </span>
+                                                                    {sp.gia_goc > sp.gia_khuyen_mai && (
+                                                                        <span className="text-[10px] text-slate-400 line-through font-semibold">
+                                                                            {dinhDangTienVND(sp.gia_goc)}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-black whitespace-nowrap ${sp.so_luong_ton_kho > 5 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : sp.so_luong_ton_kho > 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'}`}>
+                                                                    {sp.so_luong_ton_kho || 0}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => xuLyToggleFlashSale(sp)}
+                                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                                                                        sp.la_flash_sale
+                                                                            ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 ring-1 ring-rose-500/20 hover:bg-rose-100'
+                                                                            : 'bg-slate-100 text-slate-500 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
+                                                                    }`}
+                                                                    title={sp.la_flash_sale ? 'Đang bật Flash Sale - Bấm để tắt' : 'Bấm để bật Flash Sale'}
+                                                                >
+                                                                    <Flame className={`w-3 h-3 ${sp.la_flash_sale ? 'text-rose-600 fill-rose-600 animate-pulse' : 'text-slate-400'}`} />
+                                                                    <span className="whitespace-nowrap">{sp.la_flash_sale ? 'Bật Deal' : 'Tắt Deal'}</span>
+                                                                </button>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => xuLyToggleConHang(sp)}
+                                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                                                                        sp.con_hang !== false
+                                                                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 ring-1 ring-emerald-500/20 hover:bg-emerald-100'
+                                                                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                                                                    }`}
+                                                                    title={sp.con_hang !== false ? 'Đang mở bán - Bấm để tạm ẩn ngay' : 'Đang tạm ẩn - Bấm để mở bán ngay'}
+                                                                >
+                                                                    <span className={`w-2 h-2 rounded-full shrink-0 ${sp.con_hang !== false ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                                                                    <span className="whitespace-nowrap">{sp.con_hang !== false ? 'Đang bán' : 'Tạm ẩn'}</span>
+                                                                </button>
+                                                            </td>
+                                                            <td className="py-2 px-1.5 text-center border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                                                                    <Link
+                                                                        href={`/san-pham/${sp.id || sp.slug || sp._id}`}
+                                                                        target="_blank"
+                                                                        className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 transition-colors"
+                                                                        title="Xem hiển thị ngoài website khách hàng"
                                                                     >
-                                                                        <Palette className="w-3 h-3 text-purple-600 dark:text-purple-400" />
-                                                                        <span>{sp.tuy_chon_phien_ban.length} màu / phiên bản phụ</span>
+                                                                        <ExternalLink className="w-3.5 h-3.5" />
+                                                                    </Link>
+                                                                    <button
+                                                                        onClick={() => moModalSuaSp(sp)}
+                                                                        disabled={dangXuLyChung}
+                                                                        className={`p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Chỉnh sửa chi tiết sản phẩm"
+                                                                    >
+                                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => xuLyXoaSanPham(idSp, sp.ten_san_pham)}
+                                                                        disabled={dangXuLyChung}
+                                                                        className={`p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Xóa sản phẩm"
+                                                                    >
+                                                                        {dangXuLyItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                                                                     </button>
                                                                 </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <span className="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-black uppercase text-xs border border-indigo-100 dark:border-indigo-900">
-                                                                {sp.hang_san_xuat}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <div className="font-black text-sm text-red-600 dark:text-red-400">
-                                                                {dinhDangTienVND(sp.gia_khuyen_mai)}
-                                                            </div>
-                                                            {sp.gia_goc > sp.gia_khuyen_mai && (
-                                                                <div className="text-[11px] text-slate-400 line-through font-semibold">
-                                                                    {dinhDangTienVND(sp.gia_goc)}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <span className={`px-2.5 py-1 rounded-full text-xs font-black ${sp.so_luong_ton_kho > 5 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : sp.so_luong_ton_kho > 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'}`}>
-                                                                {sp.so_luong_ton_kho || 0}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <button
-                                                                onClick={() => xuLyToggleFlashSale(sp)}
-                                                                disabled={dangXuLyChung}
-                                                                className={`px-2.5 py-1 rounded-full text-xs font-black inline-flex items-center gap-1 transition-all ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${sp.la_flash_sale ? 'bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300 border border-red-200 dark:border-red-900 shadow-xs' : 'bg-slate-100 text-slate-400 dark:bg-slate-800 hover:text-red-500'}`}
-                                                                title={sp.la_flash_sale ? 'Đang bật Flash Sale - Bấm để tắt' : 'Bấm để đưa lên mục Giảm Sâu & Flash Sale'}
-                                                            >
-                                                                {dangXuLyItem ? (
-                                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                                ) : (
-                                                                    <Flame className={`w-3.5 h-3.5 ${sp.la_flash_sale ? 'text-red-600 fill-red-600 animate-pulse' : ''}`} />
-                                                                )}
-                                                                <span>{sp.la_flash_sale ? 'Bật Deal' : 'Tắt'}</span>
-                                                            </button>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <button
-                                                                onClick={() => xuLyToggleConHang(sp)}
-                                                                disabled={dangXuLyChung}
-                                                                className={`px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5 transition-all ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${sp.con_hang !== false && sp.so_luong_ton_kho > 0 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}
-                                                            >
-                                                                {dangXuLyItem ? (
-                                                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-400" />
-                                                                ) : (
-                                                                    <span className={`w-2 h-2 rounded-full ${sp.con_hang !== false && sp.so_luong_ton_kho > 0 ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                                                                )}
-                                                                <span>{sp.con_hang !== false && sp.so_luong_ton_kho > 0 ? 'Đang bán' : 'Tạm ẩn'}</span>
-                                                            </button>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <div className="flex items-center justify-center gap-1.5">
-                                                                <Link
-                                                                    href={`/san-pham/${sp.id || sp.slug || sp._id}`}
-                                                                    target="_blank"
-                                                                    className="p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 transition-colors"
-                                                                    title="Xem hiển thị ngoài website khách hàng"
-                                                                >
-                                                                    <ExternalLink className="w-4 h-4" />
-                                                                </Link>
-                                                                <button
-                                                                    onClick={() => moModalSuaSp(sp)}
-                                                                    disabled={dangXuLyChung}
-                                                                    className={`p-2 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                    title="Chỉnh sửa chi tiết sản phẩm"
-                                                                >
-                                                                    <Edit3 className="w-4 h-4" />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => xuLyXoaSanPham(idSp, sp.ten_san_pham)}
-                                                                    disabled={dangXuLyChung}
-                                                                    className={`p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                    title="Xóa sản phẩm"
-                                                                >
-                                                                    {dangXuLyItem ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -4989,151 +5424,160 @@ export default function TrangQuanTriCuaHang() {
                                 <div className="flex items-center gap-2.5">
                                     <span className="w-2.5 h-6 bg-purple-600 rounded-full" />
                                     <div>
-                                        <h2 className="text-base font-black text-slate-900 dark:text-white">Hãng Sản Xuất & Danh Mục Phân Khúc ({danhMucHienThi.length})</h2>
-                                        <p className="text-xs text-slate-500 font-semibold">Quản lý thương hiệu đối tác và các phân khúc nhu cầu trên website</p>
+                                        <h2 className="text-base font-black text-slate-900 dark:text-white">Thương Hiệu & Hãng Sản Xuất ({danhMucHienThi.length})</h2>
+                                        <p className="text-xs text-slate-500 font-semibold">Quản lý danh sách thương hiệu đối tác trên website</p>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                                    <div className="relative w-full sm:w-60">
+                                <div className="flex items-center gap-3 w-full sm:w-auto">
+                                    <div className="relative w-full sm:w-64">
                                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                         <input
                                             type="text"
                                             value={tuKhoaDanhMuc}
                                             onChange={(e) => setTuKhoaDanhMuc(e.target.value)}
-                                            placeholder="Tìm hãng, phân khúc..."
+                                            placeholder="Tìm kiếm thương hiệu..."
                                             className="w-full pl-9 pr-3 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/30"
                                         />
                                     </div>
 
-                                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
-                                        <button
-                                            type="button"
-                                            onClick={() => setLocLoaiDanhMuc('tat_ca')}
-                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${locLoaiDanhMuc === 'tat_ca' ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-300 shadow-xs' : 'text-slate-600 dark:text-slate-300'}`}
-                                        >
-                                            Tất Cả ({danhSachDanhMuc.length})
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setLocLoaiDanhMuc('thuong_hieu')}
-                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${locLoaiDanhMuc === 'thuong_hieu' ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-300 shadow-xs' : 'text-slate-600 dark:text-slate-300'}`}
-                                        >
-                                            🏷️ Hãng / Thương Hiệu
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setLocLoaiDanhMuc('nhu_cau')}
-                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${locLoaiDanhMuc === 'nhu_cau' ? 'bg-white dark:bg-slate-700 text-purple-600 dark:text-purple-300 shadow-xs' : 'text-slate-600 dark:text-slate-300'}`}
-                                        >
-                                            🎯 Nhu Cầu / Phân Khúc
-                                        </button>
-                                    </div>
-
                                     <button
                                         onClick={moModalThemDanhMuc}
-                                        className="px-4 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-purple-500/25 cursor-pointer whitespace-nowrap"
+                                        className="px-4 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-purple-500/25 cursor-pointer whitespace-nowrap shrink-0"
                                     >
                                         <Plus className="w-4 h-4 !text-white" />
-                                        <span className="!text-white">+ Thêm Mới</span>
+                                        <span className="!text-white">Thêm Thương Hiệu</span>
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="bg-white dark:bg-[#0d1527] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
+                            {/* Bảng Danh Mục / Thương Hiệu (Excel-Style Grid Sắc Nét) */}
+                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
+                                {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
+                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                                    <div className="flex items-center gap-2">
+                                        <Tag className="w-4 h-4 text-blue-200" />
+                                        <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
+                                            Danh Sách Thương Hiệu & Hãng Sản Xuất
+                                        </h3>
+                                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black">
+                                            {danhMucHienThi.length} thương hiệu
+                                        </span>
+                                    </div>
+                                    <div className="text-[11px] text-blue-100 font-bold flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                        <span>Cập nhật trực tiếp</span>
+                                    </div>
+                                </div>
+
+                                <KhuVucDangTaiTable
+                                    dangTai={dangTai || dangLocDanhMuc}
+                                    tieuDe={dangLocDanhMuc ? "Đang lọc thương hiệu..." : "Đang tải danh sách thương hiệu..."}
+                                    moTa={dangLocDanhMuc ? `Tìm thấy ${danhMucHienThi.length} thương hiệu phù hợp` : "Đồng bộ danh sách thương hiệu đối tác trên hệ thống"}
+                                />
+
+                                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocDanhMuc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                    <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className="bg-[#0f172a] text-white font-black uppercase text-xs border-b border-slate-800 tracking-wider">
-                                                <th className="py-3.5 px-4 w-12 text-center">#</th>
-                                                <th className="py-3.5 px-4">THƯƠNG HIỆU / PHÂN KHÚC</th>
-                                                <th className="py-3.5 px-4">MÃ ĐỊNH DANH</th>
-                                                <th className="py-3.5 px-4">XUẤT XỨ</th>
-                                                <th className="py-3.5 px-4">MÔ TẢ CHI TIẾT</th>
-                                                <th className="py-3.5 px-4 text-center">SỐ SẢN PHẨM</th>
-                                                <th className="py-3.5 px-4 text-center">TRẠNG THÁI</th>
-                                                <th className="py-3.5 px-4 text-center">THAO TÁC</th>
+                                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
+                                                <th className="py-2.5 px-2.5 min-w-[130px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">THƯƠNG HIỆU</th>
+                                                <th className="py-2.5 px-2 w-20 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÃ CODE</th>
+                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">XUẤT XỨ</th>
+                                                <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÔ TẢ CHI TIẾT</th>
+                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">SỐ LƯỢNG</th>
+                                                <th className="py-2.5 px-2 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                            {danhMucHienThi.map((dm, idx) => {
-                                                const soMauCuaHang = danhSachSanPham.filter(s => s.hang_san_xuat?.toLowerCase() === dm.ma_danh_muc?.toLowerCase() || s.danh_muc?.includes(dm.ma_danh_muc)).length;
-                                                const laNhuCau = dm.loai === 'nhu_cau';
-                                                const dmId = dm.id || dm._id || dm.ma_danh_muc;
-                                                const dangXuLyItem = dangXuLyDmId === dmId;
-                                                const dangXuLyChung = dangXuLyDmId !== null || dangLuuDanhMuc;
+                                        <tbody>
+                                            {danhMucHienThi.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={8} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                                        <div className="flex flex-col items-center justify-center gap-2">
+                                                            <Tag className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                                                            <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy thương hiệu nào</div>
+                                                            <div className="text-xs">Vui lòng thử tìm kiếm với từ khóa khác</div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                danhMucHienThi.map((dm, idx) => {
+                                                    const soMauCuaHang = danhSachSanPham.filter(s => s.hang_san_xuat?.toLowerCase() === dm.ma_danh_muc?.toLowerCase() || s.danh_muc?.includes(dm.ma_danh_muc)).length;
+                                                    const laNhuCau = dm.loai === 'nhu_cau';
+                                                    const dmId = dm.id || dm._id || dm.ma_danh_muc;
+                                                    const dangXuLyItem = dangXuLyDmId === dmId;
+                                                    const dangXuLyChung = dangXuLyDmId !== null || dangLuuDanhMuc;
 
-                                                return (
-                                                    <tr key={dmId} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                                                        <td className="py-3 px-4 text-center font-bold text-slate-400">
-                                                            #{idx + 1}
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-9 h-9 rounded-2xl bg-purple-50 dark:bg-slate-800 flex items-center justify-center text-lg font-bold shrink-0 shadow-xs">
-                                                                    {dm.logo || (laNhuCau ? '🎯' : '💻')}
-                                                                </div>
-                                                                <div>
-                                                                    <div className="font-black text-sm text-slate-900 dark:text-white">{dm.ten_danh_muc}</div>
-                                                                    <div className={`text-[10px] font-bold uppercase ${laNhuCau ? 'text-amber-600 dark:text-amber-400' : 'text-purple-600 dark:text-purple-400'}`}>
-                                                                        {laNhuCau ? 'PHÂN KHÚC NHU CẦU' : 'THƯƠNG HIỆU'}
+                                                    return (
+                                                        <tr key={dmId} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
+                                                            <td className="py-2 px-2 text-center font-bold text-slate-400 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                #{idx + 1}
+                                                            </td>
+                                                            <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-6 h-6 rounded-md bg-purple-50 dark:bg-slate-800 flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">
+                                                                        {dm.logo || '💻'}
                                                                     </div>
+                                                                    <span className="font-black text-xs text-slate-900 dark:text-white whitespace-nowrap">{dm.ten_danh_muc}</span>
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4 font-mono font-black text-blue-600 dark:text-cyan-400 text-sm">
-                                                            @{dm.ma_danh_muc}
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <span className="px-2.5 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs">
-                                                                {dm.xuat_xu || 'Chính Hãng'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4 max-w-xs truncate text-slate-600 dark:text-slate-400 font-medium">
-                                                            {dm.mo_ta || '—'}
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-black text-xs">
-                                                                {soMauCuaHang} sản phẩm
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <button
-                                                                onClick={() => xuLyToggleDanhMuc(dm)}
-                                                                disabled={dangXuLyChung}
-                                                                className={`px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5 transition-all ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${dm.kich_hoat !== false ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600'}`}
-                                                            >
-                                                                {dangXuLyItem ? (
-                                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                                ) : (
-                                                                    <span className={`w-2 h-2 rounded-full ${dm.kich_hoat !== false ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                                                                )}
-                                                                <span>{dm.kich_hoat !== false ? 'Kinh doanh' : 'Tạm ngưng'}</span>
-                                                            </button>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <div className="flex items-center justify-center gap-1.5">
+                                                            </td>
+                                                            <td className="py-2 px-2 font-mono font-black text-blue-600 dark:text-cyan-400 text-xs border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                @{dm.ma_danh_muc}
+                                                            </td>
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px] whitespace-nowrap">
+                                                                    {dm.xuat_xu || 'Chính Hãng'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800" title={dm.mo_ta}>
+                                                                <div className="truncate max-w-[130px] lg:max-w-[190px] xl:max-w-[280px] text-slate-600 dark:text-slate-400 font-medium text-xs">
+                                                                    {dm.mo_ta || '—'}
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <span className="inline-block px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-black text-xs whitespace-nowrap">
+                                                                    {soMauCuaHang} sản phẩm
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 <button
-                                                                    onClick={() => moModalSuaDanhMuc(dm)}
+                                                                    onClick={() => xuLyToggleDanhMuc(dm)}
                                                                     disabled={dangXuLyChung}
-                                                                    className={`p-2 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                    title="Sửa thương hiệu"
+                                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-xs'} ${dm.kich_hoat !== false ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700'}`}
                                                                 >
-                                                                    <Edit3 className="w-4 h-4" />
+                                                                    {dangXuLyItem ? (
+                                                                        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                                                                    ) : (
+                                                                        <span className={`w-2 h-2 rounded-full shrink-0 ${dm.kich_hoat !== false ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                                                                    )}
+                                                                    <span className="whitespace-nowrap">{dm.kich_hoat !== false ? 'Kinh doanh' : 'Tạm ngưng'}</span>
                                                                 </button>
-                                                                <button
-                                                                    onClick={() => xuLyXoaDanhMuc(dm)}
-                                                                    disabled={dangXuLyChung}
-                                                                    className={`p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                    title="Xóa thương hiệu"
-                                                                >
-                                                                    {dangXuLyItem ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                                            </td>
+                                                            <td className="py-2 px-1.5 text-center border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                                                                    <button
+                                                                        onClick={() => moModalSuaDanhMuc(dm)}
+                                                                        disabled={dangXuLyChung}
+                                                                        className={`p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Sửa thương hiệu"
+                                                                    >
+                                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => xuLyXoaDanhMuc(dm)}
+                                                                        disabled={dangXuLyChung}
+                                                                        className={`p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Xóa thương hiệu"
+                                                                    >
+                                                                        {dangXuLyItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -5228,111 +5672,141 @@ export default function TrangQuanTriCuaHang() {
                                 </button>
                             </div>
 
-                            {/* Bảng Khách Hàng */}
-                            <div className="bg-white dark:bg-[#0d1527] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
+                            {/* Bảng Khách Hàng (Excel-Style Grid Sắc Nét) */}
+                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
+                                {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
+                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-blue-200" />
+                                        <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
+                                            Danh Sách Khách Hàng & Thành Viên VIP
+                                        </h3>
+                                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black">
+                                            {khachHangHienThi.length} tài khoản
+                                        </span>
+                                    </div>
+                                    <div className="text-[11px] text-blue-100 font-bold flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                        <span>Dữ liệu thời gian thực</span>
+                                    </div>
+                                </div>
+
+                                <KhuVucDangTaiTable
+                                    dangTai={dangTai || dangLocKhachHang}
+                                    tieuDe={dangLocKhachHang ? "Đang lọc danh sách khách hàng..." : "Đang nạp danh sách khách hàng & thành viên..."}
+                                    moTa={dangLocKhachHang ? `Tìm thấy ${khachHangHienThi.length} tài khoản phù hợp` : "Đồng bộ số liệu chi tiêu, đơn hàng và quyền hạn tài khoản"}
+                                />
+
+                                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocKhachHang ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                    <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className="bg-[#0f172a] text-white font-black uppercase text-xs border-b border-slate-800 tracking-wider">
-                                                <th className="py-3.5 px-4 w-12 text-center">#</th>
-                                                <th className="py-3.5 px-4">KHÁCH HÀNG</th>
-                                                <th className="py-3.5 px-4">EMAIL ĐĂNG KÝ</th>
-                                                <th className="py-3.5 px-4">SỐ ĐIỆN THOẠI</th>
-                                                <th className="py-3.5 px-4">HẠNG THÀNH VIÊN</th>
-                                                <th className="py-3.5 px-4">DOANH THU / CHI TIÊU</th>
-                                                <th className="py-3.5 px-4 text-center">ĐIỂM THƯỞNG</th>
-                                                <th className="py-3.5 px-4 text-center">PHÂN QUYỀN</th>
-                                                <th className="py-3.5 px-4 text-center">THAO TÁC</th>
+                                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
+                                                <th className="py-2.5 px-2.5 min-w-[130px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHÁCH HÀNG</th>
+                                                <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">EMAIL ĐĂNG KÝ</th>
+                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">SỐ ĐIỆN THOẠI</th>
+                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">HẠNG THÀNH VIÊN</th>
+                                                <th className="py-2.5 px-2 w-36 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">DOANH THU / CHI TIÊU</th>
+                                                <th className="py-2.5 px-2 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">PHÂN QUYỀN</th>
+                                                <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                            {khachHangHienThi.map((user, idx) => {
-                                                const uId = user.id || user._id;
-                                                const dangXuLy = dangXuLyUserId === uId;
-                                                return (
-                                                    <tr key={uId} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                                                        <td className="py-3 px-4 text-center font-bold text-slate-400">
-                                                            #{idx + 1}
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
-                                                                    {user.hoTen?.charAt(0) || 'U'}
-                                                                </div>
-                                                                <div>
-                                                                    <div className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
-                                                                        <span>{user.hoTen}</span>
+                                        <tbody>
+                                            {khachHangHienThi.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={8} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                                        <div className="flex flex-col items-center justify-center gap-2">
+                                                            <Users className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                                                            <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy khách hàng nào</div>
+                                                            <div className="text-xs">Vui lòng thử tìm kiếm với từ khóa khác</div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                khachHangHienThi.map((user, idx) => {
+                                                    const uId = user.id || user._id;
+                                                    const dangXuLy = dangXuLyUserId === uId;
+                                                    return (
+                                                        <tr key={uId} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
+                                                            <td className="py-2 px-2 text-center font-bold text-slate-400 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                #{idx + 1}
+                                                            </td>
+                                                            <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                                                    <div className="w-6 h-6 rounded-md bg-gradient-to-tr from-emerald-600 to-teal-500 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                                                                        {user.hoTen?.charAt(0) || 'U'}
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                                                        <span className="font-extrabold text-xs text-slate-900 dark:text-white whitespace-nowrap">{user.hoTen}</span>
                                                                         {user.laTiemNang && (
-                                                                            <span className="px-2 py-0.5 rounded-lg bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-black text-[10px] uppercase tracking-wider">
-                                                                                🔥 Tiềm Năng
+                                                                            <span className="px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-black text-[9px] uppercase tracking-wider whitespace-nowrap">
+                                                                                🔥 VIP
                                                                             </span>
                                                                         )}
                                                                     </div>
-                                                                    <div className="text-[11px] text-slate-400 font-mono">ID: #{user.id || user._id || idx + 1}</div>
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-slate-200 text-xs">
-                                                            {user.email}
-                                                        </td>
-                                                        <td className="py-3 px-4 text-slate-600 dark:text-slate-400 font-bold font-mono text-xs">
-                                                            {user.soDienThoai || 'Chưa cập nhật'}
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <span className={`px-3 py-1 rounded-full font-black text-xs inline-block ${user.hangThanhVien?.includes('Platinum') || user.hangThanhVien?.includes('Kim Cương') ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
-                                                                user.hangThanhVien?.includes('Gold') || user.hangThanhVien?.includes('Vàng') ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
-                                                                    'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                                                                }`}>
-                                                                {user.hangThanhVien || 'Thành Viên Mới'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <div className="font-black text-sm text-red-600 dark:text-red-400">
-                                                                {dinhDangTienVND(user.tongChiTieu || 0)}
-                                                            </div>
-                                                            <div className="text-[11px] text-slate-500 font-semibold">
-                                                                {user.soDonHang > 0 ? `${user.soDonHang} đơn hàng` : 'Chưa phát sinh đơn'}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <span className="font-black text-xs text-blue-600 dark:text-cyan-400">
-                                                                {user.diemTichLuy || 0} pts
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <button
-                                                                onClick={() => xuLyDoiVaiTroNguoiDung(user)}
-                                                                disabled={dangXuLy}
-                                                                className={`px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5 transition-all ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${user.vaiTro === 'admin' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-950 dark:text-purple-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'}`}
-                                                                title="Bấm để đổi quyền quản trị"
-                                                            >
-                                                                {dangXuLy && <Loader2 className="w-3 h-3 animate-spin" />}
-                                                                <span>{user.vaiTro === 'admin' ? '👑 Quản Trị' : 'Khách Hàng'}</span>
-                                                            </button>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <div className="flex items-center justify-center gap-1.5">
+                                                            </td>
+                                                            <td className="py-2 px-2.5 font-mono font-bold text-slate-900 dark:text-slate-200 text-xs border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="truncate max-w-[150px] lg:max-w-[200px]" title={user.email}>
+                                                                    {user.email}
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-slate-600 dark:text-slate-400 font-bold font-mono text-xs border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                {user.soDienThoai || 'Chưa cập nhật'}
+                                                            </td>
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <span className={`px-2 py-0.5 rounded-full font-black text-xs inline-block whitespace-nowrap ${user.hangThanhVien?.includes('Platinum') || user.hangThanhVien?.includes('Kim Cương') ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
+                                                                    user.hangThanhVien?.includes('Gold') || user.hangThanhVien?.includes('Vàng') ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+                                                                        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                                                    }`}>
+                                                                    {user.hangThanhVien || 'Thành Viên Mới'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                                                    <span className="font-black text-xs text-red-600 dark:text-red-400">
+                                                                        {dinhDangTienVND(user.tongChiTieu || 0)}
+                                                                    </span>
+                                                                    <span className="text-[11px] text-slate-400 font-semibold">
+                                                                        ({user.soDonHang > 0 ? `${user.soDonHang} đơn` : '0 đơn'})
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 <button
-                                                                    onClick={() => moModalSuaUser(user)}
+                                                                    onClick={() => xuLyDoiVaiTroNguoiDung(user)}
                                                                     disabled={dangXuLy}
-                                                                    className={`p-2 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                    title="Sửa tài khoản"
+                                                                    className={`px-2 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${user.vaiTro === 'admin' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-950 dark:text-purple-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'}`}
+                                                                    title="Bấm để đổi quyền quản trị"
                                                                 >
-                                                                    <Edit3 className="w-4 h-4" />
+                                                                    {dangXuLy && <Loader2 className="w-3 h-3 animate-spin shrink-0" />}
+                                                                    <span className="whitespace-nowrap">{user.vaiTro === 'admin' ? '👑 Quản Trị' : 'Khách Hàng'}</span>
                                                                 </button>
-                                                                <button
-                                                                    onClick={() => xuLyXoaUser(user)}
-                                                                    disabled={dangXuLy}
-                                                                    className={`p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                    title="Xóa tài khoản"
-                                                                >
-                                                                    {dangXuLy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                                            </td>
+                                                            <td className="py-2 px-1.5 text-center border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                                                                    <button
+                                                                        onClick={() => moModalSuaUser(user)}
+                                                                        disabled={dangXuLy}
+                                                                        className={`p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Sửa tài khoản"
+                                                                    >
+                                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => xuLyXoaUser(user)}
+                                                                        disabled={dangXuLy}
+                                                                        className={`p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Xóa tài khoản"
+                                                                    >
+                                                                        {dangXuLy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -5402,32 +5876,55 @@ export default function TrangQuanTriCuaHang() {
                                 </div>
                             </div>
 
-                            {/* Bảng Danh Sách Voucher Chuẩn Mẫu Siêu Đẹp */}
-                            <div className="bg-white dark:bg-[#0d1527] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
+                            {/* Bảng Danh Sách Voucher Chuẩn Mẫu Siêu Đẹp (Excel-Style Grid Sắc Nét) */}
+                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
+                                {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
+                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                                    <div className="flex items-center gap-2">
+                                        <Ticket className="w-4 h-4 text-blue-200" />
+                                        <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
+                                            Kho Mã Giảm Giá & Voucher Khuyến Mãi
+                                        </h3>
+                                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black">
+                                            {voucherHienThi.length} voucher
+                                        </span>
+                                    </div>
+                                    <div className="text-[11px] text-blue-100 font-bold flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                        <span>Đang phát hành</span>
+                                    </div>
+                                </div>
+
+                                <KhuVucDangTaiTable
+                                    dangTai={dangTai || dangLocVoucher}
+                                    tieuDe={dangLocVoucher ? "Đang lọc kho mã khuyến mãi..." : "Đang nạp kho mã voucher khuyến mãi..."}
+                                    moTa={dangLocVoucher ? `Tìm thấy ${voucherHienThi.length} mã voucher phù hợp` : "Đồng bộ danh sách mã giảm giá và số lượng phát hành"}
+                                />
+
+                                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocVoucher ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                    <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className="bg-[#0f172a] text-white font-black uppercase text-xs border-b border-slate-800 tracking-wider">
-                                                <th className="py-3.5 px-4 w-12 text-center">
+                                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">
                                                     <input type="checkbox" className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer" />
                                                 </th>
-                                                <th className="py-3.5 px-4">MÃ CODE</th>
-                                                <th className="py-3.5 px-4">TÊN VOUCHER</th>
-                                                <th className="py-3.5 px-4 text-center">LOẠI</th>
-                                                <th className="py-3.5 px-4">GIÁ TRỊ</th>
-                                                <th className="py-3.5 px-4">ĐƠN TỐI THIỂU</th>
-                                                <th className="py-3.5 px-4">ĐÃ SĂN / TỔNG</th>
-                                                <th className="py-3.5 px-4">THỜI HẠN</th>
-                                                <th className="py-3.5 px-4 text-center">TRẠNG THÁI</th>
-                                                <th className="py-3.5 px-4 text-center">THAO TÁC</th>
+                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÃ CODE</th>
+                                                <th className="py-2.5 px-2.5 min-w-[130px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÊN VOUCHER</th>
+                                                <th className="py-2.5 px-2 w-20 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">LOẠI</th>
+                                                <th className="py-2.5 px-2 w-24 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">GIÁ TRỊ</th>
+                                                <th className="py-2.5 px-2 w-24 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ĐƠN TỐI THIỂU</th>
+                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ĐÃ SĂN / TỔNG</th>
+                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">THỜI HẠN</th>
+                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                        <tbody>
                                             {voucherHienThi.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={10} className="py-12 text-center text-slate-400">
-                                                        <Ticket className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-700 mb-2" />
-                                                        <p className="font-bold text-sm text-slate-600 dark:text-slate-400">Không tìm thấy voucher nào phù hợp</p>
+                                                    <td colSpan={10} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                                        <Ticket className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-2" />
+                                                        <p className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy voucher nào phù hợp</p>
                                                         <p className="text-xs text-slate-400 mt-0.5">Thử đổi từ khóa hoặc chọn "Tất cả trạng thái"</p>
                                                     </td>
                                                 </tr>
@@ -5442,79 +5939,76 @@ export default function TrangQuanTriCuaHang() {
                                                     const isPercent = vc.loai_giam === 'phan_tram' || String(vc.gia_tri_giam).includes('%');
 
                                                     return (
-                                                        <tr key={vc.id || vc.ma_code || vc._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                                                            <td className="py-3.5 px-4 text-center">
+                                                        <tr key={vc.id || vc.ma_code || vc._id} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 <input type="checkbox" className="rounded text-rose-600 focus:ring-rose-500 cursor-pointer" />
                                                             </td>
-                                                            <td className="py-3.5 px-4">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="w-1.5 h-6 bg-rose-600 rounded-full shrink-0" />
-                                                                    <span className="font-mono font-black text-sm text-red-600 dark:text-red-400 tracking-wider">
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                                                    <span className="w-1.5 h-5 bg-rose-600 rounded-full shrink-0" />
+                                                                    <span className="font-mono font-black text-xs text-red-600 dark:text-red-400 tracking-wider">
                                                                         {vc.ma_code}
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td className="py-3.5 px-4 max-w-xs">
-                                                                <div className="flex items-center gap-2 mb-0.5">
-                                                                    <span className="font-extrabold text-sm text-slate-900 dark:text-white line-clamp-1">{vc.tieu_de}</span>
+                                                            <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                                                    <span className="font-extrabold text-xs text-slate-900 dark:text-white truncate max-w-[150px] lg:max-w-[200px]" title={vc.tieu_de}>{vc.tieu_de}</span>
                                                                     {vc.badge && (
-                                                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-black uppercase bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 shrink-0">
+                                                                        <span className="px-1 py-0.5 rounded text-[9px] font-black uppercase bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300 shrink-0">
                                                                             {vc.badge}
                                                                         </span>
                                                                     )}
                                                                 </div>
                                                                 {vc.chuyen_muc && vc.chuyen_muc !== 'toan_san' && (
-                                                                    <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 mr-2 mb-0.5">
-                                                                        🏷️ {vc.chuyen_muc === 'gaming' ? 'Laptop Gaming' : vc.chuyen_muc === 'sinh_vien' ? 'Sinh Viên / VP' : vc.chuyen_muc === 'phu_kien' ? 'Phụ Kiện' : vc.chuyen_muc}
+                                                                    <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 mt-0.5">
+                                                                        🏷️ {vc.chuyen_muc === 'gaming' ? 'Gaming' : vc.chuyen_muc === 'sinh_vien' ? 'VP' : vc.chuyen_muc}
                                                                     </span>
                                                                 )}
-                                                                {vc.mo_ta && (
-                                                                    <div className="text-[11px] text-slate-400 line-clamp-1 mt-0.5 font-medium">{vc.mo_ta}</div>
-                                                                )}
                                                             </td>
-                                                            <td className="py-3.5 px-4 text-center">
-                                                                <span className={`px-3 py-1 rounded-full font-black text-xs ${isFreeship ? 'bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <span className={`px-2 py-0.5 rounded-full font-black text-[11px] whitespace-nowrap ${isFreeship ? 'bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
                                                                     isPercent ? 'bg-rose-50 text-rose-800 dark:bg-rose-950 dark:text-rose-300' :
                                                                         'bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                                                                     }`}>
                                                                     {isFreeship ? 'Freeship' : isPercent ? 'Giảm %' : 'Tiền mặt'}
                                                                 </span>
                                                             </td>
-                                                            <td className="py-3.5 px-4">
-                                                                <div className="font-black text-sm text-slate-900 dark:text-white">
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="font-black text-xs text-slate-900 dark:text-white whitespace-nowrap">
                                                                     {isFreeship ? 'Free' : isPercent ? `${vc.gia_tri_giam}%` : `${Math.round(vc.gia_tri_giam / 1000)}K`}
                                                                 </div>
-                                                                <div className="text-[11px] text-slate-400 font-semibold">
-                                                                    {isFreeship ? 'Miễn phí ship' : isPercent ? `Tối đa ${dinhDangTienVND(vc.giam_toi_da || 1500000)}` : dinhDangTienVND(vc.gia_tri_giam)}
+                                                                <div className="text-[10px] text-slate-400 font-semibold whitespace-nowrap">
+                                                                    {isFreeship ? 'Miễn ship' : isPercent ? `Tối đa ${dinhDangTienVND(vc.giam_toi_da || 1500000)}` : dinhDangTienVND(vc.gia_tri_giam)}
                                                                 </div>
                                                             </td>
-                                                            <td className="py-3.5 px-4 font-bold text-slate-700 dark:text-slate-300 text-xs">
+                                                            <td className="py-2 px-2 font-bold text-slate-700 dark:text-slate-300 text-xs border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 {vc.don_hang_toi_thieu > 0 ? dinhDangTienVND(vc.don_hang_toi_thieu) : '0đ'}
                                                             </td>
-                                                            <td className="py-3.5 px-4 min-w-[130px]">
-                                                                <div className="flex items-center justify-between text-xs font-black text-slate-700 dark:text-slate-300 mb-1">
-                                                                    <span>{daSuDung} / {tongPhatHanh}</span>
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center justify-between text-[11px] font-black text-slate-700 dark:text-slate-300 mb-0.5">
+                                                                    <span>{daSuDung}/{tongPhatHanh}</span>
                                                                 </div>
-                                                                <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                                                <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
                                                                     <div
                                                                         className="bg-emerald-500 h-full rounded-full transition-all"
                                                                         style={{ width: `${Math.min(100, phanTramDaDung)}%` }}
                                                                     />
                                                                 </div>
-                                                                <div className="text-[11px] text-slate-400 font-semibold mt-1">
-                                                                    Đã dùng {daSuDung} • Còn {conLai}
+                                                                <div className="text-[10px] text-slate-400 font-semibold mt-0.5 whitespace-nowrap">
+                                                                    Dùng {daSuDung} • Còn {conLai}
                                                                 </div>
                                                             </td>
-                                                            <td className="py-3.5 px-4">
-                                                                <div className="text-slate-700 dark:text-slate-300 font-bold text-xs flex items-center gap-1.5">
-                                                                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="text-slate-700 dark:text-slate-300 font-bold text-[11px] flex items-center gap-1 whitespace-nowrap">
+                                                                    <Calendar className="w-3 h-3 text-slate-400" />
                                                                     <span>{vc.ngay_bat_dau || '19/08/2026'}</span>
                                                                 </div>
-                                                                <div className="text-[11px] text-slate-400 pl-5 font-semibold">
+                                                                <div className="text-[10px] text-slate-400 pl-4 font-semibold whitespace-nowrap">
                                                                     → {vc.ngay_het_han || '31/12/2026'}
                                                                 </div>
                                                             </td>
-                                                            <td className="py-3.5 px-4 text-center">
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 {(() => {
                                                                     const vId = vc.id || vc.ma_code || vc._id;
                                                                     const dangXuLy = dangXuLyVoucherId === vId;
@@ -5524,16 +6018,16 @@ export default function TrangQuanTriCuaHang() {
                                                                                 type="button"
                                                                                 disabled={dangXuLy}
                                                                                 onClick={() => xuLyToggleVoucher(vc)}
-                                                                                className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${vc.kich_hoat !== false ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                                                                                className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${vc.kich_hoat !== false ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
                                                                                 title={vc.kich_hoat !== false ? 'Đang bật - Bấm để ẩn' : 'Đã ẩn - Bấm để bật'}
                                                                             >
                                                                                 <span
-                                                                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${vc.kich_hoat !== false ? 'translate-x-5' : 'translate-x-0'}`}
+                                                                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${vc.kich_hoat !== false ? 'translate-x-4' : 'translate-x-0'}`}
                                                                                 />
                                                                             </button>
-                                                                            <div className="text-[11px] font-black mt-1">
+                                                                            <div className="text-[10px] font-black mt-0.5 whitespace-nowrap">
                                                                                 {dangXuLy ? (
-                                                                                    <span className="text-slate-400 flex items-center gap-1"><Loader2 className="w-2.5 h-2.5 animate-spin" /> Đang lưu</span>
+                                                                                    <span className="text-slate-400 flex items-center gap-1"><Loader2 className="w-2 h-2 animate-spin" /> Lưu...</span>
                                                                                 ) : vc.kich_hoat !== false ? (
                                                                                     <span className="text-emerald-600 dark:text-emerald-400">• Đang bật</span>
                                                                                 ) : (
@@ -5544,27 +6038,27 @@ export default function TrangQuanTriCuaHang() {
                                                                     );
                                                                 })()}
                                                             </td>
-                                                            <td className="py-3.5 px-4 text-center">
+                                                            <td className="py-2 px-1.5 text-center border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 {(() => {
                                                                     const vId = vc.id || vc.ma_code || vc._id;
                                                                     const dangXuLy = dangXuLyVoucherId === vId;
                                                                     return (
-                                                                        <div className="flex items-center justify-center gap-1.5">
+                                                                        <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                                                                             <button
                                                                                 onClick={() => moModalSuaVoucher(vc)}
                                                                                 disabled={dangXuLy}
-                                                                                className={`p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                                className={`p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                                                 title="Sửa voucher"
                                                                             >
-                                                                                <Edit3 className="w-4 h-4" />
+                                                                                <Edit3 className="w-3.5 h-3.5" />
                                                                             </button>
                                                                             <button
                                                                                 onClick={() => xuLyXoaVoucher(vc)}
                                                                                 disabled={dangXuLy}
-                                                                                className={`p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-900 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                                className={`p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-900 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                                                 title="Xóa voucher"
                                                                             >
-                                                                                {dangXuLy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                                                                {dangXuLy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                                                                             </button>
                                                                         </div>
                                                                     );
@@ -5670,114 +6164,157 @@ export default function TrangQuanTriCuaHang() {
                                 </button>
                             </div>
 
-                            {/* Bảng Danh Sách Bài Viết Chuẩn Magazine */}
-                            <div className="bg-white dark:bg-[#0d1527] rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-xs">
+                            {/* Bảng Danh Sách Bài Viết Chuẩn Magazine (Excel-Style Grid Sắc Nét) */}
+                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
+                                {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
+                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                                    <div className="flex items-center gap-2">
+                                        <Newspaper className="w-4 h-4 text-blue-200" />
+                                        <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
+                                            Danh Sách Bài Viết & Tin Tức Công Nghệ
+                                        </h3>
+                                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black">
+                                            {tinTucHienThi.length} bài viết
+                                        </span>
+                                    </div>
+                                    <div className="text-[11px] text-blue-100 font-bold flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                        <span>Xuất bản trực tiếp</span>
+                                    </div>
+                                </div>
+
+                                <KhuVucDangTaiTable
+                                    dangTai={dangTai || dangLocTinTuc}
+                                    tieuDe={dangLocTinTuc ? "Đang lọc danh sách bài viết..." : "Đang tải danh sách bài viết & tin tức..."}
+                                    moTa={dangLocTinTuc ? `Tìm thấy ${tinTucHienThi.length} bài viết phù hợp` : "Đồng bộ nội dung công nghệ, lượt xem và bài viết tiêu điểm"}
+                                />
+
+                                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocTinTuc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                    <table className="w-full text-left text-xs border-collapse">
                                         <thead>
-                                            <tr className="bg-[#0f172a] text-white font-black uppercase text-xs border-b border-slate-800 tracking-wider">
-                                                <th className="py-3.5 px-4 w-12 text-center">#</th>
-                                                <th className="py-3.5 px-4 w-16 text-center">ẢNH</th>
-                                                <th className="py-3.5 px-4">TIÊU ĐỀ & TÓM TẮT BÀI VIẾT</th>
-                                                <th className="py-3.5 px-4">CHUYÊN MỤC</th>
-                                                <th className="py-3.5 px-4">TÁC GIẢ & NGÀY</th>
-                                                <th className="py-3.5 px-4 text-center">LƯỢT XEM</th>
-                                                <th className="py-3.5 px-4 text-center">TIÊU ĐIỂM</th>
-                                                <th className="py-3.5 px-4 text-center">TRẠNG THÁI</th>
-                                                <th className="py-3.5 px-4 text-center">THAO TÁC</th>
+                                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
+                                                <th className="py-2.5 px-2 w-14 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ẢNH</th>
+                                                <th className="py-2.5 px-2.5 min-w-[150px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TIÊU ĐỀ & TÓM TẮT BÀI VIẾT</th>
+                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">CHUYÊN MỤC</th>
+                                                <th className="py-2.5 px-2 w-32 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÁC GIẢ & NGÀY</th>
+                                                <th className="py-2.5 px-2 w-16 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">LƯỢT XEM</th>
+                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TIÊU ĐIỂM</th>
+                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                            {tinTucHienThi.map((tin, idx) => {
-                                                const tinId = tin.id || tin._id;
-                                                const dangXuLy = dangXuLyTinTucId === tinId;
-                                                return (
-                                                    <tr key={tinId} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                                                        <td className="py-3 px-4 text-center font-bold text-slate-400">
-                                                            #{idx + 1}
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <div className="w-14 h-10 rounded-xl bg-slate-950 overflow-hidden relative mx-auto border border-slate-200 dark:border-slate-700 shrink-0">
-                                                                <Image src={tin.hinh_anh} alt={tin.tieu_de} fill className="object-cover" />
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4 max-w-sm">
-                                                            <div className="font-extrabold text-sm text-slate-900 dark:text-white line-clamp-1">
-                                                                {tin.tieu_de}
-                                                            </div>
-                                                            <div className="text-xs text-slate-500 font-medium line-clamp-1 mt-0.5">
-                                                                {tin.tom_tat}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-black text-xs">
-                                                                {tin.chuyen_muc}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4">
-                                                            <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">{tin.tac_gia}</div>
-                                                            <div className="text-[11px] text-slate-400 font-semibold">{tin.ngay_dang || '24/08/2026'}</div>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <span className="font-black text-xs text-emerald-600 dark:text-emerald-400">
-                                                                {tin.luot_xem || 120}
-                                                            </span>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            {tin.la_tieu_diem ? (
-                                                                <span className="px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300 font-black text-[11px] inline-flex items-center gap-1">
-                                                                    <Flame className="w-3 h-3 fill-current" />
-                                                                    <span>Tiêu điểm</span>
+                                        <tbody>
+                                            {tinTucHienThi.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={9} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                                        <div className="flex flex-col items-center justify-center gap-2">
+                                                            <Newspaper className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                                                            <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy bài viết nào</div>
+                                                            <div className="text-xs">Vui lòng thử tìm kiếm với từ khóa khác</div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                tinTucHienThi.map((tin, idx) => {
+                                                    const tinId = tin.id || tin._id;
+                                                    const dangXuLy = dangXuLyTinTucId === tinId;
+                                                    return (
+                                                        <tr key={tinId} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
+                                                            <td className="py-2 px-2 text-center font-bold text-slate-400 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                #{idx + 1}
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="w-10 h-7 rounded-lg bg-slate-950 overflow-hidden relative mx-auto border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs">
+                                                                    <Image src={tin.hinh_anh} alt={tin.tieu_de} fill className="object-cover" />
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-2 px-2.5 max-w-sm border-b border-r border-slate-200 dark:border-slate-800">
+                                                                <div className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-1" title={tin.tieu_de}>
+                                                                    {tin.tieu_de}
+                                                                </div>
+                                                                <div className="text-[11px] text-slate-500 font-medium line-clamp-1 mt-0.5" title={tin.tom_tat}>
+                                                                    {tin.tom_tat}
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <span className="inline-block px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-black text-xs whitespace-nowrap">
+                                                                    {tin.chuyen_muc}
                                                                 </span>
-                                                            ) : (
-                                                                <span className="text-slate-400 text-xs font-semibold">Thường</span>
-                                                            )}
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <button
-                                                                onClick={() => xuLyToggleXuatBanTinTuc(tin)}
-                                                                disabled={dangXuLy}
-                                                                className={`px-3 py-1 rounded-full text-xs font-black inline-flex items-center gap-1.5 transition-all ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${tin.xuat_ban !== false ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-600'}`}
-                                                            >
-                                                                {dangXuLy ? (
-                                                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                                                ) : (
-                                                                    <span className={`w-2 h-2 rounded-full ${tin.xuat_ban !== false ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                                                                )}
-                                                                <span>{tin.xuat_ban !== false ? 'Xuất bản' : 'Bản nháp'}</span>
-                                                            </button>
-                                                        </td>
-                                                        <td className="py-3 px-4 text-center">
-                                                            <div className="flex items-center justify-center gap-1.5">
-                                                                <Link
-                                                                    href={`/tin-tuc/${slugTinTuc(tin)}`}
-                                                                    target="_blank"
-                                                                    className="p-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 cursor-pointer transition-colors"
-                                                                    title="Xem bài viết ngoài trang chủ"
-                                                                >
-                                                                    <Eye className="w-4 h-4" />
-                                                                </Link>
+                                                            </td>
+                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                                                    <span className="font-bold text-slate-800 dark:text-slate-200 text-xs">{tin.tac_gia}</span>
+                                                                    <span className="text-[11px] text-slate-400 font-semibold">({tin.ngay_dang || '24/08/2026'})</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <span className="font-black text-xs text-emerald-600 dark:text-emerald-400">
+                                                                    {tin.luot_xem || 120}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 <button
-                                                                    onClick={() => moModalSuaTinTuc(tin)}
-                                                                    disabled={dangXuLy}
-                                                                    className={`p-2 rounded-xl bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                    title="Sửa bài viết"
+                                                                    type="button"
+                                                                    onClick={() => xuLyToggleTieuDiemTinTuc(tin)}
+                                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                                                                        tin.la_tieu_diem
+                                                                            ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 ring-1 ring-rose-500/20 hover:bg-rose-100'
+                                                                            : 'bg-slate-100 text-slate-500 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
+                                                                    }`}
+                                                                    title={tin.la_tieu_diem ? 'Đang là tin tiêu điểm - Bấm để bỏ ghim' : 'Bấm để ghim tin tiêu điểm'}
                                                                 >
-                                                                    <Edit3 className="w-4 h-4" />
+                                                                    <Flame className={`w-3 h-3 ${tin.la_tieu_diem ? 'text-rose-600 fill-rose-600 animate-pulse' : 'text-slate-400'}`} />
+                                                                    <span className="whitespace-nowrap">{tin.la_tieu_diem ? 'Tiêu điểm' : 'Thường'}</span>
                                                                 </button>
+                                                            </td>
+                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 <button
-                                                                    onClick={() => xuLyXoaTinTuc(tin)}
-                                                                    disabled={dangXuLy}
-                                                                    className={`p-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                    title="Xóa bài viết"
+                                                                    type="button"
+                                                                    onClick={() => xuLyToggleXuatBanTinTuc(tin)}
+                                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                                                                        tin.xuat_ban !== false
+                                                                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 ring-1 ring-emerald-500/20 hover:bg-emerald-100'
+                                                                            : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                                                                    }`}
+                                                                    title={tin.xuat_ban !== false ? 'Đang xuất bản - Bấm để chuyển về bản nháp' : 'Bản nháp - Bấm để xuất bản ngay'}
                                                                 >
-                                                                    {dangXuLy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                                                    <span className={`w-2 h-2 rounded-full shrink-0 ${tin.xuat_ban !== false ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                                                                    <span className="whitespace-nowrap">{tin.xuat_ban !== false ? 'Xuất bản' : 'Bản nháp'}</span>
                                                                 </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                                            </td>
+                                                            <td className="py-2 px-1.5 text-center border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                                                                    <Link
+                                                                        href={`/tin-tuc/${slugTinTuc(tin)}`}
+                                                                        target="_blank"
+                                                                        className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 cursor-pointer transition-colors"
+                                                                        title="Xem bài viết ngoài trang chủ"
+                                                                    >
+                                                                        <Eye className="w-3.5 h-3.5" />
+                                                                    </Link>
+                                                                    <button
+                                                                        onClick={() => moModalSuaTin(tin)}
+                                                                        disabled={dangXuLy}
+                                                                        className={`p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Chỉnh sửa bài viết"
+                                                                    >
+                                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => xuLyXoaTinTuc(tinId, tin.tieu_de)}
+                                                                        disabled={dangXuLy}
+                                                                        className={`p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Xóa bài viết"
+                                                                    >
+                                                                        {dangXuLy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
@@ -6048,6 +6585,313 @@ export default function TrangQuanTriCuaHang() {
                             </form>
                         </div>
                     )}
+
+                    {/* ========================================================= */}
+                    {/* TAB 9: QUẢN LÝ SHOWROOM & TỌA ĐỘ GPS BẢN ĐỒ (100% REALTIME) */}
+                    {/* ========================================================= */}
+                    {tabHienTai === 'showroom' && (
+                        <div className="space-y-6 animate-in fade-in duration-200">
+                            {/* Header Toolbar Gọn Gàng */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
+                                            <MapPin className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
+                                                Cấu Hình Showroom & Tọa Độ Bản Đồ
+                                            </h2>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                                Cập nhật địa chỉ, hotline và tọa độ GPS (Vĩ độ, Kinh độ) để Google Maps hiển thị chính xác 100%.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-2.5 shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={xuLyKhoiPhucShowroom}
+                                        disabled={dangLuuShowroom}
+                                        className="px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                                        title="Khôi phục về 3 showroom mặc định"
+                                    >
+                                        <RotateCcw className="w-4 h-4 text-slate-500" />
+                                        <span>Khôi phục gốc</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={xuLyThemShowroomMoi}
+                                        disabled={dangLuuShowroom}
+                                        className="px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center gap-1.5 border border-blue-200 dark:border-blue-800 transition-colors cursor-pointer"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        <span>Thêm Cửa Hàng</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={xuLyLuuShowroom}
+                                        disabled={dangLuuShowroom}
+                                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition-all cursor-pointer"
+                                    >
+                                        {dangLuuShowroom ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                        <span>{dangLuuShowroom ? 'Đang lưu...' : 'Lưu Cấu Hình'}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Bố Cục 2 Cột: Cột Trái Danh Sách Cửa Hàng - Cột Phải Live Preview Google Maps */}
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                                {/* Cột Trái: Danh Sách Showroom (7 Cột) */}
+                                <div className="xl:col-span-7 space-y-4">
+                                    {danhSachShowroomAdmin.map((sr, idx) => {
+                                        const dangChon = showroomDangXemTruoc === idx;
+                                        return (
+                                            <div
+                                                key={sr.id || idx}
+                                                className={`p-4 sm:p-5 rounded-2xl border transition-all ${
+                                                    dangChon
+                                                        ? 'bg-white dark:bg-slate-800 border-blue-500 shadow-md ring-2 ring-blue-500/20'
+                                                        : 'bg-white/90 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/80 hover:border-slate-300'
+                                                }`}
+                                            >
+                                                {/* Header Card Chi Nhánh */}
+                                                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-700/60">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <span className="w-7 h-7 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                                                            {idx + 1}
+                                                        </span>
+                                                        <span className="font-black text-sm text-slate-900 dark:text-white">
+                                                            {sr.ten || `Cửa hàng #${idx + 1}`}
+                                                        </span>
+                                                        {sr.la_mac_dinh && (
+                                                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+                                                                Trụ sở chính
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setShowroomDangXemTruoc(idx)}
+                                                            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                                                dangChon
+                                                                    ? 'bg-blue-600 text-white'
+                                                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                                                            }`}
+                                                        >
+                                                            {dangChon ? '✓ Đang xem trên Map' : 'Xem trên Map'}
+                                                        </button>
+
+                                                        {danhSachShowroomAdmin.length > 1 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => xuLyXoaShowroom(idx)}
+                                                                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-colors cursor-pointer"
+                                                                title="Xóa showroom này"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Form Fields Tinh Gọn */}
+                                                <div className="space-y-3">
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                                            Tên Showroom / Chi Nhánh *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={sr.ten || ''}
+                                                            onChange={(e) => xuLyThayDoiShowroom(idx, 'ten', e.target.value)}
+                                                            placeholder="VD: Showroom Quận 10 (Trụ Sở Chính)"
+                                                            className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                                            Địa Chỉ Chi Tiết *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={sr.dia_chi || ''}
+                                                            onChange={(e) => xuLyThayDoiShowroom(idx, 'dia_chi', e.target.value)}
+                                                            placeholder="VD: Số 29 Tân Phước, Phường 8, Quận 10, TP. Hồ Chí Minh"
+                                                            className="w-full px-3 py-2 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                                                Hotline Liên Hệ
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={sr.hotline || ''}
+                                                                onChange={(e) => xuLyThayDoiShowroom(idx, 'hotline', e.target.value)}
+                                                                placeholder="1900.8946 hoặc 0948.37.79.79"
+                                                                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+                                                            />
+                                                        </div>
+
+                                                        <div>
+                                                            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
+                                                                Giờ Mở Cửa
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={sr.gio_mo_cua || ''}
+                                                                onChange={(e) => xuLyThayDoiShowroom(idx, 'gio_mo_cua', e.target.value)}
+                                                                placeholder="08:30 - 21:30 (Mở cả tuần)"
+                                                                className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:bg-white"
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Khu vực tọa độ GPS - Cực kỳ quan trọng & nổi bật */}
+                                                    <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/80 dark:border-blue-800/60 space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[11px] font-black text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
+                                                                <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                                                                Tọa Độ GPS Google Maps (Định Vị Chính Xác)
+                                                            </span>
+                                                            <span className="text-[10px] text-slate-500">
+                                                                Chuẩn số thực
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
+                                                                    Vĩ độ (Latitude) *
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="any"
+                                                                    value={sr.vi_do ?? ''}
+                                                                    onChange={(e) => xuLyThayDoiShowroom(idx, 'vi_do', e.target.value)}
+                                                                    placeholder="VD: 10.760086"
+                                                                    className="w-full px-3 py-1.5 text-xs font-mono font-bold rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-700 dark:text-slate-300 mb-0.5">
+                                                                    Kinh độ (Longitude) *
+                                                                </label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="any"
+                                                                    value={sr.kinh_do ?? ''}
+                                                                    onChange={(e) => xuLyThayDoiShowroom(idx, 'kinh_do', e.target.value)}
+                                                                    placeholder="VD: 106.663185"
+                                                                    className="w-full px-3 py-1.5 text-xs font-mono font-bold rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                                            💡 <i>Mẹo: Mở Google Maps, click chuột phải vào vị trí bất kỳ rồi bấm chọn dòng số đầu tiên để copy Vĩ độ, Kinh độ.</i>
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Đặt làm mặc định */}
+                                                    <div className="pt-1 flex items-center justify-between text-xs">
+                                                        <label className="flex items-center gap-2 cursor-pointer select-none text-slate-700 dark:text-slate-300 font-semibold">
+                                                            <input
+                                                                type="radio"
+                                                                name="sr_mac_dinh"
+                                                                checked={!!sr.la_mac_dinh}
+                                                                onChange={() => xuLyDatLamMacDinh(idx)}
+                                                                className="w-4 h-4 text-blue-600"
+                                                            />
+                                                            <span>Đặt làm Showroom chính (Mặc định khi mở trang)</span>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+
+                                    <div className="pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={xuLyLuuShowroom}
+                                            disabled={dangLuuShowroom}
+                                            className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition-all cursor-pointer"
+                                        >
+                                            {dangLuuShowroom ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                            <span>{dangLuuShowroom ? 'Đang lưu hệ thống...' : 'Lưu Tất Cả Showroom & Tọa Độ'}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Cột Phải: Live Preview Bản Đồ (5 Cột, Sticky) */}
+                                <div className="xl:col-span-5 sticky top-20 space-y-4">
+                                    <div className="bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
+                                                <h3 className="font-black text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                                                    Xem Trước Google Maps Trực Quan
+                                                </h3>
+                                            </div>
+                                            {danhSachShowroomAdmin[showroomDangXemTruoc] && (
+                                                <a
+                                                    href={`https://www.google.com/maps?q=${danhSachShowroomAdmin[showroomDangXemTruoc].vi_do},${danhSachShowroomAdmin[showroomDangXemTruoc].kinh_do}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                                                >
+                                                    <span>Mở map ngoài</span>
+                                                    <ExternalLink className="w-3 h-3" />
+                                                </a>
+                                            )}
+                                        </div>
+
+                                        {/* Chi tiết showroom đang preview */}
+                                        {danhSachShowroomAdmin[showroomDangXemTruoc] ? (
+                                            <div className="space-y-2">
+                                                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800">
+                                                    <div className="font-bold text-xs text-slate-900 dark:text-white">
+                                                        {danhSachShowroomAdmin[showroomDangXemTruoc].ten}
+                                                    </div>
+                                                    <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 mt-0.5">
+                                                        📍 {danhSachShowroomAdmin[showroomDangXemTruoc].dia_chi}
+                                                    </div>
+                                                    <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                                                        <span>Vĩ độ: <b>{danhSachShowroomAdmin[showroomDangXemTruoc].vi_do}</b></span>
+                                                        <span>Kinh độ: <b>{danhSachShowroomAdmin[showroomDangXemTruoc].kinh_do}</b></span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Khung iframe bản đồ */}
+                                                <div className="relative w-full h-[380px] sm:h-[420px] rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner bg-slate-100 dark:bg-slate-900">
+                                                    <iframe
+                                                        title="Google Maps Showroom Preview"
+                                                        src={`https://maps.google.com/maps?q=${danhSachShowroomAdmin[showroomDangXemTruoc].vi_do || 10.760086},${danhSachShowroomAdmin[showroomDangXemTruoc].kinh_do || 106.663185}&hl=vi&z=16&output=embed`}
+                                                        className="w-full h-full border-0"
+                                                        loading="lazy"
+                                                        allowFullScreen
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="h-64 flex items-center justify-center text-slate-400 text-xs">
+                                                Chưa chọn showroom để xem trước
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </main>
             </div>
 
@@ -6056,11 +6900,11 @@ export default function TrangQuanTriCuaHang() {
             {/* ========================================================================= */}
             {dangMoModalSp && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-5xl border-2 border-slate-300 dark:border-slate-700 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
-                        {/* Header Hiện Đại - Tương Phản Màu Sắc Rõ Ràng, Không Bị Chói / Mờ Chữ */}
-                        <div className="shrink-0 bg-slate-900 border-b-2 border-slate-800 p-4 sm:p-5 flex items-start justify-between gap-3 shadow-lg">
-                            <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                                <div className="w-11 h-11 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-2xl shadow-inner shrink-0 mt-0.5">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl w-full max-w-5xl border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
+                        {/* Header Sang Trọng, Tinh Tế, Đồng Bộ Tone Với Thân Modal */}
+                        <div className="shrink-0 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 px-5 sm:px-6 py-4 flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/60 flex items-center justify-center text-xl shrink-0 shadow-xs">
                                     {loaiFormSanPham === 'ban_phim' ? '⌨️' :
                                      loaiFormSanPham === 'chuot' ? '🖱️' :
                                      loaiFormSanPham === 'balo' ? '🎒' :
@@ -6069,49 +6913,46 @@ export default function TrangQuanTriCuaHang() {
                                      loaiFormSanPham === 'linh_kien' ? '💾' : '💻'}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                        <span className={`px-2.5 py-0.5 rounded-lg text-[11px] font-black uppercase tracking-wider flex items-center gap-1 border ${
+                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                        <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider ${
                                             spDangSua
-                                                ? 'bg-blue-500/20 text-blue-300 border-blue-500/40'
-                                                : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800'
+                                                : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800'
                                         }`}>
-                                            {spDangSua ? '✏️ Chỉnh Sửa' : '✨ Thêm Mới'}
+                                            {spDangSua ? 'Chỉnh Sửa' : 'Thêm Mới'}
                                         </span>
-                                        <span className="px-2.5 py-0.5 rounded-lg bg-amber-400/15 text-amber-300 border border-amber-400/30 text-[11px] font-mono font-black tracking-wider uppercase">
+                                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-mono font-bold tracking-wide">
                                             SKU: {formSp.ma_san_pham || 'NEW-SKU'}
                                         </span>
-                                        <span className="px-2.5 py-0.5 rounded-lg bg-cyan-400/15 text-cyan-300 border border-cyan-400/30 text-[11px] font-black uppercase">
-                                            Hãng: {formSp.hang_san_xuat}
+                                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
+                                            Hãng: {formSp.hang_san_xuat?.toUpperCase()}
                                         </span>
                                         {formSp.tuy_chon_phien_ban && formSp.tuy_chon_phien_ban.length > 0 && (
-                                            <span className="px-2.5 py-0.5 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-400/30 text-[11px] font-black flex items-center gap-1">
-                                                🎨 {formSp.tuy_chon_phien_ban.length} màu / biến thể
+                                            <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800 text-[11px] font-semibold">
+                                                {formSp.tuy_chon_phien_ban.length} biến thể
                                             </span>
                                         )}
                                     </div>
-                                    <h3 className="text-base sm:text-lg font-black text-slate-100 leading-snug line-clamp-2" title={formSp.ten_san_pham}>
+                                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-snug truncate" title={formSp.ten_san_pham}>
                                         {formSp.ten_san_pham || (spDangSua ? 'Sản Phẩm Chưa Có Tên' : 'Nhập Tên Sản Phẩm Mới')}
                                     </h3>
-                                    <p className="text-xs text-slate-400 font-medium mt-1">
-                                        Quản lý thông tin định danh, cấu hình kỹ thuật và các tùy chọn màu sắc phụ
-                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 <button
                                     type="button"
                                     onClick={() => setDangXemTruocCard(true)}
-                                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black text-xs flex items-center gap-1.5 transition-all shadow-md shadow-indigo-600/30 cursor-pointer border border-indigo-400/40 active:scale-95"
+                                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95"
                                     title="Xem trước sản phẩm hiển thị ngoài web"
                                 >
-                                    <Eye className="w-4 h-4 text-cyan-200" />
-                                    <span className="hidden sm:inline">Xem Trước Sản Phẩm</span>
+                                    <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                    <span className="hidden sm:inline">Xem Trước</span>
                                 </button>
                                 <button
                                     type="button"
                                     disabled={dangLuuSp}
                                     onClick={dongModalSpAnToan}
-                                    className="p-2 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-300 hover:text-white border border-slate-700 hover:border-rose-500 cursor-pointer transition-all shrink-0"
+                                    className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-slate-200 cursor-pointer transition-colors shrink-0"
                                     title="Đóng cửa sổ"
                                 >
                                     <X className="w-5 h-5" />
@@ -6119,306 +6960,354 @@ export default function TrangQuanTriCuaHang() {
                             </div>
                         </div>
 
-                        {/* Thanh 4 Tabs Chức Năng Rõ Ràng - Phối Màu Phân Biệt Sống Động */}
-                        <div className="shrink-0 p-3 px-4 sm:px-6 bg-slate-200 dark:bg-slate-900 border-b-2 border-slate-300 dark:border-slate-800 flex items-center gap-2.5 overflow-x-auto scrollbar-none shadow-xs">
-                            <button
-                                type="button"
-                                onClick={() => setTabModalSp('thong_tin')}
-                                className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 border-2 transition-all cursor-pointer whitespace-nowrap ${
-                                    tabModalSp === 'thong_tin'
-                                        ? 'bg-blue-600 text-white border-blue-700 shadow-md shadow-blue-500/35 scale-[1.02]'
-                                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-blue-400 hover:text-blue-600'
-                                }`}
-                            >
-                                <Layers className="w-4 h-4" />
-                                <span>1. Thông Tin Chung & Giá</span>
-                            </button>
+                        {/* Thanh 4 Tabs Chức Năng Rõ Ràng - Bố Cục Lưới Cân Đối & Phân Màu Đa Sắc Trực Quan */}
+                        <div className="shrink-0 px-4 sm:px-6 py-2.5 bg-slate-50/80 dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 bg-slate-200/70 dark:bg-slate-800/80 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                                {/* Tab 1: Xanh Dương (Thông Tin & Giá) */}
+                                <button
+                                    type="button"
+                                    onClick={() => setTabModalSp('thong_tin')}
+                                    className={`py-2 px-2.5 sm:px-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                        tabModalSp === 'thong_tin'
+                                            ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 border border-blue-600 font-extrabold'
+                                            : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/80 dark:hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <Tag className={`w-4 h-4 shrink-0 ${tabModalSp === 'thong_tin' ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`} />
+                                    <span className="truncate">1. Thông Tin & Giá</span>
+                                </button>
 
-                            <button
-                                type="button"
-                                onClick={() => setTabModalSp('thong_so')}
-                                className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 border-2 transition-all cursor-pointer whitespace-nowrap ${
-                                    tabModalSp === 'thong_so'
-                                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-md shadow-indigo-500/35 scale-[1.02]'
-                                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-indigo-400 hover:text-indigo-600'
-                                }`}
-                            >
-                                <SlidersHorizontal className="w-4 h-4" />
-                                <span>2. Cấu Hình Kỹ Thuật</span>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                                    tabModalSp === 'thong_so' ? 'bg-white/30 text-white' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
-                                }`}>
-                                    {loaiFormSanPham}
-                                </span>
-                            </button>
+                                {/* Tab 2: Tím Indigo (Cấu Hình Chi Tiết) */}
+                                <button
+                                    type="button"
+                                    onClick={() => setTabModalSp('thong_so')}
+                                    className={`py-2 px-2.5 sm:px-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                        tabModalSp === 'thong_so'
+                                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25 border border-indigo-600 font-extrabold'
+                                            : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white/80 dark:hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <SlidersHorizontal className={`w-4 h-4 shrink-0 ${tabModalSp === 'thong_so' ? 'text-white' : 'text-indigo-600 dark:text-indigo-400'}`} />
+                                    <span className="truncate">2. Cấu Hình Chi Tiết</span>
+                                </button>
 
-                            <button
-                                type="button"
-                                onClick={() => setTabModalSp('bien_the')}
-                                className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 border-2 transition-all cursor-pointer whitespace-nowrap ${
-                                    tabModalSp === 'bien_the'
-                                        ? 'bg-purple-600 text-white border-purple-700 shadow-md shadow-purple-500/35 scale-[1.02]'
-                                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-purple-400 hover:text-purple-600'
-                                }`}
-                            >
-                                <Palette className="w-4 h-4" />
-                                <span>3. Màu Sắc & Biến Thể</span>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                                    tabModalSp === 'bien_the'
-                                        ? 'bg-white/30 text-white'
-                                        : formSp.tuy_chon_phien_ban && formSp.tuy_chon_phien_ban.length > 0
-                                            ? 'bg-purple-600 text-white'
-                                            : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                                }`}>
-                                    {formSp.tuy_chon_phien_ban && formSp.tuy_chon_phien_ban.length > 0
-                                        ? `${formSp.tuy_chon_phien_ban.length} màu`
-                                        : 'Tùy chọn'}
-                                </span>
-                            </button>
+                                {/* Tab 3: Hồng Fuchsia (Biến Thể Màu) */}
+                                <button
+                                    type="button"
+                                    onClick={() => setTabModalSp('bien_the')}
+                                    className={`py-2 px-2.5 sm:px-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                        tabModalSp === 'bien_the'
+                                            ? 'bg-fuchsia-600 text-white shadow-md shadow-fuchsia-500/25 border border-fuchsia-600 font-extrabold'
+                                            : 'text-slate-600 dark:text-slate-300 hover:text-fuchsia-600 dark:hover:text-fuchsia-400 hover:bg-white/80 dark:hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <Palette className={`w-4 h-4 shrink-0 ${tabModalSp === 'bien_the' ? 'text-white' : 'text-fuchsia-600 dark:text-fuchsia-400'}`} />
+                                    <span className="truncate">3. Biến Thể Màu</span>
+                                    {formSp.tuy_chon_phien_ban && formSp.tuy_chon_phien_ban.length > 0 && (
+                                        <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
+                                            tabModalSp === 'bien_the'
+                                                ? 'bg-white/30 text-white'
+                                                : 'bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-950 dark:text-fuchsia-300'
+                                        }`}>
+                                            {formSp.tuy_chon_phien_ban.length}
+                                        </span>
+                                    )}
+                                </button>
 
-                            <button
-                                type="button"
-                                onClick={() => setTabModalSp('hinh_anh')}
-                                className={`px-4 py-2 rounded-xl font-black text-xs flex items-center gap-2 border-2 transition-all cursor-pointer whitespace-nowrap ${
-                                    tabModalSp === 'hinh_anh'
-                                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-md shadow-emerald-500/35 scale-[1.02]'
-                                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-600'
-                                }`}
-                            >
-                                <Sparkles className="w-4 h-4" />
-                                <span>4. Ảnh, Điểm Nổi Bật & Quà Tặng</span>
-                                {((formSp.dac_diem_noi_bat?.length || 0) > 0 || (formSp.qua_tang?.length || 0) > 0) && (
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                                        tabModalSp === 'hinh_anh' ? 'bg-white/30 text-white' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                                    }`}>
-                                        {(formSp.dac_diem_noi_bat?.length || 0) + (formSp.qua_tang?.length || 0)} mục
-                                    </span>
-                                )}
-                            </button>
+                                {/* Tab 4: Vàng Hổ Phách (Ảnh & Quà Tặng) */}
+                                <button
+                                    type="button"
+                                    onClick={() => setTabModalSp('hinh_anh')}
+                                    className={`py-2 px-2.5 sm:px-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                                        tabModalSp === 'hinh_anh'
+                                            ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 border border-amber-500 font-extrabold'
+                                            : 'text-slate-600 dark:text-slate-300 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-white/80 dark:hover:bg-slate-800'
+                                    }`}
+                                >
+                                    <Sparkles className={`w-4 h-4 shrink-0 ${tabModalSp === 'hinh_anh' ? 'text-white' : 'text-amber-500 dark:text-amber-400'}`} />
+                                    <span className="truncate">4. Ảnh & Quà Tặng</span>
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Form Body Cuộn Độc Lập - Nền Tương Phản Tạo Độ Nổi Khối */}
+                        {/* Form Body Cuộn Độc Lập - Nền Slate-100 Đậm Hơn Giúp Tôn Card Trắng & Đệm Đáy Thoải Mái */}
                         <form onSubmit={xuLyLuuSanPham} className="flex flex-col flex-1 min-h-0">
-                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs bg-slate-100 dark:bg-slate-950">
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs bg-slate-100/70 dark:bg-slate-950/80 pb-28">
                                 
                                 {/* TAB 1: THÔNG TIN CƠ BẢN & GIÁ BÁN */}
                                 {tabModalSp === 'thong_tin' && (
-                                    <div className="space-y-4 animate-in fade-in duration-150">
-                                        {/* KHỐI 1: ĐỊNH DANH & PHÂN LOẠI (TECH BLUE) */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-400/90 dark:border-blue-600 shadow-md shadow-blue-500/5 space-y-4">
-                                            <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800">
-                                                <div className="font-black text-xs uppercase tracking-wider text-blue-800 dark:text-blue-300 flex items-center gap-2">
-                                                    <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                        <Tag className="w-3.5 h-3.5" />
+                                    <div className="space-y-5 animate-in fade-in duration-150">
+                                        {/* KHỐI 1: ĐỊNH DANH & PHÂN LOẠI (Theme: Xanh Dương / Royal Blue) */}
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-200 dark:border-blue-900/60 shadow-xs overflow-hidden">
+                                            {/* Header Khối 1 có dải gradient xanh sang trọng */}
+                                            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border-b border-blue-100 dark:border-blue-900/50 flex items-center justify-between">
+                                                <div className="font-black text-xs uppercase tracking-wider text-blue-950 dark:text-blue-200 flex items-center gap-2.5">
+                                                    <span className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                                                        <Tag className="w-4 h-4" />
                                                     </span>
                                                     <span>1. Định Danh & Phân Loại Sản Phẩm</span>
                                                 </div>
-                                                <span className="text-[11px] font-black text-blue-700 bg-white dark:bg-blue-900 px-2.5 py-0.5 rounded-full border border-blue-300 dark:border-blue-700 shadow-xs">
+                                                <span className="text-[10px] font-black text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-3 py-1 rounded-full border border-blue-300 dark:border-blue-800 uppercase tracking-wider">
                                                     Bắt buộc
                                                 </span>
                                             </div>
 
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                                                <div className="space-y-1">
-                                                    <label className="font-bold text-slate-800 dark:text-slate-200">Mã SKU / Định Danh *</label>
-                                                    <input
-                                                        type="text"
-                                                        required
-                                                        value={formSp.ma_san_pham}
-                                                        onChange={(e) => setFormSp({ ...formSp, ma_san_pham: e.target.value })}
-                                                        className="w-full px-3.5 py-2.5 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-slate-800 text-blue-950 dark:text-blue-200 font-mono font-black text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                                    />
-                                                </div>
+                                            <div className="p-4 sm:p-5 space-y-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                                    {/* Mã SKU */}
+                                                    <div className="space-y-1.5">
+                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                            <Barcode className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                            <span>Mã SKU / Định Danh *</span>
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={formSp.ma_san_pham}
+                                                            onChange={(e) => setFormSp({ ...formSp, ma_san_pham: e.target.value })}
+                                                            placeholder="VD: G834JYR-R9054W..."
+                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-blue-50/25 dark:bg-slate-800/70 text-slate-900 dark:text-white font-mono font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+                                                        />
+                                                    </div>
 
-                                                <div className="space-y-1">
-                                                    <label className="font-bold text-slate-800 dark:text-slate-200">Hãng Sản Xuất *</label>
-                                                    <select
-                                                        value={formSp.hang_san_xuat}
-                                                        onChange={(e) => setFormSp({ ...formSp, hang_san_xuat: e.target.value })}
-                                                        className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold capitalize text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                                    >
-                                                        {danhSachHangThucTe.map(h => (
-                                                            <option key={h.ma} value={h.ma}>{h.ten}</option>
-                                                        ))}
-                                                    </select>
-                                                </div>
+                                                    {/* Hãng Sản Xuất */}
+                                                    <div className="space-y-1.5">
+                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                            <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                            <span>Hãng Sản Xuất *</span>
+                                                        </label>
+                                                        <select
+                                                            value={formSp.hang_san_xuat}
+                                                            onChange={(e) => setFormSp({ ...formSp, hang_san_xuat: e.target.value })}
+                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-blue-50/25 dark:bg-slate-800/70 text-slate-900 dark:text-white font-bold capitalize text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer"
+                                                        >
+                                                            {danhSachHangThucTe.map(h => (
+                                                                <option key={h.ma} value={h.ma}>{h.ten}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
 
-                                                <div className="space-y-1">
-                                                    <label className="font-bold text-slate-800 dark:text-slate-200">Nhóm Ngành Hàng *</label>
-                                                    <select
-                                                        value={loaiFormSanPham}
-                                                        onChange={(e) => setLoaiFormSanPham(e.target.value)}
-                                                        className="w-full px-3.5 py-2.5 rounded-xl border-2 border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200 font-black text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                                                    >
-                                                        <option value="laptop">💻 Laptop Gaming & Văn Phòng</option>
-                                                        <option value="ban_phim">⌨️ Bàn Phím Cơ Custom</option>
-                                                        <option value="chuot">🖱️ Chuột Gaming Siêu Nhẹ</option>
-                                                        <option value="balo">🎒 Balo & Túi Chống Sốc</option>
-                                                        <option value="tai_nghe">🎧 Tai Nghe & Loa Âm Thanh</option>
-                                                        <option value="sac_hub">⚡ Củ Sạc GaN & Hub Đa Năng</option>
-                                                        <option value="linh_kien">💾 Linh Kiện RAM / SSD</option>
-                                                    </select>
-                                                </div>
+                                                    {/* Nhóm Ngành Hàng */}
+                                                    <div className="space-y-1.5">
+                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                            <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                            <span>Nhóm Ngành Hàng *</span>
+                                                        </label>
+                                                        <select
+                                                            value={loaiFormSanPham}
+                                                            onChange={(e) => setLoaiFormSanPham(e.target.value)}
+                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-blue-50/25 dark:bg-slate-800/70 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer"
+                                                        >
+                                                            <option value="laptop">💻 Laptop Gaming & Văn Phòng</option>
+                                                            <option value="ban_phim">⌨️ Bàn Phím Cơ Custom</option>
+                                                            <option value="chuot">🖱️ Chuột Gaming Siêu Nhẹ</option>
+                                                            <option value="balo">🎒 Balo & Túi Chống Sốc</option>
+                                                            <option value="tai_nghe">🎧 Tai Nghe & Loa Âm Thanh</option>
+                                                            <option value="sac_hub">⚡ Củ Sạc GaN & Hub Đa Năng</option>
+                                                            <option value="linh_kien">💾 Linh Kiện RAM / SSD</option>
+                                                        </select>
+                                                    </div>
 
-                                                <div className="sm:col-span-3 space-y-1">
-                                                    <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                                                        <span>Tên Đầy Đủ Của Sản Phẩm *</span>
-                                                        <NhanDaSua fieldName="ten_san_pham" />
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        required
-                                                        value={formSp.ten_san_pham}
-                                                        onChange={(e) => setFormSp({ ...formSp, ten_san_pham: e.target.value })}
-                                                        placeholder="Nhập tên sản phẩm đầy đủ và chi tiết..."
-                                                        className={layClassInput('ten_san_pham')}
-                                                    />
+                                                    {/* Tên Đầy Đủ Của Sản Phẩm */}
+                                                    <div className="sm:col-span-3 space-y-1.5">
+                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between text-xs">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <Laptop className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                                <span>Tên Đầy Đủ Của Sản Phẩm *</span>
+                                                            </span>
+                                                            <NhanDaSua fieldName="ten_san_pham" />
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={formSp.ten_san_pham}
+                                                            onChange={(e) => setFormSp({ ...formSp, ten_san_pham: e.target.value })}
+                                                            placeholder="Nhập tên sản phẩm đầy đủ và chi tiết..."
+                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-blue-50/15 dark:bg-slate-800/70 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* KHỐI 2: THIẾT LẬP GIÁ BÁN & KHO HÀNG (WARM AMBER / ORANGE) */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-400/90 dark:border-amber-600 shadow-md shadow-amber-500/5 space-y-4">
-                                            <div className="flex items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800">
-                                                <div className="font-black text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center gap-2">
-                                                    <span className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
-                                                        <DollarSign className="w-3.5 h-3.5" />
+                                        {/* KHỐI 2: THIẾT LẬP GIÁ BÁN & TỒN KHO THỰC TẾ (Theme: Tài Chính - Emerald & Rose & Slate) */}
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-300 dark:border-emerald-900/60 shadow-xs overflow-hidden">
+                                            {/* Header Khối 2 có dải gradient Emerald */}
+                                            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-emerald-500/10 via-rose-500/5 to-transparent border-b border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between">
+                                                <div className="font-black text-xs uppercase tracking-wider text-emerald-950 dark:text-emerald-200 flex items-center gap-2.5">
+                                                    <span className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+                                                        <DollarSign className="w-4 h-4" />
                                                     </span>
                                                     <span>2. Thiết Lập Giá Bán & Tồn Kho Thực Tế</span>
                                                 </div>
-                                                <span className="text-[11px] font-black text-amber-800 bg-white dark:bg-amber-900 px-2.5 py-0.5 rounded-full border border-amber-300 dark:border-amber-700 shadow-xs">
+                                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-3 py-1 rounded-full border border-emerald-300 dark:border-emerald-800 uppercase tracking-wider">
                                                     Tiền tệ: VNĐ
                                                 </span>
                                             </div>
 
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                                                {/* Giá Niêm Yết Gốc */}
-                                                <div className="space-y-1">
-                                                    <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                                                        <span>Giá Niêm Yết Gốc (VNĐ)</span>
-                                                        <NhanDaSua fieldName="gia_goc" />
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        value={formSp.gia_goc}
-                                                        onChange={(e) => setFormSp({ ...formSp, gia_goc: e.target.value })}
-                                                        className={layClassInput('gia_goc', 'font-black')}
-                                                    />
-                                                    <div className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[11px] mt-1 border border-slate-200 dark:border-slate-700">
-                                                        Hiển thị: {dinhDangTienVND(formSp.gia_goc)}
-                                                    </div>
-                                                </div>
-
-                                                {/* Giá Khuyến Mãi Thực Thu */}
-                                                <div className="space-y-1">
-                                                    <label className="font-bold text-rose-700 dark:text-rose-400 flex items-center justify-between">
-                                                        <span>Giá Khuyến Mãi (VNĐ) *</span>
-                                                        <NhanDaSua fieldName="gia_khuyen_mai" />
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        required
-                                                        value={formSp.gia_khuyen_mai}
-                                                        onChange={(e) => setFormSp({ ...formSp, gia_khuyen_mai: e.target.value })}
-                                                        className={layClassInput('gia_khuyen_mai', 'font-black text-sm text-rose-600 dark:text-rose-400')}
-                                                    />
-                                                    <div className="px-2.5 py-1 rounded-lg bg-rose-100/90 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-black text-[11px] mt-1 flex items-center justify-between border border-rose-200 dark:border-rose-800">
-                                                        <span>Thực thu: {dinhDangTienVND(formSp.gia_khuyen_mai)}</span>
-                                                        {Number(formSp.gia_goc) > Number(formSp.gia_khuyen_mai) && (
-                                                            <span className="text-emerald-700 dark:text-emerald-400 font-black">
-                                                                - {Math.round(((Number(formSp.gia_goc) - Number(formSp.gia_khuyen_mai)) / Number(formSp.gia_goc)) * 100)}%
+                                            <div className="p-4 sm:p-5">
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                                    {/* CỘT 1: GIÁ NIÊM YẾT GỐC (Theme Slate Cool) */}
+                                                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                                                        <label className="font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between text-xs">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <CircleDollarSign className="w-3.5 h-3.5 text-slate-500" />
+                                                                <span>Giá Niêm Yết Gốc</span>
                                                             </span>
-                                                        )}
+                                                            <NhanDaSua fieldName="gia_goc" />
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            value={formSp.gia_goc}
+                                                            onChange={(e) => setFormSp({ ...formSp, gia_goc: e.target.value })}
+                                                            placeholder="VD: 125000000"
+                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-slate-400 focus:outline-none"
+                                                        />
+                                                        <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold text-[11px] border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-2xs">
+                                                            <span>Hiển thị:</span>
+                                                            <span className="font-black text-slate-900 dark:text-white">{dinhDangTienVND(formSp.gia_goc)}</span>
+                                                        </div>
                                                     </div>
-                                                </div>
 
-                                                {/* Số Lượng Tồn Kho */}
-                                                <div className="space-y-1">
-                                                    <label className="font-bold text-emerald-800 dark:text-emerald-400 flex items-center justify-between">
-                                                        <span>Số Lượng Tồn Kho</span>
-                                                        <NhanDaSua fieldName="so_luong_ton_kho" />
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        value={formSp.so_luong_ton_kho}
-                                                        onChange={(e) => setFormSp({ ...formSp, so_luong_ton_kho: e.target.value })}
-                                                        className={layClassInput('so_luong_ton_kho', 'font-black text-sm text-emerald-700 dark:text-emerald-300')}
-                                                    />
-                                                    <div className="px-2.5 py-1 rounded-lg bg-emerald-100/90 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] mt-1 border border-emerald-200 dark:border-emerald-800">
-                                                        {Number(formSp.so_luong_ton_kho) > 5 ? '✅ Sẵn sàng giao ngay' : Number(formSp.so_luong_ton_kho) > 0 ? '⚠️ Sắp hết hàng' : '❌ Hết hàng'}
+                                                    {/* CỘT 2: GIÁ KHUYẾN MÃI THỰC THU (Theme Rose Sôi Động) */}
+                                                    <div className="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-800 space-y-2.5">
+                                                        <label className="font-bold text-rose-800 dark:text-rose-300 flex items-center justify-between text-xs">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <Flame className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                                                                <span>Giá Khuyến Mãi (Thực Thu) *</span>
+                                                            </span>
+                                                            <NhanDaSua fieldName="gia_khuyen_mai" />
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            required
+                                                            value={formSp.gia_khuyen_mai}
+                                                            onChange={(e) => setFormSp({ ...formSp, gia_khuyen_mai: e.target.value })}
+                                                            placeholder="VD: 109990000"
+                                                            className="w-full px-3.5 py-2.5 rounded-xl border-2 border-rose-400 dark:border-rose-700 bg-white dark:bg-slate-900 font-black text-rose-600 dark:text-rose-400 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                                                        />
+                                                        <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-200 dark:border-rose-800 flex items-center justify-between shadow-2xs">
+                                                            <span className="flex items-center gap-1">
+                                                                <span>Thực thu:</span>
+                                                                <b className="text-rose-600 dark:text-rose-400 font-black">{dinhDangTienVND(formSp.gia_khuyen_mai)}</b>
+                                                            </span>
+                                                            {Number(formSp.gia_goc) > Number(formSp.gia_khuyen_mai) && (
+                                                                <span className="px-2 py-0.5 rounded-md bg-rose-600 text-white font-black text-[10.5px] shadow-xs">
+                                                                    -{Math.round(((Number(formSp.gia_goc) - Number(formSp.gia_khuyen_mai)) / Number(formSp.gia_goc)) * 100)}%
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* CỘT 3: TỒN KHO THỰC TẾ (Theme Emerald) */}
+                                                    <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800 space-y-2.5">
+                                                        <label className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-between text-xs">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <Boxes className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                                                <span>Số Lượng Tồn Kho</span>
+                                                            </span>
+                                                            <NhanDaSua fieldName="so_luong_ton_kho" />
+                                                        </label>
+                                                        <input
+                                                            type="number"
+                                                            value={formSp.so_luong_ton_kho}
+                                                            onChange={(e) => setFormSp({ ...formSp, so_luong_ton_kho: e.target.value })}
+                                                            placeholder="VD: 7"
+                                                            className="w-full px-3.5 py-2.5 rounded-xl border-2 border-emerald-400 dark:border-emerald-700 bg-white dark:bg-slate-900 font-black text-emerald-700 dark:text-emerald-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                                        />
+                                                        <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] border border-emerald-200 dark:border-emerald-800 flex items-center justify-between shadow-2xs">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <span className={`w-2 h-2 rounded-full ${Number(formSp.so_luong_ton_kho) > 5 ? 'bg-emerald-500' : Number(formSp.so_luong_ton_kho) > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+                                                                <span>{Number(formSp.so_luong_ton_kho) > 5 ? 'Sẵn sàng giao' : Number(formSp.so_luong_ton_kho) > 0 ? 'Sắp hết hàng' : 'Hết hàng'}</span>
+                                                            </span>
+                                                            <span className="font-black text-emerald-700 dark:text-emerald-300">{formSp.so_luong_ton_kho || 0} máy</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* KHỐI 3: CHẾ ĐỘ BẢO HÀNH (EMERALD GREEN) */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400/90 dark:border-emerald-600 shadow-md shadow-emerald-500/5 space-y-3">
-                                            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800">
-                                                <div className="font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
-                                                    <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                        <ShieldCheck className="w-3.5 h-3.5" />
+                                        {/* KHỐI 3: BẢO HÀNH & TRẠNG THÁI HIỂN THỊ (Theme: Indigo & Amber) */}
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-200 dark:border-indigo-900/60 shadow-xs overflow-hidden">
+                                            {/* Header Khối 3 có dải gradient Indigo */}
+                                            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent border-b border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between">
+                                                <div className="font-black text-xs uppercase tracking-wider text-indigo-950 dark:text-indigo-200 flex items-center gap-2.5">
+                                                    <span className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                                                        <ShieldCheck className="w-4 h-4" />
                                                     </span>
-                                                    <span>3. Chế Độ Bảo Hành Chính Hãng</span>
+                                                    <span>3. Bảo Hành & Trạng Thái Kinh Doanh</span>
                                                 </div>
                                                 <NhanDaSua fieldName="che_do_bao_hanh" />
                                             </div>
-                                            <input
-                                                type="text"
-                                                placeholder="24 tháng chính hãng tại TNTP Laptop Store..."
-                                                value={formSp.che_do_bao_hanh}
-                                                onChange={(e) => setFormSp({ ...formSp, che_do_bao_hanh: e.target.value })}
-                                                className={layClassInput('che_do_bao_hanh')}
-                                            />
-                                        </div>
 
-                                        {/* KHỐI 4: TRẠNG THÁI HIỂN THỊ & NHÃN DÁN (ROYAL PURPLE) */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-400/90 dark:border-purple-600 shadow-md shadow-purple-500/5 space-y-3.5">
-                                            <div className="flex items-center gap-2 font-black text-xs uppercase tracking-wider text-purple-900 dark:text-purple-300 p-3 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800">
-                                                <span className="w-6 h-6 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                    <Sparkles className="w-3.5 h-3.5" />
-                                                </span>
-                                                <span>4. Trạng Thái Hiển Thị & Huy Hiệu Nổi Bật Ngoài Web</span>
-                                            </div>
+                                            <div className="p-4 sm:p-5">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                                                    {/* Chính Sách Bảo Hành */}
+                                                    <div className="space-y-1.5">
+                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                            <Shield className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                                                            <span>Chính Sách Bảo Hành Chính Hãng</span>
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Ví dụ: 24 tháng chính hãng tại TNTP Laptop..."
+                                                            value={formSp.che_do_bao_hanh}
+                                                            onChange={(e) => setFormSp({ ...formSp, che_do_bao_hanh: e.target.value })}
+                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-slate-700 bg-indigo-50/20 dark:bg-slate-800/70 text-slate-900 dark:text-white font-medium text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                                                        />
+                                                    </div>
 
-                                            <div className="flex flex-wrap items-center gap-3 pt-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setFormSp({ ...formSp, la_flash_sale: !formSp.la_flash_sale })}
-                                                    className={`px-4 py-2.5 rounded-2xl font-black flex items-center gap-2 border-2 transition-all cursor-pointer ${
-                                                        formSp.la_flash_sale
-                                                            ? 'bg-gradient-to-r from-orange-500 to-rose-600 text-white border-orange-600 shadow-md shadow-orange-500/30 scale-[1.02]'
-                                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-orange-400'
-                                                    }`}
-                                                >
-                                                    <Flame className="w-4 h-4" />
-                                                    <span>Flash Sale Deal</span>
-                                                </button>
+                                                    {/* 3 Nút Huy Hiệu Trực Quan Ngoài Website */}
+                                                    <div className="space-y-1.5">
+                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                                                            <span>Huy Hiệu Trực Quan Ngoài Website</span>
+                                                        </label>
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            {/* Flash Sale Toggle */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormSp({ ...formSp, la_flash_sale: !formSp.la_flash_sale })}
+                                                                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+                                                                    formSp.la_flash_sale
+                                                                        ? 'bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-500/30'
+                                                                        : 'bg-rose-50 dark:bg-slate-800 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/50 hover:bg-rose-100'
+                                                                }`}
+                                                            >
+                                                                <Flame className="w-3.5 h-3.5 fill-current text-inherit" />
+                                                                <span>⚡ Flash Sale</span>
+                                                            </button>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setFormSp({ ...formSp, la_ban_chay: !formSp.la_ban_chay })}
-                                                    className={`px-4 py-2.5 rounded-2xl font-black flex items-center gap-2 border-2 transition-all cursor-pointer ${
-                                                        formSp.la_ban_chay
-                                                            ? 'bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 border-amber-500 shadow-md shadow-amber-500/30 scale-[1.02]'
-                                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-amber-400'
-                                                    }`}
-                                                >
-                                                    <Sparkles className="w-4 h-4" />
-                                                    <span>Bán Chạy Nhất</span>
-                                                </button>
+                                                            {/* Bán Chạy Toggle */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormSp({ ...formSp, la_ban_chay: !formSp.la_ban_chay })}
+                                                                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+                                                                    formSp.la_ban_chay
+                                                                        ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/30'
+                                                                        : 'bg-amber-50 dark:bg-slate-800 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/50 hover:bg-amber-100'
+                                                                }`}
+                                                            >
+                                                                <Sparkles className="w-3.5 h-3.5 fill-current text-inherit" />
+                                                                <span>🔥 Bán Chạy</span>
+                                                            </button>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setFormSp({ ...formSp, con_hang: !formSp.con_hang })}
-                                                    className={`px-4 py-2.5 rounded-2xl font-black flex items-center gap-2 border-2 transition-all cursor-pointer ${
-                                                        formSp.con_hang
-                                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-emerald-600 shadow-md shadow-emerald-500/30 scale-[1.02]'
-                                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:border-emerald-400'
-                                                    }`}
-                                                >
-                                                    <CheckCircle2 className="w-4 h-4" />
-                                                    <span>Đang Mở Bán</span>
-                                                </button>
+                                                            {/* Đang Mở Bán Toggle */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormSp({ ...formSp, con_hang: !formSp.con_hang })}
+                                                                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+                                                                    formSp.con_hang
+                                                                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-md shadow-emerald-500/30'
+                                                                        : 'bg-emerald-50 dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100'
+                                                                }`}
+                                                            >
+                                                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                                                <span>✅ Đang Mở Bán</span>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -8873,43 +9762,34 @@ export default function TrangQuanTriCuaHang() {
                                 )}
                             </div>
 
-                            {/* Footer Cố Định - Độ Tương Phản Cao & Nút Hành Động Rõ Ràng */}
-                            <div className="shrink-0 p-4 px-6 bg-slate-50 dark:bg-slate-900 border-t-2 border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shadow-lg">
-                                <div className="text-xs text-slate-600 dark:text-slate-400 hidden sm:flex items-center gap-2 font-bold">
+                            {/* Footer Cố Định - Thiết Kế Hiện Đại, Nút Bấm Rõ Ràng */}
+                            <div className="shrink-0 p-3.5 sm:p-4 px-6 bg-white dark:bg-slate-900 border-t border-slate-200/90 dark:border-slate-800 flex items-center justify-between gap-3 shadow-md z-10">
+                                <div className="text-xs text-slate-600 dark:text-slate-400 hidden sm:flex items-center gap-2 font-medium">
                                     {spDangSua && demSoMucDaSua() > 0 ? (
-                                        <span className="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 flex items-center gap-2 shadow-xs">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                            <span>Đang sửa <b>{demSoMucDaSua()}</b> mục (tô màu cam vàng hổ phách)</span>
+                                        <span className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                            <span>Đang sửa <b>{demSoMucDaSua()}</b> mục thông tin</span>
                                         </span>
                                     ) : (
-                                        <>
-                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                            <span>Bấm "Lưu Sản Phẩm" để lưu lại các thay đổi</span>
-                                        </>
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                            <span>Nhấn "Lưu Sản Phẩm" để cập nhật vào kho hàng</span>
+                                        </div>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2.5 ml-auto">
                                     <button
                                         type="button"
-                                        onClick={() => setDangXemTruocCard(true)}
-                                        className="px-4 py-2.5 rounded-xl border-2 border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 font-extrabold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
-                                        title="Xem trước sản phẩm hiển thị trên trang bán lẻ"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                        <span>Xem Trước Sản Phẩm</span>
-                                    </button>
-                                    <button
-                                        type="button"
                                         disabled={dangLuuSp}
                                         onClick={dongModalSpAnToan}
-                                        className={`px-6 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-extrabold text-xs transition-all shadow-xs ${dangLuuSp ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                                        className={`px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition-colors shadow-xs ${dangLuuSp ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                     >
-                                        Đóng
+                                        Hủy Bỏ
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={dangLuuSp}
-                                        className={`px-7 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all ${dangLuuSp ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer scale-[1.01] active:scale-[0.98]'}`}
+                                        className={`px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition-all ${dangLuuSp ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
                                     >
                                         {dangLuuSp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                         <span>{dangLuuSp ? 'Đang lưu vào kho...' : 'Lưu Sản Phẩm'}</span>
@@ -9633,8 +10513,8 @@ export default function TrangQuanTriCuaHang() {
                     <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
                         <div className="shrink-0 bg-gradient-to-r from-purple-700 to-pink-700 text-white p-6 flex items-center justify-between">
                             <div>
-                                <h3 className="text-base font-black !text-white">{dmDangSua ? 'Chỉnh Sửa Thương Hiệu / Danh Mục' : 'Thêm Thương Hiệu / Danh Mục Mới'}</h3>
-                                <p className="text-xs text-purple-100 font-medium">Cấu hình thông tin hãng sản xuất hoặc danh mục phân khúc</p>
+                                <h3 className="text-base font-black !text-white">{dmDangSua ? 'Chỉnh Sửa Thương Hiệu' : 'Thêm Thương Hiệu Mới'}</h3>
+                                <p className="text-xs text-purple-100 font-medium">Cấu hình thông tin hãng sản xuất trên hệ thống</p>
                             </div>
                             <button
                                 onClick={() => !dangLuuDanhMuc && setDangMoModalDanhMuc(false)}
@@ -9646,36 +10526,12 @@ export default function TrangQuanTriCuaHang() {
 
                         <form onSubmit={xuLyLuuDanhMuc} className="flex flex-col flex-1 min-h-0">
                             <div className="flex-1 overflow-y-auto p-6 space-y-3.5 text-xs">
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Phân Loại *</label>
-                                        <select
-                                            value={formDm.loai || 'thuong_hieu'}
-                                            onChange={(e) => setFormDm({ ...formDm, loai: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                        >
-                                            <option value="thuong_hieu">🏷️ Hãng / Thương Hiệu (ASUS, Dell...)</option>
-                                            <option value="nhu_cau">🎯 Nhu Cầu / Phân Khúc (Gaming, Văn Phòng...)</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Biểu Tượng (Icon / Emoji)</label>
-                                        <input
-                                            type="text"
-                                            placeholder="💻 / 🎮 / 💼 / 🎓 / ⚡"
-                                            value={formDm.logo || '💻'}
-                                            onChange={(e) => setFormDm({ ...formDm, logo: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-center text-sm"
-                                        />
-                                    </div>
-                                </div>
-
                                 <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Tên Thương Hiệu / Danh Mục *</label>
+                                    <label className="font-bold text-slate-700 dark:text-slate-300">Tên Thương Hiệu *</label>
                                     <input
                                         type="text"
                                         required
-                                        placeholder="Razer / Laptop Gaming Cao Cấp..."
+                                        placeholder="Ví dụ: ASUS, Dell, Lenovo, Apple, MSI..."
                                         value={formDm.ten_danh_muc}
                                         onChange={(e) => setFormDm({ ...formDm, ten_danh_muc: e.target.value })}
                                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
@@ -9684,26 +10540,37 @@ export default function TrangQuanTriCuaHang() {
 
                                 <div className="grid grid-cols-2 gap-3.5">
                                     <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Mã Slug *</label>
+                                        <label className="font-bold text-slate-700 dark:text-slate-300">Mã Slug / Code *</label>
                                         <input
                                             type="text"
                                             required
-                                            placeholder="razer"
+                                            placeholder="asus"
                                             value={formDm.ma_danh_muc}
                                             onChange={(e) => setFormDm({ ...formDm, ma_danh_muc: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
                                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs"
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Xuất Xứ / Ghi Chú</label>
+                                        <label className="font-bold text-slate-700 dark:text-slate-300">Biểu Tượng (Icon / Emoji)</label>
                                         <input
                                             type="text"
-                                            placeholder="Mỹ, Đài Loan, Chính Hãng..."
-                                            value={formDm.xuat_xu}
-                                            onChange={(e) => setFormDm({ ...formDm, xuat_xu: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
+                                            placeholder="💻 / 🎮 / ⚡"
+                                            value={formDm.logo || '💻'}
+                                            onChange={(e) => setFormDm({ ...formDm, logo: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-center text-sm"
                                         />
                                     </div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="font-bold text-slate-700 dark:text-slate-300">Xuất Xứ / Ghi Chú</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Mỹ, Đài Loan, Chính Hãng..."
+                                        value={formDm.xuat_xu}
+                                        onChange={(e) => setFormDm({ ...formDm, xuat_xu: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
+                                    />
                                 </div>
 
                                 <div className="space-y-1">
@@ -9784,25 +10651,14 @@ export default function TrangQuanTriCuaHang() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Số Điện Thoại</label>
-                                        <input
-                                            type="text"
-                                            value={formUser.soDienThoai}
-                                            onChange={(e) => setFormUser({ ...formUser, soDienThoai: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold font-mono"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Điểm Tích Lũy</label>
-                                        <input
-                                            type="number"
-                                            value={formUser.diemTichLuy}
-                                            onChange={(e) => setFormUser({ ...formUser, diemTichLuy: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-black"
-                                        />
-                                    </div>
+                                <div className="space-y-1">
+                                    <label className="font-bold text-slate-700 dark:text-slate-300">Số Điện Thoại</label>
+                                    <input
+                                        type="text"
+                                        value={formUser.soDienThoai}
+                                        onChange={(e) => setFormUser({ ...formUser, soDienThoai: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold font-mono"
+                                    />
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3.5">
@@ -9816,7 +10672,10 @@ export default function TrangQuanTriCuaHang() {
                                             <option value="Đồng">Đồng</option>
                                             <option value="Bạc">Bạc</option>
                                             <option value="Vàng">Vàng</option>
+                                            <option value="Bạch Kim">Bạch Kim</option>
                                             <option value="Kim Cương">Kim Cương</option>
+                                            <option value="VIP Gold">VIP Gold</option>
+                                            <option value="VIP Platinum">VIP Platinum</option>
                                         </select>
                                     </div>
                                     <div className="space-y-1">
@@ -10051,33 +10910,34 @@ export default function TrangQuanTriCuaHang() {
             {donHangChiTiet && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs">
                     <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95">
-                        {/* 1. Header Đơn Hàng */}
-                        <div className="shrink-0 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 sm:p-6 flex items-center justify-between border-b border-slate-800">
+                        {/* 1. Header Đơn Hàng (Tone Sáng Tinh Tế & Dễ Đọc Chữ) */}
+                        <div className="shrink-0 bg-gradient-to-r from-sky-50 via-slate-50 to-indigo-50/80 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800 p-4 sm:p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-700">
                             <div>
                                 <div className="flex items-center gap-2">
-                                    <span className="px-2.5 py-0.5 rounded-lg bg-blue-500/25 text-cyan-300 font-black text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                                        <Package className="w-3.5 h-3.5 text-cyan-300" />
-                                        Hóa Đơn & Phiếu Chuẩn Bị Xuất Kho
+                                    <span className="px-2.5 py-0.5 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-black text-[11px] uppercase tracking-wider flex items-center gap-1.5 border border-blue-200/80 dark:border-blue-800">
+                                        <Package className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                        Chi Tiết Đơn Hàng & Phiếu Xuất Kho
                                     </span>
                                 </div>
-                                <h3 className="text-xl sm:text-2xl font-mono font-black mt-1 !text-white flex items-center gap-2">
+                                <h3 className="text-xl sm:text-2xl font-mono font-black mt-1 text-slate-900 dark:text-white flex items-center gap-2">
                                     <span>{donHangChiTiet.ma_don_hang}</span>
                                 </h3>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => window.print()}
-                                    className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-colors flex items-center gap-1.5 text-xs font-bold"
-                                    title="In phiếu xuất kho & hóa đơn"
+                                    onClick={() => inHoaDonBanHang(donHangChiTiet, danhSachSanPham)}
+                                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 !text-white cursor-pointer transition-all shadow-xs hover:shadow-md flex items-center gap-1.5 text-xs font-black"
+                                    title="In hóa đơn bán hàng chuẩn xịn"
                                 >
-                                    <Printer className="w-4 h-4" />
-                                    <span className="hidden sm:inline">In Phiếu</span>
+                                    <Printer className="w-4 h-4 !text-white" />
+                                    <span className="hidden sm:inline !text-white">In Phiếu Hóa Đơn</span>
                                 </button>
                                 <button
                                     type="button"
                                     onClick={() => setDonHangChiTiet(null)}
-                                    className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-colors"
+                                    className="p-2 rounded-xl bg-slate-200/70 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"
+                                    title="Đóng modal"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -10086,14 +10946,14 @@ export default function TrangQuanTriCuaHang() {
 
                         {/* 2. Scrollable Body */}
                         <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
-                            {/* Thanh Meta: Ngày đặt & Trạng thái & Thanh toán */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                            {/* Thanh Meta 3 Thẻ: Thời gian - Trạng thái giao - Chỉ dẫn thu tiền COD */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
                                 <div className="space-y-1">
                                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                                         <Calendar className="w-3.5 h-3.5 text-blue-600" />
                                         Thời Gian Đặt Hàng
                                     </span>
-                                    <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white">
+                                    <div className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white font-mono">
                                         {donHangChiTiet.ngay_tao || (donHangChiTiet.createdAt ? new Date(donHangChiTiet.createdAt).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' }) : '23/08/2026')}
                                     </div>
                                 </div>
@@ -10104,7 +10964,7 @@ export default function TrangQuanTriCuaHang() {
                                         Trạng Thái Giao Hàng
                                     </span>
                                     <div>
-                                        <span className={`px-2.5 py-1 rounded-xl text-xs font-black inline-flex items-center gap-1 border ${
+                                        <span className={`px-2.5 py-1 rounded-xl text-xs font-black inline-flex items-center gap-1.5 border ${
                                             donHangChiTiet.trang_thai === 'da_giao'
                                                 ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
                                                 : donHangChiTiet.trang_thai === 'dang_giao'
@@ -10127,15 +10987,36 @@ export default function TrangQuanTriCuaHang() {
                                 <div className="space-y-1">
                                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                                         <CreditCard className="w-3.5 h-3.5 text-purple-600" />
-                                        Hình Thức & Tiến Độ
+                                        Chỉ Dẫn Thu Tiền (Shipper)
                                     </span>
-                                    <div className="flex flex-wrap items-center gap-1.5">
-                                        <span className="px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-black text-[11px]">
-                                            {donHangChiTiet.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? 'VIETQR' : 'COD'}
-                                        </span>
-                                        <span className={`font-black text-xs ${donHangChiTiet.da_thanh_toan ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
-                                            {donHangChiTiet.da_thanh_toan ? '• Đã thanh toán' : '• Thu tiền khi giao'}
-                                        </span>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        {donHangChiTiet.da_thanh_toan ? (
+                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                                                <span>✓ ĐÃ THANH TOÁN (KHÔNG THU TIỀN)</span>
+                                            </div>
+                                        ) : donHangChiTiet.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? (
+                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800">
+                                                <span>⏳ CHỜ CHUYỂN KHOẢN: {dinhDangTienVND(donHangChiTiet.tong_tien_thanh_toan)}</span>
+                                            </div>
+                                        ) : (
+                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-black bg-blue-100 dark:bg-blue-950/60 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-800">
+                                                <span>⚠️ CẦN THU COD: {dinhDangTienVND(donHangChiTiet.tong_tien_thanh_toan)}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Nút Admin chuyển đổi trạng thái thanh toán thủ công */}
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                const donId = donHangChiTiet.id || donHangChiTiet._id || donHangChiTiet.ma_don_hang;
+                                                const newStatus = !donHangChiTiet.da_thanh_toan;
+                                                await xuLyDoiTrangThaiThanhToan(donId, newStatus, donHangChiTiet.hinh_thuc_thanh_toan);
+                                                setDonHangChiTiet(prev => prev ? ({ ...prev, da_thanh_toan: newStatus }) : null);
+                                            }}
+                                            className="px-2.5 py-1 rounded-xl text-[11px] font-black border transition-all cursor-pointer shadow-2xs hover:shadow-xs active:scale-95 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:border-amber-500 hover:text-amber-600"
+                                        >
+                                            {donHangChiTiet.da_thanh_toan ? '↩️ Đổi sang Chưa thanh toán' : '✅ Đánh dấu Đã thanh toán (Thủ công)'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -10158,7 +11039,7 @@ export default function TrangQuanTriCuaHang() {
                                         <div className="flex items-center gap-2">
                                             <Phone className="w-4 h-4 text-emerald-600 shrink-0" />
                                             <span className="text-slate-500 dark:text-slate-400 font-bold">Điện thoại:</span>
-                                            <a href={`tel:${donHangChiTiet.thong_tin_giao_hang?.so_dien_thoai}`} className="font-mono font-black text-blue-600 dark:text-blue-400 hover:underline">
+                                            <a href={`tel:${donHangChiTiet.thong_tin_giao_hang?.so_dien_thoai}`} className="font-mono font-black text-blue-600 dark:text-blue-400 hover:underline text-sm">
                                                 {donHangChiTiet.thong_tin_giao_hang?.so_dien_thoai || 'Chưa cập nhật'}
                                             </a>
                                         </div>
@@ -10176,7 +11057,7 @@ export default function TrangQuanTriCuaHang() {
                                             <MapPin className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                                             <div>
                                                 <span className="text-slate-500 dark:text-slate-400 font-bold block">Địa chỉ giao:</span>
-                                                <span className="font-extrabold text-slate-900 dark:text-white leading-relaxed block">
+                                                <span className="font-extrabold text-slate-900 dark:text-white leading-relaxed block text-xs sm:text-sm">
                                                     {donHangChiTiet.thong_tin_giao_hang?.dia_chi_chi_tiet || 'Nhận trực tiếp tại showroom'}
                                                 </span>
                                                 {donHangChiTiet.thong_tin_giao_hang?.tinh_thanh && (
@@ -10191,10 +11072,10 @@ export default function TrangQuanTriCuaHang() {
 
                                 {/* Ghi chú soạn hàng của khách */}
                                 {donHangChiTiet.thong_tin_giao_hang?.ghi_chu && (
-                                    <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 rounded-xl flex items-start gap-2.5 text-xs">
+                                    <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border-l-4 border-amber-500 dark:border-amber-600 rounded-r-xl flex items-start gap-2.5 text-xs">
                                         <MessageSquare className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                                         <div>
-                                            <span className="font-black text-amber-900 dark:text-amber-200">Ghi chú soạn hàng từ khách: </span>
+                                            <span className="font-black text-amber-900 dark:text-amber-200">Ghi chú từ khách hàng: </span>
                                             <span className="font-bold text-amber-800 dark:text-amber-300">"{donHangChiTiet.thong_tin_giao_hang.ghi_chu}"</span>
                                         </div>
                                     </div>
@@ -10315,6 +11196,17 @@ export default function TrangQuanTriCuaHang() {
                                 <div className="flex justify-between items-center text-sm sm:text-base text-red-600 dark:text-red-400 pt-2.5 border-t border-slate-200 dark:border-slate-700 font-black">
                                     <span>TỔNG THANH TOÁN:</span>
                                     <span className="text-lg sm:text-xl font-mono">{dinhDangTienVND(donHangChiTiet.tong_tien_thanh_toan)}</span>
+                                </div>
+
+                                <div className={`flex justify-between items-center p-2.5 rounded-xl font-black text-xs sm:text-sm mt-2 border ${
+                                    donHangChiTiet.da_thanh_toan
+                                        ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                                        : 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800'
+                                }`}>
+                                    <span>{donHangChiTiet.da_thanh_toan ? '✓ Trạng thái thanh toán:' : '⚠️ Tiền mặt bưu tá cần thu (COD):'}</span>
+                                    <span className="font-mono text-sm sm:text-base">
+                                        {donHangChiTiet.da_thanh_toan ? '0 đ (Đã thanh toán 100%)' : dinhDangTienVND(donHangChiTiet.tong_tien_thanh_toan)}
+                                    </span>
                                 </div>
                             </div>
 
@@ -10486,11 +11378,11 @@ export default function TrangQuanTriCuaHang() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => window.print()}
-                                className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition-all cursor-pointer"
+                                onClick={() => inHoaDonBanHang(donHangChiTiet, danhSachSanPham)}
+                                className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 transition-all cursor-pointer hover:scale-102"
                             >
                                 <Printer className="w-4 h-4 !text-white" />
-                                <span className="!text-white">In Phiếu Đóng Hàng & Hóa Đơn</span>
+                                <span className="!text-white">In Hóa Đơn & Phiếu Xuất Kho</span>
                             </button>
                         </div>
                     </div>

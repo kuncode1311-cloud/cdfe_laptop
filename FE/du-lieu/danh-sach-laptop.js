@@ -113,8 +113,8 @@ const DANH_SACH_LAPTOP_GOC = [
         "so_luong_con": 3
       },
       {
-        "ten_chi_nhanh": "LaptopNew Chi nhánh 2 - Bình Thạnh, TP.HCM",
-        "dia_chi": "399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM",
+        "ten_chi_nhanh": "TNTP Chi nhánh 2 - Tân Phú - ITC, TP.HCM",
+        "dia_chi": "12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM",
         "so_dien_thoai": "0922.37.79.79",
         "con_hang": true,
         "so_luong_con": 2
@@ -242,8 +242,8 @@ const DANH_SACH_LAPTOP_GOC = [
         "so_luong_con": 5
       },
       {
-        "ten_chi_nhanh": "LaptopNew Chi nhánh 2 - Bình Thạnh, TP.HCM",
-        "dia_chi": "399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM",
+        "ten_chi_nhanh": "TNTP Chi nhánh 2 - Tân Phú - ITC, TP.HCM",
+        "dia_chi": "12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM",
         "so_dien_thoai": "0922.37.79.79",
         "con_hang": true,
         "so_luong_con": 4
@@ -633,8 +633,8 @@ const DANH_SACH_LAPTOP_GOC = [
         "so_luong_con": 2
       },
       {
-        "ten_chi_nhanh": "LaptopNew Chi nhánh 2 - Bình Thạnh, TP.HCM",
-        "dia_chi": "399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM",
+        "ten_chi_nhanh": "TNTP Chi nhánh 2 - Tân Phú - ITC, TP.HCM",
+        "dia_chi": "12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM",
         "so_dien_thoai": "0922.37.79.79",
         "con_hang": true,
         "so_luong_con": 3
@@ -768,8 +768,8 @@ const DANH_SACH_LAPTOP_GOC = [
         "so_luong_con": 10
       },
       {
-        "ten_chi_nhanh": "LaptopNew Chi nhánh 2 - Bình Thạnh, TP.HCM",
-        "dia_chi": "399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM",
+        "ten_chi_nhanh": "TNTP Chi nhánh 2 - Tân Phú - ITC, TP.HCM",
+        "dia_chi": "12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM",
         "so_dien_thoai": "0922.37.79.79",
         "con_hang": true,
         "so_luong_con": 8

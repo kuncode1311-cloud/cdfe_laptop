@@ -38,26 +38,26 @@ const SHOWROOMS = [
     banDoUrl: 'https://maps.google.com/?q=29+Tan+Phuoc+Phuong+8+Quan+10+TPHCM'
   },
   {
-    id: 'hcm-binh-thanh',
-    tenNgan: 'Bình Thạnh, TP.HCM',
-    tag: 'Creator & Business',
-    subTag: 'Showroom chuyên đồ họa & doanh nhân',
-    tenDayDu: 'Showroom Trải Nghiệm & Studio Bình Thạnh',
+    id: 'hcm-tan-phu',
+    tenNgan: 'Tân Phú - ITC, TP.HCM',
+    tag: 'ITC Campus & Creator Lab',
+    subTag: 'Cơ sở trải nghiệm công nghệ sinh viên ITC',
+    tenDayDu: 'Showroom TNTP LAPTOP Tân Phú - ITC',
     hinhAnh: '/images/about/showroom-binh-thanh.jpg',
-    diaChi: 'Số 399 Bạch Đằng, Phường 14, Quận Bình Thạnh, TP. Hồ Chí Minh',
-    chiTietViTri: 'Trục đường Bạch Đằng huyết mạch kết nối Quận 1 & TP. Thủ Đức',
-    gioMoCua: '08:30 - 21:30',
+    diaChi: 'Số 12 Trịnh Đình Thảo, Phường Hòa Thạnh, Quận Tân Phú, TP. Hồ Chí Minh',
+    chiTietViTri: 'Khuôn viên Trường Cao Đẳng Công Nghệ Thông Tin TP.HCM (ITC)',
+    gioMoCua: '08:00 - 21:30',
     ghiChuGio: 'Mở cửa tất cả các ngày trong tuần',
     hotline: '1900.8946 (Phím 2)',
     hotlineDiDong: '0922.37.79.79',
     telUrl: '19008946',
     dacDiem: [
-      { tieuDe: 'Studio Creator & Coder', moTa: 'Trưng bày chuyên sâu dòng mỏng nhẹ, AI' },
-      { tieuDe: 'Chuẩn màu OLED', moTa: 'Màn hình 100% DCI-P3 chuẩn điện ảnh' },
-      { tieuDe: 'Trả góp 0% duyệt 5p', moTa: 'Liên kết 28 ngân hàng lớn thủ tục siêu tốc' },
-      { tieuDe: 'Giao hỏa tốc 2H', moTa: 'Nội thành TP.HCM nhận máy nguyên seal ngay' }
+      { tieuDe: 'Ưu đãi đặc quyền sinh viên ITC', moTa: 'Tặng balo chống sốc xịn, giảm thêm 500k khi xuất trình thẻ SV' },
+      { tieuDe: 'Studio Coder & AI Laptop', moTa: 'Trưng bày chuyên sâu dòng máy lập trình, đồ họa chuẩn màu' },
+      { tieuDe: 'Trả góp 0% duyệt 5p', moTa: 'Chỉ cần CCCD, thủ tục nhanh cho sinh viên & phụ huynh' },
+      { tieuDe: 'Vệ sinh & Nâng cấp 0đ', moTa: 'Spa bảo dưỡng máy & thay keo tản nhiệt miễn phí tại trường' }
     ],
-    banDoUrl: 'https://maps.google.com/?q=399+Bach+Dang+Phuong+14+Quan+Binh+Thanh+TPHCM'
+    banDoUrl: 'https://maps.google.com/?q=10.775093,106.634544'
   },
   {
     id: 'hn-cau-giay',

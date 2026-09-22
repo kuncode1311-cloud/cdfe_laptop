@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Home, ChevronRight, Calendar, ArrowRight, Eye, Clock, Search, Flame, X, ChevronDown } from 'lucide-react';
 import { TinTucService } from '@/services/tin-tuc.service';
 import { slugTinTuc } from '@/utils/taoSlug';
+import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
 
 const CHUYEN_MUC = [
   { ten: 'Tất Cả', loc: '' },
@@ -83,6 +84,18 @@ export default function TrangTinTuc() {
   const [tuKhoa, setTuKhoa] = useState('');
   const [moFaq, setMoFaq] = useState(null);
   const [hienThem, setHienThem] = useState(6);
+  const [dangLoc, setDangLoc] = useState(false);
+  const daMountLocRef = React.useRef(false);
+
+  useEffect(() => {
+    if (!daMountLocRef.current) {
+      daMountLocRef.current = true;
+      return;
+    }
+    setDangLoc(true);
+    const timer = setTimeout(() => setDangLoc(false), 320);
+    return () => clearTimeout(timer);
+  }, [locChon, tuKhoa]);
 
   useEffect(() => {
     (async () => {
@@ -214,38 +227,46 @@ export default function TrangTinTuc() {
           </div>
         )}
 
-        {/* Không có kết quả */}
-        {!dangTai && coBai.length === 0 && (
-          <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '40px', textAlign: 'center' }}>
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
-            <p style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', marginBottom: '5px' }}>Không tìm thấy bài viết</p>
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '14px' }}>Thử từ khóa khác hoặc đổi chuyên mục</p>
-            <button onClick={() => { setTuKhoa(''); setLocChon(''); }}
-              style={{ padding: '8px 18px', borderRadius: '9px', background: '#1d4ed8', color: 'white', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}>
-              Xem tất cả
-            </button>
-          </div>
-        )}
+        {/* Lưới bài viết & Trạng thái trống */}
+        {!dangTai && (
+          <div className="relative min-h-[360px]">
+            <KhuVucDangTaiTable
+              dangTai={dangLoc}
+              tieuDe="Đang lọc bài viết tin tức..."
+              moTa={`Tìm thấy ${coBai.length} bài viết`}
+            />
+            <div className={`transition-opacity duration-300 ${dangLoc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+              {coBai.length === 0 ? (
+                <div style={{ background: 'white', borderRadius: '14px', border: '1px solid #e2e8f0', padding: '40px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>📭</div>
+                  <p style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', marginBottom: '5px' }}>Không tìm thấy bài viết</p>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '14px' }}>Thử từ khóa khác hoặc đổi chuyên mục</p>
+                  <button onClick={() => { setTuKhoa(''); setLocChon(''); }}
+                    style={{ padding: '8px 18px', borderRadius: '9px', background: '#1d4ed8', color: 'white', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}>
+                    Xem tất cả
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="tt-grid">
+                    {coBai.slice(0, hienThem).map((tin) => <CardBaiViet key={tin.id || tin._id} tin={tin} />)}
+                  </div>
 
-        {/* Lưới bài viết */}
-        {!dangTai && coBai.length > 0 && (
-          <>
-            <div className="tt-grid">
-              {coBai.slice(0, hienThem).map((tin) => <CardBaiViet key={tin.id || tin._id} tin={tin} />)}
+                  {/* Load more */}
+                  {hienThem < coBai.length && (
+                    <div style={{ textAlign: 'center', marginTop: '24px' }}>
+                      <button onClick={() => setHienThem(prev => prev + 6)}
+                        style={{ padding: '10px 28px', borderRadius: '12px', background: 'white', border: '1.5px solid #e2e8f0', color: '#1d4ed8', fontSize: '13.5px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', transition: 'all 0.15s' }}
+                        onMouseEnter={e => { e.target.style.background = '#eff6ff'; e.target.style.borderColor = '#93c5fd'; }}
+                        onMouseLeave={e => { e.target.style.background = 'white'; e.target.style.borderColor = '#e2e8f0'; }}>
+                        Xem thêm {Math.min(6, coBai.length - hienThem)} bài →
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-
-            {/* Load more */}
-            {hienThem < coBai.length && (
-              <div style={{ textAlign: 'center', marginTop: '24px' }}>
-                <button onClick={() => setHienThem(prev => prev + 6)}
-                  style={{ padding: '10px 28px', borderRadius: '12px', background: 'white', border: '1.5px solid #e2e8f0', color: '#1d4ed8', fontSize: '13.5px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', transition: 'all 0.15s' }}
-                  onMouseEnter={e => { e.target.style.background = '#eff6ff'; e.target.style.borderColor = '#93c5fd'; }}
-                  onMouseLeave={e => { e.target.style.background = 'white'; e.target.style.borderColor = '#e2e8f0'; }}>
-                  Xem thêm {Math.min(6, coBai.length - hienThem)} bài →
-                </button>
-              </div>
-            )}
-          </>
+          </div>
         )}
 
         {/* FAQ */}

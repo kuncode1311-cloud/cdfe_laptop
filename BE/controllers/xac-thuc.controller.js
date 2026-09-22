@@ -90,7 +90,6 @@ const dangKy = async (req, res) => {
             avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
             vaiTro: 'khach_hang',
             hangThanhVien: 'Thành Viên Mới',
-            diemTichLuy: 100,
             daKichHoat: false,
             maOtp: maOtp,
             hanOtp: hanOtp,
@@ -199,8 +198,7 @@ const dangNhap = async (req, res) => {
                 matKhau: matKhauHash,
                 avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
                 vaiTro: 'admin',
-                hangThanhVien: 'Kim Cương',
-                diemTichLuy: 9999
+                hangThanhVien: 'Kim Cương'
             });
             await nguoiDung.save();
         }
@@ -316,7 +314,6 @@ const dangNhapGoogle = async (req, res) => {
                 avatar: googleAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
                 vaiTro: 'khach_hang',
                 hangThanhVien: 'Thành Viên VIP',
-                diemTichLuy: 200,
                 viVoucher: [],
                 googleId: googleSub,
                 authProvider: 'google'
@@ -499,6 +496,91 @@ const datLaiMatKhau = async (req, res) => {
     }
 };
 
+// 9. Cập nhật hồ sơ cá nhân (Họ tên, SĐT, avatar, giới tính, ngày sinh, sổ địa chỉ)
+const capNhatHoSo = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user.userId;
+        const duLieu = req.body;
+
+        const user = await NguoiDung.findOne({ id: userId });
+        if (!user) {
+            return res.status(404).json({ thong_diep: 'Không tìm thấy người dùng!' });
+        }
+
+        if (duLieu.hoTen) user.hoTen = duLieu.hoTen.trim();
+        if (duLieu.soDienThoai !== undefined) user.soDienThoai = duLieu.soDienThoai.trim();
+        if (duLieu.avatar) user.avatar = duLieu.avatar.trim();
+        if (duLieu.gioiTinh) user.gioiTinh = duLieu.gioiTinh;
+        if (duLieu.ngaySinh !== undefined) user.ngaySinh = duLieu.ngaySinh;
+        if (Array.isArray(duLieu.danhSachDiaChi)) user.danhSachDiaChi = duLieu.danhSachDiaChi;
+
+        await user.save();
+
+        console.log(`✅ [Cập Nhật Hồ Sơ Thành Công] User: ${user.email}`);
+
+        return res.status(200).json({
+            thong_diep: 'Cập nhật hồ sơ tài khoản thành công!',
+            nguoiDung: user
+        });
+    } catch (loi) {
+        console.error('Lỗi cập nhật hồ sơ:', loi);
+        return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi cập nhật hồ sơ', chi_tiet: loi.message });
+    }
+};
+
+// 10. Đổi mật khẩu trực tiếp cho người dùng đã đăng nhập (với mật khẩu cũ & mật khẩu mới)
+const doiMatKhau = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user.userId || req.user._id;
+        const { matKhauCu, matKhauMoi } = req.body;
+
+        if (!matKhauMoi || matKhauMoi.length < 6) {
+            return res.status(400).json({ thong_diep: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' });
+        }
+
+        const user = await NguoiDung.findOne({
+            $or: [
+                { id: userId },
+                { _id: userId },
+                { email: req.user?.email }
+            ]
+        });
+
+        if (!user) {
+            return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản người dùng!' });
+        }
+
+        const laTaiKhoanGoogle = user.authProvider === 'google' || Boolean(user.googleId);
+
+        // Nếu là tài khoản thường hoặc tài khoản Google đã từng đặt mật khẩu riêng, cần xác thực mật khẩu cũ
+        if (!laTaiKhoanGoogle || (user.coMatKhau && matKhauCu)) {
+            if (!matKhauCu) {
+                return res.status(400).json({ thong_diep: 'Vui lòng nhập mật khẩu hiện tại đang dùng!' });
+            }
+            const hopLe = await bcrypt.compare(matKhauCu, user.matKhau);
+            if (!hopLe) {
+                return res.status(400).json({ thong_diep: 'Mật khẩu hiện tại không chính xác!' });
+            }
+        }
+
+        // Băm mật khẩu mới với bcrypt
+        const salt = await bcrypt.genSalt(10);
+        user.matKhau = await bcrypt.hash(matKhauMoi, salt);
+        user.coMatKhau = true;
+        await user.save();
+
+        console.log(`🔒 [Thiết Lập / Đổi Mật Khẩu Thành Công] User: ${user.email}`);
+
+        return res.status(200).json({
+            thanhCong: true,
+            thong_diep: 'Thiết lập mật khẩu thành công! Giờ đây bạn có thể dùng mật khẩu này để đăng nhập.'
+        });
+    } catch (loi) {
+        console.error('Lỗi đổi mật khẩu:', loi);
+        return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi đổi mật khẩu', chi_tiet: loi.message });
+    }
+};
+
 module.exports = {
     dangKy,
     kichHoatTaiKhoan,
@@ -507,5 +589,7 @@ module.exports = {
     dangNhapGoogle,
     yeuCauQuenMatKhau,
     xacNhanOtp,
-    datLaiMatKhau
+    datLaiMatKhau,
+    capNhatHoSo,
+    doiMatKhau
 };

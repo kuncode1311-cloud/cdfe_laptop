@@ -36,7 +36,7 @@ export default function ChanTrang() {
                 <div className="flex items-start gap-2.5 text-slate-300">
                   <MapPin className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5"/>
                   <div>
-                    <strong className="text-white">Showroom 2:</strong> 399 Bạch Đằng, P.14, Q.Bình Thạnh, TP.HCM
+                    <strong className="text-white">Showroom 2:</strong> 12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM (Trường ITC)
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5 text-slate-300">

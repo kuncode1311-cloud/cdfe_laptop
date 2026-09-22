@@ -26,8 +26,8 @@ export default function KhoHangChiNhanh({ danhSachKho }) {
     const danhSach = Array.isArray(danhSachKho) && danhSachKho.length > 0 ? danhSachKho : SHOWROOM_MAC_DINH;
 
     return (
-        <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-300/80 dark:border-slate-700 text-xs">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
                 <span className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-[11px]">
                     Tình Trạng Hàng Tại Showroom ({danhSach.length} điểm có sẵn):
                 </span>
@@ -41,7 +41,7 @@ export default function KhoHangChiNhanh({ danhSachKho }) {
                 {danhSach.map((kho, idx) => {
                     const sdt = kho.so_dien_thoai || '1900.8946';
                     return (
-                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 gap-2 shadow-2xs">
+                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300/80 dark:border-slate-700 gap-2 shadow-2xs">
                             <div className="space-y-0.5 min-w-0 flex-1">
                                 <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 truncate">
                                     <MapPin className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400 shrink-0" />

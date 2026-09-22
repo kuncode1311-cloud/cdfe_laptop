@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import { 
@@ -98,6 +99,22 @@ const TRUST_PILLARS = [
 
 export default function TrangChinhSach() {
   const [modalPolicyId, setModalPolicyId] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Khóa cuộn trang nền khi mở popup chính sách
+  useEffect(() => {
+    if (modalPolicyId) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [modalPolicyId]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -352,15 +369,15 @@ export default function TrangChinhSach() {
 
 
       {/* =========================================================================
-          4. MODAL DIALOG ĐÈ HOÀN TOÀN HEADER (z-[99999]), ĐỘ TƯƠNG PHẢN CAO, KHÔNG CUỘN
+          4. MODAL DIALOG ĐÈ HOÀN TOÀN HEADER (z-[999999]) QUA REACT PORTAL
           ========================================================================= */}
-      {modalPolicyId && (
+      {mounted && typeof document !== 'undefined' && modalPolicyId && createPortal(
         <div 
-          className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150"
+          className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-5 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150 overflow-y-auto"
           onClick={() => setModalPolicyId(null)}
         >
           <div 
-            className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-[#0052cc] dark:border-cyan-500 p-5 sm:p-6 text-slate-900 dark:text-white space-y-4"
+            className="relative w-full max-w-2xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border-2 border-[#0052cc] dark:border-cyan-500 p-5 sm:p-6 text-slate-900 dark:text-white space-y-4 my-auto overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             
@@ -611,7 +628,8 @@ export default function TrangChinhSach() {
             </div>
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

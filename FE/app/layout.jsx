@@ -1,5 +1,6 @@
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import "./stars-bg.css";
 import { AppProviders } from "@/contexts/AppProviders";
 import BoKhungGiaoDien from "@/components/dieu-huong/BoKhungGiaoDien";
 

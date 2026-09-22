@@ -10,6 +10,7 @@ import BannerDanhMucManh from '@/components/san-pham/BannerDanhMucManh';
 import ThanhBoLocTinhGon from '@/components/san-pham/ThanhBoLocTinhGon';
 import BoLocSanPhamComponent from '@/components/san-pham/BoLocSanPham';
 import TheSanPham from '@/components/san-pham/TheSanPham';
+import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
 
 function NoiDungDanhSachSanPham() {
     const searchParams = useSearchParams();
@@ -31,6 +32,19 @@ function NoiDungDanhSachSanPham() {
         ho_tro_tra_gop_0: false,
         sap_xep: 'moi_nhat'
     });
+
+    const [dangLoc, setDangLoc] = useState(false);
+    const daMountBoLocRef = React.useRef(false);
+
+    useEffect(() => {
+        if (!daMountBoLocRef.current) {
+            daMountBoLocRef.current = true;
+            return;
+        }
+        setDangLoc(true);
+        const timer = setTimeout(() => setDangLoc(false), 320);
+        return () => clearTimeout(timer);
+    }, [boLoc]);
 
     const [cheDoHienThi, setCheDoHienThi] = useState('luoi');
     const [moBoLocToanDien, setMoBoLocToanDien] = useState(false);
@@ -178,34 +192,43 @@ function NoiDungDanhSachSanPham() {
             />
 
             {/* 5. LƯỚI SẢN PHẨM 4 CỘT HIỂN THỊ RỘNG RÃI NGAY TRÊN ĐẦU TRANG */}
-            {danhSachLoc.length > 0 ? (
-                <div className={cheDoHienThi === 'luoi'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4'
-                    : 'space-y-3.5'}>
-                    {danhSachLoc.map((sp) => (
-                        <TheSanPham key={sp.id} sanPham={sp} cheDoHienThi={cheDoHienThi} />
-                    ))}
+            <div className="relative min-h-[400px]">
+                <KhuVucDangTaiTable
+                    dangTai={dangLoc}
+                    tieuDe="Đang áp dụng bộ lọc sản phẩm..."
+                    moTa={`Tìm thấy ${danhSachLoc.length} laptop & phụ kiện phù hợp`}
+                />
+                <div className={`transition-opacity duration-300 ${dangLoc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                    {danhSachLoc.length > 0 ? (
+                        <div className={cheDoHienThi === 'luoi'
+                            ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4'
+                            : 'space-y-3.5'}>
+                            {danhSachLoc.map((sp) => (
+                                <TheSanPham key={sp.id} sanPham={sp} cheDoHienThi={cheDoHienThi} />
+                            ))}
+                        </div>
+                    ) : (
+                        /* Trạng thái không tìm thấy sản phẩm */
+                        <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
+                            <div className="w-16 h-16 rounded-full bg-blue-500/10 text-blue-600 mx-auto flex items-center justify-center">
+                                <Laptop className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                                Không tìm thấy sản phẩm phù hợp với bộ lọc đã chọn
+                            </h3>
+                            <p className="text-xs text-slate-400 max-w-md mx-auto">
+                                Quý khách vui lòng thử bỏ bớt tiêu chí lọc hoặc xóa bộ lọc để xem toàn bộ danh mục.
+                            </p>
+                            <button
+                                onClick={datLaiBoLoc}
+                                className="px-5 py-2.5 rounded-xl bg-[#0052cc] text-white text-xs font-bold cursor-pointer hover:bg-[#003da5] transition-colors shadow-sm"
+                            >
+                                Xóa Bộ Lọc &amp; Xem Tất Cả
+                            </button>
+                        </div>
+                    )}
                 </div>
-            ) : (
-                /* Trạng thái không tìm thấy sản phẩm */
-                <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
-                    <div className="w-16 h-16 rounded-full bg-blue-500/10 text-blue-600 mx-auto flex items-center justify-center">
-                        <Laptop className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-                        Không tìm thấy sản phẩm phù hợp với bộ lọc đã chọn
-                    </h3>
-                    <p className="text-xs text-slate-400 max-w-md mx-auto">
-                        Quý khách vui lòng thử bỏ bớt tiêu chí lọc hoặc xóa bộ lọc để xem toàn bộ danh mục.
-                    </p>
-                    <button
-                        onClick={datLaiBoLoc}
-                        className="px-5 py-2.5 rounded-xl bg-[#0052cc] text-white text-xs font-bold cursor-pointer hover:bg-[#003da5] transition-colors shadow-sm"
-                    >
-                        Xóa Bộ Lọc &amp; Xem Tất Cả
-                    </button>
-                </div>
-            )}
+            </div>
 
             {/* 6. Drawer Bộ Lọc Toàn Diện (Mở trượt khi người dùng bấm nút "BỘ LỌC") */}
             <BoLocSanPhamComponent

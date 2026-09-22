@@ -19,8 +19,7 @@ const db = {
             soDienThoai: "0912345678",
             matKhau: "123456",
             avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80",
-            hangThanhVien: "VIP Gold",
-            diemTichLuy: 850
+            hangThanhVien: "VIP Gold"
         },
         {
             id: "usr-02",
@@ -29,8 +28,7 @@ const db = {
             soDienThoai: "0987654321",
             matKhau: "123456",
             avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
-            hangThanhVien: "VIP Platinum",
-            diemTichLuy: 2100
+            hangThanhVien: "VIP Platinum"
         }
     ],
     don_hang: [

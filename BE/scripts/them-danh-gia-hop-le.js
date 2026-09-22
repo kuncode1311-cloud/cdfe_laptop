@@ -30,7 +30,6 @@ async function boSungDanhGiaVaNguoiDung() {
                 avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
                 vaiTro: 'khach_hang',
                 hangThanhVien: 'Thành Viên Vàng',
-                diemTichLuy: 1200,
                 viVoucher: ['GAMING500'],
                 daKichHoat: true
             },
@@ -43,7 +42,6 @@ async function boSungDanhGiaVaNguoiDung() {
                 avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
                 vaiTro: 'khach_hang',
                 hangThanhVien: 'Thành Viên Bạc',
-                diemTichLuy: 850,
                 viVoucher: ['FREESHIP'],
                 daKichHoat: true
             },
@@ -56,7 +54,6 @@ async function boSungDanhGiaVaNguoiDung() {
                 avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
                 vaiTro: 'khach_hang',
                 hangThanhVien: 'Thành Viên Kim Cương',
-                diemTichLuy: 2400,
                 viVoucher: ['APPLEVIP', 'MACBOOK1000'],
                 daKichHoat: true
             },
@@ -69,7 +66,6 @@ async function boSungDanhGiaVaNguoiDung() {
                 avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
                 vaiTro: 'khach_hang',
                 hangThanhVien: 'Thành Viên VIP',
-                diemTichLuy: 1950,
                 viVoucher: ['DELLVIP'],
                 daKichHoat: true
             }

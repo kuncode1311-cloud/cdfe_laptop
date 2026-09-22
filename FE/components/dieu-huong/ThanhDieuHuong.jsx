@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Search, ShoppingCart, Phone, Menu, ArrowRight, Sun, Moon, User, LogOut, Sparkles, PackageCheck, LayoutDashboard } from "lucide-react";
+import { Search, ShoppingCart, Phone, Menu, ArrowRight, Sun, Moon, User, LogOut, Sparkles, PackageCheck, LayoutDashboard, Ticket } from "lucide-react";
 import { useCart, useGioHang } from "@/contexts/CartContext";
 import { useTheme, useGiaoDien } from "@/contexts/ThemeContext";
 import { useAuth, useNguoiDung } from "@/contexts/AuthContext";
@@ -156,8 +156,12 @@ export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
           {/* Nút Đăng Nhập / Tài Khoản Người Dùng */}
           <div ref={menuUserRef} className="relative">
             {daDangNhap && nguoiDung ? (<button onClick={() => setDangMoMenuUser(!dangMoMenuUser)} className="flex items-center gap-2 h-10 px-3 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white font-bold text-xs transition-all cursor-pointer shadow-xs">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 text-slate-950 font-black text-[10px] flex items-center justify-center">
-                  {nguoiDung.hoTen.charAt(0)}
+                <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-400 to-blue-500 text-slate-950 font-black text-[10px] flex items-center justify-center overflow-hidden shrink-0">
+                  {nguoiDung.avatar ? (
+                    <img src={nguoiDung.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                  ) : (
+                    nguoiDung.hoTen?.charAt(0) || 'T'
+                  )}
                 </div>
                 <span className="hidden md:inline max-w-[100px] truncate">
                   {nguoiDung.hoTen}
@@ -168,19 +172,26 @@ export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
               </button>)}
 
             {/* Dropdown Menu Tài Khoản khi đã đăng nhập */}
-            {daDangNhap && nguoiDung && dangMoMenuUser && (<div className="absolute right-0 top-full mt-2 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 text-slate-900 dark:text-white text-xs font-semibold z-50 animate-in fade-in zoom-in-95">
-                <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-xl mb-1 space-y-0.5">
-                  <div className="font-bold text-sm text-slate-900 dark:text-white truncate">
-                    {nguoiDung.hoTen}
+            {daDangNhap && nguoiDung && dangMoMenuUser && (<div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 text-slate-900 dark:text-white text-xs font-semibold z-50 animate-in fade-in zoom-in-95">
+                <Link
+                  href="/tai-khoan"
+                  onClick={() => setDangMoMenuUser(false)}
+                  className="block p-3 bg-slate-50 hover:bg-blue-50/80 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 rounded-xl mb-1 space-y-0.5 transition-colors group cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors truncate">
+                      {nguoiDung.hoTen}
+                    </div>
+                    <span className="text-[10px] font-bold text-blue-600 group-hover:underline">Hồ sơ &gt;</span>
                   </div>
                   <div className="text-[11px] text-slate-400 truncate">
                     {nguoiDung.email}
                   </div>
                   <div className="pt-1 flex items-center gap-1.5 text-[10px] text-amber-500 font-extrabold">
                     <Sparkles className="w-3 h-3 fill-amber-400"/>
-                    <span>{nguoiDung.hangThanhVien} ({nguoiDung.diemTichLuy} Điểm)</span>
+                    <span>{nguoiDung.hangThanhVien || 'Thành Viên VIP'}</span>
                   </div>
-                </div>
+                </Link>
 
                 {nguoiDung.vaiTro === 'admin' && (
                   <Link href="/admin" onClick={() => setDangMoMenuUser(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 font-bold transition-colors mb-1">
@@ -189,9 +200,14 @@ export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
                   </Link>
                 )}
 
-                <Link href="/don-hang" onClick={() => setDangMoMenuUser(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                <Link href="/tai-khoan?tab=don-hang" onClick={() => setDangMoMenuUser(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                   <PackageCheck className="w-4 h-4 text-[#0052cc] dark:text-cyan-400"/>
-                  <span>Đơn hàng của tôi</span>
+                  <span>Đơn hàng & tiến độ</span>
+                </Link>
+
+                <Link href="/tai-khoan?tab=voucher" onClick={() => setDangMoMenuUser(false)} className="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                  <Ticket className="w-4 h-4 text-purple-600 dark:text-purple-400"/>
+                  <span>Ví voucher ưu đãi</span>
                 </Link>
 
                 <button onClick={() => {

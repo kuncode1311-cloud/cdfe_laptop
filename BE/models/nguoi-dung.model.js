@@ -45,14 +45,32 @@ const NguoiDungSchema = new mongoose.Schema(
             type: String,
             default: 'Thành Viên Mới'
         },
-        diemTichLuy: {
-            type: Number,
-            default: 100
-        },
         viVoucher: {
             type: [String],
             default: []
         },
+        gioiTinh: {
+            type: String,
+            enum: ['nam', 'nu', 'khac'],
+            default: 'nam'
+        },
+        ngaySinh: {
+            type: String,
+            default: ''
+        },
+        danhSachDiaChi: [
+            {
+                id: { type: String, default: () => `dc_${Date.now()}` },
+                hoTen: { type: String, default: '' },
+                soDienThoai: { type: String, default: '' },
+                diaChiChiTiet: { type: String, default: '' },
+                tinhThanh: { type: String, default: '' },
+                quanHuyen: { type: String, default: '' },
+                phuongXa: { type: String, default: '' },
+                macDinh: { type: Boolean, default: false },
+                loaiDiaChi: { type: String, enum: ['nha_rieng', 'van_phong'], default: 'nha_rieng' }
+            }
+        ],
         googleId: {
             type: String,
             default: ''

@@ -17,7 +17,20 @@ export function AppProviders({ children }) {
                         <WishlistProvider>
                             {children}
                             <ModalDangNhapDangKy />
-                            <Toaster position="top-right" richColors closeButton />
+                            <Toaster 
+                                position="bottom-right" 
+                                richColors 
+                                closeButton 
+                                expand={false}
+                                duration={3500}
+                                style={{ zIndex: 9999999 }}
+                                toastOptions={{
+                                    style: {
+                                        fontFamily: 'var(--font-chinh), sans-serif',
+                                    },
+                                    className: 'font-sans text-sm'
+                                }}
+                            />
                         </WishlistProvider>
                     </CompareProvider>
                 </CartProvider>

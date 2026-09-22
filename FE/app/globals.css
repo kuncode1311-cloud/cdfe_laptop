@@ -2,8 +2,8 @@
 
 @layer base {
   :root {
-    /* Nền Titanium Slate / Ice Frost cao cấp, đậm hơn để tách biệt sắc nét và tôn vinh card nội dung màu trắng */
-    --bg-primary: #dfe6f0;
+    /* Nền Slate-100 chuẩn e-commerce công nghệ cao, làm nổi bật tuyệt đối các card màu trắng và đường viền */
+    --bg-primary: #f1f5f9;
     --bg-surface: #ffffff;
     --bg-card: #ffffff;
     --text-main: #0f172a;
@@ -14,7 +14,7 @@
     --accent-red: #dc2626;
     --accent-green: #16a34a;
     --accent-amber: #d97706;
-    --shadow-soft: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    --shadow-soft: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
     --glass-bg: rgba(255, 255, 255, 0.95);
     --glass-border: rgba(203, 213, 225, 0.8);
   }
@@ -53,10 +53,8 @@
   body {
     background-color: var(--bg-primary);
     background-image: 
-      radial-gradient(at 0% 0%, rgba(0, 82, 204, 0.08) 0px, transparent 55%),
-      radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.07) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.06) 0px, transparent 55%),
-      radial-gradient(at 0% 100%, rgba(6, 182, 212, 0.06) 0px, transparent 50%);
+      radial-gradient(at 0% 0%, rgba(0, 82, 204, 0.03) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.03) 0px, transparent 50%);
     background-attachment: fixed;
     color: var(--text-main);
     overflow-x: hidden;
@@ -295,4 +293,118 @@
 .animate-flame-wiggle {
   animation: flameWiggle 0.85s ease-in-out infinite;
 }
+
+@keyframes toastProgress {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-toast-progress {
+  animation: toastProgress 3200ms linear forwards;
+}
+
+/* =======================================================
+   HỆ THỐNG TOAST THÔNG BÁO TOÀN SÀN (SONNER TOASTER)
+   - Đồng bộ góc dưới bên phải (bottom-right)
+   - Thiết kế tinh gọn, mỏng nhẹ, không bị to hay cao
+   - Nền trắng/tối tách biệt hoàn toàn khỏi body, không tệp màu
+   - Viền kép sang trọng với thanh màu nhận diện bên trái
+   - Luôn nổi trên mọi modal với z-index cao nhất
+======================================================= */
+[data-sonner-toaster] {
+  z-index: 9999999 !important;
+  font-family: var(--font-chinh), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  --width: 350px !important;
+}
+
+[data-sonner-toast] {
+  padding: 8px 12px !important;
+  min-height: 42px !important;
+  max-width: 360px !important;
+  border-radius: 12px !important;
+  gap: 10px !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-left-width: 5px !important;
+  box-shadow: 0 12px 30px -4px rgba(15, 23, 42, 0.22), 0 4px 10px rgba(15, 23, 42, 0.08) !important;
+  letter-spacing: -0.01em !important;
+  transition: all 0.2s ease !important;
+}
+
+.dark [data-sonner-toast] {
+  background: #0b1120 !important;
+  color: #f8fafc !important;
+  border: 1px solid #334155 !important;
+  border-left-width: 5px !important;
+  box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.7), 0 0 15px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Viền màu nhận diện từng loại thông báo (Sắc nét, nổi bật) */
+[data-sonner-toast][data-type="success"] {
+  border-left-color: #10b981 !important;
+}
+[data-sonner-toast][data-type="error"] {
+  border-left-color: #ef4444 !important;
+}
+[data-sonner-toast][data-type="warning"] {
+  border-left-color: #f59e0b !important;
+}
+[data-sonner-toast][data-type="info"] {
+  border-left-color: #0284c7 !important;
+}
+
+[data-sonner-toast] [data-icon] {
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  transform: scale(0.92);
+}
+
+[data-sonner-toast] [data-content] {
+  gap: 1px !important;
+}
+
+[data-sonner-toast] [data-title] {
+  font-weight: 700 !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.15rem !important;
+  color: #0f172a !important;
+}
+.dark [data-sonner-toast] [data-title] {
+  color: #f8fafc !important;
+}
+
+[data-sonner-toast] [data-description] {
+  font-weight: 500 !important;
+  font-size: 0.725rem !important;
+  line-height: 0.95rem !important;
+  color: #64748b !important;
+  margin-top: 1px !important;
+}
+.dark [data-sonner-toast] [data-description] {
+  color: #94a3b8 !important;
+}
+
+[data-sonner-toast] [data-close-button] {
+  top: 6px !important;
+  right: 6px !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 6px !important;
+  background: rgba(15, 23, 42, 0.05) !important;
+  color: #64748b !important;
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  transition: all 0.15s ease !important;
+}
+.dark [data-sonner-toast] [data-close-button] {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #cbd5e1 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+
 

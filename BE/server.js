@@ -38,6 +38,9 @@ const nguoiDungRoutes = require('./routes/nguoi-dung.routes');
 const danhMucRoutes = require('./routes/danh-muc.routes');
 const tinTucRoutes = require('./routes/tin-tuc.routes');
 const baoHanhRoutes = require('./routes/bao-hanh.routes');
+const thanhToanRoutes = require('./routes/thanh-toan.routes');
+const lienHeRoutes = require('./routes/lien-he.routes');
+const caiDatRoutes = require('./routes/cai-dat.routes');
 
 // 6. Gắn các Tuyến đường REST API chuẩn (/api/...)
 app.use('/api/auth', xacThucRoutes);
@@ -50,6 +53,11 @@ app.use('/api/nguoi-dung', nguoiDungRoutes);
 app.use('/api/danh-muc', danhMucRoutes);
 app.use('/api/tin-tuc', tinTucRoutes);
 app.use('/api/bao-hanh', baoHanhRoutes);
+app.use('/api/thanh-toan', thanhToanRoutes);
+app.use('/api/lien-he', lienHeRoutes);
+app.use('/lien-he', lienHeRoutes);
+app.use('/api/cai-dat', caiDatRoutes);
+app.use('/cai-dat', caiDatRoutes);
 
 // 7. Gắn các Tuyến đường tương thích ngược (/api/san_pham, /san_pham,...)
 app.use('/auth', xacThucRoutes);

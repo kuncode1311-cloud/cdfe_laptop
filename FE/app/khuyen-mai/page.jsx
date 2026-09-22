@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -18,6 +19,7 @@ import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import { CaiDatService } from '@/services/cai-dat.service';
+import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
 
 export default function TrangKhuyenMai() {
     const { daDangNhap, nguoiDung, moModalDangNhap, capNhatViVoucher } = useNguoiDung();
@@ -29,10 +31,38 @@ export default function TrangKhuyenMai() {
     const [dangTai, setDangTai] = useState(true);
 
     const [tabHienTai, setTabHienTai] = useState('tat_ca');
+    const [dangLocTab, setDangLocTab] = useState(false);
+    const daMountTabRef = React.useRef(false);
+
+    useEffect(() => {
+        if (!daMountTabRef.current) {
+            daMountTabRef.current = true;
+            return;
+        }
+        setDangLocTab(true);
+        const timer = setTimeout(() => setDangLocTab(false), 300);
+        return () => clearTimeout(timer);
+    }, [tabHienTai]);
     const [maDaSaoChep, setMaDaSaoChep] = useState(null);
     const [dangLuuMa, setDangLuuMa] = useState({});
     const [moModalViVoucher, setMoModalViVoucher] = useState(false);
     const [caiDatKm, setCaiDatKm] = useState(CaiDatService.layCaiDatKhuyenMai());
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Khóa cuộn màn hình khi mở modal ví voucher
+    useEffect(() => {
+        if (moModalViVoucher) {
+            const prevOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = prevOverflow;
+            };
+        }
+    }, [moModalViVoucher]);
 
     // Tải dữ liệu Voucher và Sản phẩm Giảm Sâu 100% từ MongoDB Atlas qua Service
     useEffect(() => {
@@ -159,14 +189,15 @@ export default function TrangKhuyenMai() {
         setDangLuuMa((cu) => ({ ...cu, [maCode]: true }));
         try {
             const ketQua = await MaGiamGiaService.luuMaVoucherAsync(maCode);
-            if (ketQua.thanhCong) {
+            const thanhCong = ketQua?.thanhCong || ketQua?.thanh_cong || ketQua?.da_luu;
+            if (thanhCong) {
                 capNhatViVoucher(ketQua.viVoucher || [...viVoucherNguoiDung, maCode]);
                 banPhaoHoa();
-                toast.success(`Săn mã thành công: ${maCode}!`, {
-                    description: 'Mã đã được lưu vào ví tài khoản của bạn.'
+                toast.success(ketQua.thongBao || ketQua.thong_diep || `Săn mã thành công: ${maCode}!`, {
+                    description: 'Mã đã được lưu vào Ví Voucher trong tài khoản của bạn.'
                 });
             } else {
-                toast.error(ketQua.thongBao || 'Không thể lưu mã vào ví lúc này.');
+                toast.error(ketQua?.thongBao || ketQua?.thong_diep || 'Không thể lưu mã vào ví lúc này.');
             }
         } catch (error) {
             toast.error(error.message || 'Lỗi khi lưu mã vào ví.');
@@ -432,8 +463,15 @@ export default function TrangKhuyenMai() {
                     </div>
 
                     {/* Lưới 4 Thẻ Voucher 4 Màu Rực Rỡ Gọn Gàng Chuẩn Reference */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
-                        {danhSachHienThi.map((vc) => {
+                    <div className="relative min-h-[260px]">
+                        <KhuVucDangTaiTable
+                            dangTai={dangLocTab}
+                            tieuDe="Đang lọc danh sách voucher..."
+                            moTa="Hệ thống đang áp dụng phân mục khuyến mãi"
+                        />
+                        <div className={`transition-opacity duration-300 ${dangLocTab ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+                                {danhSachHienThi.map((vc) => {
                             const mau = layMauSacCard(vc.mau_sac);
                             const daLuu = viVoucherNguoiDung.includes(vc.ma_code);
                             const dangLuu = dangLuuMa[vc.ma_code];
@@ -531,6 +569,8 @@ export default function TrangKhuyenMai() {
                                 </div>
                             );
                         })}
+                            </div>
+                        </div>
                     </div>
                 </section>
 
@@ -802,8 +842,8 @@ export default function TrangKhuyenMai() {
                 </section>
 
             {/* 7. Modal Ví Voucher Của Tôi */}
-            {moModalViVoucher && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in">
+            {mounted && typeof document !== 'undefined' && moModalViVoucher && createPortal(
+                <div className="fixed inset-0 z-[999999] flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 animate-in fade-in">
                     <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
                         <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                             <div className="flex items-center gap-2">
@@ -860,7 +900,8 @@ export default function TrangKhuyenMai() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

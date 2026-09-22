@@ -158,20 +158,44 @@ const luuMaVoucherVaoVi = async (req, res) => {
     try {
         const { ma_code } = req.body;
         if (!ma_code) {
-            return res.status(400).json({ thong_diep: 'Vui lòng cung cấp mã voucher cần lưu!' });
+            return res.status(400).json({
+                thanhCong: false,
+                thanh_cong: false,
+                thongBao: 'Vui lòng cung cấp mã voucher cần lưu!',
+                thong_diep: 'Vui lòng cung cấp mã voucher cần lưu!'
+            });
         }
 
         const maChuan = ma_code.trim().toUpperCase();
         const voucher = await MaGiamGia.findOne({ ma_code: maChuan, kich_hoat: true });
         if (!voucher) {
-            return res.status(404).json({ thong_diep: 'Mã giảm giá không tồn tại hoặc đã hết hạn!' });
+            return res.status(404).json({
+                thanhCong: false,
+                thanh_cong: false,
+                thongBao: 'Mã giảm giá không tồn tại hoặc đã hết hạn!',
+                thong_diep: 'Mã giảm giá không tồn tại hoặc đã hết hạn!'
+            });
         }
 
-        const userId = req.user.id || req.user.userId;
+        const userId = req.user.id || req.user.userId || req.user._id;
         const NguoiDung = require('../models/nguoi-dung.model');
-        const user = await NguoiDung.findOne({ id: userId });
+        let user = req.user;
+        if (!user || !user.save) {
+            user = await NguoiDung.findOne({
+                $or: [
+                    { id: userId },
+                    { _id: userId },
+                    { email: req.user?.email }
+                ]
+            });
+        }
         if (!user) {
-            return res.status(404).json({ thong_diep: 'Không tìm thấy thông tin tài khoản người dùng!' });
+            return res.status(404).json({
+                thanhCong: false,
+                thanh_cong: false,
+                thongBao: 'Không tìm thấy thông tin tài khoản người dùng!',
+                thong_diep: 'Không tìm thấy thông tin tài khoản người dùng!'
+            });
         }
 
         if (!Array.isArray(user.viVoucher)) {
@@ -180,8 +204,10 @@ const luuMaVoucherVaoVi = async (req, res) => {
 
         if (user.viVoucher.includes(maChuan)) {
             return res.status(200).json({
+                thanhCong: true,
                 thanh_cong: true,
                 da_luu: true,
+                thongBao: `Mã "${maChuan}" đã có sẵn trong Ví Voucher của bạn!`,
                 thong_diep: `Mã "${maChuan}" đã có sẵn trong Ví Voucher của bạn!`,
                 viVoucher: user.viVoucher
             });
@@ -202,9 +228,13 @@ const luuMaVoucherVaoVi = async (req, res) => {
 
         await user.save();
 
+        console.log(`🎟️ [Ví Voucher] Người dùng ${user.email} đã lưu thành công mã: ${maChuan}`);
+
         return res.status(200).json({
+            thanhCong: true,
             thanh_cong: true,
             da_luu: true,
+            thongBao: `🎉 Săn mã thành công! Đã lưu "${maChuan}" vào Ví Voucher.`,
             thong_diep: `🎉 Săn mã thành công! Đã lưu "${maChuan}" vào Ví Voucher.`,
             ma_code: maChuan,
             viVoucher: user.viVoucher,
@@ -212,30 +242,57 @@ const luuMaVoucherVaoVi = async (req, res) => {
         });
     } catch (loi) {
         console.error('Lỗi lưu mã voucher vào ví:', loi);
-        return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi lưu mã voucher', chi_tiet: loi.message });
+        return res.status(500).json({
+            thanhCong: false,
+            thanh_cong: false,
+            thongBao: 'Lỗi máy chủ khi lưu mã voucher',
+            thong_diep: 'Lỗi máy chủ khi lưu mã voucher',
+            chi_tiet: loi.message
+        });
     }
 };
 
 // 7. Lấy danh sách voucher trong ví của người dùng
 const layViVoucherNguoiDung = async (req, res) => {
     try {
-        const userId = req.user.id || req.user.userId;
+        const userId = req.user.id || req.user.userId || req.user._id;
         const NguoiDung = require('../models/nguoi-dung.model');
-        const user = await NguoiDung.findOne({ id: userId });
+        let user = req.user;
+        if (!user || !user.viVoucher) {
+            user = await NguoiDung.findOne({
+                $or: [
+                    { id: userId },
+                    { _id: userId },
+                    { email: req.user?.email }
+                ]
+            });
+        }
         if (!user) {
-            return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản người dùng' });
+            return res.status(404).json({
+                thanhCong: false,
+                thanh_cong: false,
+                thongBao: 'Không tìm thấy tài khoản người dùng',
+                thong_diep: 'Không tìm thấy tài khoản người dùng'
+            });
         }
 
         const danhSachMa = user.viVoucher || [];
         const vouchers = await MaGiamGia.find({ ma_code: { $in: danhSachMa } });
         return res.status(200).json({
+            thanhCong: true,
             thanh_cong: true,
             danhSachMa,
             vouchers
         });
     } catch (loi) {
         console.error('Lỗi lấy ví voucher:', loi);
-        return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi lấy ví voucher', chi_tiet: loi.message });
+        return res.status(500).json({
+            thanhCong: false,
+            thanh_cong: false,
+            thongBao: 'Lỗi máy chủ khi lấy ví voucher',
+            thong_diep: 'Lỗi máy chủ khi lấy ví voucher',
+            chi_tiet: loi.message
+        });
     }
 };
 

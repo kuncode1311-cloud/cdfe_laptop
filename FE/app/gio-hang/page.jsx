@@ -8,33 +8,40 @@ import NhapMaGiamGia from '@/components/gio-hang/NhapMaGiamGia';
 import TomTatThanhToan from '@/components/gio-hang/TomTatThanhToan';
 export default function TrangGioHang() {
     const { gio_hang } = useGioHang();
-    return (<div className="space-y-8">
-      {/* 1. Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-        <Link href="/" className="hover:text-slate-900 dark:hover:text-white flex items-center gap-1">
-          <Home className="w-3.5 h-3.5"/>
-          <span>Trang Chủ</span>
-        </Link>
-        <ChevronRight className="w-3.5 h-3.5"/>
-        <span className="font-semibold text-slate-900 dark:text-white">Giỏ Hàng Của Bạn</span>
-      </nav>
+    return (
+        <div className="space-y-6 pt-2 sm:pt-4 pb-12 max-w-7xl mx-auto">
+            {/* 1. Breadcrumb */}
+            <nav className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <Link href="/" className="hover:text-slate-900 dark:hover:text-white flex items-center gap-1 transition-colors">
+                    <Home className="w-3.5 h-3.5" />
+                    <span>Trang Chủ</span>
+                </Link>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                <span className="font-bold text-slate-900 dark:text-white">Giỏ Hàng Của Bạn</span>
+            </nav>
 
-      {/* 2. Tiêu đề */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-            GIỎ HÀNG CỦA BẠN
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Đang có <strong className="text-slate-900 dark:text-white font-bold">{gio_hang.tong_so_luong}</strong> sản phẩm trong giỏ
-          </p>
-        </div>
+            {/* 2. Tiêu đề nổi bật trong Card Sạch Sẽ Tách Biệt Với Nền */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-2 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex flex-wrap items-center gap-2.5">
+                        <span>GIỎ HÀNG CỦA BẠN</span>
+                        <span className="text-xs px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950 text-[#0052cc] dark:text-cyan-300 font-extrabold border border-blue-300 dark:border-blue-800 shadow-2xs">
+                            Đang có {gio_hang.tong_so_luong} máy
+                        </span>
+                    </h1>
+                    <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
+                        Kiểm tra laptop nguyên seal, bảo hành chính hãng và các quà tặng đi kèm
+                    </p>
+                </div>
 
-        <Link href="/san-pham" className="text-xs font-bold text-sky-600 dark:text-cyan-400 hover:underline flex items-center gap-1">
-          <ArrowLeft className="w-4 h-4"/>
-          <span>Tiếp tục chọn thêm máy</span>
-        </Link>
-      </div>
+                <Link 
+                    href="/san-pham" 
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 text-[#0052cc] dark:text-cyan-400 font-black text-xs border border-blue-200 dark:border-blue-800 transition-all shadow-2xs self-start sm:self-center shrink-0"
+                >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Tiếp tục chọn thêm máy khác</span>
+                </Link>
+            </div>
 
       {/* 3. Nội dung giỏ hàng */}
       {gio_hang.danh_sach_muc.length > 0 ? (<div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

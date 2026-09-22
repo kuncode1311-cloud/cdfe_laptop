@@ -15,7 +15,10 @@ import {
     ArrowLeft,
     RefreshCw,
     Send,
-    Sparkles
+    Sparkles,
+    HelpCircle,
+    LifeBuoy,
+    Info
 } from 'lucide-react';
 import { useNguoiDung } from '@/contexts/AuthContext';
 
@@ -68,8 +71,9 @@ export default function ModalDangNhapDangKy() {
     const [tieuDeThanhCong, setTieuDeThanhCong] = useState('Đăng nhập thành công!');
     const [moTaThanhCong, setMoTaThanhCong] = useState('Chào mừng bạn đến với TNTP Laptop Store 🎉');
 
-    // State điều khiển hiệu ứng tan biến
+    // State điều khiển hiệu ứng tan biến & chuyển đổi form hòa hợp
     const [dangTanBien, setDangTanBien] = useState(false);
+    const [dangDoiForm, setDangDoiForm] = useState(false);
     const canvasRef = useRef(null);
     const animFrameRef = useRef(null);
     const googleBtnRef = useRef(null);
@@ -90,6 +94,8 @@ export default function ModalDangNhapDangKy() {
     useEffect(() => {
         if (dangMoModalAuth) {
             setThanhCong(false);
+            setDangTanBien(false);
+            setDangDoiForm(false);
             setThongBaoLoi('');
             setThongBaoThanhCong('');
             setBuocDangKy(1);
@@ -105,6 +111,8 @@ export default function ModalDangNhapDangKy() {
 
     const dongModalVaReset = () => {
         setThanhCong(false);
+        setDangTanBien(false);
+        setDangDoiForm(false);
         dongModalAuth();
     };
 
@@ -209,7 +217,7 @@ export default function ModalDangNhapDangKy() {
     if (!dangMoModalAuth) return null;
 
     // =========================================================================
-    // HIỆU ỨNG TAN BIẾN MẢNH VỤN LI TI BAY LÊN & HỢP NHẤT (TELEGRAM STYLE - TỪ TỪ MƯỢT MÀ)
+    // HIỆU ỨNG TAN BIẾN MẢNH VỤN LI TI BAY LÊN & HỢP NHẤT HÒA HỢP (TELEGRAM STYLE - TỪ TỐN & MƯỢT MÀ)
     // =========================================================================
     const chayHieuUngTanBienTelegram = (cheDoMoi, buocMoi = 1) => {
         if (cheDoHienTai === cheDoMoi && buocMoi === 1) return;
@@ -230,6 +238,7 @@ export default function ModalDangNhapDangKy() {
         }
 
         setDangTanBien(true);
+        setDangDoiForm(true); // Bắt đầu làm mờ êm dịu form cũ (0.32s)
 
         const bangMau = [
             '#00f0ff', '#38bdf8', '#60a5fa', '#3b82f6',
@@ -237,21 +246,21 @@ export default function ModalDangNhapDangKy() {
             '#f59e0b', '#fbbf24', '#ffffff', '#ec4899'
         ];
 
-        // GIAI ĐOẠN 1: TẠO 280 MẢNH VỤN LI TI BAY BỒNG BỀNH TỪ TỪ LÊN TRÊN
+        // GIAI ĐOẠN 1: 240 MẢNH VỤN LI TI BÙNG LÊN BAY BỒNG BỀNH TỪ TỪ
         const particles = [];
-        const soLuongHat = 280;
+        const soLuongHat = 240;
         for (let i = 0; i < soLuongHat; i++) {
             particles.push({
                 x: Math.random() * canvas.width,
-                y: Math.random() * (canvas.height * 0.85) + 20,
-                vx: (Math.random() - 0.5) * 2.8,
-                vy: -(Math.random() * 2.5 + 1.2), // Tốc độ trôi êm đềm, từ từ
-                size: Math.random() * 4 + 2, // Kích thước hạt rõ nét hơn
+                y: Math.random() * (canvas.height * 0.8) + 30,
+                vx: (Math.random() - 0.5) * 2.4,
+                vy: -(Math.random() * 2.0 + 1.0), // Tốc độ trôi êm đềm, không bị quá vội
+                size: Math.random() * 3.8 + 1.8,
                 color: bangMau[Math.floor(Math.random() * bangMau.length)],
                 alpha: Math.random() * 0.3 + 0.7,
-                decay: Math.random() * 0.009 + 0.007, // Tồn tại 750ms - 950ms
+                decay: Math.random() * 0.010 + 0.008,
                 rotation: Math.random() * Math.PI * 2,
-                vRot: (Math.random() - 0.5) * 0.12,
+                vRot: (Math.random() - 0.5) * 0.1,
                 waveFreq: Math.random() * 0.006 + 0.004,
                 phase: Math.random() * Math.PI * 2
             });
@@ -263,8 +272,8 @@ export default function ModalDangNhapDangKy() {
         const loop = (currentTime) => {
             const elapsed = currentTime - startTime;
 
-            // Sau 300ms (từ từ, mượt mà): Chuyển sang form mới và kích hoạt hạt hội tụ
-            if (elapsed > 300 && !daDoiForm) {
+            // ĐIỂM GIAO THOA (280ms): Đủ thời gian cho mắt cảm nhận hạt tan biến, form mới trồi lên hòa quyện
+            if (elapsed > 280 && !daDoiForm) {
                 daDoiForm = true;
                 setCheDoHienTai(cheDoMoi);
                 if (chuyenDoiCheDoAuth) chuyenDoiCheDoAuth(cheDoMoi);
@@ -272,20 +281,21 @@ export default function ModalDangNhapDangKy() {
                 if (cheDoMoi === 'quen_mat_khau') setBuocQuenPass(buocMoi);
                 setThongBaoLoi('');
                 setThongBaoThanhCong('');
+                setDangDoiForm(false); // Form mới bắt đầu trồi lên sáng rõ êm đềm (0.32s)
 
-                // 120 hạt bụi ánh sáng kết tinh từ trên cao trôi xuống hợp nhất vào form mới
-                for (let j = 0; j < 120; j++) {
+                // 100 hạt bụi ánh sáng kết tinh từ trên cao rơi xuống giao thoa với form mới
+                for (let j = 0; j < 100; j++) {
                     particles.push({
                         x: Math.random() * canvas.width,
-                        y: Math.random() * 50 - 20,
-                        vx: (Math.random() - 0.5) * 2.2,
-                        vy: Math.random() * 2.2 + 1.2, // Rơi êm đềm từ trên xuống
-                        size: Math.random() * 3.5 + 1.8,
+                        y: Math.random() * 50,
+                        vx: (Math.random() - 0.5) * 2.0,
+                        vy: Math.random() * 1.8 + 0.8, // Rơi nhẹ như tuyết
+                        size: Math.random() * 3.2 + 1.6,
                         color: bangMau[Math.floor(Math.random() * bangMau.length)],
                         alpha: 0.9,
                         decay: Math.random() * 0.012 + 0.009,
                         rotation: Math.random() * Math.PI * 2,
-                        vRot: (Math.random() - 0.5) * 0.1,
+                        vRot: (Math.random() - 0.5) * 0.08,
                         waveFreq: 0.005,
                         phase: Math.random() * Math.PI * 2
                     });
@@ -300,27 +310,24 @@ export default function ModalDangNhapDangKy() {
                 if (p.alpha <= 0) continue;
                 activeCount++;
 
-                // Chuyển động lượn sóng uốn lượn như bụi sao vũ trụ
-                p.x += p.vx + Math.sin(elapsed * p.waveFreq + p.phase) * 0.6;
+                p.x += p.vx + Math.sin(elapsed * p.waveFreq + p.phase) * 0.7;
                 p.y += p.vy;
                 p.rotation += p.vRot;
                 p.alpha -= p.decay;
-                p.size = Math.max(0.8, p.size - 0.012);
+                p.size = Math.max(0.6, p.size - 0.01);
 
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, p.alpha);
                 ctx.translate(p.x, p.y);
                 ctx.rotate(p.rotation);
                 ctx.fillStyle = p.color;
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 9;
                 ctx.shadowColor = p.color;
-
-                // Mảnh vụn pixel/shards phát sáng phong cách Telegram
-                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.35);
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 1.3);
                 ctx.restore();
             }
 
-            if (activeCount > 0 && elapsed < 1100) {
+            if (activeCount > 0 && elapsed < 880) {
                 animFrameRef.current = requestAnimationFrame(loop);
             } else {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -486,8 +493,20 @@ export default function ModalDangNhapDangKy() {
     // MÀN HÌNH THÀNH CÔNG
     if (thanhCong) {
         return (
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
-                <div className="bg-white dark:bg-slate-900 rounded-[30px] p-8 text-center max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-800">
+            <div
+                className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-in fade-in duration-200"
+                onClick={(e) => e.target === e.currentTarget && dongModalVaReset()}
+            >
+                <div className="relative bg-white dark:bg-slate-900 rounded-[30px] p-8 text-center max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200 overflow-hidden">
+                    {/* Nút đóng X */}
+                    <button
+                        onClick={dongModalVaReset}
+                        aria-label="Đóng"
+                        className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 flex items-center justify-center transition-all cursor-pointer"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+
                     <div className="w-18 h-18 bg-emerald-50 dark:bg-emerald-950/50 border-4 border-emerald-100 dark:border-emerald-800 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600 dark:text-emerald-400 shadow-md">
                         <CheckCircle2 className="w-10 h-10" />
                     </div>
@@ -503,6 +522,11 @@ export default function ModalDangNhapDangKy() {
                     >
                         Tiếp tục mua sắm →
                     </button>
+
+                    {/* Thanh tiến trình đếm ngược 1.8s */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800">
+                        <div className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 animate-[pulse_1.8s_ease-in-out]" />
+                    </div>
                 </div>
             </div>
         );
@@ -514,7 +538,7 @@ export default function ModalDangNhapDangKy() {
             onClick={(e) => e.target === e.currentTarget && dongModalVaReset()}
         >
             {/* THẺ MODAL ĐẲNG CẤP - CHỮ SẮC NÉT KHÔNG BỊ BLUR/MẤT NÉT */}
-            <div className="relative w-full max-w-[450px] my-auto bg-white dark:bg-slate-900 rounded-[28px] shadow-[0_20px_60px_-10px_rgba(37,99,235,0.3)] border border-blue-200/80 dark:border-blue-900/60 overflow-hidden">
+            <div className="relative w-full max-w-[450px] my-auto bg-white dark:bg-slate-900 rounded-[28px] shadow-[0_20px_60px_-10px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.6)] border-2 border-slate-300/80 dark:border-slate-700 overflow-hidden">
                 {/* Viền neon rực rỡ trên đỉnh */}
                 <div className="h-1.5 w-full bg-gradient-to-r from-cyan-400 via-blue-600 to-purple-600" />
 
@@ -525,12 +549,12 @@ export default function ModalDangNhapDangKy() {
                 />
 
                 {/* HEADER SANG TRỌNG */}
-                <div className="relative p-6 pb-4 bg-gradient-to-b from-blue-50/80 via-slate-50/40 to-transparent dark:from-slate-800/60 dark:via-slate-800/20 dark:to-transparent border-b border-slate-100 dark:border-slate-800">
+                <div className="relative p-6 pb-4 bg-gradient-to-b from-blue-50/80 via-slate-50/40 to-transparent dark:from-slate-800/60 dark:via-slate-800/20 dark:to-transparent border-b-2 border-slate-200 dark:border-slate-800">
                     {/* Nút đóng */}
                     <button
                         onClick={dongModalVaReset}
                         aria-label="Đóng"
-                        className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 shadow-2xs cursor-pointer"
+                        className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 border-2 border-slate-300 dark:border-slate-700 flex items-center justify-center transition-all duration-200 hover:rotate-90 shadow-2xs cursor-pointer"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -560,11 +584,11 @@ export default function ModalDangNhapDangKy() {
 
                     {/* TAB CHUYỂN ĐỔI CAO CẤP */}
                     {(cheDoHienTai === 'dang_nhap' || (cheDoHienTai === 'dang_ky' && buocDangKy === 1)) && (
-                        <div className="mt-4 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 flex items-center gap-1.5 shadow-inner">
+                        <div className="mt-4 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/90 border-2 border-slate-300 dark:border-slate-700 flex items-center gap-1.5 shadow-inner">
                             <button
                                 type="button"
                                 onClick={() => chayHieuUngTanBienTelegram('dang_nhap')}
-                                className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-150 cursor-pointer ${
+                                className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-250 cursor-pointer ${
                                     cheDoHienTai === 'dang_nhap'
                                         ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-blue-500/35'
                                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-700/60'
@@ -575,7 +599,7 @@ export default function ModalDangNhapDangKy() {
                             <button
                                 type="button"
                                 onClick={() => chayHieuUngTanBienTelegram('dang_ky')}
-                                className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-150 cursor-pointer ${
+                                className={`flex-1 py-2 rounded-xl text-xs font-black transition-all duration-250 cursor-pointer ${
                                     cheDoHienTai === 'dang_ky'
                                         ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-blue-500/35'
                                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/70 dark:hover:bg-slate-700/60'
@@ -620,12 +644,12 @@ export default function ModalDangNhapDangKy() {
                             </div>
                         )}
 
-                        {/* KHUNG NỘI DUNG CHUYỂN CẢNH MƯỢT MÀ TỪ TỪ */}
+                        {/* KHUNG NỘI DUNG CHUYỂN CẢNH SIÊU MƯỢT, TỪ TỐN & HÒA QUYỆN */}
                         <div
                             style={{
-                                opacity: dangTanBien ? 0 : 1,
-                                transform: dangTanBien ? 'scale(0.97) translateY(-8px)' : 'scale(1) translateY(0)',
-                                transition: 'opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                opacity: dangDoiForm ? 0.2 : 1,
+                                transform: dangDoiForm ? 'scale(0.98) translateY(6px)' : 'scale(1) translateY(0)',
+                                transition: 'opacity 0.32s cubic-bezier(0.4, 0, 0.2, 1), transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)'
                             }}
                         >
                             {/* ==================================================== */}
@@ -647,17 +671,17 @@ export default function ModalDangNhapDangKy() {
                                     </div>
 
                                     <div className="relative flex items-center justify-center my-3">
-                                        <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
-                                        <span className="bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-400 dark:text-slate-500 font-bold shrink-0 uppercase tracking-wider">
+                                        <div className="border-t-2 border-slate-200 dark:border-slate-700 w-full" />
+                                        <span className="bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-500 dark:text-slate-400 font-extrabold shrink-0 uppercase tracking-wider">
                                             Hoặc đăng nhập với email
                                         </span>
-                                        <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
+                                        <div className="border-t-2 border-slate-200 dark:border-slate-700 w-full" />
                                     </div>
 
                                     <form onSubmit={xuLyDangNhap} className="space-y-3.5">
-                                        <div className="space-y-1">
-                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                                <Mail className="w-3.5 h-3.5 text-cyan-500" />
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                                <Mail className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                                                 <span>Địa Chỉ Email</span>
                                             </label>
                                             <input
@@ -666,14 +690,14 @@ export default function ModalDangNhapDangKy() {
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="name@example.com"
-                                                className="w-full px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
+                                                className="w-full px-4 py-2.5 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs sm:text-sm font-semibold shadow-xs hover:border-slate-400 dark:hover:border-slate-500 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/15 transition-all"
                                             />
                                         </div>
 
-                                        <div className="space-y-1">
+                                        <div className="space-y-1.5">
                                             <div className="flex items-center justify-between">
-                                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                                                    <Lock className="w-3.5 h-3.5 text-indigo-500" />
+                                                <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                                    <Lock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                                                     <span>Mật Khẩu</span>
                                                 </label>
                                                 <button
@@ -691,12 +715,12 @@ export default function ModalDangNhapDangKy() {
                                                     onChange={(e) => setMatKhau(e.target.value)}
                                                     required
                                                     placeholder="Nhập mật khẩu..."
-                                                    className="w-full pl-4 pr-10 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/20 transition-all"
+                                                    className="w-full pl-4 pr-10 py-2.5 rounded-2xl border-2 border-slate-300 dark:border-slate-600 bg-slate-50/70 dark:bg-slate-800/80 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 text-xs sm:text-sm font-semibold shadow-xs hover:border-slate-400 dark:hover:border-slate-500 focus:outline-none focus:border-blue-600 dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/15 transition-all"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={() => setHienMatKhau(!hienMatKhau)}
-                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                                                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"
                                                 >
                                                     {hienMatKhau ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                 </button>
@@ -952,6 +976,19 @@ export default function ModalDangNhapDangKy() {
                                             >
                                                 <ArrowLeft className="w-3.5 h-3.5" /> Thay đổi thông tin đăng ký
                                             </button>
+
+                                            {/* Hướng dẫn kích hoạt */}
+                                            <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/30 to-purple-50/40 dark:from-slate-800/80 dark:via-blue-950/20 dark:to-indigo-950/30 border-2 border-blue-100 dark:border-slate-700 text-xs space-y-1.5 shadow-2xs">
+                                                <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
+                                                    <Info className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400 shrink-0" />
+                                                    <span>Lưu ý khi kích hoạt tài khoản:</span>
+                                                </div>
+                                                <ul className="text-[11px] space-y-1 list-disc list-inside text-slate-600 dark:text-slate-400 leading-relaxed">
+                                                    <li>Mã kích hoạt có hiệu lực trong vòng <b className="text-slate-800 dark:text-slate-200">5 phút</b>.</li>
+                                                    <li>Kiểm tra hòm thư <b className="text-slate-800 dark:text-slate-200">Chính</b> hoặc <b className="text-slate-800 dark:text-slate-200">Spam / Thư rác</b>.</li>
+                                                    <li>Kích hoạt ngay để nhận quà chào mừng từ TNTP Laptop Store.</li>
+                                                </ul>
+                                            </div>
                                         </form>
                                     )}
                                 </div>
@@ -1007,6 +1044,75 @@ export default function ModalDangNhapDangKy() {
                                             >
                                                 <ArrowLeft className="w-3.5 h-3.5" /> Quay lại Đăng nhập
                                             </button>
+
+                                            {/* Hướng dẫn 3 bước khôi phục mật khẩu màu sắc rực rỡ & siêu đẹp */}
+                                            <div className="pt-2">
+                                                <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-purple-50/60 dark:from-slate-800/90 dark:via-slate-800/60 dark:to-indigo-950/40 border-2 border-indigo-100 dark:border-slate-700 shadow-sm space-y-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="flex items-center gap-1.5 font-black text-slate-800 dark:text-white text-xs">
+                                                            <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-400 shrink-0" />
+                                                            3 Bước Lấy Lại Mật Khẩu
+                                                        </span>
+                                                        <span className="px-2 py-0.5 rounded-full bg-blue-100/80 dark:bg-blue-900/60 text-blue-700 dark:text-cyan-300 text-[10px] font-bold">
+                                                            Nhanh chóng & Bảo mật
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-3 gap-2 text-center">
+                                                        {/* Ô 1: Xanh Dương / Cyan */}
+                                                        <div className="p-2.5 rounded-2xl bg-gradient-to-b from-sky-50 via-blue-50 to-blue-100/70 dark:from-sky-950/50 dark:via-blue-950/40 dark:to-blue-900/40 border-2 border-blue-300 dark:border-blue-600/70 shadow-sm shadow-blue-500/15 flex flex-col items-center text-center transition-all hover:scale-102 hover:shadow-md hover:shadow-blue-500/25">
+                                                            <span className="w-7 h-7 mx-auto rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/35 mb-1.5">
+                                                                1
+                                                            </span>
+                                                            <div className="font-black text-blue-900 dark:text-blue-200 text-xs">
+                                                                Gửi OTP
+                                                            </div>
+                                                            <div className="text-[10px] font-bold text-blue-600 dark:text-cyan-300 mt-0.5 leading-tight">
+                                                                Nhập email
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Ô 2: Tím / Indigo */}
+                                                        <div className="p-2.5 rounded-2xl bg-gradient-to-b from-purple-50 via-indigo-50 to-purple-100/70 dark:from-purple-950/50 dark:via-indigo-950/40 dark:to-purple-900/40 border-2 border-purple-300 dark:border-purple-600/70 shadow-sm shadow-purple-500/15 flex flex-col items-center text-center transition-all hover:scale-102 hover:shadow-md hover:shadow-purple-500/25">
+                                                            <span className="w-7 h-7 mx-auto rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-black text-xs flex items-center justify-center shadow-md shadow-purple-500/35 mb-1.5">
+                                                                2
+                                                            </span>
+                                                            <div className="font-black text-purple-900 dark:text-purple-200 text-xs">
+                                                                Xác Thực
+                                                            </div>
+                                                            <div className="text-[10px] font-bold text-purple-600 dark:text-purple-300 mt-0.5 leading-tight">
+                                                                Mã 6 số
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Ô 3: Xanh Ngọc / Emerald */}
+                                                        <div className="p-2.5 rounded-2xl bg-gradient-to-b from-emerald-50 via-teal-50 to-emerald-100/70 dark:from-emerald-950/50 dark:via-teal-950/40 dark:to-emerald-900/40 border-2 border-emerald-300 dark:border-emerald-600/70 shadow-sm shadow-emerald-500/15 flex flex-col items-center text-center transition-all hover:scale-102 hover:shadow-md hover:shadow-emerald-500/25">
+                                                            <span className="w-7 h-7 mx-auto rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white font-black text-xs flex items-center justify-center shadow-md shadow-emerald-500/35 mb-1.5">
+                                                                3
+                                                            </span>
+                                                            <div className="font-black text-emerald-900 dark:text-emerald-200 text-xs">
+                                                                Đổi Pass
+                                                            </div>
+                                                            <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-300 mt-0.5 leading-tight">
+                                                                Mật khẩu mới
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="pt-2 border-t-2 border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between text-xs">
+                                                        <span className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 font-bold text-[11.5px]">
+                                                            <LifeBuoy className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400 shrink-0" />
+                                                            <span>Cần hỗ trợ trực tiếp?</span>
+                                                        </span>
+                                                        <a
+                                                            href="tel:18006868"
+                                                            className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-[11px] shadow-sm shadow-blue-500/30 active:scale-98 transition-all"
+                                                        >
+                                                            Hotline 1800 6868
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </form>
                                     )}
 
@@ -1073,6 +1179,19 @@ export default function ModalDangNhapDangKy() {
                                             >
                                                 <ArrowLeft className="w-3.5 h-3.5" /> Thay đổi email
                                             </button>
+
+                                            {/* Mẹo nhận mã OTP */}
+                                            <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/30 to-purple-50/40 dark:from-slate-800/80 dark:via-blue-950/20 dark:to-indigo-950/30 border-2 border-blue-100 dark:border-slate-700 text-xs space-y-1.5 shadow-2xs">
+                                                <div className="flex items-center gap-1.5 font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
+                                                    <Info className="w-3.5 h-3.5 text-blue-600 dark:text-cyan-400 shrink-0" />
+                                                    <span>Mẹo nhận mã OTP nhanh:</span>
+                                                </div>
+                                                <ul className="text-[11px] space-y-1 list-disc list-inside text-slate-600 dark:text-slate-400 leading-relaxed">
+                                                    <li>Mã xác thực có hiệu lực trong vòng <b className="text-slate-800 dark:text-slate-200">5 phút</b>.</li>
+                                                    <li>Kiểm tra mục <b className="text-slate-800 dark:text-slate-200">Spam / Thư rác</b> nếu chưa thấy ở Hộp thư đến.</li>
+                                                    <li>Bấm <b className="text-slate-800 dark:text-slate-200">Gửi lại mã</b> nếu bạn chưa nhận được sau 60 giây.</li>
+                                                </ul>
+                                            </div>
                                         </form>
                                     )}
 
@@ -1081,6 +1200,11 @@ export default function ModalDangNhapDangKy() {
                                             <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800 flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                                                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                                                 <span>Mã OTP chính xác! Hãy tạo mật khẩu mới:</span>
+                                            </div>
+
+                                            <div className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                                                <Info className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                                                <span>Mẹo bảo mật: Mật khẩu nên chứa tối thiểu 6 ký tự, gồm cả chữ và số để tăng cường bảo vệ.</span>
                                             </div>
 
                                             <div className="space-y-1">

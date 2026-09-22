@@ -108,10 +108,22 @@ export default function BieuDoTongQuan({
 }) {
     const [daMount, setDaMount] = useState(false);
     const [khungThoiGian, setKhungThoiGian] = useState('7_ngay'); // '7_ngay' | '4_tuan' | '6_thang'
+    const [dangLocKhungThoiGian, setDangLocKhungThoiGian] = useState(false);
+    const daMountKhungThoiGianRef = React.useRef(false);
 
     useEffect(() => {
         setDaMount(true);
     }, []);
+
+    useEffect(() => {
+        if (!daMountKhungThoiGianRef.current) {
+            daMountKhungThoiGianRef.current = true;
+            return;
+        }
+        setDangLocKhungThoiGian(true);
+        const timer = setTimeout(() => setDangLocKhungThoiGian(false), 300);
+        return () => clearTimeout(timer);
+    }, [khungThoiGian]);
 
     // 1. Dữ liệu xu hướng doanh thu theo khung thời gian
     const duLieuDoanhThu = useMemo(() => {
@@ -248,63 +260,63 @@ export default function BieuDoTongQuan({
             {/* HÀNG 1: BIỂU ĐỒ DOANH THU & BIỂU ĐỒ CƠ CẤU NGÀNH HÀNG */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* 1.1 BIỂU ĐỒ DIỆN TÍCH SÓNG DOANH THU */}
-                <div className="lg:col-span-8 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                <div className="lg:col-span-8 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 flex flex-col justify-between">
                     <div>
                         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
                             <div>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 flex items-center justify-center font-bold">
-                                        <TrendingUp className="w-4 h-4" />
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/25">
+                                        <TrendingUp className="w-4 h-4 text-white" />
                                     </div>
                                     <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white uppercase tracking-wider">
                                         XU HƯỚNG DOANH THU & GIAO DỊCH
                                     </h3>
                                 </div>
-                                <p className="text-xs text-slate-500 font-semibold mt-0.5 ml-10">
+                                <p className="text-xs text-slate-500 font-semibold mt-0.5 ml-11">
                                     Biểu đồ trực quan theo dõi lượng tiền về và số đơn hàng phát sinh
                                 </p>
                             </div>
 
                             {/* Bộ Lọc Khung Thời Gian */}
-                            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-black">
+                            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border-2 border-slate-200 dark:border-slate-700 text-xs font-black shadow-2xs">
                                 <button
                                     onClick={() => setKhungThoiGian('7_ngay')}
-                                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '7_ngay' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-cyan-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '7_ngay' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                 >
                                     7 Ngày
                                 </button>
                                 <button
                                     onClick={() => setKhungThoiGian('4_tuan')}
-                                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '4_tuan' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-cyan-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '4_tuan' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                 >
                                     4 Tuần
                                 </button>
                                 <button
                                     onClick={() => setKhungThoiGian('6_thang')}
-                                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '6_thang' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-cyan-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'}`}
+                                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '6_thang' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                 >
                                     6 Tháng
                                 </button>
                             </div>
                         </div>
 
-                        {/* Thông số nhanh đầu biểu đồ */}
+                        {/* Thông số nhanh đầu biểu đồ (3 Hộp Thống Kê Đậm Màu Sắc Nét) */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 my-4">
-                            <div className="p-3 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40">
-                                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Doanh thu kỳ này</div>
-                                <div className="text-base sm:text-lg font-black text-blue-600 dark:text-cyan-400">
+                            <div className="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/50 border-2 border-blue-300 dark:border-blue-700 shadow-2xs">
+                                <div className="text-[11px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-wider">Doanh thu kỳ này</div>
+                                <div className="text-base sm:text-xl font-black text-blue-700 dark:text-cyan-300 mt-0.5">
                                     {dinhDangTienVND(thongKe.tongDoanhThu || 0)}
                                 </div>
                             </div>
-                            <div className="p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40">
-                                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Đã thu thực tế</div>
-                                <div className="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400">
+                            <div className="p-3.5 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/50 border-2 border-emerald-300 dark:border-emerald-700 shadow-2xs">
+                                <div className="text-[11px] font-black text-emerald-900 dark:text-emerald-300 uppercase tracking-wider">Đã thu thực tế</div>
+                                <div className="text-base sm:text-xl font-black text-emerald-700 dark:text-emerald-300 mt-0.5">
                                     {dinhDangTienVND(thongKe.doanhThuThanhCong || 0)}
                                 </div>
                             </div>
-                            <div className="col-span-2 sm:col-span-1 p-3 rounded-2xl bg-orange-50/50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/40">
-                                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Tỷ lệ thành công</div>
-                                <div className="text-base sm:text-lg font-black text-orange-600 dark:text-orange-400">
+                            <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/50 border-2 border-amber-300 dark:border-amber-700 shadow-2xs">
+                                <div className="text-[11px] font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">Tỷ lệ thành công</div>
+                                <div className="text-base sm:text-xl font-black text-amber-700 dark:text-amber-400 mt-0.5">
                                     {Math.round(((thongKe.donThanhCong || 0) / Math.max(1, thongKe.tongDonHang || 1)) * 100)}%
                                 </div>
                             </div>
@@ -312,80 +324,90 @@ export default function BieuDoTongQuan({
                     </div>
 
                     {/* VÙNG VẼ RECHARTS AREA */}
-                    <div className="w-full h-72 pt-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={duLieuDoanhThu} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="mauDoanhThuGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.45} />
-                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
-                                    </linearGradient>
-                                    <linearGradient id="mauDonHangGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
-                                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.6} />
-                                <XAxis
-                                    dataKey="thoiGian"
-                                    stroke="#94a3b8"
-                                    fontSize={11}
-                                    fontWeight={700}
-                                    tickLine={false}
-                                    axisLine={{ stroke: '#cbd5e1' }}
-                                />
-                                <YAxis
-                                    yAxisId="left"
-                                    stroke="#94a3b8"
-                                    fontSize={10}
-                                    fontWeight={700}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickFormatter={(val) => `${(val / 1000000).toFixed(0)}Tr`}
-                                />
-                                <YAxis
-                                    yAxisId="right"
-                                    orientation="right"
-                                    stroke="#f59e0b"
-                                    fontSize={10}
-                                    fontWeight={700}
-                                    tickLine={false}
-                                    axisLine={false}
-                                    tickFormatter={(val) => `${val}đ`}
-                                />
-                                <Tooltip content={<CustomTooltipDoanhThu />} />
-                                <Area
-                                    yAxisId="left"
-                                    type="monotone"
-                                    dataKey="doanhThu"
-                                    name="Doanh Thu"
-                                    stroke="#2563eb"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#mauDoanhThuGrad)"
-                                />
-                                <Area
-                                    yAxisId="right"
-                                    type="monotone"
-                                    dataKey="soDon"
-                                    name="Số Đơn"
-                                    stroke="#f59e0b"
-                                    strokeWidth={2}
-                                    strokeDasharray="4 4"
-                                    fillOpacity={1}
-                                    fill="url(#mauDonHangGrad)"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                    <div className="relative w-full h-72 pt-2">
+                        {dangLocKhungThoiGian && (
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 dark:bg-[#0d1527]/85 backdrop-blur-[2px] rounded-2xl animate-in fade-in duration-150">
+                                <div className="w-10 h-10 rounded-full border-[3px] border-blue-600/20 border-t-blue-600 animate-spin" />
+                                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mt-2">
+                                    Đang tính toán lại xu hướng...
+                                </span>
+                            </div>
+                        )}
+                        <div className={`w-full h-full transition-opacity duration-300 ${dangLocKhungThoiGian ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={duLieuDoanhThu} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="mauDoanhThuGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.45} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
+                                        </linearGradient>
+                                        <linearGradient id="mauDonHangGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
+                                            <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.6} />
+                                    <XAxis
+                                        dataKey="thoiGian"
+                                        stroke="#94a3b8"
+                                        fontSize={11}
+                                        fontWeight={700}
+                                        tickLine={false}
+                                        axisLine={{ stroke: '#cbd5e1' }}
+                                    />
+                                    <YAxis
+                                        yAxisId="left"
+                                        stroke="#94a3b8"
+                                        fontSize={10}
+                                        fontWeight={600}
+                                        tickLine={false}
+                                        axisLine={{ stroke: '#cbd5e1' }}
+                                        tickFormatter={(v) => `${Math.round(v / 1000000)}Tr`}
+                                    />
+                                    <YAxis
+                                        yAxisId="right"
+                                        orientation="right"
+                                        stroke="#94a3b8"
+                                        fontSize={10}
+                                        fontWeight={600}
+                                        tickLine={false}
+                                        axisLine={{ stroke: '#cbd5e1' }}
+                                        tickFormatter={(v) => `${v} Đơn`}
+                                    />
+                                    <Tooltip content={<CustomTooltipDoanhThu />} />
+                                    <Area
+                                        yAxisId="left"
+                                        type="monotone"
+                                        dataKey="doanhThu"
+                                        name="Doanh thu"
+                                        stroke="#2563eb"
+                                        strokeWidth={3}
+                                        fillOpacity={1}
+                                        fill="url(#mauDoanhThuGrad)"
+                                    />
+                                    <Area
+                                        yAxisId="right"
+                                        type="monotone"
+                                        dataKey="soDon"
+                                        name="Đơn hàng"
+                                        stroke="#d97706"
+                                        strokeWidth={2}
+                                        strokeDasharray="4 4"
+                                        fillOpacity={1}
+                                        fill="url(#mauDonHangGrad)"
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 </div>
 
                 {/* 1.2 BIỂU ĐỒ TRÒN CƠ CẤU 7 NGÀNH HÀNG */}
-                <div className="lg:col-span-4 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                <div className="lg:col-span-4 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
-                            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 flex items-center justify-center font-bold">
-                                <PieIcon className="w-4 h-4" />
+                        <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+                            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/25">
+                                <PieIcon className="w-4 h-4 text-white" />
                             </div>
                             <div>
                                 <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">
@@ -446,11 +468,11 @@ export default function BieuDoTongQuan({
             {/* HÀNG 2: TIẾN ĐỘ XỬ LÝ ĐƠN HÀNG & TỒN KHO THEO THƯƠNG HIỆU */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* 2.1 TRẠNG THÁI XỬ LÝ ĐƠN HÀNG (TIẾN ĐỘ & PHỄU) */}
-                <div className="lg:col-span-6 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 flex items-center justify-center font-bold">
-                                <ShoppingBag className="w-4 h-4" />
+                <div className="lg:col-span-6 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 space-y-4">
+                    <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/25">
+                                <ShoppingBag className="w-4 h-4 text-white" />
                             </div>
                             <div>
                                 <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">
@@ -459,7 +481,7 @@ export default function BieuDoTongQuan({
                                 <p className="text-[11px] text-slate-500 font-semibold">Tỷ lệ hoàn tất và phân luồng trạng thái</p>
                             </div>
                         </div>
-                        <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-300">
+                        <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                             Tổng: {thongKe.tongDonHang || 0} đơn
                         </span>
                     </div>
@@ -470,7 +492,7 @@ export default function BieuDoTongQuan({
                             <div key={idx} className="space-y-1">
                                 <div className="flex items-center justify-between text-xs font-bold">
                                     <span className="text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: tt.mau }} />
+                                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: tt.mau }} />
                                         {tt.ten}
                                     </span>
                                     <div className="flex items-center gap-2">
@@ -490,12 +512,12 @@ export default function BieuDoTongQuan({
                 </div>
 
                 {/* 2.2 BIỂU ĐỒ CỘT TOP THƯƠNG HIỆU TỒN KHO & MẪU HÀNG */}
-                <div className="lg:col-span-6 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+                <div className="lg:col-span-6 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-xl bg-cyan-50 text-cyan-600 dark:bg-cyan-950/60 dark:text-cyan-400 flex items-center justify-center font-bold">
-                                    <BarChart3 className="w-4 h-4" />
+                        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-600 to-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-cyan-500/25">
+                                    <BarChart3 className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
                                     <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">

@@ -194,7 +194,7 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
     // =========================================================================
     if (cheDoHienThi === 'danh_sach') {
         return (
-            <div className="group bg-white dark:bg-slate-900 rounded-[20px] p-3.5 sm:p-4 border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-4 relative transition-all duration-300 hover:shadow-lg hover:border-[#0052cc]">
+            <div className="group bg-white dark:bg-slate-900 rounded-[20px] p-3.5 sm:p-4 border border-slate-300/80 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center gap-4 relative transition-all duration-300 hover:shadow-lg hover:border-[#0052cc]">
                 <Link
                     href={`/san-pham/${slugSanPham(sanPham)}`}
                     className="relative w-full sm:w-52 aspect-[16/9] sm:h-32 shrink-0 block bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden"
@@ -304,7 +304,7 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
     // 2. CHẾ ĐỘ LƯỚI (Grid View) - FULL WIDTH IMAGE, GỌN GÀNG, VIỀN XỊN
     // =========================================================================
     return (
-        <div className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 hover:border-blue-400 dark:border-slate-800 dark:hover:border-cyan-400 shadow-sm hover:shadow-[0_16px_36px_-10px_rgba(0,82,204,0.2)] hover:-translate-y-1 flex flex-col justify-between overflow-hidden transition-all duration-300 h-full relative">
+        <div className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-300/80 hover:border-blue-500 dark:border-slate-700 dark:hover:border-cyan-400 shadow-sm hover:shadow-[0_16px_36px_-10px_rgba(0,82,204,0.2)] hover:-translate-y-1 flex flex-col justify-between overflow-hidden transition-all duration-300 h-full relative">
             {/* 1. PRODUCT IMAGE SHOWCASE (Chuẩn e-commerce cao cấp, GIÃN FULL CARD 100%, TỶ LỆ 16:9 CHUẨN XỊN) */}
             <div className="relative w-full aspect-[16/9] bg-white dark:bg-slate-900 flex items-center justify-center border-b border-slate-100 dark:border-slate-800/80 overflow-hidden">
                 <Link href={`/san-pham/${slugSanPham(sanPham)}`} className="relative w-full h-full block">

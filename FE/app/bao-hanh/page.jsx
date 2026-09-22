@@ -1,5 +1,6 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -41,6 +42,22 @@ export default function TrangBaoHanh() {
 
 
     const [hienModalKetQua, setHienModalKetQua] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Khóa cuộn trang nền khi mở popup kết quả hoặc popup hướng dẫn
+    useEffect(() => {
+        if (hienModalKetQua || hienModalHuongDan) {
+            const prevOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = prevOverflow;
+            };
+        }
+    }, [hienModalKetQua, hienModalHuongDan]);
 
     const copyToClipboard = (text, id) => {
         navigator.clipboard?.writeText(text);
@@ -122,7 +139,7 @@ export default function TrangBaoHanh() {
                     goi_dich_vu: 'Bảo hành vàng VIP On-site tận nơi 24 tháng chính hãng tại hệ thống TNTP Laptop',
                     trung_tam_bao_hanh: [
                         'Chi nhánh 1: 29 Tân Phước, P.8, Q.10, TP.HCM (Hotline: 0948.37.79.79)',
-                        'Chi nhánh 2: 399 Xô Viết Nghệ Tĩnh, P.24, Q.Bình Thạnh, TP.HCM'
+                        'Chi nhánh 2: 12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM (Trường ITC)'
                     ]
                 }]);
                 setDangTraCuu(false);
@@ -271,10 +288,10 @@ export default function TrangBaoHanh() {
             </div>
 
             {/* 4. POPUP MODAL HIỂN THỊ KẾT QUẢ TRA CỨU (KHI TRA CỨU XONG SẼ BẬT POPUP NGAY) */}
-            {hienModalKetQua && (
+            {mounted && typeof document !== 'undefined' && hienModalKetQua && createPortal(
                 <div
                     onClick={() => setHienModalKetQua(false)}
-                    className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
                 >
                     <div
                         className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto animate-in zoom-in-95 duration-200"
@@ -563,14 +580,15 @@ export default function TrangBaoHanh() {
                             </div>
                         )}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* 5. POPUP MODAL HƯỚNG DẪN TRA CỨU BẢO HÀNH (TRỰC QUAN, KHÔNG BỊ CHE KHUẤT) */}
-            {hienModalHuongDan && (
+            {mounted && typeof document !== 'undefined' && hienModalHuongDan && createPortal(
                 <div
                     onClick={() => setHienModalHuongDan(false)}
-                    className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/75 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
+                    className="fixed inset-0 z-[999999] flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200"
                 >
                     <div
                         className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden my-auto animate-in zoom-in-95 duration-200"
@@ -776,7 +794,8 @@ export default function TrangBaoHanh() {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

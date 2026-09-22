@@ -80,7 +80,7 @@ export default function ThuVienAnhSanPham({ danhSachAnh, tenSanPham, videoDemo, 
             {/* 1. Khung Hiển Thị Chính (Main Showcase) */}
             <div
                 onClick={() => !dangXemVideo && setDangPhongTo(true)}
-                className="relative w-full h-72 sm:h-[390px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 overflow-hidden flex items-center justify-center p-4 shadow-2xs group cursor-zoom-in"
+                className="relative w-full h-72 sm:h-[390px] rounded-2xl bg-white dark:bg-slate-900 border border-slate-300/80 dark:border-slate-700 overflow-hidden flex items-center justify-center p-4 shadow-sm group cursor-zoom-in"
                 title="Bấm để phóng to xem chi tiết sắc nét"
             >
                 {/* Huy hiệu chính hãng */}
@@ -134,7 +134,7 @@ export default function ThuVienAnhSanPham({ danhSachAnh, tenSanPham, videoDemo, 
                             className={`relative w-16 h-14 sm:w-20 sm:h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all duration-200 cursor-pointer bg-white dark:bg-slate-900 p-1 ${
                                 laChon
                                     ? 'border-[#0052cc] dark:border-cyan-400 ring-2 ring-blue-500/30 shadow-md translate-y-[-1px]'
-                                    : 'border-slate-200 dark:border-slate-800 opacity-75 hover:opacity-100 hover:border-blue-400 dark:hover:border-cyan-400 hover:shadow-xs'
+                                    : 'border-slate-300/80 dark:border-slate-700 opacity-80 hover:opacity-100 hover:border-blue-400 dark:hover:border-cyan-400 hover:shadow-xs'
                             }`}
                         >
                             <Image src={src} alt={`${tenSanPham} thumb ${idx}`} fill unoptimized className="object-contain p-0.5" />

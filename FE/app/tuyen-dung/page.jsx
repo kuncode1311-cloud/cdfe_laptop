@@ -6,7 +6,7 @@ export default function TrangTuyenDung() {
         {
             id: 'td-1',
             viTri: 'Chuyên Viên Tư Vấn Bán Hàng Laptop Gaming & Cao Cấp',
-            diaDiem: 'Showroom Quận 10 & Bình Thạnh, TP.HCM',
+            diaDiem: 'Showroom Quận 10 & Tân Phú - ITC, TP.HCM',
             mucLuong: '12 - 25 Triệu (Lương cứng + Thưởng doanh số)',
             hinhThuc: 'Toàn thời gian (Xoay ca)',
             soLuong: '03 người'

@@ -36,20 +36,53 @@ export const DonHangService = {
                 ho_va_ten: thongTinHoacPayload?.ho_va_ten || thongTinHoacPayload?.ho_ten || ''
             };
 
+            // Chuẩn hóa danh sách sản phẩm đầy đủ đơn giá, thành tiền và ID chi tiết
+            const danhSachChuanHoa = (danhSachSanPham || []).map((item) => {
+                const sp = item.san_pham || {};
+                const giaSP = item.gia_hien_tai || item.gia_tai_thoi_diem_them || sp.gia_khuyen_mai || sp.gia_goc || sp.gia || 0;
+                const qty = item.so_luong || 1;
+                const chenhLech = item.tuy_chon_chon?.chenh_lech_gia || 0;
+                const donGia = giaSP + chenhLech;
+                const tongTienMuc = item.tong_tien_muc || (donGia * qty);
+                return {
+                    ...item,
+                    san_pham_id: item.san_pham_id || sp.id || sp._id || item.id || '',
+                    ten_san_pham: item.ten_san_pham || sp.ten_san_pham || 'Laptop Chính Hãng',
+                    hinh_anh: item.hinh_anh || sp.hinh_anh_chinh || sp.hinh_anh || '',
+                    gia_tai_thoi_diem_them: donGia,
+                    gia_hien_tai: donGia,
+                    tong_tien_muc: tongTienMuc
+                };
+            });
+
+            // Lấy ID người dùng đăng nhập nếu có
+            let idNguoiDung = thongTinHoacPayload?.id_nguoi_dung || '';
+            if (!idNguoiDung && typeof window !== 'undefined') {
+                try {
+                    const rawUser = localStorage.getItem('tnt_laptop_user') || localStorage.getItem('laptopnew_user') || localStorage.getItem('nguoi_dung') || localStorage.getItem('user');
+                    if (rawUser) {
+                        const parsed = JSON.parse(rawUser);
+                        idNguoiDung = parsed.id || parsed._id || '';
+                    }
+                } catch {}
+            }
+
             donHangMoi = {
                 id: `dh-${Date.now()}`,
                 ma_don_hang: maDon,
+                id_nguoi_dung: idNguoiDung,
                 ngay_tao: thoiGian,
-                trang_thai: 'da_xac_nhan',
+                trang_thai: 'cho_xac_nhan',
                 thong_tin_giao_hang: thongTinChuan,
-                danh_sach_san_pham: danhSachSanPham || [],
+                danh_sach_san_pham: danhSachChuanHoa,
                 tam_tinh: tamTinh || 0,
                 tien_giam_gia: tienGiamGia || 0,
                 ma_giam_gia: maGiamGia || '',
                 phi_van_chuyen: 0,
                 tong_tien_thanh_toan: tongTien,
                 hinh_thuc_thanh_toan: hinhThucThanhToan || 'chuyen_khoan_vietqr',
-                da_thanh_toan: hinhThucThanhToan === 'chuyen_khoan_vietqr',
+                da_thanh_toan: false,
+                trang_thai_thanh_toan: hinhThucThanhToan === 'tien_mat_cod' ? 'thanh_toan_khi_nhan_hang' : 'cho_thanh_toan',
                 lich_trinh_giao_hang: [
                     {
                         thoi_gian: thoiGian,
@@ -58,10 +91,10 @@ export const DonHangService = {
                         hoan_thanh: true
                     },
                     {
-                        thoi_gian: thoiGian,
-                        tieu_de: 'Đã xác nhận đơn hàng',
-                        mo_ta_chi_tiet: 'Nhân viên kỹ thuật LaptopNew đang kiểm tra máy và đóng gói niêm phong chống sốc.',
-                        hoan_thanh: true
+                        thoi_gian: 'Chờ xử lý',
+                        tieu_de: 'Chờ xác nhận đơn hàng',
+                        mo_ta_chi_tiet: 'Nhân viên kỹ thuật LaptopNew sẽ kiểm tra và xác nhận đơn hàng trong vòng 15 phút.',
+                        hoan_thanh: false
                     },
                     {
                         thoi_gian: 'Dự kiến trong ngày',
@@ -117,7 +150,15 @@ export const DonHangService = {
         const local = this.layTatCaDonHang();
         try {
             const serverOrders = await apiFetch('/don-hang', { cache: 'no-store' }, local);
-            return Array.isArray(serverOrders) ? serverOrders : local;
+            if (Array.isArray(serverOrders) && serverOrders.length > 0) {
+                if (typeof window !== 'undefined') {
+                    try {
+                        localStorage.setItem(KHOA_LUU_TRU_DON_HANG, JSON.stringify(serverOrders));
+                    } catch {}
+                }
+                return serverOrders;
+            }
+            return local;
         } catch {
             return local;
         }
@@ -156,18 +197,58 @@ export const DonHangService = {
      * Cập nhật trạng thái / lịch trình đơn hàng (Dành cho Admin)
      */
     async capNhatDonHang(id, duLieuCapNhat) {
-        return await apiFetch(`/don-hang/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(duLieuCapNhat)
-        });
+        let serverRes = null;
+        try {
+            serverRes = await apiFetch(`/don-hang/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(duLieuCapNhat)
+            });
+        } catch (err) {
+            console.warn('[DonHangService] Lỗi kết nối Express API khi cập nhật đơn hàng:', err.message);
+        }
+
+        if (typeof window !== 'undefined') {
+            try {
+                const danhSachHienTai = this.layTatCaDonHang();
+                const idx = danhSachHienTai.findIndex(d => d.id === id || d.ma_don_hang === id || d._id === id);
+                if (idx >= 0) {
+                    const donHangCu = danhSachHienTai[idx];
+                    const donHangMoi = serverRes || { ...donHangCu, ...duLieuCapNhat };
+                    danhSachHienTai[idx] = donHangMoi;
+                    localStorage.setItem(KHOA_LUU_TRU_DON_HANG, JSON.stringify(danhSachHienTai));
+                    return donHangMoi;
+                }
+            } catch (err) {
+                console.error('Lỗi khi cập nhật đơn hàng LocalStorage:', err);
+            }
+        }
+
+        return serverRes;
     },
 
     /**
      * Xóa đơn hàng (Dành cho Admin)
      */
     async xoaDonHang(id) {
-        return await apiFetch(`/don-hang/${id}`, {
-            method: 'DELETE'
-        });
+        let serverRes = null;
+        try {
+            serverRes = await apiFetch(`/don-hang/${id}`, {
+                method: 'DELETE'
+            });
+        } catch (err) {
+            console.warn('[DonHangService] Lỗi kết nối Express API khi xóa đơn hàng:', err.message);
+        }
+
+        if (typeof window !== 'undefined') {
+            try {
+                const danhSachHienTai = this.layTatCaDonHang();
+                const danhSachMoi = danhSachHienTai.filter(d => d.id !== id && d.ma_don_hang !== id && d._id !== id);
+                localStorage.setItem(KHOA_LUU_TRU_DON_HANG, JSON.stringify(danhSachMoi));
+            } catch (err) {
+                console.error('Lỗi khi xóa đơn hàng LocalStorage:', err);
+            }
+        }
+
+        return serverRes;
     }
 };
