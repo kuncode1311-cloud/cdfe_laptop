@@ -12,32 +12,54 @@ function layThongTinEmail() {
 async function guiMailBangTransporter(mailOptions) {
     const { user, pass } = layThongTinEmail();
 
-    // Phương thức 1: Sử dụng cấu hình chuẩn service: 'gmail' (Tối ưu nhất cho Google SMTP)
+    // Phương thức 1: Port 465 SSL (Railway & nhiều cloud thường mở port này)
     try {
-        const transporterGmail = nodemailer.createTransport({
-            service: 'gmail',
+        const transporter465 = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // SSL
             auth: { user, pass },
             tls: { rejectUnauthorized: false },
-            connectionTimeout: 8000,
-            greetingTimeout: 4000,
-            socketTimeout: 10000
+            connectionTimeout: 10000,
+            greetingTimeout: 5000,
+            socketTimeout: 15000
         });
-        return await transporterGmail.sendMail(mailOptions);
+        const info = await transporter465.sendMail(mailOptions);
+        console.log('✅ [Email] Gửi thành công qua port 465 SSL');
+        return info;
     } catch (err1) {
-        console.warn('⚠️ Gửi qua service gmail thất bại, thử lại qua port 587 STARTTLS...', err1.message);
-        // Phương thức 2: Dự phòng qua smtp.gmail.com port 587 STARTTLS
+        console.warn('⚠️ Port 465 thất bại, thử port 587 STARTTLS...', err1.message);
+    }
+
+    // Phương thức 2: Port 587 STARTTLS
+    try {
         const transporter587 = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 587,
             secure: false,
             auth: { user, pass },
             tls: { rejectUnauthorized: false },
-            connectionTimeout: 8000,
-            greetingTimeout: 4000,
-            socketTimeout: 10000
+            connectionTimeout: 10000,
+            greetingTimeout: 5000,
+            socketTimeout: 15000
         });
-        return await transporter587.sendMail(mailOptions);
+        const info = await transporter587.sendMail(mailOptions);
+        console.log('✅ [Email] Gửi thành công qua port 587 STARTTLS');
+        return info;
+    } catch (err2) {
+        console.warn('⚠️ Port 587 thất bại, thử service:gmail...', err2.message);
     }
+
+    // Phương thức 3: service: 'gmail' (fallback cuối cùng)
+    const transporterGmail = nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass },
+        tls: { rejectUnauthorized: false },
+        connectionTimeout: 10000,
+        greetingTimeout: 5000,
+        socketTimeout: 15000
+    });
+    return await transporterGmail.sendMail(mailOptions);
 }
 
 
