@@ -8,19 +8,41 @@ const USER_STORAGE_KEY = 'tnt_laptop_user';
 export function AuthProvider({ children }) {
     const [nguoiDung, setNguoiDung] = useState(null);
     const [token, setToken] = useState(null);
+    const [dangKiemTraPhien, setDangKiemTraPhien] = useState(true);
     const [dangMoModalAuth, setDangMoModalAuth] = useState(false);
     const [cheDoAuth, setCheDoAuth] = useState('dang_nhap');
 
-    // Khôi phục phiên đăng nhập và xác thực Token từ server khi tải trang
+    // Khôi phục phiên đăng nhập NGAY LẬP TỨC từ localStorage khi tải trang, sau đó xác thực ngầm với server
     useEffect(() => {
+        let daHuy = false;
+
         const khoiPhucPhien = async () => {
             try {
-                const tokenLuu = localStorage.getItem(TOKEN_STORAGE_KEY);
-                const userLuu = localStorage.getItem(USER_STORAGE_KEY);
+                const tokenLuu = localStorage.getItem(TOKEN_STORAGE_KEY) || localStorage.getItem('token') || localStorage.getItem('tnt_laptop_token');
+                const userLuu = localStorage.getItem(USER_STORAGE_KEY) || localStorage.getItem('user') || localStorage.getItem('tnt_laptop_user');
 
-                if (tokenLuu) {
+                // 1. Phục hồi NGAY TỨC THÌ (0ms) từ localStorage để tránh bị chớp màn hình đăng nhập khi F5
+                if (userLuu) {
+                    try {
+                        const parsedUser = JSON.parse(userLuu);
+                        if (!daHuy && parsedUser) {
+                            setNguoiDung(parsedUser);
+                        }
+                    } catch (err) {
+                        console.warn('Lỗi đọc user cache:', err);
+                    }
+                }
+
+                if (tokenLuu && !daHuy) {
                     setToken(tokenLuu);
-                    // Tự động kiểm tra token với Backend
+                }
+
+                if (!daHuy) {
+                    setDangKiemTraPhien(false);
+                }
+
+                // 2. Xác thực ngầm trong nền với server (background revalidation)
+                if (tokenLuu) {
                     try {
                         const res = await fetch(`${API_BASE_URL}/auth/toi`, {
                             headers: {
@@ -28,35 +50,36 @@ export function AuthProvider({ children }) {
                                 'Content-Type': 'application/json'
                             }
                         });
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.nguoiDung) {
-                                setNguoiDung(data.nguoiDung);
-                                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
-                                return;
+                        if (!daHuy) {
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data.nguoiDung) {
+                                    setNguoiDung(data.nguoiDung);
+                                    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
+                                }
+                            } else if (res.status === 401) {
+                                // Token hết hạn thực sự trên server -> xóa phiên
+                                localStorage.removeItem(TOKEN_STORAGE_KEY);
+                                localStorage.removeItem(USER_STORAGE_KEY);
+                                setToken(null);
+                                setNguoiDung(null);
                             }
-                        } else if (res.status === 401) {
-                            // Token hết hạn hoặc không hợp lệ -> xóa phiên
-                            localStorage.removeItem(TOKEN_STORAGE_KEY);
-                            localStorage.removeItem(USER_STORAGE_KEY);
-                            setToken(null);
-                            setNguoiDung(null);
-                            return;
                         }
                     } catch {
-                        // Nếu server offline, dùng user đã lưu tạm
+                        // Nếu server tạm thời offline hoặc chậm, vẫn giữ phiên đăng nhập từ localStorage
                     }
-                }
-
-                if (userLuu) {
-                    setNguoiDung(JSON.parse(userLuu));
                 }
             } catch (e) {
                 console.error('Lỗi đọc dữ liệu người dùng:', e);
+            } finally {
+                if (!daHuy) {
+                    setDangKiemTraPhien(false);
+                }
             }
         };
 
         khoiPhucPhien();
+        return () => { daHuy = true; };
     }, []);
 
     const moModalDangNhap = () => {
@@ -359,6 +382,8 @@ export function AuthProvider({ children }) {
                 nguoiDung,
                 user: nguoiDung,
                 token,
+                dangKiemTraPhien,
+                isLoadingAuth: dangKiemTraPhien,
                 daDangNhap: !!nguoiDung,
                 isAuthenticated: !!nguoiDung,
                 laAdmin,

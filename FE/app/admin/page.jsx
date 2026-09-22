@@ -133,7 +133,7 @@ const dinhDangVND = (so) => dinhDangTienVND(Number(so) || 0);
 
 
 export default function TrangQuanTriCuaHang() {
-    const { nguoiDung, daDangNhap, laAdmin, dangNhap, dangXuat } = useNguoiDung();
+    const { nguoiDung, daDangNhap, laAdmin, dangNhap, dangXuat, dangKiemTraPhien } = useNguoiDung();
     const { chu_de, chuyenDoiChuDe } = useGiaoDien();
 
     // Điều hướng Tab: 9 Tabs Quản Trị Toàn Diện (Tự động ghi nhớ vị trí khi F5 reload)
@@ -837,8 +837,8 @@ export default function TrangQuanTriCuaHang() {
     const [donHangChiTiet, setDonHangChiTiet] = useState(null);
 
     // Form Đăng nhập Admin
-    const [emailAdmin, setEmailAdmin] = useState('admin');
-    const [matKhauAdmin, setMatKhauAdmin] = useState('admin123');
+    const [emailAdmin, setEmailAdmin] = useState('');
+    const [matKhauAdmin, setMatKhauAdmin] = useState('');
     const [loiLogin, setLoiLogin] = useState('');
     const [dangXuLyLogin, setDangXuLyLogin] = useState(false);
 
@@ -3717,9 +3717,53 @@ export default function TrangQuanTriCuaHang() {
     };
 
     // ==========================================
-    // CỔNG ĐĂNG NHẬP ADMIN
+    // CỔNG XÁC THỰC QUYỀN TRUY CẬP ADMIN
     // ==========================================
-    if (!daDangNhap || !laAdmin) {
+    // 1. Đang kiểm tra phiên đăng nhập từ LocalStorage / Token: Hiển thị loading nhẹ, KHÔNG BAO GIỜ hiện form đăng nhập chớp giật
+    if (dangKiemTraPhien) {
+        return (
+            <div className="min-h-screen bg-[#f1f5f9] dark:bg-[#070b14] text-slate-900 dark:text-white flex flex-col items-center justify-center p-4">
+                <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="w-9 h-9 text-blue-600 animate-spin" />
+                    <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Đang đồng bộ quyền quản trị...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // 2. Nếu đã đăng nhập nhưng tài khoản không có quyền Admin (vaiTro !== 'admin')
+    if (daDangNhap && !laAdmin) {
+        return (
+            <div className="min-h-screen bg-[#f1f5f9] dark:bg-[#070b14] text-slate-900 dark:text-white flex items-center justify-center p-4">
+                <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-red-200 dark:border-red-900/50 p-8 text-center space-y-4">
+                    <div className="w-16 h-16 rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 flex items-center justify-center mx-auto text-3xl">
+                        <AlertTriangle className="w-8 h-8 text-red-600" />
+                    </div>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white">Từ Chối Truy Cập</h2>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        Tài khoản <b>{nguoiDung?.email || 'hiện tại của bạn'}</b> không có quyền Quản trị viên để truy cập trang quản lý này.
+                    </p>
+                    <div className="pt-2 flex flex-col gap-2">
+                        <button
+                            onClick={dangXuat}
+                            className="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs cursor-pointer transition-all shadow-md"
+                        >
+                            Đăng Xuất Tài Khoản Này
+                        </button>
+                        <Link
+                            href="/"
+                            className="w-full py-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-xs hover:bg-slate-200 transition-all text-center"
+                        >
+                            Quay Lại Cửa Hàng
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // 3. Nếu chưa đăng nhập: Hiển thị cổng đăng nhập quản trị
+    if (!daDangNhap) {
         return (
             <div className="min-h-screen bg-[#f1f5f9] dark:bg-[#070b14] text-slate-900 dark:text-white flex items-center justify-center p-4">
                 <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -3744,14 +3788,14 @@ export default function TrangQuanTriCuaHang() {
                         <div className="space-y-1.5">
                             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                                 <User className="w-4 h-4 text-blue-600" />
-                                <span>Tài Khoản Quản Trị</span>
+                                <span>Tài Khoản / Email Quản Trị</span>
                             </label>
                             <input
                                 type="text"
                                 required
                                 value={emailAdmin}
                                 onChange={(e) => setEmailAdmin(e.target.value)}
-                                placeholder="admin"
+                                placeholder="Nhập tài khoản quản trị"
                                 className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/30 focus:border-blue-600 transition-all"
                             />
                         </div>
@@ -3779,15 +3823,12 @@ export default function TrangQuanTriCuaHang() {
                             {dangXuLyLogin ? 'Đang xác thực...' : 'Đăng Nhập Quản Trị'}
                         </button>
 
-                        <div className="p-3.5 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 rounded-2xl text-xs text-blue-950 dark:text-blue-200 leading-relaxed font-semibold">
-                            💡 <b>Đăng nhập nhanh:</b> <br />
-                            • Tài khoản: <code className="text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded font-mono font-bold">admin</code> <br />
-                            • Mật khẩu: <code className="text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900 px-1.5 py-0.5 rounded font-mono font-bold">admin123</code>
-                        </div>
-
-                        <div className="text-center pt-2">
-                            <Link href="/" className="text-xs font-bold text-blue-600 hover:underline">
+                        <div className="text-center pt-2 flex items-center justify-between text-xs font-bold text-blue-600">
+                            <Link href="/" className="hover:underline">
                                 ← Quay lại Cửa hàng
+                            </Link>
+                            <Link href="/dang-nhap" className="hover:underline">
+                                Cổng Đăng Nhập Website →
                             </Link>
                         </div>
                     </form>

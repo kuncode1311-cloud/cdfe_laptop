@@ -48,7 +48,7 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
         return () => clearInterval(timer);
     }, []);
 
-    if (danhSach.length === 0) return null;
+    if (danhSach.length === 0 && !dangTai) return null;
 
     return (
         <section id="flash-sale" className="w-full">
@@ -201,14 +201,25 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
             {/* 3. 4 COMPACT PRODUCT CARDS (Gap 18px, Card height ~410-430px)             */}
             {/* ========================================================================= */}
             <div className="mt-3.5 sm:mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px]">
-                {danhSach.slice(0, 4).map((sp) => (
-                    <TheSanPham
-                        key={sp.id || sp._id}
-                        sanPham={sp}
-                        cheDoHienThi="luoi"
-                        hienThiThanhFlashSale={true}
-                    />
-                ))}
+                {dangTai ? (
+                    [...Array(4)].map((_, i) => (
+                        <div key={i} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse space-y-3 h-[410px]">
+                            <div className="w-full h-48 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                            <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                            <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                            <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mt-4"></div>
+                        </div>
+                    ))
+                ) : (
+                    danhSach.slice(0, 4).map((sp) => (
+                        <TheSanPham
+                            key={sp.id || sp._id}
+                            sanPham={sp}
+                            cheDoHienThi="luoi"
+                            hienThiThanhFlashSale={true}
+                        />
+                    ))
+                )}
             </div>
         </section>
     );

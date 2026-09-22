@@ -6,7 +6,8 @@ import { SanPhamService } from '@/services/san-pham.service';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 export default function SectionSanPhamBanChay() {
     const [tabHienTai, setTabHienTai] = useState('tat_ca');
-    const [tatCaSanPham, setTatCaSanPham] = useState(() => SanPhamService.layTatCaSanPham());
+    const [tatCaSanPham, setTatCaSanPham] = useState(() => SanPhamService.layTatCaSanPham() || []);
+    const [dangTai, setDangTai] = useState(tatCaSanPham.length === 0);
 
     // Đồng bộ danh sách sản phẩm từ MongoDB Atlas theo thời gian thực
     useEffect(() => {
@@ -15,6 +16,9 @@ export default function SectionSanPhamBanChay() {
             if (!daHuy && Array.isArray(data) && data.length > 0) {
                 setTatCaSanPham(data);
             }
+            if (!daHuy) setDangTai(false);
+        }).catch(() => {
+            if (!daHuy) setDangTai(false);
         });
         return () => { daHuy = true; };
     }, []);
@@ -84,7 +88,18 @@ export default function SectionSanPhamBanChay() {
 
       {/* 2. Lưới Sản Phẩm Bán Chạy */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {danhSachLoc.map((sp) => (<TheSanPham key={sp.id} sanPham={sp} cheDoHienThi="luoi"/>))}
+        {dangTai ? (
+          [...Array(4)].map((_, i) => (
+            <div key={i} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse space-y-3 h-[410px]">
+              <div className="w-full h-48 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+              <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+              <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+              <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mt-4"></div>
+            </div>
+          ))
+        ) : danhSachLoc.length > 0 ? (
+          danhSachLoc.map((sp) => (<TheSanPham key={sp.id || sp._id} sanPham={sp} cheDoHienThi="luoi"/>))
+        ) : null}
       </div>
 
       {/* 3. Nút Xem Thêm */}

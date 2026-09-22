@@ -50,9 +50,13 @@ export default function TrangDangNhap() {
                     setDangXuLy(false);
                     return;
                 }
-                await dangNhap(email, matKhau);
+                const user = await dangNhap(email, matKhau);
                 toast.success('Đăng nhập thành công! Chào mừng bạn quay lại.');
-                router.push('/khuyen-mai');
+                if (user?.vaiTro === 'admin') {
+                    router.push('/admin');
+                } else {
+                    router.push('/khuyen-mai');
+                }
             } else {
                 if (!hoTen || !email || !soDienThoai || !matKhau) {
                     toast.error('Vui lòng điền đầy đủ các trường thông tin');
@@ -73,14 +77,18 @@ export default function TrangDangNhap() {
     const xuLyDangNhapGoogle = async () => {
         setDangXuLyGoogle(true);
         try {
-            await dangNhapGoogle({
+            const userGg = await dangNhapGoogle({
                 email: 'khachhang.google@gmail.com',
                 hoTen: 'Khách Hàng Google VIP',
                 avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
                 googleId: 'gg_' + Date.now()
             });
             toast.success('Đăng nhập với Google thành công! 🎉');
-            router.push('/khuyen-mai');
+            if (userGg?.vaiTro === 'admin') {
+                router.push('/admin');
+            } else {
+                router.push('/khuyen-mai');
+            }
         } catch (err) {
             toast.error(err.message || 'Lỗi kết nối tài khoản Google');
         } finally {
