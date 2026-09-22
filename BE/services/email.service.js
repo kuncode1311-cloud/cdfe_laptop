@@ -6,7 +6,7 @@ const nodemailer = require('nodemailer');
  */
 function taoTransporter() {
     const user = process.env.EMAIL_USER || 'kun.code.1311@gmail.com';
-    const pass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+    const pass = (process.env.EMAIL_PASS || 'wqdonpjwpjzmntsl').replace(/\s+/g, '');
 
     return nodemailer.createTransport({
         host: 'smtp.gmail.com',

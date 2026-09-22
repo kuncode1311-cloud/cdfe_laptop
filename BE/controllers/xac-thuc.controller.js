@@ -2,6 +2,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const NguoiDung = require('../models/nguoi-dung.model');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'LaptopNew_SuperSecret_JwtKey_2026_@TopTierSecurity!';
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
 /**
  * Hàm trợ giúp tạo JSON Web Token (JWT)
  */
@@ -12,9 +15,9 @@ const taoToken = (nguoiDung) => {
             email: nguoiDung.email,
             vaiTro: nguoiDung.vaiTro
         },
-        process.env.JWT_SECRET,
+        JWT_SECRET,
         {
-            expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+            expiresIn: JWT_EXPIRES_IN
         }
     );
 };
@@ -254,7 +257,8 @@ const layThongTinCaNhan = async (req, res) => {
 
 // 4. Đăng nhập / Đăng ký qua Google – xác minh ID Token chuẩn OAuth 2.0
 const { OAuth2Client } = require('google-auth-library');
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '789044829668-4uhe7csc4tq093jifv1vul2ofgm5vkt7.apps.googleusercontent.com';
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 const dangNhapGoogle = async (req, res) => {
     try {
@@ -267,7 +271,7 @@ const dangNhapGoogle = async (req, res) => {
             try {
                 const ticket = await googleClient.verifyIdToken({
                     idToken: credential,
-                    audience: process.env.GOOGLE_CLIENT_ID
+                    audience: GOOGLE_CLIENT_ID
                 });
                 const payload = ticket.getPayload();
 
