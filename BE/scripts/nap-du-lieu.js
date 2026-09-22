@@ -28,14 +28,12 @@ const napDuLieu = async () => {
         });
         console.log('✅ Kết nối MongoDB Atlas thành công!');
 
-        // Đọc dữ liệu từ file FE/db.json
-        const duongDanDbJson = path.join(__dirname, '..', '..', 'FE', 'db.json');
-        if (!fs.existsSync(duongDanDbJson)) {
-            console.error(`❌ Không tìm thấy file: ${duongDanDbJson}`);
-            process.exit(1);
+        // Đọc dữ liệu từ BE/backup_db
+        let duLieuJson = {};
+        const backupSanPham = path.join(__dirname, '..', 'backup_db', 'sanphams.json');
+        if (fs.existsSync(backupSanPham)) {
+            duLieuJson.san_pham = JSON.parse(fs.readFileSync(backupSanPham, 'utf-8'));
         }
-
-        const duLieuJson = JSON.parse(fs.readFileSync(duongDanDbJson, 'utf-8'));
 
         console.log('🚀 Bắt đầu quá trình nạp dữ liệu (Seed Data)...');
 

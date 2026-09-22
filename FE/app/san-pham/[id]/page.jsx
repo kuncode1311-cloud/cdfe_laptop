@@ -2,7 +2,7 @@
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
-import { Home, ChevronRight, Star, ShieldCheck, Truck, RotateCcw, Gift, ShoppingCart, GitCompare, Heart, Check, CreditCard, Sparkles } from 'lucide-react';
+import { Home, ChevronRight, Star, ShieldCheck, Truck, RotateCcw, Gift, ShoppingCart, GitCompare, Heart, Check, CreditCard, Sparkles, AlertTriangle, RefreshCw } from 'lucide-react';
 import { SanPhamService } from '@/services/san-pham.service';
 import { formatCurrency, dinhDangTienVND, calculateSavings, tinhTienTietKiem } from '@/utils/formatCurrency';
 import { useCart, useGioHang } from '@/contexts/CartContext';
@@ -23,17 +23,17 @@ export default function TrangChiTietSanPham({ params }) {
 
     const [sanPham, setSanPham] = useState(() => SanPhamService.laySanPhamTheoId(id));
     const [dangTai, setDangTai] = useState(!sanPham);
+    const [loiKetNoi, setLoiKetNoi] = useState(null);
 
-    // Nạp dữ liệu sản phẩm mới nhất từ MongoDB Atlas qua RESTful API
-    useEffect(() => {
-        let daHuy = false;
+    const taiLaiDuLieu = () => {
         if (!id) {
             setDangTai(false);
             return;
         }
-
-        SanPhamService.laySanPhamTheoIdAsync(id).then((sp) => {
-            if (!daHuy) {
+        setDangTai(true);
+        setLoiKetNoi(null);
+        SanPhamService.laySanPhamTheoIdAsync(id)
+            .then((sp) => {
                 if (sp) {
                     setSanPham(sp);
                     if (sp.tuy_chon_phien_ban && sp.tuy_chon_phien_ban.length > 0) {
@@ -41,11 +41,17 @@ export default function TrangChiTietSanPham({ params }) {
                     }
                 }
                 setDangTai(false);
-            }
-        }).catch(() => {
-            if (!daHuy) setDangTai(false);
-        });
-        return () => { daHuy = true; };
+            })
+            .catch((err) => {
+                console.error('Lỗi nạp sản phẩm MongoDB Atlas:', err);
+                setLoiKetNoi('Không thể kết nối đến máy chủ MongoDB Atlas. Vui lòng kiểm tra lại dịch vụ Backend.');
+                setDangTai(false);
+            });
+    };
+
+    // Nạp dữ liệu sản phẩm mới nhất từ MongoDB Atlas qua RESTful API
+    useEffect(() => {
+        taiLaiDuLieu();
     }, [id]);
 
     const { themVaoGioHang } = useGioHang();
@@ -67,6 +73,39 @@ export default function TrangChiTietSanPham({ params }) {
             <div className="py-24 flex flex-col items-center justify-center space-y-4">
                 <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 <p className="text-sm font-bold text-slate-500">Đang tải thông tin sản phẩm từ máy chủ MongoDB...</p>
+            </div>
+        );
+    }
+
+    if (loiKetNoi) {
+        return (
+            <div className="max-w-xl mx-auto py-16 px-4 text-center">
+                <div className="p-8 sm:p-10 rounded-3xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 space-y-4 shadow-sm">
+                    <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 mx-auto flex items-center justify-center">
+                        <AlertTriangle className="w-8 h-8 text-red-600" />
+                    </div>
+                    <h2 className="text-lg font-bold text-red-800 dark:text-red-300">
+                        Không Thể Kết Nối Máy Chủ MongoDB Atlas
+                    </h2>
+                    <p className="text-xs text-red-600/90 dark:text-red-400 max-w-md mx-auto leading-relaxed">
+                        {loiKetNoi}
+                    </p>
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                        <button
+                            onClick={taiLaiDuLieu}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-sm"
+                        >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Thử Kết Nối Lại</span>
+                        </button>
+                        <Link
+                            href="/san-pham"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors"
+                        >
+                            <span>Danh Sách Sản Phẩm</span>
+                        </Link>
+                    </div>
+                </div>
             </div>
         );
     }

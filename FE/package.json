@@ -5,9 +5,6 @@
   "scripts": {
     "dev": "next dev",
     "dev:fe": "next dev",
-    "server": "json-server db.json --port 5000",
-    "build:db": "node scripts/tao-db-json.js",
-    "seed:mongo": "node scripts/day-du-lieu-len-mongodb.js",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -32,7 +29,6 @@
     "concurrently": "^10.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.3.2",
-    "json-server": "^1.0.0-beta.15",
     "tailwindcss": "^4"
   }
 }

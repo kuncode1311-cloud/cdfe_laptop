@@ -7,7 +7,7 @@ import {
     Home, ChevronRight, Flame, Ticket, ArrowRight,
     CheckCircle2, Copy, Check, Zap, Truck, ShieldCheck,
     Gift, Gamepad2, Laptop, Headphones, GraduationCap, Heart, Tag,
-    CheckCheck, ShoppingCart, X
+    CheckCheck, ShoppingCart, X, AlertTriangle, RefreshCw
 } from 'lucide-react';
 import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 import { SanPhamService } from '@/services/san-pham.service';
@@ -29,6 +29,7 @@ export default function TrangKhuyenMai() {
     const [danhSachVoucher, setDanhSachVoucher] = useState([]);
     const [danhSachGiamSau, setDanhSachGiamSau] = useState([]);
     const [dangTai, setDangTai] = useState(true);
+    const [loiKetNoi, setLoiKetNoi] = useState(null);
 
     const [tabHienTai, setTabHienTai] = useState('tat_ca');
     const [dangLocTab, setDangLocTab] = useState(false);
@@ -65,30 +66,34 @@ export default function TrangKhuyenMai() {
     }, [moModalViVoucher]);
 
     // Tải dữ liệu Voucher và Sản phẩm Giảm Sâu 100% từ MongoDB Atlas qua Service
-    useEffect(() => {
-        let daHuy = false;
+    const taiDuLieuKhuyenMai = () => {
         setDangTai(true);
+        setLoiKetNoi(null);
 
         Promise.all([
             MaGiamGiaService.layDanhSachMaGiamGiaAsync(),
             SanPhamService.layTatCaSanPhamAsync({ flash_sale: true })
         ])
             .then(([vouchers, products]) => {
-                if (!daHuy) {
-                    if (Array.isArray(vouchers) && vouchers.length > 0) {
-                        setDanhSachVoucher(vouchers);
-                    }
-                    if (Array.isArray(products) && products.length > 0) {
-                        setDanhSachGiamSau(products);
-                    }
+                if (Array.isArray(vouchers) && vouchers.length > 0) {
+                    setDanhSachVoucher(vouchers);
                 }
+                if (Array.isArray(products) && products.length > 0) {
+                    setDanhSachGiamSau(products);
+                }
+                setLoiKetNoi(null);
             })
             .catch((err) => {
-                console.error('Lỗi nạp khuyến mãi từ MongoDB:', err);
+                console.error('Lỗi nạp khuyến mãi từ MongoDB Atlas:', err);
+                setLoiKetNoi('Không thể kết nối đến máy chủ MongoDB Atlas. Vui lòng kiểm tra lại dịch vụ Backend.');
             })
             .finally(() => {
-                if (!daHuy) setDangTai(false);
+                setDangTai(false);
             });
+    };
+
+    useEffect(() => {
+        taiDuLieuKhuyenMai();
 
         setCaiDatKm(CaiDatService.layCaiDatKhuyenMai());
         const xuLyCaiDatDoi = (e) => {
@@ -97,7 +102,6 @@ export default function TrangKhuyenMai() {
         window.addEventListener('tntp_khuyen_mai_cap_nhat', xuLyCaiDatDoi);
 
         return () => {
-            daHuy = true;
             window.removeEventListener('tntp_khuyen_mai_cap_nhat', xuLyCaiDatDoi);
         };
     }, []);
@@ -470,106 +474,141 @@ export default function TrangKhuyenMai() {
                             moTa="Hệ thống đang áp dụng phân mục khuyến mãi"
                         />
                         <div className={`transition-opacity duration-300 ${dangLocTab ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
-                                {danhSachHienThi.map((vc) => {
-                            const mau = layMauSacCard(vc.mau_sac);
-                            const daLuu = viVoucherNguoiDung.includes(vc.ma_code);
-                            const dangLuu = dangLuuMa[vc.ma_code];
-
-                            return (
-                                <div
-                                    key={vc.id || vc.ma_code}
-                                    className="rounded-[22px] shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.1)] hover:-translate-y-1.5 transition-all duration-300 border border-slate-100/80 flex flex-col justify-between bg-white relative group overflow-hidden"
-                                >
-                                    {/* Mép đục lỗ răng cưa vé voucher (Scallop holes) bên trái chuẩn vé ưu đãi */}
-                                    <div className="absolute -left-[5px] top-3 bottom-3 flex flex-col justify-between z-20 pointer-events-none">
-                                        {[...Array(10)].map((_, i) => (
-                                            <div
-                                                key={i}
-                                                className="w-2.5 h-2.5 rounded-full bg-[#f8fafc]"
-                                            />
-                                        ))}
+                            {loiKetNoi ? (
+                                <div className="p-10 text-center rounded-3xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 space-y-3 shadow-sm">
+                                    <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 mx-auto flex items-center justify-center">
+                                        <AlertTriangle className="w-7 h-7 text-red-600" />
                                     </div>
-
-                                    {/* Nửa trên: Màu sắc chủ đạo + Badge ngày + Giá trị + Icon */}
-                                    <div className={`${mau.dauCard} p-4 sm:p-4.5 text-white relative flex flex-col justify-between min-h-[135px]`}>
-                                        {/* Hàng trên: Giảm + Badge ngày còn lại */}
-                                        <div className="flex items-center justify-between z-10">
-                                            <span className="text-[12.5px] font-semibold text-white/95">
-                                                Giảm
-                                            </span>
-                                            <span className="text-[11px] font-semibold bg-white/20 backdrop-blur-xs border border-white/30 px-2.5 py-0.5 rounded-full text-white shadow-2xs">
-                                                {vc.ngay_het_han || 'Còn 15 ngày'}
-                                            </span>
-                                        </div>
-
-                                        {/* Icon mờ lớn ở góc phải */}
-                                        <div className="absolute right-3.5 top-8 pointer-events-none">
-                                            {layIconVoucher(vc)}
-                                        </div>
-
-                                        {/* Nội dung giá trị giảm và điều kiện */}
-                                        <div className="z-10 mt-2">
-                                            <div className="text-[23px] sm:text-[25px] font-black tracking-tight leading-none text-white my-1">
-                                                {vc.loai_giam === 'phan_tram' ? `${vc.gia_tri_giam}%` : dinhDangGia(vc.gia_tri_giam)}
-                                            </div>
-                                            <div className="text-[12px] font-medium text-white/95 mt-1 leading-snug">
-                                                {vc.mo_ta || 'Cho sản phẩm áp dụng'}
-                                            </div>
-                                            <div className="text-[11px] text-white/80 mt-0.5 font-normal">
-                                                Đơn tối thiểu {dinhDangGia(vc.don_hang_toi_thieu)}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Nửa dưới: Nền trắng + Hộp mã Code kèm nút Copy + Nút Lưu mã */}
-                                    <div className="p-3.5 sm:p-4 bg-white space-y-2.5">
-                                        {/* Ô mã Code kèm nút Copy */}
-                                        <div className={`rounded-xl px-3 py-2 flex items-center justify-between border ${mau.pillBorder} ${mau.pillBg} transition-colors`}>
-                                            <span className={`font-mono font-black tracking-wider text-[13.5px] ${mau.mauCode}`}>
-                                                {vc.ma_code}
-                                            </span>
-                                            <button
-                                                onClick={() => saoChepMa(vc.ma_code)}
-                                                className="p-1 text-slate-400 hover:text-slate-700 hover:scale-110 active:scale-95 transition-all cursor-pointer"
-                                                title="Sao chép mã"
-                                                aria-label={`Sao chép mã ${vc.ma_code}`}
-                                            >
-                                                {maDaSaoChep === vc.ma_code ? (
-                                                    <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
-                                                        <Check className="w-3.5 h-3.5" />
-                                                        <span>Đã chép</span>
-                                                    </span>
-                                                ) : (
-                                                    <Copy className="w-3.5 h-3.5" />
-                                                )}
-                                            </button>
-                                        </div>
-
-                                        {/* Nút hành động Lưu mã */}
-                                        {daLuu ? (
-                                            <Link
-                                                href="/san-pham"
-                                                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-[0_4px_12px_rgba(5,150,105,0.25)] flex items-center justify-center gap-2 text-[13px] transition-all hover:-translate-y-0.5 active:scale-98"
-                                            >
-                                                <CheckCheck className="w-4 h-4" />
-                                                <span>Đã lưu • Dùng ngay</span>
-                                            </Link>
-                                        ) : (
-                                            <button
-                                                onClick={() => xuLyLuuMa(vc)}
-                                                disabled={dangLuu}
-                                                className={`w-full ${mau.nutBam} text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 text-[13px] transition-all hover:-translate-y-0.5 active:scale-98 cursor-pointer disabled:opacity-75`}
-                                            >
-                                                <ShoppingCart className="w-4 h-4" />
-                                                <span>{dangLuu ? 'Đang lưu...' : 'Lưu mã'}</span>
-                                            </button>
-                                        )}
-                                    </div>
+                                    <h3 className="text-base font-bold text-red-800 dark:text-red-300">
+                                        Không Thể Kết Nối Máy Chủ MongoDB Atlas
+                                    </h3>
+                                    <p className="text-xs text-red-600/90 dark:text-red-400 max-w-md mx-auto leading-relaxed">
+                                        {loiKetNoi}
+                                    </p>
+                                    <button
+                                        onClick={taiDuLieuKhuyenMai}
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-sm"
+                                    >
+                                        <RefreshCw className="w-3.5 h-3.5" />
+                                        <span>Thử Kết Nối Lại</span>
+                                    </button>
                                 </div>
-                            );
-                        })}
-                            </div>
+                            ) : dangTai ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+                                    {[...Array(4)].map((_, i) => (
+                                        <div key={i} className="rounded-[22px] p-4 bg-white border border-slate-100 animate-pulse space-y-4 min-h-[220px]">
+                                            <div className="h-20 bg-slate-200 rounded-xl"></div>
+                                            <div className="h-10 bg-slate-100 rounded-lg"></div>
+                                            <div className="h-9 bg-slate-200 rounded-xl"></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : danhSachHienThi.length === 0 ? (
+                                <div className="py-12 text-center text-slate-500 bg-slate-50 rounded-2xl border border-slate-200">
+                                    <p className="text-sm font-semibold">Chưa có mã giảm giá nào trong danh mục này.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
+                                    {danhSachHienThi.map((vc) => {
+                                        const mau = layMauSacCard(vc.mau_sac);
+                                        const daLuu = viVoucherNguoiDung.includes(vc.ma_code);
+                                        const dangLuu = dangLuuMa[vc.ma_code];
+
+                                        return (
+                                            <div
+                                                key={vc.id || vc.ma_code}
+                                                className="rounded-[22px] shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.1)] hover:-translate-y-1.5 transition-all duration-300 border border-slate-100/80 flex flex-col justify-between bg-white relative group overflow-hidden"
+                                            >
+                                                {/* Mép đục lỗ răng cưa vé voucher (Scallop holes) bên trái chuẩn vé ưu đãi */}
+                                                <div className="absolute -left-[5px] top-3 bottom-3 flex flex-col justify-between z-20 pointer-events-none">
+                                                    {[...Array(10)].map((_, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className="w-2.5 h-2.5 rounded-full bg-[#f8fafc]"
+                                                        />
+                                                    ))}
+                                                </div>
+
+                                                {/* Nửa trên: Màu sắc chủ đạo + Badge ngày + Giá trị + Icon */}
+                                                <div className={`${mau.dauCard} p-4 sm:p-4.5 text-white relative flex flex-col justify-between min-h-[135px]`}>
+                                                    {/* Hàng trên: Giảm + Badge ngày còn lại */}
+                                                    <div className="flex items-center justify-between z-10">
+                                                        <span className="text-[12.5px] font-semibold text-white/95">
+                                                            Giảm
+                                                        </span>
+                                                        <span className="text-[11px] font-semibold bg-white/20 backdrop-blur-xs border border-white/30 px-2.5 py-0.5 rounded-full text-white shadow-2xs">
+                                                            {vc.ngay_het_han || 'Còn 15 ngày'}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Icon mờ lớn ở góc phải */}
+                                                    <div className="absolute right-3.5 top-8 pointer-events-none">
+                                                        {layIconVoucher(vc)}
+                                                    </div>
+
+                                                    {/* Nội dung giá trị giảm và điều kiện */}
+                                                    <div className="z-10 mt-2">
+                                                        <div className="text-[23px] sm:text-[25px] font-black tracking-tight leading-none text-white my-1">
+                                                            {vc.loai_giam === 'phan_tram' ? `${vc.gia_tri_giam}%` : dinhDangGia(vc.gia_tri_giam)}
+                                                        </div>
+                                                        <div className="text-[12px] font-medium text-white/95 mt-1 leading-snug">
+                                                            {vc.mo_ta || 'Cho sản phẩm áp dụng'}
+                                                        </div>
+                                                        <div className="text-[11px] text-white/80 mt-0.5 font-normal">
+                                                            Đơn tối thiểu {dinhDangGia(vc.don_hang_toi_thieu)}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Nửa dưới: Nền trắng + Hộp mã Code kèm nút Copy + Nút Lưu mã */}
+                                                <div className="p-3.5 sm:p-4 bg-white space-y-2.5">
+                                                    {/* Ô mã Code kèm nút Copy */}
+                                                    <div className={`rounded-xl px-3 py-2 flex items-center justify-between border ${mau.pillBorder} ${mau.pillBg} transition-colors`}>
+                                                        <span className={`font-mono font-black tracking-wider text-[13.5px] ${mau.mauCode}`}>
+                                                            {vc.ma_code}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => saoChepMa(vc.ma_code)}
+                                                            className="p-1 text-slate-400 hover:text-slate-700 hover:scale-110 active:scale-95 transition-all cursor-pointer"
+                                                            title="Sao chép mã"
+                                                            aria-label={`Sao chép mã ${vc.ma_code}`}
+                                                        >
+                                                            {maDaSaoChep === vc.ma_code ? (
+                                                                <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600">
+                                                                    <Check className="w-3.5 h-3.5" />
+                                                                    <span>Đã chép</span>
+                                                                </span>
+                                                            ) : (
+                                                                <Copy className="w-3.5 h-3.5" />
+                                                            )}
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Nút hành động Lưu mã */}
+                                                    {daLuu ? (
+                                                        <Link
+                                                            href="/san-pham"
+                                                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow-[0_4px_12px_rgba(5,150,105,0.25)] flex items-center justify-center gap-2 text-[13px] transition-all hover:-translate-y-0.5 active:scale-98"
+                                                        >
+                                                            <CheckCheck className="w-4 h-4" />
+                                                            <span>Đã lưu • Dùng ngay</span>
+                                                        </Link>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => xuLyLuuMa(vc)}
+                                                            disabled={dangLuu}
+                                                            className={`w-full ${mau.nutBam} text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 text-[13px] transition-all hover:-translate-y-0.5 active:scale-98 cursor-pointer disabled:opacity-75`}
+                                                        >
+                                                            <ShoppingCart className="w-4 h-4" />
+                                                            <span>{dangLuu ? 'Đang lưu...' : 'Lưu mã'}</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </section>
@@ -772,16 +811,32 @@ export default function TrangKhuyenMai() {
                     </div>
 
                     {/* Lưới Sản Phẩm Giảm Sâu Chuẩn Component TheSanPham & Kết Nối MongoDB */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
-                        {danhSach5SanPham.map((sp) => (
-                            <TheSanPham
-                                key={sp.id || sp._id}
-                                sanPham={sp}
-                                cheDoHienThi="luoi"
-                                hienThiThanhFlashSale={false}
-                            />
-                        ))}
-                    </div>
+                    {dangTai ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                            {[...Array(5)].map((_, i) => (
+                                <div key={i} className="p-3.5 rounded-2xl bg-white border border-slate-200 animate-pulse space-y-3">
+                                    <div className="w-full h-36 rounded-xl bg-slate-200"></div>
+                                    <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+                                    <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : loiKetNoi ? (
+                        <div className="p-8 text-center text-xs text-slate-500 bg-slate-50 rounded-2xl border border-slate-200">
+                            Không thể tải sản phẩm giảm sâu do kết nối máy chủ MongoDB gián đoạn.
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                            {danhSach5SanPham.map((sp) => (
+                                <TheSanPham
+                                    key={sp.id || sp._id}
+                                    sanPham={sp}
+                                    cheDoHienThi="luoi"
+                                    hienThiThanhFlashSale={false}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </section>
 
                 {/* 6. Khối "VÌ SAO NÊN SĂN ƯU ĐÃI TẠI TNTP?" chuẩn 100% Reference */}
