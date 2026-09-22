@@ -225,6 +225,115 @@ export async function GET(request, { params }) {
             return NextResponse.json(cd || {});
         }
 
+        // 10. BẢO HÀNH: /api/bao-hanh hoặc /api/bao-hanh/tra-cuu
+        if (primary === 'bao-hanh' || primary === 'bao_hanh') {
+            const tuKhoa = (searchParams.get('tu_khoa') || searchParams.get('q') || '').trim();
+            if (!tuKhoa || tuKhoa.length < 3) {
+                return NextResponse.json({
+                    hop_le: false,
+                    thong_diep: `Từ khóa "${tuKhoa}" quá ngắn. Quý khách vui lòng nhập chính xác Số Serial/IMEI thiết bị, Mã hoá đơn (LPN-...) hoặc Số điện thoại mua hàng.`,
+                    danh_sach: []
+                });
+            }
+
+            const escaped = tuKhoa.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const exactRegex = new RegExp(`^${escaped}$`, 'i');
+            const digitsOnly = tuKhoa.replace(/\D/g, '');
+
+            const orConditions = [
+                { ma_don_hang: exactRegex },
+                { id: exactRegex },
+                { 'thong_tin_giao_hang.so_dien_thoai': exactRegex },
+                { 'danh_sach_san_pham.so_serial': exactRegex },
+                { 'danh_sach_san_pham.san_pham.ma_san_pham': exactRegex }
+            ];
+
+            if (digitsOnly.length >= 9) {
+                orConditions.push({ 'thong_tin_giao_hang.so_dien_thoai': new RegExp(digitsOnly + '$', 'i') });
+            }
+
+            // Quét trong collection 'don_hang'
+            const donHangKhop = await db.collection('don_hang').find({
+                $or: orConditions
+            }).sort({ _id: -1 }).toArray();
+
+            if (donHangKhop && donHangKhop.length > 0) {
+                const danhSachKetQua = [];
+
+                for (const dh of donHangKhop) {
+                    let ngayMua = new Date(dh.createdAt || Date.now());
+                    if (dh.ngay_tao && dh.ngay_tao.includes('/')) {
+                        const parts = dh.ngay_tao.split(' ').pop().split('/');
+                        if (parts.length === 3) {
+                            ngayMua = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                        }
+                    }
+
+                    let sdtMasked = dh.thong_tin_giao_hang?.so_dien_thoai || '0912***678';
+                    if (sdtMasked.length >= 7) {
+                        sdtMasked = sdtMasked.substring(0, 4) + '***' + sdtMasked.substring(sdtMasked.length - 3);
+                    }
+
+                    const hoTen = dh.thong_tin_giao_hang?.ho_ten || dh.thong_tin_giao_hang?.ho_va_ten || 'Khách Hàng';
+
+                    for (const item of (dh.danh_sach_san_pham || [])) {
+                        const sp = item.san_pham || {};
+                        const thoiGianBHThang = 24;
+                        const ngayHetHan = new Date(ngayMua);
+                        ngayHetHan.setMonth(ngayHetHan.getMonth() + thoiGianBHThang);
+
+                        const now = new Date();
+                        const conHieuLuc = now <= ngayHetHan;
+                        const diffTime = ngayHetHan.getTime() - now.getTime();
+                        const soThangConLai = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30)));
+
+                        const serialMay = item.so_serial || `${sp.ma_san_pham || 'LPN'}-${dh.ma_don_hang?.replace('LPN-', '') || '8899'}`;
+
+                        danhSachKetQua.push({
+                            hop_le: true,
+                            loai_tra_cuu: 'don_hang',
+                            ma_don_hang: dh.ma_don_hang,
+                            id_don_hang: dh.id,
+                            so_serial: serialMay,
+                            ma_san_pham: sp.ma_san_pham || 'CHÍNH HÃNG',
+                            ten_san_pham: item.ten_san_pham || sp.ten_san_pham || 'Laptop Chính Hãng',
+                            hinh_anh: item.hinh_anh || sp.hinh_anh_chinh || (Array.isArray(sp.hinh_anh) ? sp.hinh_anh[0] : '/images/asus_rog_scar18.jpg'),
+                            hang_san_xuat: (sp.hang_san_xuat || 'TNTP').toUpperCase(),
+                            khach_hang: hoTen,
+                            so_dien_thoai: sdtMasked,
+                            ngay_kich_hoat: ngayMua.toLocaleDateString('vi-VN'),
+                            ngay_het_han: ngayHetHan.toLocaleDateString('vi-VN'),
+                            thoi_gian_bao_hanh: `${thoiGianBHThang} Tháng Chính Hãng`,
+                            con_hieu_luc: conHieuLuc,
+                            so_thang_con_lai: soThangConLai,
+                            trang_thai: conHieuLuc
+                                ? `Còn hiệu lực bảo hành chính hãng (${soThangConLai} tháng còn lại)`
+                                : 'Đã hết thời hạn bảo hành chính hãng',
+                            goi_dich_vu: 'Bảo hành vàng On-site tận nơi 24 tháng chính hãng tại hệ thống TNTP Laptop',
+                            trung_tam_bao_hanh: [
+                                'Chi nhánh 1: 29 Tân Phước, P.8, Q.10, TP.HCM (Hotline: 0948.37.79.79)',
+                                'Chi nhánh 2: 12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM (Trường ITC)'
+                            ]
+                        });
+                    }
+                }
+
+                if (danhSachKetQua.length > 0) {
+                    return NextResponse.json({
+                        hop_le: true,
+                        tong_so: danhSachKetQua.length,
+                        danh_sach: danhSachKetQua
+                    });
+                }
+            }
+
+            return NextResponse.json({
+                hop_le: false,
+                thong_diep: `Không tìm thấy thông tin bảo hành cho mã "${tuKhoa}". Quý khách vui lòng kiểm tra lại Số Serial, Mã đơn hàng hoặc Số điện thoại mua hàng.`,
+                danh_sach: []
+            });
+        }
+
         // 10. LIÊN HỆ & TƯ VẤN: /api/lien-he
         if (primary === 'lien-he' || primary === 'lien_he') {
             const boLoc = {};
