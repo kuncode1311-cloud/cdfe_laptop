@@ -379,8 +379,16 @@ export async function POST(request, { params }) {
             );
 
             console.log(`✉️ [Đăng Ký - Lưu Bảng Tạm & Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
-            // Gửi email song song (phản hồi giao diện ngay lập tức trong 30ms)
-            guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
+            // Await email để phát hiện lỗi thật (Railway có thể block SMTP)
+            const ketQuaMail = await guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp);
+            if (!ketQuaMail?.thanhCong) {
+                console.error(`❌ [Đăng Ký] Không thể gửi OTP đến ${emailClean}:`, ketQuaMail?.loi);
+                // Xóa bản ghi tạm vì không gửi được mail
+                await db.collection('dang_ky_tam').deleteMany({ email: emailClean });
+                return NextResponse.json({
+                    thong_diep: `Hệ thống không thể gửi email đến "${emailClean}". Vui lòng thử lại sau hoặc dùng email khác. (Lỗi: ${ketQuaMail?.loi || 'SMTP timeout'})`
+                }, { status: 500 });
+            }
 
             return NextResponse.json({
                 yeuCauOtp: true,
@@ -522,7 +530,12 @@ export async function POST(request, { params }) {
                     { _id: tempUser._id },
                     { $set: { maOtp, hanOtp, updatedAt: new Date() } }
                 );
-                guiMailKichHoatTaiKhoan(emailClean, tempUser.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
+                const ketQuaMail2 = await guiMailKichHoatTaiKhoan(emailClean, tempUser.hoTen, maOtp);
+                if (!ketQuaMail2?.thanhCong) {
+                    return NextResponse.json({
+                        thong_diep: `Không thể gửi email đến "${emailClean}". Lỗi: ${ketQuaMail2?.loi || 'SMTP timeout'}`
+                    }, { status: 500 });
+                }
                 return NextResponse.json({
                     thong_diep: `Mã OTP kích hoạt mới đã được gửi tới email ${emailClean}!`,
                     email: emailClean,
