@@ -176,24 +176,36 @@ const layDanhSachDonHang = async (req, res) => {
     }
 };
 
-// 3. Tra cứu thông tin đơn hàng theo ID hoặc Mã đơn hàng
+// 3. Tra cứu thông tin đơn hàng theo ID, Mã đơn, OrderCode PayOS hoặc SĐT
 const layDonHangTheoIdHoacMa = async (req, res) => {
     try {
         const { id } = req.params;
+        const cleanId = String(id || '').trim();
 
-        let donHang = await DonHang.findOne({
-            $or: [
-                { id: id },
-                { ma_don_hang: { $regex: `^${id}$`, $options: 'i' } }
-            ]
-        });
+        const queryList = [
+            { id: cleanId },
+            { ma_don_hang: { $regex: `^${cleanId}$`, $options: 'i' } }
+        ];
 
-        if (!donHang && id.match(/^[0-9a-fA-F]{24}$/)) {
-            donHang = await DonHang.findById(id);
+        // Nếu là số: tìm theo payos_order_code hoặc mã đơn chứa số
+        if (!isNaN(Number(cleanId))) {
+            queryList.push({ payos_order_code: Number(cleanId) });
         }
 
+        // Nếu là định dạng SĐT Việt Nam
+        if (/^[0-9]{9,11}$/.test(cleanId)) {
+            queryList.push({ 'thong_tin_giao_hang.so_dien_thoai': cleanId });
+        }
+
+        // Nếu là ObjectId hợp lệ của MongoDB
+        if (cleanId.match(/^[0-9a-fA-F]{24}$/)) {
+            queryList.push({ _id: cleanId });
+        }
+
+        let donHang = await DonHang.findOne({ $or: queryList });
+
         if (!donHang) {
-            return res.status(404).json({ thong_diep: `Không tìm thấy đơn hàng với mã/id: ${id}` });
+            return res.status(404).json({ thong_diep: `Không tìm thấy đơn hàng với mã/id: ${cleanId}` });
         }
 
         return res.status(200).json(donHang);

@@ -74,16 +74,27 @@ function NoiDungTrangThanhToan() {
         const orderCode = searchParams.get('orderCode');
         if (status === 'PAID' && orderCode) {
             toast.success('🎉 Cổng PayOS xác nhận đã thanh toán thành công!');
-            // Tìm đơn hàng tương ứng
-            const danhSach = DonHangService.layTatCaDonHang();
-            const donHang = danhSach.find(d => 
-                String(d.payos_order_code) === String(orderCode) || 
-                String(d.ma_don_hang).includes(String(orderCode))
-            );
-            if (donHang) {
-                setDonHangThanhCong(donHang);
-                xoaSachGioHang();
-            }
+            // Tìm đơn hàng tương ứng từ Server MongoDB
+            DonHangService.layDonHangTheoIdHoacMaAsync(orderCode).then(donHang => {
+                if (donHang) {
+                    setDonHangThanhCong({
+                        ...donHang,
+                        da_thanh_toan: true,
+                        trang_thai_thanh_toan: 'da_thanh_toan'
+                    });
+                    xoaSachGioHang();
+                } else {
+                    const danhSach = DonHangService.layTatCaDonHang();
+                    const dh = danhSach.find(d => 
+                        String(d.payos_order_code) === String(orderCode) || 
+                        String(d.ma_don_hang).includes(String(orderCode))
+                    );
+                    if (dh) {
+                        setDonHangThanhCong(dh);
+                        xoaSachGioHang();
+                    }
+                }
+            });
         }
     }, [searchParams]);
 

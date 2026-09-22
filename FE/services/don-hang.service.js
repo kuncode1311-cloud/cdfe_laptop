@@ -221,7 +221,48 @@ export const DonHangService = {
     },
 
     /**
-     * Tra cứu đơn hàng theo Mã Đơn Hàng hoặc Số Điện Thoại
+     * Tra cứu đơn hàng theo Mã Đơn Hàng hoặc Số Điện Thoại từ Server (Async)
+     */
+    async traCuuDonHangAsync(maHoacSdt) {
+        if (!maHoacSdt || !maHoacSdt.trim()) return [];
+        const key = maHoacSdt.trim();
+
+        try {
+            const donHang = await apiFetch(`/don-hang/${encodeURIComponent(key)}`, { cache: 'no-store' });
+            if (donHang && donHang.ma_don_hang) {
+                return [donHang];
+            }
+        } catch {}
+
+        // Fallback kiểm tra trong cache cục bộ
+        return this.traCuuDonHang(key);
+    },
+
+    /**
+     * Lấy chi tiết đơn hàng theo ID, Mã đơn hoặc PayOS OrderCode từ Server (Async)
+     */
+    async layDonHangTheoIdHoacMaAsync(idHoacMa) {
+        if (!idHoacMa) return null;
+        const key = String(idHoacMa).trim();
+
+        try {
+            const donHang = await apiFetch(`/don-hang/${encodeURIComponent(key)}`, { cache: 'no-store' });
+            if (donHang && donHang.ma_don_hang) {
+                return donHang;
+            }
+        } catch {}
+
+        const local = this.layTatCaDonHang();
+        return local.find(d => 
+            d.id === key || 
+            d.ma_don_hang === key || 
+            d._id === key || 
+            String(d.payos_order_code) === key
+        ) || null;
+    },
+
+    /**
+     * Tra cứu đơn hàng theo Mã Đơn Hàng hoặc Số Điện Thoại (Đồng bộ cục bộ)
      */
     traCuuDonHang(maHoacSdt) {
         if (!maHoacSdt.trim())
@@ -229,7 +270,7 @@ export const DonHangService = {
         const key = maHoacSdt.trim().toLowerCase();
         const tatCa = this.layTatCaDonHang();
         return tatCa.filter((dh) => dh.ma_don_hang.toLowerCase() === key ||
-            dh.thong_tin_giao_hang.so_dien_thoai.includes(key));
+            dh.thong_tin_giao_hang?.so_dien_thoai?.includes(key));
     },
 
     /**

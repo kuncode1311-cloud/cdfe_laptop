@@ -9,13 +9,23 @@ export default function TrangTraCuuDonHang() {
     const [tuKhoaTraCuu, setTuKhoaTraCuu] = useState('');
     const [ketQuaTraCuu, setKetQuaTraCuu] = useState(null);
     const [daTimKiem, setDaTimKiem] = useState(false);
-    const xuLyTraCuu = (e) => {
+    const [dangTimKiem, setDangTimKiem] = useState(false);
+
+    const xuLyTraCuu = async (e) => {
         e.preventDefault();
         if (!tuKhoaTraCuu.trim())
             return;
-        const ketQua = DonHangService.traCuuDonHang(tuKhoaTraCuu.trim());
-        setKetQuaTraCuu(ketQua);
-        setDaTimKiem(true);
+        setDangTimKiem(true);
+        try {
+            const ketQua = await DonHangService.traCuuDonHangAsync(tuKhoaTraCuu.trim());
+            setKetQuaTraCuu(ketQua);
+        } catch (err) {
+            console.error('Lỗi tra cứu:', err);
+            setKetQuaTraCuu([]);
+        } finally {
+            setDangTimKiem(false);
+            setDaTimKiem(true);
+        }
     };
     return (<div className="space-y-8 max-w-4xl mx-auto">
       {/* 1. Breadcrumb */}
@@ -46,8 +56,8 @@ export default function TrangTraCuuDonHang() {
             <input type="text" value={tuKhoaTraCuu} onChange={(e) => setTuKhoaTraCuu(e.target.value)} placeholder="Nhập mã đơn LPN-xxxxx hoặc SĐT..." className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"/>
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"/>
           </div>
-          <button type="submit" className="px-6 py-3 rounded-2xl bg-sky-600 hover:bg-sky-700 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-white dark:text-slate-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer shadow-md">
-            Tra Cứu
+          <button type="submit" disabled={dangTimKiem} className="px-6 py-3 rounded-2xl bg-sky-600 hover:bg-sky-700 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-white dark:text-slate-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer shadow-md disabled:opacity-50">
+            {dangTimKiem ? 'Đang Tra Cứu...' : 'Tra Cứu'}
           </button>
         </form>
       </div>
