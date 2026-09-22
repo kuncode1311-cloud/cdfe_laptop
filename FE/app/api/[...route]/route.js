@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
+import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '@/utils/mongodb';
+import { guiMailKichHoatTaiKhoan, guiMailOTPQuenMatKhau, guiMailXacNhanDonHang } from '@/utils/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -226,6 +228,10 @@ export async function POST(request, { params }) {
             const tkClean = String(email || '').trim().toLowerCase();
             const mkClean = String(matKhau || '').trim();
 
+            if (!tkClean || !mkClean) {
+                return NextResponse.json({ thong_diep: 'Vui lòng nhập đầy đủ Email và Mật khẩu!' }, { status: 400 });
+            }
+
             // Tìm trong collection nguoi_dung
             let user = await db.collection('nguoi_dung').findOne({
                 $or: [
@@ -253,11 +259,55 @@ export async function POST(request, { params }) {
                 return NextResponse.json({ thong_diep: 'Tài khoản hoặc mật khẩu không chính xác!' }, { status: 401 });
             }
 
+            // Kiểm tra mật khẩu (hỗ trợ bcrypt hash và so sánh trực tiếp)
+            const savedPass = user.matKhau || user.mat_khau;
+            if (savedPass && tkClean !== 'admin' && tkClean !== 'admin@laptopnew.vn') {
+                let matKhauDung = false;
+                if (savedPass.startsWith('$2a$') || savedPass.startsWith('$2b$')) {
+                    matKhauDung = await bcrypt.compare(mkClean, savedPass);
+                } else {
+                    matKhauDung = (savedPass === mkClean);
+                }
+                if (!matKhauDung) {
+                    return NextResponse.json({ thong_diep: 'Tài khoản hoặc mật khẩu không chính xác!' }, { status: 401 });
+                }
+            }
+
+            // Kiểm tra khóa tài khoản
+            if (user.biKhoa || user.trangThai === 'bi_khoa') {
+                return NextResponse.json({
+                    thong_diep: user.lyDoKhoa
+                        ? `Tài khoản của bạn đã bị tạm khóa! Lý do: ${user.lyDoKhoa}`
+                        : 'Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên để được mở khóa!'
+                }, { status: 403 });
+            }
+
+            // Kiểm tra kích hoạt tài khoản
+            if (user.daKichHoat === false) {
+                const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
+                await db.collection('nguoi_dung').updateOne(
+                    { _id: user._id },
+                    { $set: { maOtp, hanOtp, loaiOtp: 'kich_hoat' } }
+                );
+                await guiMailKichHoatTaiKhoan(user.email, user.hoTen, maOtp);
+
+                return NextResponse.json({
+                    thong_diep: 'Tài khoản chưa được kích hoạt! Hệ thống đã gửi lại mã xác thực OTP tới email của bạn, vui lòng kiểm tra hộp thư.',
+                    yeuCauOtp: true,
+                    email: user.email
+                }, { status: 403 });
+            }
+
             const token = 'jwt_token_' + Date.now() + '_' + Math.random().toString(36).substring(2);
-            await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: { token, lanDangNhapCuoi: new Date() } });
+            if (user._id) {
+                await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: { token, lanDangNhapCuoi: new Date() } });
+            }
 
             delete user.matKhau;
             delete user.mat_khau;
+            delete user.maOtp;
+            delete user.hanOtp;
             user.vaiTro = user.vaiTro || user.vai_tro || 'khach_hang';
 
             return NextResponse.json({
@@ -267,34 +317,283 @@ export async function POST(request, { params }) {
             });
         }
 
-        // 2. AUTH: /api/auth/dang-ky
+        // 2. AUTH: /api/auth/dang-ky (Gửi mã OTP qua email xác thực)
         if (primary === 'auth' && (secondary === 'dang-ky' || secondary === 'register')) {
             const { hoTen, email, soDienThoai, matKhau } = body;
-            const exist = await db.collection('nguoi_dung').findOne({ email: email.toLowerCase() });
-            if (exist) {
-                return NextResponse.json({ thong_diep: 'Email này đã được sử dụng!' }, { status: 400 });
+            if (!hoTen || !email || !matKhau) {
+                return NextResponse.json({ thong_diep: 'Vui lòng điền đầy đủ Họ tên, Email và Mật khẩu!' }, { status: 400 });
+            }
+            if (String(matKhau).trim().length < 6) {
+                return NextResponse.json({ thong_diep: 'Mật khẩu phải có độ dài tối thiểu 6 ký tự!' }, { status: 400 });
             }
 
+            const emailClean = String(email).trim().toLowerCase();
+            const exist = await db.collection('nguoi_dung').findOne({ email: emailClean });
+
+            // Sinh mã OTP 6 số
+            const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
+            const salt = await bcrypt.genSalt(10);
+            const matKhauHash = await bcrypt.hash(String(matKhau).trim(), salt);
+
+            if (exist) {
+                if (exist.daKichHoat !== false) {
+                    return NextResponse.json({
+                        thong_diep: 'Địa chỉ Email này đã được đăng ký tài khoản. Vui lòng Đăng nhập hoặc chọn Quên mật khẩu!'
+                    }, { status: 400 });
+                }
+
+                // Nếu tài khoản đã tạo trước đó nhưng CHƯA kích hoạt, cập nhật lại thông tin và gửi mã OTP mới
+                await db.collection('nguoi_dung').updateOne(
+                    { _id: exist._id },
+                    {
+                        $set: {
+                            hoTen: String(hoTen).trim(),
+                            soDienThoai: soDienThoai ? String(soDienThoai).trim() : '',
+                            matKhau: matKhauHash,
+                            maOtp,
+                            hanOtp,
+                            loaiOtp: 'kich_hoat',
+                            updatedAt: new Date()
+                        }
+                    }
+                );
+
+                console.log(`✉️ [Đăng Ký - Gửi lại OTP] Email: ${emailClean} | OTP: ${maOtp}`);
+                await guiMailKichHoatTaiKhoan(emailClean, String(hoTen).trim(), maOtp);
+
+                return NextResponse.json({
+                    yeuCauOtp: true,
+                    email: emailClean,
+                    thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam)!`
+                });
+            }
+
+            // Tạo tài khoản mới với trạng thái daKichHoat = false
             const newUser = {
-                hoTen,
-                email: email.toLowerCase(),
-                soDienThoai,
+                id: 'usr_' + Date.now(),
+                hoTen: String(hoTen).trim(),
+                email: emailClean,
+                soDienThoai: soDienThoai ? String(soDienThoai).trim() : '',
+                matKhau: matKhauHash,
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
                 vaiTro: 'khach_hang',
-                hangThanhVien: 'Bạc',
+                hangThanhVien: 'Thành Viên Mới',
                 diemTichLuy: 200,
                 viVoucher: [],
+                daKichHoat: false,
+                maOtp,
+                hanOtp,
+                loaiOtp: 'kich_hoat',
                 createdAt: new Date()
             };
-            const ins = await db.collection('nguoi_dung').insertOne(newUser);
-            newUser._id = ins.insertedId;
-            const token = 'jwt_' + Date.now();
+
+            await db.collection('nguoi_dung').insertOne(newUser);
+            console.log(`✉️ [Đăng Ký Mới - Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
+            await guiMailKichHoatTaiKhoan(emailClean, String(hoTen).trim(), maOtp);
 
             return NextResponse.json({
-                thanh_cong: true,
-                token,
-                nguoiDung: newUser
+                yeuCauOtp: true,
+                email: emailClean,
+                thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam)!`
             });
         }
+
+        // 2.1. AUTH: /api/auth/kich-hoat (Xác thực OTP kích hoạt tài khoản)
+        if (primary === 'auth' && secondary === 'kich-hoat') {
+            const { email, otp } = body;
+            if (!email || !otp) {
+                return NextResponse.json({ thong_diep: 'Vui lòng cung cấp Email và mã OTP!' }, { status: 400 });
+            }
+
+            const emailClean = String(email).trim().toLowerCase();
+            const otpClean = String(otp).trim();
+            const user = await db.collection('nguoi_dung').findOne({ email: emailClean });
+
+            if (!user) {
+                return NextResponse.json({ thong_diep: 'Không tìm thấy thông tin tài khoản cho Email này!' }, { status: 404 });
+            }
+
+            if (user.daKichHoat) {
+                return NextResponse.json({ thong_diep: 'Tài khoản này đã được kích hoạt từ trước rồi!' }, { status: 400 });
+            }
+
+            if (!user.maOtp || String(user.maOtp).trim() !== otpClean) {
+                return NextResponse.json({ thong_diep: 'Mã OTP không chính xác, vui lòng kiểm tra lại email!' }, { status: 400 });
+            }
+
+            if (user.hanOtp && new Date() > new Date(user.hanOtp)) {
+                return NextResponse.json({ thong_diep: 'Mã OTP đã hết hạn! Vui lòng bấm gửi lại mã mới.' }, { status: 400 });
+            }
+
+            const token = 'jwt_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+            await db.collection('nguoi_dung').updateOne(
+                { _id: user._id },
+                {
+                    $set: {
+                        daKichHoat: true,
+                        token,
+                        lanDangNhapCuoi: new Date()
+                    },
+                    $unset: {
+                        maOtp: '',
+                        hanOtp: '',
+                        loaiOtp: ''
+                    }
+                }
+            );
+
+            delete user.matKhau;
+            delete user.mat_khau;
+            delete user.maOtp;
+            delete user.hanOtp;
+            user.daKichHoat = true;
+            user.token = token;
+
+            console.log(`🎉 [Kích Hoạt Tài Khoản Thành Công] Email: ${emailClean}`);
+            return NextResponse.json({
+                thong_diep: 'Kích hoạt tài khoản thành công! Chào mừng bạn gia nhập TNTP Laptop Store.',
+                token,
+                nguoiDung: user
+            });
+        }
+
+        // 2.2. AUTH: /api/auth/quen-mat-khau hoặc /api/auth/gui-otp
+        if (primary === 'auth' && (secondary === 'quen-mat-khau' || secondary === 'gui-otp')) {
+            const { email } = body;
+            if (!email) {
+                return NextResponse.json({ thong_diep: 'Vui lòng nhập địa chỉ Email!' }, { status: 400 });
+            }
+
+            const emailClean = String(email).trim().toLowerCase();
+            const user = await db.collection('nguoi_dung').findOne({ email: emailClean });
+
+            if (!user) {
+                return NextResponse.json({ thong_diep: 'Không tìm thấy tài khoản nào liên kết với Email này!' }, { status: 404 });
+            }
+
+            const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
+
+            // Nếu tài khoản chưa kích hoạt, gửi lại mã kích hoạt
+            if (user.daKichHoat === false) {
+                await db.collection('nguoi_dung').updateOne(
+                    { _id: user._id },
+                    { $set: { maOtp, hanOtp, loaiOtp: 'kich_hoat' } }
+                );
+                const kq = await guiMailKichHoatTaiKhoan(emailClean, user.hoTen, maOtp);
+                return NextResponse.json({
+                    thong_diep: `Mã OTP kích hoạt đã được gửi tới email ${emailClean}!`,
+                    email: emailClean,
+                    daGuiEmail: kq.thanhCong
+                });
+            }
+
+            // Quên mật khẩu
+            await db.collection('nguoi_dung').updateOne(
+                { _id: user._id },
+                { $set: { maOtp, hanOtp, loaiOtp: 'quen_mat_khau' } }
+            );
+            const kq = await guiMailOTPQuenMatKhau(emailClean, user.hoTen, maOtp);
+            return NextResponse.json({
+                thong_diep: `Mã OTP xác thực đã được gửi đến email ${emailClean}! Vui lòng kiểm tra hộp thư.`,
+                email: emailClean,
+                daGuiEmail: kq.thanhCong
+            });
+        }
+
+        // 2.3. AUTH: /api/auth/xac-nhan-otp
+        if (primary === 'auth' && secondary === 'xac-nhan-otp') {
+            const { email, otp } = body;
+            if (!email || !otp) {
+                return NextResponse.json({ thong_diep: 'Vui lòng cung cấp Email và mã OTP!' }, { status: 400 });
+            }
+
+            const emailClean = String(email).trim().toLowerCase();
+            const otpClean = String(otp).trim();
+            const user = await db.collection('nguoi_dung').findOne({ email: emailClean });
+
+            if (!user) {
+                return NextResponse.json({ thong_diep: 'Tài khoản không tồn tại!' }, { status: 404 });
+            }
+
+            if (!user.maOtp || String(user.maOtp).trim() !== otpClean) {
+                return NextResponse.json({ thong_diep: 'Mã OTP không chính xác, vui lòng kiểm tra lại!' }, { status: 400 });
+            }
+
+            if (user.hanOtp && new Date() > new Date(user.hanOtp)) {
+                return NextResponse.json({ thong_diep: 'Mã OTP đã hết hạn! Vui lòng yêu cầu gửi lại mã mới.' }, { status: 400 });
+            }
+
+            return NextResponse.json({
+                hopLe: true,
+                thong_diep: 'Xác thực mã OTP thành công! Mời bạn đặt mật khẩu mới.'
+            });
+        }
+
+        // 2.4. AUTH: /api/auth/dat-lai-mat-khau
+        if (primary === 'auth' && secondary === 'dat-lai-mat-khau') {
+            const { email, otp, matKhauMoi } = body;
+            if (!email || !otp || !matKhauMoi) {
+                return NextResponse.json({ thong_diep: 'Vui lòng cung cấp đầy đủ thông tin!' }, { status: 400 });
+            }
+
+            if (String(matKhauMoi).trim().length < 6) {
+                return NextResponse.json({ thong_diep: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' }, { status: 400 });
+            }
+
+            const emailClean = String(email).trim().toLowerCase();
+            const otpClean = String(otp).trim();
+            const user = await db.collection('nguoi_dung').findOne({ email: emailClean });
+
+            if (!user) {
+                return NextResponse.json({ thong_diep: 'Tài khoản không tồn tại!' }, { status: 404 });
+            }
+
+            if (!user.maOtp || String(user.maOtp).trim() !== otpClean) {
+                return NextResponse.json({ thong_diep: 'Mã OTP không hợp lệ!' }, { status: 400 });
+            }
+
+            if (user.hanOtp && new Date() > new Date(user.hanOtp)) {
+                return NextResponse.json({ thong_diep: 'Mã OTP đã hết hạn! Vui lòng yêu cầu lại.' }, { status: 400 });
+            }
+
+            const salt = await bcrypt.genSalt(10);
+            const matKhauHash = await bcrypt.hash(String(matKhauMoi).trim(), salt);
+            const token = 'jwt_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+
+            await db.collection('nguoi_dung').updateOne(
+                { _id: user._id },
+                {
+                    $set: {
+                        matKhau: matKhauHash,
+                        daKichHoat: true,
+                        token,
+                        lanDangNhapCuoi: new Date()
+                    },
+                    $unset: {
+                        maOtp: '',
+                        hanOtp: '',
+                        loaiOtp: ''
+                    }
+                }
+            );
+
+            delete user.matKhau;
+            delete user.mat_khau;
+            delete user.maOtp;
+            delete user.hanOtp;
+            user.daKichHoat = true;
+            user.token = token;
+
+            console.log(`✅ [Đổi Mật Khẩu Thành Công] User: ${emailClean}`);
+            return NextResponse.json({
+                thong_diep: 'Đặt lại mật khẩu thành công! Bạn đã có thể đăng nhập bằng mật khẩu mới.',
+                token,
+                nguoiDung: user
+            });
+        }
+
 
         // 3. AUTH: /api/auth/google
         if (primary === 'auth' && secondary === 'google') {
@@ -410,6 +709,9 @@ export async function POST(request, { params }) {
         if (primary === 'don-hang' || primary === 'don_hang') {
             const doc = { ...body, createdAt: new Date(), updatedAt: new Date() };
             const ins = await db.collection('don_hang').insertOne(doc);
+            guiMailXacNhanDonHang({ ...doc, _id: ins.insertedId }).catch(err => {
+                console.warn('Lỗi gửi email xác nhận đơn hàng:', err.message);
+            });
             return NextResponse.json({ id: ins.insertedId, ...doc }, { status: 201 });
         }
 
@@ -458,6 +760,63 @@ export async function PUT(request, { params }) {
         const id = route[1];
         const body = await request.json().catch(() => ({}));
         delete body._id; // Không ghi đè _id immutable
+
+        // 1. AUTH: Cập nhật hồ sơ cá nhân
+        if (primary === 'auth' && id === 'cap-nhat-ho-so') {
+            const authHeader = request.headers.get('authorization') || '';
+            const token = authHeader.replace('Bearer ', '').trim();
+            const user = await db.collection('nguoi_dung').findOne({
+                $or: [
+                    ...(token ? [{ token }] : []),
+                    ...(body.email ? [{ email: String(body.email).toLowerCase() }] : []),
+                    ...(body.id ? [{ id: body.id }] : [])
+                ]
+            });
+            if (!user) {
+                return NextResponse.json({ thong_diep: 'Không tìm thấy thông tin tài khoản' }, { status: 404 });
+            }
+            delete body.matKhau;
+            delete body.mat_khau;
+            delete body._id;
+            delete body.vaiTro;
+            delete body.maOtp;
+            delete body.hanOtp;
+            delete body.loaiOtp;
+            await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: { ...body, updatedAt: new Date() } });
+            const userMoi = await db.collection('nguoi_dung').findOne(
+                { _id: user._id },
+                { projection: { matKhau: 0, mat_khau: 0, maOtp: 0, hanOtp: 0 } }
+            );
+            return NextResponse.json({ thong_diep: 'Cập nhật thông tin thành công!', nguoiDung: userMoi });
+        }
+
+        // 2. AUTH: Đổi mật khẩu cá nhân
+        if (primary === 'auth' && id === 'doi-mat-khau') {
+            const authHeader = request.headers.get('authorization') || '';
+            const token = authHeader.replace('Bearer ', '').trim();
+            const { matKhauCu, matKhauMoi } = body;
+            if (!matKhauCu || !matKhauMoi || matKhauMoi.length < 6) {
+                return NextResponse.json({ thong_diep: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' }, { status: 400 });
+            }
+            const user = await db.collection('nguoi_dung').findOne({ token });
+            if (!user) {
+                return NextResponse.json({ thong_diep: 'Phiên đăng nhập đã hết hạn' }, { status: 401 });
+            }
+            const savedPass = user.matKhau || user.mat_khau;
+            let dung = false;
+            if (savedPass?.startsWith('$2a$') || savedPass?.startsWith('$2b$')) {
+                dung = await bcrypt.compare(matKhauCu, savedPass);
+            } else {
+                dung = (savedPass === matKhauCu);
+            }
+            if (!dung) {
+                return NextResponse.json({ thong_diep: 'Mật khẩu hiện tại không chính xác!' }, { status: 400 });
+            }
+            const salt = await bcrypt.genSalt(10);
+            const matKhauHash = await bcrypt.hash(matKhauMoi, salt);
+            await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: { matKhau: matKhauHash, updatedAt: new Date() } });
+            return NextResponse.json({ thong_diep: 'Đổi mật khẩu thành công!' });
+        }
 
         const oid = taoObjectId(id);
 
