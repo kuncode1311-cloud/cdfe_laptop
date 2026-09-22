@@ -7288,62 +7288,125 @@ export default function TrangQuanTriCuaHang() {
                                 <div className="xl:col-span-2 space-y-3 sticky top-4">
                                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5 px-1">
                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
-                                        Xem Trước Trực Tiếp
+                                        Preview — giống trang thật
                                     </div>
 
-                                    {/* Mini Hero Preview */}
-                                    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#0b0f19] to-[#040711] text-white p-5 shadow-xl min-h-[200px] flex flex-col justify-end">
-                                        {/* BG */}
-                                        <div className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-screen pointer-events-none"
-                                            style={{ backgroundImage: `url(${formCaiDatKm.hinh_anh_banner || '/images/hero_banner_3d.jpg'})` }} />
-                                        <div className="absolute inset-0 bg-gradient-to-tr from-black via-black/60 to-transparent pointer-events-none" />
-                                        {/* Content */}
-                                        <div className="relative z-10 space-y-2">
-                                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-red-600 to-orange-500 text-white font-black text-[10px] uppercase tracking-wider">
-                                                <Flame className="w-3 h-3" />
-                                                {formCaiDatKm.badge_noi_bat || 'SIÊU KHUYẾN MÃI'}
+                                    {/* ══ Preview giống trang /khuyen-mai thật ══ */}
+                                    <div className="rounded-2xl overflow-hidden border border-[#CDE5FC] shadow-lg bg-[#D7EAFD] relative" style={{ minHeight: 220 }}>
+                                        {/* Ảnh nền bên phải (như trang thật) */}
+                                        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+                                            <img
+                                                src="/images/khuyen-mai/hero_banner_3d_panoramic_perfect.png"
+                                                alt=""
+                                                className="absolute right-0 top-0 h-full w-auto object-cover object-right opacity-90"
+                                                style={{ maxWidth: '65%' }}
+                                            />
+                                            {/* gradient để chữ đọc được */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-[#D7EAFD]/95 via-[#D7EAFD]/60 to-transparent" />
+                                        </div>
+
+                                        {/* Badge góc phải trên */}
+                                        <div className="absolute top-2 right-2 bg-white/95 rounded-lg px-2 py-1 shadow border border-[#D5E6F8] text-center z-10">
+                                            <div className="text-[8px] font-extrabold text-[#0060E6] uppercase leading-tight">TIẾT KIỆM ĐẾN</div>
+                                            <div className="text-[11px] font-black text-[#0060E6] leading-tight">{formCaiDatKm.muc_giam_toi_da || 'GIẢM 35%'}</div>
+                                        </div>
+
+                                        {/* Nội dung bên trái */}
+                                        <div className="relative z-10 p-4 space-y-2 max-w-[60%]">
+                                            {/* Badge xanh */}
+                                            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/90 border border-[#BEDBFE] text-[#0060E6] text-[8px] font-extrabold uppercase tracking-wide">
+                                                <Gift className="w-2.5 h-2.5" />
+                                                <span className="line-clamp-1">{formCaiDatKm.badge_noi_bat || 'ƯU ĐÃI CHÍNH HÃNG'}</span>
                                             </div>
-                                            <h4 className="text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-amber-300 leading-tight line-clamp-2">
+
+                                            {/* Tiêu đề */}
+                                            <div className="text-[13px] font-black text-[#0B1736] leading-tight line-clamp-2">
                                                 {formCaiDatKm.tieu_de_chinh || 'TIÊU ĐỀ CHIẾN DỊCH'}
-                                            </h4>
-                                            <p className="text-[10px] text-slate-300 line-clamp-1">
-                                                {formCaiDatKm.phu_de || 'Phụ đề mô tả chiến dịch...'}
+                                            </div>
+
+                                            {/* Phụ đề */}
+                                            <p className="text-[9px] text-[#334155] font-semibold line-clamp-1">
+                                                {formCaiDatKm.phu_de || 'Săn Deal Khủng...'}
                                             </p>
-                                            <div className="flex flex-wrap items-center gap-2 pt-1">
-                                                <span className="px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-black text-[10px]">
-                                                    {formCaiDatKm.muc_giam_toi_da || 'GIẢM ĐẾN 35%'}
-                                                </span>
-                                                <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-red-600 to-orange-500 text-white font-black text-[10px]">
-                                                    {formCaiDatKm.nut_hanh_dong_text || 'Xem Deal Ngay'}
-                                                </span>
+
+                                            {/* CTA */}
+                                            <div className="inline-flex items-center gap-1 bg-[#0060E6] text-white text-[9px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                                                <span>{formCaiDatKm.nut_hanh_dong_text || 'Khám phá ưu đãi'}</span>
+                                                <ArrowUpRight className="w-2.5 h-2.5" />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* ══ Preview Flash Sale banner trang chủ ══ */}
+                                    <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1 pt-1 flex items-center gap-1">
+                                        <Flame className="w-2.5 h-2.5 text-orange-500" />
+                                        Flash Sale (trang chủ) — cùng timer
+                                    </div>
+                                    <div className="rounded-xl overflow-hidden border border-orange-200 bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 p-3 shadow">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="space-y-0.5 flex-1 min-w-0">
+                                                <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-white/20 text-white text-[8px] font-black uppercase">
+                                                    <Flame className="w-2 h-2" />
+                                                    {formCaiDatKm.badge_noi_bat || 'SIÊU KHUYẾN MÃI'}
+                                                </div>
+                                                <div className="text-[10px] font-black text-white leading-tight line-clamp-1">FLASH SALE</div>
+                                                <div className="text-[8px] text-white/80 line-clamp-1">{formCaiDatKm.phu_de || 'Săn Deal Khủng...'}</div>
+                                            </div>
+                                            {/* Countdown */}
+                                            <div className="shrink-0 text-center">
+                                                <div className="text-[7px] text-white/70 font-bold uppercase mb-0.5">Kết thúc trong</div>
+                                                <div className="flex items-center gap-0.5">
+                                                    {['GIỜ', 'PHÚT', 'GIÂY'].map((unit, i) => (
+                                                        <React.Fragment key={unit}>
+                                                            <div className="bg-black/40 rounded px-1 py-0.5 text-center">
+                                                                <div className="text-[10px] font-black text-white">--</div>
+                                                                <div className="text-[6px] text-white/60">{unit}</div>
+                                                            </div>
+                                                            {i < 2 && <span className="text-white/80 font-black text-[8px] mb-1">:</span>}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Marquee preview */}
                                     {formCaiDatKm.thong_bao_chay && (
-                                        <div className="bg-gradient-to-r from-amber-500 to-rose-600 rounded-xl px-4 py-2 overflow-hidden">
-                                            <p className="text-white font-bold text-[10px] truncate">
+                                        <div className="bg-gradient-to-r from-amber-500 to-rose-600 rounded-xl px-3 py-1.5 overflow-hidden">
+                                            <p className="text-white font-bold text-[9px] truncate">
                                                 📢 {formCaiDatKm.thong_bao_chay}
                                             </p>
                                         </div>
                                     )}
 
-                                    {/* Bảng tóm tắt thông tin */}
+                                    {/* Ghi chú đồng hồ */}
+                                    <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/50 rounded-xl px-3 py-2 space-y-0.5">
+                                        <div className="flex items-start gap-1.5">
+                                            <Clock className="w-3 h-3 text-blue-500 shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-[10px] font-black text-blue-700 dark:text-blue-300">Đồng hồ đếm ngược chung</p>
+                                                <p className="text-[9px] text-blue-500/80 dark:text-blue-400/70 leading-tight mt-0.5">
+                                                    Hạn kết thúc bạn chỉnh ở đây điều khiển <strong>cả 2 trang</strong>: banner Flash Sale trang chủ & đồng hồ trang Khuyến Mãi.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Bảng tóm tắt */}
                                     <div className="bg-white dark:bg-[#0d1527] rounded-2xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
                                         <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/50">
                                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Tóm Tắt Cấu Hình</span>
                                         </div>
                                         {[
                                             { label: 'Tiêu đề', val: formCaiDatKm.tieu_de_chinh, color: 'text-slate-800 dark:text-slate-100 font-bold' },
-                                            { label: 'Badge đỏ', val: formCaiDatKm.badge_noi_bat, color: 'text-red-600 font-bold' },
+                                            { label: 'Badge', val: formCaiDatKm.badge_noi_bat, color: 'text-red-600 font-bold' },
                                             { label: 'Mức giảm', val: formCaiDatKm.muc_giam_toi_da, color: 'text-amber-600 font-bold' },
                                             { label: 'Nút CTA', val: formCaiDatKm.nut_hanh_dong_text, color: 'text-slate-700 dark:text-slate-200' },
-                                            { label: 'Link nút', val: formCaiDatKm.nut_hanh_dong_link, color: 'text-blue-600 font-mono' },
-                                            { label: 'Kết thúc', val: formCaiDatKm.thoi_gian_ket_thuc ? new Date(formCaiDatKm.thoi_gian_ket_thuc).toLocaleString('vi-VN') : '—', color: 'text-slate-600 dark:text-slate-300' },
+                                            { label: 'Link', val: formCaiDatKm.nut_hanh_dong_link, color: 'text-blue-600 font-mono' },
+                                            { label: 'Hết hạn', val: formCaiDatKm.thoi_gian_ket_thuc ? new Date(formCaiDatKm.thoi_gian_ket_thuc).toLocaleString('vi-VN') : '—', color: 'text-slate-600 dark:text-slate-300' },
                                         ].map(row => (
                                             <div key={row.label} className="flex items-start gap-2 px-4 py-2">
-                                                <span className="text-[10px] text-slate-400 w-16 shrink-0 pt-0.5">{row.label}</span>
+                                                <span className="text-[10px] text-slate-400 w-14 shrink-0 pt-0.5">{row.label}</span>
                                                 <span className={`text-[11px] ${row.color} line-clamp-1 flex-1 min-w-0`}>{row.val || <span className="text-slate-300 dark:text-slate-600 italic">chưa nhập</span>}</span>
                                             </div>
                                         ))}
