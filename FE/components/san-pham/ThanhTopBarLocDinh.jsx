@@ -70,7 +70,7 @@ export default function ThanhTopBarLocDinh({
         if (tabChonThuCong) return tabChonThuCong;
         if (danhMucHienTai.length === 0) return 'tat-ca';
         const coLaptop = danhMucHienTai.some(m => MA_DANH_MUC_LAPTOP.includes(m));
-        const coPhuKien = danhMucHienTai.some(m => MA_DANH_MUC_PHU_KIEN.includes(m));
+        const coPhuKien = danhMucHienTai.some(m => MA_DANH_MUC_PHU_KIEN.includes(m) || m === 'linh-kien' || m === 'phu-kien-gear');
         if (coLaptop && !coPhuKien) return 'laptop';
         if (coPhuKien && !coLaptop) return 'phu-kien';
         return 'tat-ca';
@@ -306,7 +306,7 @@ export default function ThanhTopBarLocDinh({
 
                             {/* Các danh mục con của Phụ Kiện */}
                             {DANH_MUC_CON_PHU_KIEN.map((dm) => {
-                                const dangChon = danhMucHienTai.length === 1 && danhMucHienTai[0] === dm.ma;
+                                const dangChon = danhMucHienTai.length === 1 && (danhMucHienTai[0] === dm.ma || (dm.ma === 'linh-kien-nang-cap' && danhMucHienTai[0] === 'linh-kien'));
                                 const count = demCount[dm.ma] ?? 0;
 
                                 return (

@@ -212,23 +212,48 @@ export const SanPhamService = {
      */
     locSanPham(boLoc, danhSach = null) {
         let ketQua = [...(Array.isArray(danhSach) && danhSach.length > 0 ? danhSach : boNhoDemSanPham)];
-        // 1. Lọc theo từ khóa tìm kiếm
+        // 1. Lọc theo từ khóa tìm kiếm (An toàn tuyệt đối, không crash với phụ kiện hay linh kiện)
         if (boLoc.tu_khoa && boLoc.tu_khoa.trim()) {
             const key = boLoc.tu_khoa.toLowerCase().trim();
-            ketQua = ketQua.filter((sp) => sp.ten_san_pham.toLowerCase().includes(key) ||
-                sp.ma_san_pham.toLowerCase().includes(key) ||
-                sp.hang_san_xuat.toLowerCase().includes(key) ||
-                sp.thong_so.cpu.toLowerCase().includes(key) ||
-                sp.thong_so.card_do_hoa.toLowerCase().includes(key) ||
-                sp.thong_so.ram.toLowerCase().includes(key));
+            ketQua = ketQua.filter((sp) => {
+                if (!sp) return false;
+                const ten = (sp.ten_san_pham || '').toLowerCase();
+                const ma = (sp.ma_san_pham || '').toLowerCase();
+                const hang = (sp.hang_san_xuat || '').toLowerCase();
+                const ts = sp.thong_so || {};
+                const cpu = (ts.cpu || '').toLowerCase();
+                const vga = (ts.card_do_hoa || '').toLowerCase();
+                const ram = (ts.ram || '').toLowerCase();
+                const loaiLk = (ts.loai_linh_kien || '').toLowerCase();
+                const dungLuong = (ts.dung_luong || '').toLowerCase();
+                const switchKey = (ts.loai_switch || '').toLowerCase();
+                const moTa = (sp.moTa || sp.mo_ta_chi_tiet || '').toLowerCase();
+                return ten.includes(key) || ma.includes(key) || hang.includes(key) ||
+                    cpu.includes(key) || vga.includes(key) || ram.includes(key) ||
+                    loaiLk.includes(key) || dungLuong.includes(key) || switchKey.includes(key) || moTa.includes(key);
+            });
         }
         // 2. Lọc theo hãng sản xuất
         if (boLoc.hang_san_xuat && boLoc.hang_san_xuat.length > 0) {
-            ketQua = ketQua.filter((sp) => boLoc.hang_san_xuat.includes(sp.hang_san_xuat));
+            ketQua = ketQua.filter((sp) => sp.hang_san_xuat && boLoc.hang_san_xuat.includes(sp.hang_san_xuat));
         }
-        // 3. Lọc theo danh mục nhu cầu
+        // 3. Lọc theo danh mục nhu cầu (Hỗ trợ alias linh hoạt giữa linh-kien và linh-kien-nang-cap, phu-kien-gear và tat-ca-phu-kien)
         if (boLoc.danh_muc && boLoc.danh_muc.length > 0) {
-            ketQua = ketQua.filter((sp) => sp.danh_muc.some((dm) => boLoc.danh_muc.includes(dm)));
+            const danhMucYeuCau = boLoc.danh_muc.flatMap(dm => {
+                if (dm === 'linh-kien') return ['linh-kien', 'linh-kien-nang-cap'];
+                if (dm === 'linh-kien-nang-cap') return ['linh-kien-nang-cap', 'linh-kien'];
+                if (dm === 'phu-kien-gear' || dm === 'tat-ca-phu-kien') {
+                    return ['phu-kien-gear', 'tat-ca-phu-kien', 'balo-tui-chong-soc', 'ban-phim-co', 'chuot-lot-chuot', 'tai-nghe-loa', 'sac-cap-hub', 'linh-kien-nang-cap', 'linh-kien', 'de-tan-gia-do'];
+                }
+                if (dm === 'tat-ca-laptop') {
+                    return ['ai-pc', 'gaming', 'van-phong-mong-nhe', 'do-hoa-sang-tao', 'doanh-nhan', 'sinh-vien'];
+                }
+                return [dm];
+            });
+            ketQua = ketQua.filter((sp) => {
+                const spCategories = Array.isArray(sp.danh_muc) ? sp.danh_muc : [];
+                return spCategories.some((dm) => danhMucYeuCau.includes(dm));
+            });
         }
         // 4. Lọc theo khoảng giá
         if (boLoc.muc_gia_toi_thieu !== undefined) {

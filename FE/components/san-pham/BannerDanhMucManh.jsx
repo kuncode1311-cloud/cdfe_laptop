@@ -84,6 +84,18 @@ const THONG_TIN_DANH_MUC = {
         moTa: 'SSD PCIe Gen 4 tốc độ đọc ghi 7.450 MB/s và RAM bus cao tăng tốc độ phản hồi tức thì',
         hinhAnh: '/images/sp/samsung_990_ssd.jpg',
         badge: 'Gen 4.0 Siêu Tốc'
+    },
+    'linh-kien': {
+        ten: 'LINH KIỆN NÂNG CẤP (SSD NVMe & RAM DDR5)',
+        moTa: 'SSD PCIe Gen 4 tốc độ đọc ghi 7.450 MB/s và RAM bus cao tăng tốc độ phản hồi tức thì',
+        hinhAnh: '/images/sp/samsung_990_ssd.jpg',
+        badge: 'Linh Kiện Chính Hãng'
+    },
+    'phu-kien-gear': {
+        ten: 'TẤT CẢ PHỤ KIỆN CÔNG NGHỆ & GAMING GEAR',
+        moTa: 'Balo chống sốc, bàn phím cơ custom, chuột siêu nhẹ, tai nghe âm thanh vòm, sạc nhanh GaN và linh kiện nâng cấp',
+        hinhAnh: '/images/sp/gaming_keyboard_rgb.jpg',
+        badge: 'Phụ Kiện Gaming Pro'
     }
 };
 
@@ -97,12 +109,23 @@ export default function BannerDanhMucManh({
 }) {
     const key = useMemo(() => {
         if (!danhMucHienTai || danhMucHienTai.length === 0) return 'all';
-        if (danhMucHienTai.length === 1) return danhMucHienTai[0];
+        if (danhMucHienTai.length === 1) {
+            const k = danhMucHienTai[0];
+            if (k === 'linh-kien') return 'linh-kien-nang-cap';
+            if (k === 'phu-kien-gear') return 'tat-ca-phu-kien';
+            return k;
+        }
         if (danhMucHienTai.includes('ai-pc') && danhMucHienTai.includes('gaming')) return 'tat-ca-laptop';
         if (danhMucHienTai.includes('balo-tui-chong-soc') && danhMucHienTai.includes('ban-phim-co')) return 'tat-ca-phu-kien';
         return danhMucHienTai[0] || 'all';
     }, [danhMucHienTai]);
-    const info = THONG_TIN_DANH_MUC[key] || THONG_TIN_DANH_MUC['all'];
+
+    const info = THONG_TIN_DANH_MUC[key] || THONG_TIN_DANH_MUC['all'] || {
+        ten: 'SẢN PHẨM CÔNG NGHỆ CHÍNH HÃNG',
+        moTa: 'Khám phá các sản phẩm công nghệ và phụ kiện chính hãng chất lượng cao',
+        hinhAnh: '/images/sp/hero-3d-laptop.jpg',
+        badge: 'Chính Hãng'
+    };
 
     return (
         <div className="w-full bg-gradient-to-r from-blue-50/90 via-sky-50/50 to-white dark:from-slate-900 dark:via-blue-950/30 dark:to-slate-900 rounded-2xl border-2 border-blue-200/90 dark:border-blue-900/60 p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 transition-all">

@@ -22,7 +22,9 @@ export const DANH_SACH_DANH_MUC_ANH = [
     { ma: 'chuot-lot-chuot', ten: 'Chuột & Pad', moTa: 'Wireless 49g siêu nhẹ', hinhAnh: '/images/sp/gaming_mouse_wireless.jpg' },
     { ma: 'tai-nghe-loa', ten: 'Tai Nghe', moTa: 'Hi-Res Audio 7.1', hinhAnh: '/images/sp/tai_nghe_gaming_pro.jpg' },
     { ma: 'sac-cap-hub', ten: 'Sạc & Hub', moTa: 'GaN 140W đa cổng', hinhAnh: '/images/sp/cu_sac_gan_140w.jpg' },
-    { ma: 'linh-kien-nang-cap', ten: 'Linh Kiện', moTa: 'SSD NVMe Gen 4', hinhAnh: '/images/sp/samsung_990_ssd.jpg' }
+    { ma: 'linh-kien-nang-cap', ten: 'Linh Kiện', moTa: 'SSD NVMe Gen 4', hinhAnh: '/images/sp/samsung_990_ssd.jpg' },
+    { ma: 'linh-kien', ten: 'Linh Kiện', moTa: 'SSD NVMe Gen 4 & RAM', hinhAnh: '/images/sp/samsung_990_ssd.jpg' },
+    { ma: 'phu-kien-gear', ten: 'Phụ Kiện', moTa: 'Gaming Gear & Đồ Công Nghệ', hinhAnh: '/images/sp/gaming_keyboard_rgb.jpg' }
 ];
 
 export default function BoLocThongMinhAllInOne({

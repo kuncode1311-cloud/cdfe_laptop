@@ -1096,6 +1096,7 @@ const DANH_SACH_LAPTOP_GOC = [
     "ten_san_pham": "Ổ Cứng SSD Samsung 990 PRO 2TB M.2 NVMe PCIe 4.0 Heatsink (Đọc 7.450 MB/s - Ghi 6.900 MB/s)",
     "hang_san_xuat": "samsung",
     "danh_muc": [
+      "linh-kien-nang-cap",
       "linh-kien"
     ],
     "gia_goc": 5990000,
@@ -1188,6 +1189,7 @@ const DANH_SACH_LAPTOP_GOC = [
     "ten_san_pham": "Bộ Nhớ RAM Kingston FURY Renegade DDR5 RGB 32GB (2x16GB) Bus 6400MHz CL32",
     "hang_san_xuat": "kingston",
     "danh_muc": [
+      "linh-kien-nang-cap",
       "linh-kien"
     ],
     "gia_goc": 4290000,
@@ -1271,6 +1273,7 @@ const DANH_SACH_LAPTOP_GOC = [
     "ten_san_pham": "Bàn Phím Cơ Custom Glyph 75% Gasket Mount | Màn Hình OLED | Núm Xoay Đa Năng | Switch HIFI",
     "hang_san_xuat": "keychron",
     "danh_muc": [
+      "ban-phim-co",
       "phu-kien-gear"
     ],
     "gia_goc": 3490000,
@@ -1372,6 +1375,7 @@ const DANH_SACH_LAPTOP_GOC = [
     "ten_san_pham": "Chuột Gaming Siêu Nhẹ Không Dây Pro Air-8 Wireless | Mắt Đọc 26.000 DPI | Siêu Nhẹ 49g | 8000Hz Polling Rate",
     "hang_san_xuat": "logitech",
     "danh_muc": [
+      "chuot-lot-chuot",
       "phu-kien-gear"
     ],
     "gia_goc": 2190000,

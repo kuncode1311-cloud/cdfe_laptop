@@ -93,7 +93,7 @@ export default function MenuDanhMuc() {
                   </div>
 
                   <div className="space-y-2">
-                    <Link href="/san-pham?danh_muc=linh-kien&tu_khoa=RAM" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <Link href="/san-pham?danh_muc=linh-kien-nang-cap&tu_khoa=RAM" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
                       <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-cyan-400 shrink-0">
                         <Cpu className="w-4 h-4"/>
                       </div>
@@ -107,7 +107,7 @@ export default function MenuDanhMuc() {
                       </div>
                     </Link>
 
-                    <Link href="/san-pham?danh_muc=linh-kien&tu_khoa=SSD" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <Link href="/san-pham?danh_muc=linh-kien-nang-cap&tu_khoa=SSD" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
                       <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shrink-0">
                         <HardDrive className="w-4 h-4"/>
                       </div>
@@ -121,7 +121,7 @@ export default function MenuDanhMuc() {
                       </div>
                     </Link>
 
-                    <Link href="/san-pham?danh_muc=linh-kien" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <Link href="/san-pham?danh_muc=linh-kien-nang-cap" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
                       <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-slate-800 text-amber-600 dark:text-amber-400 shrink-0">
                         <ShieldCheck className="w-4 h-4"/>
                       </div>
@@ -147,7 +147,7 @@ export default function MenuDanhMuc() {
                   </div>
 
                   <div className="space-y-2">
-                    <Link href="/san-pham?danh_muc=phu-kien-gear&tu_khoa=Bàn phím" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <Link href="/san-pham?danh_muc=ban-phim-co" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
                       <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shrink-0">
                         <Keyboard className="w-4 h-4"/>
                       </div>
@@ -161,7 +161,7 @@ export default function MenuDanhMuc() {
                       </div>
                     </Link>
 
-                    <Link href="/san-pham?danh_muc=phu-kien-gear&tu_khoa=Chuột" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <Link href="/san-pham?danh_muc=chuot-lot-chuot" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
                       <div className="p-1.5 rounded-lg bg-rose-50 dark:bg-slate-800 text-rose-600 dark:text-rose-400 shrink-0">
                         <Mouse className="w-4 h-4"/>
                       </div>
@@ -175,7 +175,7 @@ export default function MenuDanhMuc() {
                       </div>
                     </Link>
 
-                    <Link href="/san-pham?danh_muc=phu-kien-gear" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
+                    <Link href="/san-pham?danh_muc=tai-nghe-loa" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
                       <div className="p-1.5 rounded-lg bg-cyan-50 dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shrink-0">
                         <Headphones className="w-4 h-4"/>
                       </div>

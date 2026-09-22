@@ -16,8 +16,13 @@ import { useYeuThich } from '@/contexts/WishlistContext';
  */
 function layThongSoNhanh(sanPham) {
     const thongSo = sanPham.thong_so || {};
-    const danhMuc = sanPham.danh_muc || [];
-    const laLinhKien = danhMuc.includes('linh-kien') || danhMuc.includes('phu-kien-gear');
+    const danhMuc = Array.isArray(sanPham.danh_muc) ? sanPham.danh_muc : [];
+    const DANH_MUC_PHU_KIEN_SET = new Set([
+        'linh-kien', 'linh-kien-nang-cap', 'phu-kien-gear', 'tat-ca-phu-kien',
+        'balo-tui-chong-soc', 'ban-phim-co', 'chuot-lot-chuot', 'tai-nghe-loa',
+        'sac-cap-hub', 'de-tan-gia-do'
+    ]);
+    const laLinhKien = danhMuc.some(dm => DANH_MUC_PHU_KIEN_SET.has(dm)) || !thongSo.cpu;
 
     // Phụ kiện chuột, bàn phím, linh kiện, balo, củ sạc, tản nhiệt, tai nghe
     if (laLinhKien) {
