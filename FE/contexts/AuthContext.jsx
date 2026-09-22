@@ -254,6 +254,20 @@ export function AuthProvider({ children }) {
         return data;
     };
 
+    // Gửi lại mã OTP (Hỗ trợ cả kích hoạt tài khoản và quên mật khẩu)
+    const guiLaiOtp = async (email) => {
+        const res = await fetch(`${API_BASE_URL}/auth/gui-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.thong_diep || 'Không thể gửi lại mã OTP, vui lòng kiểm tra lại email!');
+        }
+        return data;
+    };
+
     // Xác nhận mã OTP
     const xacNhanOtp = async (email, otp) => {
         const res = await fetch(`${API_BASE_URL}/auth/xac-nhan-otp`, {
@@ -437,6 +451,8 @@ export function AuthProvider({ children }) {
                 dangXuat,
                 logout: dangXuat,
                 guiOtpQuenMatKhau,
+                guiLaiOtp,
+                resendOtp: guiLaiOtp,
                 xacNhanOtp,
                 datLaiMatKhau
             }}

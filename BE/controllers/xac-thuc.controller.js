@@ -423,8 +423,17 @@ const yeuCauQuenMatKhau = async (req, res) => {
         }
 
         if (user.daKichHoat === false) {
-            return res.status(400).json({
-                thong_diep: 'Tài khoản này chưa được kích hoạt xác thực email! Vui lòng kích hoạt tài khoản trước.'
+            const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
+            user.maOtp = maOtp;
+            user.hanOtp = hanOtp;
+            user.loaiOtp = 'kich_hoat';
+            await user.save();
+            const ketQua = await guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp);
+            return res.status(200).json({
+                thong_diep: `Tài khoản chưa được kích hoạt! Đã gửi lại mã OTP kích hoạt mới tới email ${emailChuan}.`,
+                email: emailChuan,
+                daGuiEmail: ketQua.thanhCong
             });
         }
 
@@ -453,6 +462,65 @@ const yeuCauQuenMatKhau = async (req, res) => {
         console.error('Lỗi yêu cầu quên mật khẩu:', loi);
         return res.status(500).json({
             thong_diep: 'Lỗi máy chủ khi xử lý yêu cầu quên mật khẩu',
+            chi_tiet: loi.message
+        });
+    }
+};
+
+// 5.1. Gửi lại mã OTP (Hỗ trợ cả kích hoạt tài khoản và quên mật khẩu)
+const guiLaiOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ thong_diep: 'Vui lòng cung cấp Email!' });
+        }
+
+        const emailChuan = email.trim().toLowerCase();
+        const user = await NguoiDung.findOne({ email: emailChuan });
+
+        if (!user) {
+            return res.status(404).json({
+                thong_diep: 'Không tìm thấy tài khoản nào liên kết với Email này trong hệ thống!'
+            });
+        }
+
+        // Sinh mã OTP 6 số ngẫu nhiên mới
+        const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const hanOtp = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
+
+        if (user.daKichHoat === false) {
+            user.maOtp = maOtp;
+            user.hanOtp = hanOtp;
+            user.loaiOtp = 'kich_hoat';
+            await user.save();
+
+            console.log(`✉️ [BE - Gửi Lại OTP Kích Hoạt] Email: ${emailChuan} | OTP: ${maOtp}`);
+            const ketQua = await guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp);
+
+            return res.status(200).json({
+                thong_diep: `Mã OTP kích hoạt mới đã được gửi tới email ${emailChuan}! Vui lòng kiểm tra hộp thư.`,
+                email: emailChuan,
+                daGuiEmail: ketQua.thanhCong
+            });
+        }
+
+        user.maOtp = maOtp;
+        user.hanOtp = hanOtp;
+        user.loaiOtp = 'quen_mat_khau';
+        await user.save();
+
+        console.log(`🔑 [BE - Gửi Lại OTP Quên Pass] Email: ${emailChuan} | OTP: ${maOtp}`);
+        const ketQua = await guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp);
+
+        return res.status(200).json({
+            thong_diep: `Mã OTP xác thực mới đã được gửi tới email ${emailChuan}! Vui lòng kiểm tra hộp thư.`,
+            email: emailChuan,
+            daGuiEmail: ketQua.thanhCong
+        });
+    } catch (loi) {
+        console.error('Lỗi gửi lại mã OTP:', loi);
+        return res.status(500).json({
+            thong_diep: 'Lỗi máy chủ khi gửi lại mã OTP',
             chi_tiet: loi.message
         });
     }
@@ -634,6 +702,7 @@ module.exports = {
     layThongTinCaNhan,
     dangNhapGoogle,
     yeuCauQuenMatKhau,
+    guiLaiOtp,
     xacNhanOtp,
     datLaiMatKhau,
     capNhatHoSo,

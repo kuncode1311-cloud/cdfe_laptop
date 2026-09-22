@@ -47,6 +47,7 @@ export default function ModalDangNhapDangKy() {
         kichHoatTaiKhoan,
         dangNhapGoogle,
         guiOtpQuenMatKhau,
+        guiLaiOtp,
         xacNhanOtp,
         datLaiMatKhau
     } = useNguoiDung();
@@ -466,6 +467,26 @@ export default function ModalDangNhapDangKy() {
         }
     };
 
+    // Gửi lại mã OTP kích hoạt tài khoản
+    const xuLyGuiLaiOtpDangKy = async () => {
+        if (!email || !email.includes('@')) {
+            setThongBaoLoi('Vui lòng nhập địa chỉ email hợp lệ để nhận mã OTP!');
+            return;
+        }
+        setThongBaoLoi('');
+        setThongBaoThanhCong('');
+        setDangXuLy(true);
+        try {
+            const res = await guiLaiOtp(email.trim());
+            setThongBaoThanhCong(res.thong_diep || `Đã gửi lại mã OTP mới tới email ${email}! Vui lòng kiểm tra hộp thư.`);
+            setDemNguoc(60);
+        } catch (err) {
+            setThongBaoLoi(err.message || 'Không thể gửi lại mã OTP, vui lòng thử lại!');
+        } finally {
+            setDangXuLy(false);
+        }
+    };
+
     // ==========================================
     // 3. XỬ LÝ ĐĂNG NHẬP
     // ==========================================
@@ -484,6 +505,12 @@ export default function ModalDangNhapDangKy() {
             setMoTaThanhCong('Chào mừng bạn quay trở lại với TNTP Laptop Store.');
             setThanhCong(true);
         } catch (err) {
+            if (err.message && err.message.toLowerCase().includes('chưa được kích hoạt')) {
+                setThongBaoThanhCong('Tài khoản chưa được kích hoạt! Hệ thống đã gửi lại mã OTP, vui lòng nhập mã bên dưới để kích hoạt.');
+                chuyenCheDo('dang_ky', 2);
+                setDemNguoc(60);
+                return;
+            }
             setThongBaoLoi(err.message || 'Tài khoản hoặc mật khẩu không chính xác!');
         } finally {
             setDangXuLy(false);
@@ -944,10 +971,10 @@ export default function ModalDangNhapDangKy() {
                                                     <button
                                                         type="button"
                                                         disabled={demNguoc > 0 || dangXuLy}
-                                                        onClick={xuLyDangKyGuiOtp}
+                                                        onClick={xuLyGuiLaiOtpDangKy}
                                                         className="text-[11px] font-black text-blue-600 dark:text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
                                                     >
-                                                        <RefreshCw className="w-3 h-3" />
+                                                        <RefreshCw className={`w-3 h-3 ${dangXuLy ? 'animate-spin' : ''}`} />
                                                         {demNguoc > 0 ? `Gửi lại (${demNguoc}s)` : 'Gửi lại mã'}
                                                     </button>
                                                 </div>

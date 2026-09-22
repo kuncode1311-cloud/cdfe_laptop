@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 export default function TrangDangNhap() {
     const router = useRouter();
-    const { daDangNhap, dangNhap, dangKy, kichHoatTaiKhoan, guiOtpQuenMatKhau, dangNhapGoogle, nguoiDung, moModalDangNhap } = useNguoiDung();
+    const { daDangNhap, dangNhap, dangKy, kichHoatTaiKhoan, guiOtpQuenMatKhau, guiLaiOtp, dangNhapGoogle, nguoiDung, moModalDangNhap } = useNguoiDung();
     const [cheDo, setCheDo] = useState('dang_nhap'); // 'dang_nhap' | 'dang_ky' | 'xac_thuc_otp'
     const [email, setEmail] = useState('');
     const [matKhau, setMatKhau] = useState('');
@@ -114,7 +114,7 @@ export default function TrangDangNhap() {
         }
         setDangXuLy(true);
         try {
-            const res = await guiOtpQuenMatKhau(email.trim());
+            const res = await guiLaiOtp(email.trim());
             toast.success(res.thong_diep || `Đã gửi lại mã OTP tới ${email}`);
             setDemNguoc(60);
         } catch (err) {

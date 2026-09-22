@@ -7,6 +7,7 @@ const {
     layThongTinCaNhan,
     dangNhapGoogle,
     yeuCauQuenMatKhau,
+    guiLaiOtp,
     xacNhanOtp,
     datLaiMatKhau,
     capNhatHoSo,
@@ -22,6 +23,7 @@ router.post('/google', dangNhapGoogle);
 
 // Tuyến đường Quên Mật Khẩu & OTP Email
 router.post('/quen-mat-khau', yeuCauQuenMatKhau);
+router.post('/gui-otp', guiLaiOtp);
 router.post('/xac-nhan-otp', xacNhanOtp);
 router.post('/dat-lai-mat-khau', datLaiMatKhau);
 

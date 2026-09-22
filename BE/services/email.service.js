@@ -3,36 +3,47 @@ require('dotenv').config({ path: path.join(__dirname, '../.env') });
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 
-/**
- * Cấu hình Transporter gửi email qua Gmail SMTP
- */
-function taoTransporter() {
-    const user = process.env.EMAIL_USER;
-    const pass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+const DEFAULT_EMAIL_USER = 'kun.code.1311@gmail.com';
+const DEFAULT_EMAIL_PASS = 'wqdonpjwpjzmntsl';
 
-    return nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // SSL
-        auth: {
-            user: user,
-            pass: pass
-        },
-        tls: {
-            rejectUnauthorized: false
-        },
-        connectionTimeout: 10000,
-        greetingTimeout: 5000,
-        socketTimeout: 15000
-    });
+function layThongTinEmail() {
+    const user = process.env.EMAIL_USER || DEFAULT_EMAIL_USER;
+    const pass = (process.env.EMAIL_PASS || DEFAULT_EMAIL_PASS).replace(/\s+/g, '');
+    return { user, pass };
+}
+
+/**
+ * Cấu hình Transporter gửi email qua Gmail SMTP với Fallback 2 tầng
+ */
+async function guiMailBangTransporter(mailOptions) {
+    const { user, pass } = layThongTinEmail();
+
+    // Phương thức 1: service: 'gmail' (Tối ưu nhất cho Google SMTP)
+    try {
+        const transporterGmail = nodemailer.createTransport({
+            service: 'gmail',
+            auth: { user, pass },
+            tls: { rejectUnauthorized: false }
+        });
+        return await transporterGmail.sendMail(mailOptions);
+    } catch (err1) {
+        console.warn('⚠️ [BE Email] Gửi qua service gmail thất bại, thử lại qua port 587 STARTTLS...', err1.message);
+        // Phương thức 2: smtp.gmail.com port 587 STARTTLS
+        const transporter587 = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 587,
+            secure: false,
+            auth: { user, pass },
+            tls: { rejectUnauthorized: false }
+        });
+        return await transporter587.sendMail(mailOptions);
+    }
 }
 
 /**
  * Gửi email mã OTP Quên Mật Khẩu
  */
 async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
-    const transporter = taoTransporter();
-
     const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -87,7 +98,7 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
     `;
 
     try {
-        const info = await transporter.sendMail({
+        const info = await guiMailBangTransporter({
             from: `"TNTP Laptop Store" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
             to: emailNhan,
             subject: `[TNTP Laptop] Mã OTP đặt lại mật khẩu của bạn là: ${maOtp}`,
@@ -99,7 +110,6 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
         return { thanhCong: true, messageId: info.messageId };
     } catch (err) {
         console.error(`❌ [Nodemailer] Lỗi khi gửi email đến ${emailNhan}:`, err.message);
-        // Trả về false kèm thông báo lỗi để xử lý fallback
         return { thanhCong: false, loi: err.message };
     }
 }
@@ -108,8 +118,6 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
  * Gửi email kích hoạt tài khoản
  */
 async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
-    const transporter = taoTransporter();
-
     const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -156,13 +164,14 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
     `;
 
     try {
-        const info = await transporter.sendMail({
+        const info = await guiMailBangTransporter({
             from: `"TNTP Laptop Store" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
             to: emailNhan,
             subject: `[TNTP Laptop] Mã OTP kích hoạt tài khoản của bạn: ${maOtp}`,
             text: `Mã kích hoạt tài khoản của bạn là: ${maOtp}`,
             html: htmlContent
         });
+        console.log(`✅ [Nodemailer] Đã gửi mã kích hoạt đến ${emailNhan} - MessageId: ${info.messageId}`);
         return { thanhCong: true, messageId: info.messageId };
     } catch (err) {
         console.error(`❌ [Nodemailer] Lỗi gửi email kích hoạt:`, err.message);
@@ -176,8 +185,6 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
 async function guiMailXacNhanDonHang(donHang) {
     const emailNhan = donHang?.thong_tin_giao_hang?.email || donHang?.email;
     if (!emailNhan || !String(emailNhan).includes('@')) return { thanhCong: false, lyDo: 'Không có email' };
-
-    const transporter = taoTransporter();
     const tenKhach = donHang?.thong_tin_giao_hang?.ho_ten || donHang?.thong_tin_giao_hang?.ho_va_ten || 'Quý khách';
     const maDon = donHang?.ma_don_hang || donHang?.id || 'LPN-ORDER';
     const tongTien = Number(donHang?.tong_tien_thanh_toan || 0).toLocaleString('vi-VN') + ' đ';
@@ -276,7 +283,7 @@ async function guiMailXacNhanDonHang(donHang) {
     `;
 
     try {
-        const info = await transporter.sendMail({
+        const info = await guiMailBangTransporter({
             from: `"TNTP Laptop Store" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
             to: emailNhan,
             subject: `[TNTP Laptop] Xác nhận đơn hàng #${maDon} thành công - ${tenKhach}`,
