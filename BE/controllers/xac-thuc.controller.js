@@ -89,6 +89,11 @@ const dangKy = async (req, res) => {
         const hanOtp = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
 
         // LƯU VÀO BẢNG TẠM: TUYỆT ĐỐI KHÔNG LƯU VÀO NguoiDung KHI CHƯA XÁC THỰC OTP
+        // 1. Tự động dọn dẹp các bản ghi tạm hết hạn (> 10 phút) để tránh phình rác Database
+        await mongoose.connection.collection('dang_ky_tam').deleteMany({ hanOtp: { $lt: new Date() } }).catch(() => {});
+        // 2. Thiết lập TTL Index trên MongoDB để tự động tiêu hủy document khi tới hạn hanOtp
+        mongoose.connection.collection('dang_ky_tam').createIndex({ hanOtp: 1 }, { expireAfterSeconds: 0 }).catch(() => {});
+
         await mongoose.connection.collection('dang_ky_tam').updateOne(
             { email: emailClean },
             {

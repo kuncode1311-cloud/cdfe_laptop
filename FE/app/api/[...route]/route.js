@@ -361,6 +361,11 @@ export async function POST(request, { params }) {
             const matKhauHash = await bcrypt.hash(String(matKhau).trim(), salt);
 
             // LƯU VÀO BẢNG TẠM: TUYỆT ĐỐI KHÔNG LƯU VÀO nguoi_dung KHI CHƯA XÁC THỰC OTP
+            // 1. Tự động dọn dẹp các bản ghi tạm đã hết hạn OTP (> 10 phút) để chống rác Database
+            await db.collection('dang_ky_tam').deleteMany({ hanOtp: { $lt: new Date() } }).catch(() => {});
+            // 2. Thiết lập TTL Index trên MongoDB Atlas để Database tự động hủy document khi tới hạn hanOtp
+            db.collection('dang_ky_tam').createIndex({ hanOtp: 1 }, { expireAfterSeconds: 0 }).catch(() => {});
+
             await db.collection('dang_ky_tam').updateOne(
                 { email: emailClean },
                 {
