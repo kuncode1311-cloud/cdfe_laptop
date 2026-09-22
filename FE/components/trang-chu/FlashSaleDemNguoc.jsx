@@ -7,9 +7,21 @@ import { Flame, ArrowRight, Truck, ShieldCheck, Gift } from 'lucide-react';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import { SanPhamService } from '@/services/san-pham.service';
 
+import { CaiDatService } from '@/services/cai-dat.service';
+
 export default function FlashSaleDemNguoc({ danhSachSanPham }) {
     const [danhSach, setDanhSach] = useState(danhSachSanPham || []);
     const [dangTai, setDangTai] = useState(!danhSachSanPham || danhSachSanPham.length === 0);
+    const [caiDat, setCaiDat] = useState(() => CaiDatService.layCaiDatKhuyenMai());
+
+    // Lắng nghe cập nhật realtime từ Admin tab Khuyến Mãi
+    useEffect(() => {
+        const handleCapNhat = (e) => {
+            if (e.detail) setCaiDat(e.detail);
+        };
+        window.addEventListener('tntp_khuyen_mai_cap_nhat', handleCapNhat);
+        return () => window.removeEventListener('tntp_khuyen_mai_cap_nhat', handleCapNhat);
+    }, []);
 
     // Nạp danh sách Flash Sale từ MongoDB Atlas qua API
     useEffect(() => {
@@ -35,25 +47,36 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
         }
     }, [danhSachSanPham]);
 
-    // Đồng hồ đếm ngược Flash Sale 24h
+    // Đồng hồ đếm ngược Flash Sale đồng bộ với Admin Cài Đặt Khuyến Mãi
     const [gio, setGio] = useState(14);
     const [phut, setPhut] = useState(36);
-    const [giay, setGiay] = useState(46);
+    const [giay, setGiay] = useState(14);
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            setGiay((g) => {
-                if (g > 0) return g - 1;
-                setPhut((p) => {
-                    if (p > 0) return p - 1;
-                    setGio((h) => (h > 0 ? h - 1 : 23));
-                    return 59;
-                });
-                return 59;
-            });
-        }, 1000);
+        const capNhatDongHo = () => {
+            if (!caiDat?.thoi_gian_ket_thuc) return;
+            const target = new Date(caiDat.thoi_gian_ket_thuc).getTime();
+            const now = Date.now();
+            const diff = target - now;
+
+            if (diff > 0) {
+                const totalHours = Math.floor(diff / (1000 * 60 * 60));
+                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((diff % (1000 * 60)) / 1000);
+                setGio(totalHours);
+                setPhut(m);
+                setGiay(s);
+            } else {
+                setGio(0);
+                setPhut(0);
+                setGiay(0);
+            }
+        };
+
+        capNhatDongHo();
+        const timer = setInterval(capNhatDongHo, 1000);
         return () => clearInterval(timer);
-    }, []);
+    }, [caiDat?.thoi_gian_ket_thuc]);
 
     if (danhSach.length === 0 && !dangTai) return null;
 
@@ -84,7 +107,7 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
                         {/* Small Badge: ƯU ĐÃI CÓ HẠN */}
                         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#450007]/70 backdrop-blur-md border border-white/30 text-amber-300 text-[12px] sm:text-[12.5px] font-bold uppercase tracking-wider shadow-sm">
                             <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                            <span>ƯU ĐÃI CÓ HẠN</span>
+                            <span>{caiDat?.badge_noi_bat || 'ƯU ĐÃI CÓ HẠN'}</span>
                         </div>
 
                         {/* Heading Display Typography 58-62px italic 3D chuẩn promotional electronics */}
@@ -93,7 +116,7 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
                                 FLASH SALE
                             </h2>
                             <p className="text-[15px] sm:text-[16px] font-extrabold text-white uppercase tracking-wide mt-2 [text-shadow:_0_2px_4px_rgba(0,0,0,0.6)]">
-                                SĂN DEAL CỰC SỐC - GIÁ TỐT NHẤT NĂM
+                                {caiDat?.phu_de || 'SĂN DEAL CỰC SỐC - GIÁ TỐT NHẤT NĂM'}
                             </p>
                         </div>
 

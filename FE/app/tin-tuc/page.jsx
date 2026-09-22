@@ -8,12 +8,78 @@ import { slugTinTuc } from '@/utils/taoSlug';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
 
 const CHUYEN_MUC = [
-  { ten: 'Tất Cả', loc: '' },
-  { ten: 'Tư Vấn Mua Sắm', loc: 'Tư Vấn Mua Sắm' },
-  { ten: 'Xu Hướng Công Nghệ', loc: 'Xu Hướng Công Nghệ' },
-  { ten: 'Đánh Giá & So Sánh', loc: 'Đánh Giá & So Sánh' },
-  { ten: 'Tin Tức Công Nghệ', loc: 'Tin Tức Công Nghệ' },
-  { ten: 'Chia Sẻ Kinh Nghiệm', loc: 'Chia Sẻ Kinh Nghiệm' },
+  {
+    ten: 'Tất Cả',
+    loc: '',
+    icon: '🌐',
+    mauChinh: '#2563eb',
+    mauGrad: 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)',
+    mauNenInactive: '#f8fafc',
+    mauBorderInactive: '#cbd5e1',
+    mauChuInactive: '#0f172a',
+    mauBadgeInactive: '#e2e8f0',
+    mauBadgeTextInactive: '#1e293b'
+  },
+  {
+    ten: 'Tư Vấn Mua Sắm',
+    loc: 'Tư Vấn Mua Sắm',
+    icon: '💡',
+    mauChinh: '#0284c7',
+    mauGrad: 'linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%)',
+    mauNenInactive: '#f0f9ff',
+    mauBorderInactive: '#7dd3fc',
+    mauChuInactive: '#0369a1',
+    mauBadgeInactive: '#bae6fd',
+    mauBadgeTextInactive: '#0c4a6e'
+  },
+  {
+    ten: 'Xu Hướng Công Nghệ',
+    loc: 'Xu Hướng Công Nghệ',
+    icon: '🚀',
+    mauChinh: '#059669',
+    mauGrad: 'linear-gradient(135deg, #047857 0%, #10b981 100%)',
+    mauNenInactive: '#ecfdf5',
+    mauBorderInactive: '#6ee7b7',
+    mauChuInactive: '#047857',
+    mauBadgeInactive: '#a7f3d0',
+    mauBadgeTextInactive: '#064e3b'
+  },
+  {
+    ten: 'Đánh Giá & So Sánh',
+    loc: 'Đánh Giá & So Sánh',
+    icon: '⭐',
+    mauChinh: '#d97706',
+    mauGrad: 'linear-gradient(135deg, #b45309 0%, #f59e0b 100%)',
+    mauNenInactive: '#fffbeb',
+    mauBorderInactive: '#fcd34d',
+    mauChuInactive: '#b45309',
+    mauBadgeInactive: '#fde68a',
+    mauBadgeTextInactive: '#78350f'
+  },
+  {
+    ten: 'Tin Tức Công Nghệ',
+    loc: 'Tin Tức Công Nghệ',
+    icon: '🔥',
+    mauChinh: '#7c3aed',
+    mauGrad: 'linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%)',
+    mauNenInactive: '#f5f3ff',
+    mauBorderInactive: '#c4b5fd',
+    mauChuInactive: '#6d28d9',
+    mauBadgeInactive: '#ddd6fe',
+    mauBadgeTextInactive: '#4c1d95'
+  },
+  {
+    ten: 'Chia Sẻ Kinh Nghiệm',
+    loc: 'Chia Sẻ Kinh Nghiệm',
+    icon: '🛠️',
+    mauChinh: '#e11d48',
+    mauGrad: 'linear-gradient(135deg, #be123c 0%, #f43f5e 100%)',
+    mauNenInactive: '#fff1f2',
+    mauBorderInactive: '#fda4af',
+    mauChuInactive: '#be123c',
+    mauBadgeInactive: '#fecdd3',
+    mauBadgeTextInactive: '#881337'
+  },
 ];
 
 const ANH_FALLBACK = (cm) => {
@@ -29,11 +95,11 @@ const ANH_FALLBACK = (cm) => {
 
 const MAU_BADGE = (cm) => {
   const m = {
-    'Tư Vấn Mua Sắm': '#3b82f6',
-    'Xu Hướng Công Nghệ': '#10b981',
-    'Đánh Giá & So Sánh': '#f59e0b',
-    'Tin Tức Công Nghệ': '#8b5cf6',
-    'Chia Sẻ Kinh Nghiệm': '#ef4444',
+    'Tư Vấn Mua Sắm': '#0284c7',
+    'Xu Hướng Công Nghệ': '#059669',
+    'Đánh Giá & So Sánh': '#d97706',
+    'Tin Tức Công Nghệ': '#7c3aed',
+    'Chia Sẻ Kinh Nghiệm': '#e11d48',
   };
   return m[cm] || '#64748b';
 };
@@ -114,8 +180,13 @@ export default function TrangTinTuc() {
     });
   }, [danhSachTin, locChon, tuKhoa]);
 
-  const baiNoi = danhSachLoc.find(t => t.la_tieu_diem) || danhSachLoc[0] || null;
-  const coBai = baiNoi ? danhSachLoc.filter(t => (t.id || t._id) !== (baiNoi.id || baiNoi._id)) : danhSachLoc;
+  // Chỉ tách riêng bài Hero lớn khi đang ở Trang chủ Tin tức (không lọc và không tìm kiếm)
+  // Khi người dùng bấm lọc chuyên mục hoặc tìm kiếm, hiển thị ĐẦY ĐỦ TẤT CẢ bài viết trong lưới (không ẩn bài nào)
+  const dangOTrangChuTin = !locChon && !tuKhoa;
+  const baiNoi = dangOTrangChuTin ? (danhSachLoc.find(t => t.la_tieu_diem) || danhSachLoc[0] || null) : null;
+  const coBai = (dangOTrangChuTin && baiNoi)
+    ? danhSachLoc.filter(t => (t.id || t._id) !== (baiNoi.id || baiNoi._id))
+    : danhSachLoc;
 
   return (
     <div className="min-h-screen">
@@ -158,15 +229,65 @@ export default function TrangTinTuc() {
         </div>
 
         {/* Filter tabs */}
-        <div className="dm-bar" style={{ marginBottom: '16px' }}>
-          {CHUYEN_MUC.map(({ ten, loc }) => {
-            const active = locChon === loc;
-            const count = !loc ? danhSachTin.length : danhSachTin.filter(t => t.chuyen_muc === loc).length;
+        <div className="dm-bar" style={{ marginBottom: '18px', paddingBottom: '4px' }}>
+          {CHUYEN_MUC.map((cm) => {
+            const active = locChon === cm.loc;
+            const count = !cm.loc ? danhSachTin.length : danhSachTin.filter(t => t.chuyen_muc === cm.loc).length;
             return (
-              <button key={ten} onClick={() => { setLocChon(loc); setHienThem(6); }}
-                style={{ padding: '7px 14px', borderRadius: '20px', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px', transition: 'all 0.15s', flexShrink: 0, background: active ? '#1d4ed8' : 'white', color: active ? 'white' : '#475569', border: active ? '1.5px solid #1d4ed8' : '1.5px solid #e2e8f0', boxShadow: active ? '0 4px 12px rgba(29,78,216,0.25)' : '0 1px 3px rgba(0,0,0,0.06)' }}>
-                {ten}
-                <span style={{ background: active ? 'rgba(255,255,255,0.22)' : '#f1f5f9', color: active ? 'white' : '#64748b', borderRadius: '8px', padding: '0px 6px', fontSize: '10.5px', fontWeight: '800' }}>{count}</span>
+              <button
+                key={cm.ten}
+                type="button"
+                onClick={() => { setLocChon(cm.loc); setHienThem(6); }}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '24px',
+                  fontSize: '13px',
+                  fontWeight: active ? '800' : '700',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  flexShrink: 0,
+                  background: active ? cm.mauGrad : cm.mauNenInactive,
+                  color: active ? '#ffffff' : cm.mauChuInactive,
+                  border: active ? `2px solid ${cm.mauChinh}` : `2px solid ${cm.mauBorderInactive}`,
+                  boxShadow: active
+                    ? `0 6px 20px ${cm.mauChinh}40`
+                    : '0 2px 5px rgba(0,0,0,0.04)',
+                  transform: active ? 'translateY(-1px)' : 'none'
+                }}
+                onMouseEnter={e => {
+                  if (!active) {
+                    e.currentTarget.style.borderColor = cm.mauChinh;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = `0 6px 16px ${cm.mauChinh}20`;
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!active) {
+                    e.currentTarget.style.borderColor = cm.mauBorderInactive;
+                    e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.04)';
+                  }
+                }}
+              >
+                <span>{cm.icon}</span>
+                <span>{cm.ten}</span>
+                <span
+                  style={{
+                    background: active ? 'rgba(255,255,255,0.28)' : cm.mauBadgeInactive,
+                    color: active ? '#ffffff' : cm.mauBadgeTextInactive,
+                    borderRadius: '12px',
+                    padding: '1px 8px',
+                    fontSize: '11px',
+                    fontWeight: '900',
+                    border: active ? '1px solid rgba(255,255,255,0.4)' : `1px solid ${cm.mauBorderInactive}`
+                  }}
+                >
+                  {count}
+                </span>
               </button>
             );
           })}
