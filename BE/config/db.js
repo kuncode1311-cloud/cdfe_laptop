@@ -5,9 +5,9 @@ const mongoose = require('mongoose');
  */
 const ketNoiCoSoDuLieu = async () => {
     try {
-        const uri = process.env.MONGODB_URI || 'mongodb+srv://kuncode1311_db_user:cd0xoTq5PSmTHvqP@laptop-store.ynzhkyj.mongodb.net/laptop_store?retryWrites=true&w=majority&appName=laptop-store';
+        const uri = process.env.MONGODB_URI;
         if (!uri) {
-            console.error('❌ Lỗi: Chưa cấu hình MONGODB_URI trong file .env');
+            console.error('❌ Lỗi: Chưa cấu hình MONGODB_URI trong biến môi trường');
             return;
         }
 

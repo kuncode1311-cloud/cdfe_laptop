@@ -18,7 +18,7 @@ const xacThucToken = async (req, res, next) => {
             });
         }
 
-        const secret = process.env.JWT_SECRET || 'LaptopNew_SuperSecret_JwtKey_2026_@TopTierSecurity!';
+        const secret = process.env.JWT_SECRET || 'TNTP_LAPTOP_SECURITY_KEY_2026';
 
         // Giải mã và kiểm tra hạn sử dụng của Token
         const decoded = jwt.verify(token, secret);

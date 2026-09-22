@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const NguoiDung = require('../models/nguoi-dung.model');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'LaptopNew_SuperSecret_JwtKey_2026_@TopTierSecurity!';
+const JWT_SECRET = process.env.JWT_SECRET || 'TNTP_LAPTOP_SECURITY_KEY_2026';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 
 /**
@@ -257,7 +257,7 @@ const layThongTinCaNhan = async (req, res) => {
 
 // 4. Đăng nhập / Đăng ký qua Google – xác minh ID Token chuẩn OAuth 2.0
 const { OAuth2Client } = require('google-auth-library');
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '789044829668-4uhe7csc4tq093jifv1vul2ofgm5vkt7.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 const dangNhapGoogle = async (req, res) => {

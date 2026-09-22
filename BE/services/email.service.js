@@ -5,8 +5,8 @@ const nodemailer = require('nodemailer');
  * Cấu hình Transporter gửi email qua Gmail SMTP
  */
 function taoTransporter() {
-    const user = process.env.EMAIL_USER || 'kun.code.1311@gmail.com';
-    const pass = (process.env.EMAIL_PASS || 'wqdonpjwpjzmntsl').replace(/\s+/g, '');
+    const user = process.env.EMAIL_USER;
+    const pass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
 
     return nodemailer.createTransport({
         host: 'smtp.gmail.com',
