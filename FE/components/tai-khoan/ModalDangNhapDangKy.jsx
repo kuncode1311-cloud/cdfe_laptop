@@ -304,7 +304,7 @@ export default function ModalDangNhapDangKy() {
     // Khởi tạo nút Google Sign-In (Khung cố định, nạp 1 lần duy nhất)
     useEffect(() => {
         if (!dangMoModalAuth || !mounted) return;
-        if (cheDoHienTai === 'quen_mat_khau' || (cheDoHienTai === 'dang_ky' && buocDangKy === 2)) return;
+        if (cheDoHienTai !== 'dang_nhap') return;
 
         const xuLyPhanHoiGoogle = async (res) => {
             if (!res?.credential) {
@@ -755,8 +755,8 @@ export default function ModalDangNhapDangKy() {
 
                 {/* THÂN MODAL */}
                 <div className="p-5 pt-4">
-                    {/* KHUNG GOOGLE SIGN-IN DÙNG CHUNG CỐ ĐỊNH h-[44px] */}
-                    {laFormChinh && (
+                    {/* KHUNG GOOGLE SIGN-IN: CHỈ HIỂN THỊ Ở TAB ĐĂNG NHẬP (ẨN HOÀN TOÀN Ở TAB ĐĂNG KÝ) */}
+                    {cheDoHienTai === 'dang_nhap' && (
                         <div className="mb-3">
                             <div className="relative h-[44px] min-h-[44px] flex justify-center overflow-hidden">
                                 <div ref={googleBtnRef} className="w-full flex justify-center" />
@@ -778,7 +778,7 @@ export default function ModalDangNhapDangKy() {
                             <div className="relative flex items-center justify-center my-2.5">
                                 <div className="border-t-2 border-slate-200 dark:border-slate-700 w-full" />
                                 <span className="bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-400 dark:text-slate-500 font-bold shrink-0 uppercase tracking-wider">
-                                    {cheDoHienTai === 'dang_nhap' ? 'Hoặc đăng nhập với email' : 'Hoặc điền thông tin đăng ký'}
+                                    Hoặc đăng nhập với email
                                 </span>
                                 <div className="border-t-2 border-slate-200 dark:border-slate-700 w-full" />
                             </div>
