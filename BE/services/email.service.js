@@ -174,8 +174,8 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
  * Gửi email xác nhận đơn hàng khi khách đặt hàng thành công
  */
 async function guiMailXacNhanDonHang(donHang) {
-    const emailNhan = donHang?.thong_tin_giao_hang?.email;
-    if (!emailNhan || !emailNhan.includes('@')) return { thanhCong: false, lyDo: 'Không có email' };
+    const emailNhan = donHang?.thong_tin_giao_hang?.email || donHang?.email;
+    if (!emailNhan || !String(emailNhan).includes('@')) return { thanhCong: false, lyDo: 'Không có email' };
 
     const transporter = taoTransporter();
     const tenKhach = donHang?.thong_tin_giao_hang?.ho_ten || donHang?.thong_tin_giao_hang?.ho_va_ten || 'Quý khách';

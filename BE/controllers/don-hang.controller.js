@@ -149,13 +149,8 @@ const taoDonHangMoi = async (req, res) => {
 
         console.log(`📦 Tạo đơn hàng mới thành công: ${ketQua.ma_don_hang} | ID User: ${ketQua.id_nguoi_dung} | Hình thức: ${ketQua.hinh_thuc_thanh_toan} | Trạng thái TT: ${ketQua.trang_thai_thanh_toan}`);
 
-        // Tự động gửi email xác nhận đơn hàng cho khách hàng trong nền (bất đồng bộ, an toàn không gây nghẽn)
-        const emailKhach = ketQua.thong_tin_giao_hang?.email || req.user?.email;
-        if (emailKhach && String(emailKhach).includes('@')) {
-            guiMailXacNhanDonHang(ketQua).catch(errMail => {
-                console.warn('⚠️ [Email Service] Không thể gửi email xác nhận đơn:', errMail?.message);
-            });
-        }
+        // Tự động gửi email xác nhận đơn hàng kèm hóa đơn chi tiết cho khách
+        guiMailXacNhanDonHang(ketQua).catch(err => console.warn('⚠️ Lỗi gửi email xác nhận:', err.message));
 
         return res.status(201).json(ketQua);
     } catch (loi) {
