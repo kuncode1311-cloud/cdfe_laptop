@@ -246,7 +246,7 @@ const dangNhap = async (req, res) => {
         let nguoiDung = await NguoiDung.findOne({
             $or: [
                 { email: emailChuan },
-                ...(emailChuan === 'admin' ? [{ email: 'admin@laptopnew.vn' }, { vaiTro: 'admin' }] : [])
+                ...(emailChuan === 'admin' ? [{ email: 'admin@laptopnew.vn' }] : [])
             ]
         });
 
@@ -773,6 +773,20 @@ const doiMatKhau = async (req, res) => {
     }
 };
 
+// 10. Đăng xuất tài khoản và thu hồi phiên trên Database
+const dangXuat = async (req, res) => {
+    try {
+        const authHeader = req.headers.authorization || '';
+        const token = authHeader.replace('Bearer ', '').trim();
+        if (token && token.length > 5) {
+            await mongoose.connection.collection('nguoi_dung').updateOne({ token }, { $unset: { token: "" } });
+        }
+        return res.status(200).json({ thanh_cong: true, thong_diep: 'Đăng xuất và thu hồi phiên thành công!' });
+    } catch (loi) {
+        return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi đăng xuất', chi_tiet: loi.message });
+    }
+};
+
 module.exports = {
     dangKy,
     kichHoatTaiKhoan,
@@ -784,5 +798,6 @@ module.exports = {
     xacNhanOtp,
     datLaiMatKhau,
     capNhatHoSo,
-    doiMatKhau
+    doiMatKhau,
+    dangXuat
 };

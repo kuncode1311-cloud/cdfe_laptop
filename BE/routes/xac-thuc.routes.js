@@ -11,7 +11,8 @@ const {
     xacNhanOtp,
     datLaiMatKhau,
     capNhatHoSo,
-    doiMatKhau
+    doiMatKhau,
+    dangXuat
 } = require('../controllers/xac-thuc.controller');
 const { xacThucToken } = require('../middleware/xac-thuc.middleware');
 
@@ -19,6 +20,7 @@ const { xacThucToken } = require('../middleware/xac-thuc.middleware');
 router.post('/dang-ky', dangKy);
 router.post('/kich-hoat', kichHoatTaiKhoan);
 router.post('/dang-nhap', dangNhap);
+router.post('/dang-xuat', dangXuat);
 router.post('/google', dangNhapGoogle);
 
 // Tuyến đường Quên Mật Khẩu & OTP Email

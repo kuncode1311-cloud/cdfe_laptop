@@ -377,9 +377,20 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // Đăng xuất và xóa sạch Token & Toàn bộ Session
-    // Đăng xuất và xóa sạch Token, Giỏ hàng, Cache đơn hàng & Toàn bộ Session
+    // Đăng xuất và xóa sạch Token, Giỏ hàng, Cache đơn hàng & Toàn bộ Session (Đồng thời thu hồi token trên Database)
     const dangXuat = () => {
+        const tokenHienTai = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+
+        if (tokenHienTai) {
+            fetch(`${API_BASE_URL}/auth/dang-xuat`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${tokenHienTai}`,
+                    'Content-Type': 'application/json'
+                }
+            }).catch(() => {});
+        }
+
         setNguoiDung(null);
         setToken(null);
         setDangMoModalAuth(false);

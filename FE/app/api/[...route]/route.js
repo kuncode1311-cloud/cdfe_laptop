@@ -194,6 +194,26 @@ export async function GET(request, { params }) {
             );
 
             if (user) {
+                // Kiểm tra tài khoản có bị khóa không
+                if (user.biKhoa || user.trangThai === 'bi_khoa') {
+                    await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $unset: { token: "" } });
+                    return NextResponse.json({ thong_diep: 'Tài khoản của bạn hiện đang bị tạm khóa!' }, { status: 403 });
+                }
+
+                // Kiểm tra thời hạn phiên đăng nhập (Admin: 24 giờ, Khách hàng: 7 ngày)
+                if (user.lanDangNhapCuoi) {
+                    const thoiGianDangNhap = new Date(user.lanDangNhapCuoi).getTime();
+                    const bayGio = Date.now();
+                    const hanToiDa = user.vaiTro === 'admin'
+                        ? 24 * 60 * 60 * 1000      // Admin: 24 giờ
+                        : 7 * 24 * 60 * 60 * 1000;  // Khách hàng: 7 ngày
+
+                    if (bayGio - thoiGianDangNhap > hanToiDa) {
+                        await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $unset: { token: "" } });
+                        return NextResponse.json({ thong_diep: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại!' }, { status: 401 });
+                    }
+                }
+
                 return NextResponse.json({ hop_le: true, nguoiDung: user });
             }
             return NextResponse.json({ thong_diep: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn' }, { status: 401 });
@@ -236,40 +256,30 @@ export async function POST(request, { params }) {
             let user = await db.collection('nguoi_dung').findOne({
                 $or: [
                     { email: tkClean },
-                    { ten_dang_nhap: tkClean }
+                    { ten_dang_nhap: tkClean },
+                    ...(tkClean === 'admin' ? [{ email: 'admin@laptopnew.vn' }] : [])
                 ]
             });
-
-            // Nếu nhập admin / admin123
-            if (tkClean === 'admin' || tkClean === 'admin@laptopnew.vn') {
-                if (!user) {
-                    user = await db.collection('nguoi_dung').findOne({ vaiTro: 'admin' });
-                }
-                if (!user) {
-                    user = {
-                        email: 'admin@laptopnew.vn',
-                        hoTen: 'Quản Trị Viên Hệ Thống',
-                        vaiTro: 'admin'
-                    };
-                }
-            }
 
             if (!user) {
                 return NextResponse.json({ thong_diep: 'Tài khoản hoặc mật khẩu không chính xác!' }, { status: 401 });
             }
 
-            // Kiểm tra mật khẩu (hỗ trợ bcrypt hash và so sánh trực tiếp)
+            // Kiểm tra mật khẩu (Bắt buộc so khớp mật khẩu chuẩn với bcrypt cho 100% tài khoản)
             const savedPass = user.matKhau || user.mat_khau;
-            if (savedPass && tkClean !== 'admin' && tkClean !== 'admin@laptopnew.vn') {
-                let matKhauDung = false;
-                if (savedPass.startsWith('$2a$') || savedPass.startsWith('$2b$')) {
-                    matKhauDung = await bcrypt.compare(mkClean, savedPass);
-                } else {
-                    matKhauDung = (savedPass === mkClean);
-                }
-                if (!matKhauDung) {
-                    return NextResponse.json({ thong_diep: 'Tài khoản hoặc mật khẩu không chính xác!' }, { status: 401 });
-                }
+            if (!savedPass) {
+                return NextResponse.json({ thong_diep: 'Tài khoản hoặc mật khẩu không chính xác!' }, { status: 401 });
+            }
+
+            let matKhauDung = false;
+            if (savedPass.startsWith('$2a$') || savedPass.startsWith('$2b$')) {
+                matKhauDung = await bcrypt.compare(mkClean, savedPass);
+            } else {
+                matKhauDung = (savedPass === mkClean);
+            }
+
+            if (!matKhauDung) {
+                return NextResponse.json({ thong_diep: 'Tài khoản hoặc mật khẩu không chính xác!' }, { status: 401 });
             }
 
             // Kiểm tra khóa tài khoản
@@ -726,6 +736,15 @@ export async function POST(request, { params }) {
                 ]
             });
 
+            // Kiểm tra nếu tài khoản đang bị khóa
+            if (user && (user.biKhoa || user.trangThai === 'bi_khoa')) {
+                return NextResponse.json({
+                    thong_diep: user.lyDoKhoa
+                        ? `Tài khoản của bạn đã bị tạm khóa! Lý do: ${user.lyDoKhoa}`
+                        : 'Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên để được mở khóa!'
+                }, { status: 403 });
+            }
+
             const token = 'jwt_google_' + Date.now() + '_' + Math.random().toString(36).substring(2);
 
             if (!user) {
@@ -760,6 +779,16 @@ export async function POST(request, { params }) {
             delete user.hanOtp;
 
             return NextResponse.json({ thanh_cong: true, token, nguoiDung: user });
+        }
+
+        // 3.1. AUTH: /api/auth/dang-xuat hoặc /api/auth/logout (Thu hồi Token trên Database)
+        if (primary === 'auth' && (secondary === 'dang-xuat' || secondary === 'logout')) {
+            const authHeader = request.headers.get('authorization') || '';
+            const token = authHeader.replace('Bearer ', '').trim();
+            if (token && token.length > 5) {
+                await db.collection('nguoi_dung').updateOne({ token }, { $unset: { token: "" } });
+            }
+            return NextResponse.json({ thanh_cong: true, thong_diep: 'Đăng xuất và thu hồi phiên thành công!' });
         }
 
         // 4. KIỂM TRA MÃ GIẢM GIÁ: /api/ma-giam-gia/kiem-tra
@@ -858,28 +887,30 @@ export async function PUT(request, { params }) {
         const body = await request.json().catch(() => ({}));
         delete body._id; // Không ghi đè _id immutable
 
-        // 1. AUTH: Cập nhật hồ sơ cá nhân
+        // 1. AUTH: Cập nhật hồ sơ cá nhân (Yêu cầu Bearer Token hợp lệ, chỉ cho phép cập nhật các trường an toàn)
         if (primary === 'auth' && id === 'cap-nhat-ho-so') {
             const authHeader = request.headers.get('authorization') || '';
             const token = authHeader.replace('Bearer ', '').trim();
-            const user = await db.collection('nguoi_dung').findOne({
-                $or: [
-                    ...(token ? [{ token }] : []),
-                    ...(body.email ? [{ email: String(body.email).toLowerCase() }] : []),
-                    ...(body.id ? [{ id: body.id }] : [])
-                ]
-            });
-            if (!user) {
-                return NextResponse.json({ thong_diep: 'Không tìm thấy thông tin tài khoản' }, { status: 404 });
+            if (!token || token.length < 5) {
+                return NextResponse.json({ thong_diep: 'Bạn cần đăng nhập để thực hiện thao tác này!' }, { status: 401 });
             }
-            delete body.matKhau;
-            delete body.mat_khau;
-            delete body._id;
-            delete body.vaiTro;
-            delete body.maOtp;
-            delete body.hanOtp;
-            delete body.loaiOtp;
-            await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: { ...body, updatedAt: new Date() } });
+
+            const user = await db.collection('nguoi_dung').findOne({ token });
+            if (!user) {
+                return NextResponse.json({ thong_diep: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn!' }, { status: 401 });
+            }
+
+            // Whitelist các trường được phép sửa, tuyệt đối không cho ghi đè vaiTro, token, diemTichLuy, matKhau
+            const capNhat = {};
+            if (body.hoTen !== undefined) capNhat.hoTen = String(body.hoTen).trim();
+            if (body.soDienThoai !== undefined) capNhat.soDienThoai = String(body.soDienThoai).trim();
+            if (body.avatar !== undefined) capNhat.avatar = String(body.avatar).trim();
+            if (body.diaChi !== undefined) capNhat.diaChi = body.diaChi;
+            if (body.ngaySinh !== undefined) capNhat.ngaySinh = body.ngaySinh;
+            if (body.gioiTinh !== undefined) capNhat.gioiTinh = body.gioiTinh;
+            capNhat.updatedAt = new Date();
+
+            await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: capNhat });
             const userMoi = await db.collection('nguoi_dung').findOne(
                 { _id: user._id },
                 { projection: { matKhau: 0, mat_khau: 0, maOtp: 0, hanOtp: 0 } }

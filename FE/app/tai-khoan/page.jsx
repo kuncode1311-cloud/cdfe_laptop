@@ -769,7 +769,7 @@ function NoiDungTrangTaiKhoan() {
 
             setDangTaiDonHang(true);
             try {
-                const laAdmin = nguoiDung?.vaiTro === 'admin' || nguoiDung?.role === 'admin' || nguoiDung?.email === 'admin@laptopnew.vn';
+                const laAdmin = nguoiDung?.vaiTro === 'admin' || nguoiDung?.role === 'admin';
                 if (laAdmin) {
                     // Admin xem tất cả các đơn để quản lý và kiểm tra realtime
                     const tatCa = await DonHangService.layTatCaDonHangAsync();
@@ -3655,7 +3655,7 @@ function NoiDungTrangTaiKhoan() {
                             toast.success(`🎉 Đã xác nhận thanh toán thành công đơn #${donHangThanhToanQR.ma_don_hang}!`);
                             setDonHangThanhToanQR(null);
                             // Cập nhật lại danh sách đơn hàng đúng tài khoản từ MongoDB
-                            const laAdmin = nguoiDung?.vaiTro === 'admin' || nguoiDung?.role === 'admin' || nguoiDung?.email === 'admin@laptopnew.vn';
+                            const laAdmin = nguoiDung?.vaiTro === 'admin' || nguoiDung?.role === 'admin';
                             if (laAdmin) {
                                 const tatCaMoi = await DonHangService.layTatCaDonHangAsync();
                                 setDanhSachDonHang(tatCaMoi || []);

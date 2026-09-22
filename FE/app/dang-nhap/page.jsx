@@ -1,15 +1,43 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, User, Phone, ArrowRight, ShieldCheck, Eye, EyeOff, Sparkles, CheckCircle2, Laptop, Gift, Zap, KeyRound, RefreshCw } from 'lucide-react';
-import { useAuth, useNguoiDung } from '@/contexts/AuthContext';
+import {
+    Mail,
+    Lock,
+    User,
+    Phone,
+    ArrowRight,
+    ShieldCheck,
+    Eye,
+    EyeOff,
+    Sparkles,
+    CheckCircle2,
+    Gift,
+    Zap,
+    KeyRound,
+    RefreshCw,
+    Check
+} from 'lucide-react';
+import { useNguoiDung } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 export default function TrangDangNhap() {
     const router = useRouter();
-    const { daDangNhap, dangNhap, dangKy, kichHoatTaiKhoan, guiOtpQuenMatKhau, guiLaiOtp, dangNhapGoogle, nguoiDung, moModalDangNhap } = useNguoiDung();
+    const {
+        daDangNhap,
+        dangNhap,
+        dangKy,
+        kichHoatTaiKhoan,
+        guiLaiOtp,
+        dangNhapGoogle,
+        nguoiDung,
+        moModalDangNhap
+    } = useNguoiDung();
+
     const [cheDo, setCheDo] = useState('dang_nhap'); // 'dang_nhap' | 'dang_ky' | 'xac_thuc_otp'
     const [email, setEmail] = useState('');
     const [matKhau, setMatKhau] = useState('');
@@ -21,14 +49,72 @@ export default function TrangDangNhap() {
     const [dangXuLy, setDangXuLy] = useState(false);
     const [dangXuLyGoogle, setDangXuLyGoogle] = useState(false);
 
+    // Tự động tải thư viện Google Identity Services (GSI)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        if (!document.getElementById('gsi-script')) {
+            const s = document.createElement('script');
+            s.id = 'gsi-script';
+            s.src = 'https://accounts.google.com/gsi/client';
+            s.async = true;
+            s.defer = true;
+            document.head.appendChild(s);
+        }
+    }, []);
+
     // Bộ đếm ngược thời gian gửi lại OTP
-    React.useEffect(() => {
+    useEffect(() => {
         let timer;
         if (demNguoc > 0) {
             timer = setInterval(() => setDemNguoc((prev) => prev - 1), 1000);
         }
         return () => clearInterval(timer);
     }, [demNguoc]);
+
+    // Realtime Validation cho form Đăng ký
+    const validationDangKy = useMemo(() => {
+        const hoTenClean = (hoTen || '').trim();
+        const sdtClean = (soDienThoai || '').replace(/\s+/g, '');
+        const emailClean = (email || '').trim().toLowerCase();
+        const mkClean = matKhau || '';
+
+        const errors = {};
+
+        if (hoTen && hoTenClean.length > 0 && hoTenClean.length < 2) {
+            errors.hoTen = 'Tối thiểu 2 ký tự';
+        }
+
+        if (soDienThoai && sdtClean.length > 0) {
+            if (!/^(0|\+84)[0-9]{9}$/.test(sdtClean)) {
+                errors.soDienThoai = 'Cần 10 số VN';
+            }
+        }
+
+        if (email && emailClean.length > 0) {
+            if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailClean)) {
+                errors.email = 'Email chưa đúng';
+            }
+        }
+
+        if (matKhau && mkClean.length > 0 && mkClean.length < 6) {
+            errors.matKhau = 'Tối thiểu 6 ký tự';
+        }
+
+        const isValidHoTen = hoTenClean.length >= 2;
+        const isValidSdt = /^(0|\+84)[0-9]{9}$/.test(sdtClean);
+        const isValidEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailClean);
+        const isValidMatKhau = mkClean.length >= 6;
+        const isAllValid = isValidHoTen && isValidSdt && isValidEmail && isValidMatKhau;
+
+        return {
+            errors,
+            isValidHoTen,
+            isValidSdt,
+            isValidEmail,
+            isValidMatKhau,
+            isAllValid
+        };
+    }, [hoTen, soDienThoai, email, matKhau]);
 
     // Định dạng thời gian đếm ngược (90s -> 1p30s, 45s -> 45s)
     const dinhDangDemNguoc = (giay) => {
@@ -41,7 +127,7 @@ export default function TrangDangNhap() {
         return `${giay}s`;
     };
 
-    // Nếu đã đăng nhập thì điều hướng về trang chủ
+    // Nếu đã đăng nhập thì hiển thị thẻ thông tin
     if (daDangNhap) {
         return (
             <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
@@ -51,6 +137,11 @@ export default function TrangDangNhap() {
                 <h2 className="text-xl font-bold">Bạn đã đăng nhập thành công!</h2>
                 <p className="text-sm text-slate-500">Xin chào {nguoiDung?.hoTen || 'Thành viên VIP'}.</p>
                 <div className="flex items-center gap-3 pt-2">
+                    {nguoiDung?.vaiTro === 'admin' && (
+                        <Link href="/admin" className="px-5 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-all shadow-md">
+                            Quản Trị Hệ Thống 👑
+                        </Link>
+                    )}
                     <Link href="/khuyen-mai" className="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold text-xs hover:bg-red-700 transition-all shadow-md">
                         Săn Voucher Ngay 🎟️
                     </Link>
@@ -77,7 +168,7 @@ export default function TrangDangNhap() {
                 if (user?.vaiTro === 'admin') {
                     router.push('/admin');
                 } else {
-                    router.push('/khuyen-mai');
+                    router.push('/');
                 }
             } else if (cheDo === 'xac_thuc_otp') {
                 const otpClean = maOtp.replace(/\s+/g, '');
@@ -88,7 +179,7 @@ export default function TrangDangNhap() {
                 }
                 await kichHoatTaiKhoan(email.trim(), otpClean);
                 toast.success('Kích hoạt tài khoản thành công! 🎉 Chào mừng bạn gia nhập VIP.');
-                router.push('/khuyen-mai');
+                router.push('/');
             } else {
                 const hoTenClean = hoTen.trim();
                 const emailClean = email.trim().toLowerCase();
@@ -135,7 +226,7 @@ export default function TrangDangNhap() {
                     return;
                 }
                 toast.success('Đăng ký tài khoản VIP thành công! Đã tặng 200 điểm.');
-                router.push('/khuyen-mai');
+                router.push('/');
             }
         } catch (err) {
             if (err.message && err.message.toLowerCase().includes('chưa được kích hoạt')) {
@@ -167,26 +258,61 @@ export default function TrangDangNhap() {
         }
     };
 
-    const xuLyDangNhapGoogle = async () => {
+    // Đăng nhập Google chuẩn Google Identity Services (Không dùng dữ liệu ảo)
+    const xuLyDangNhapGoogle = () => {
+        if (dangXuLyGoogle || dangXuLy) return;
         setDangXuLyGoogle(true);
-        try {
-            const userGg = await dangNhapGoogle({
-                email: 'khachhang.google@gmail.com',
-                hoTen: 'Khách Hàng Google VIP',
-                avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
-                googleId: 'gg_' + Date.now()
-            });
-            toast.success('Đăng nhập với Google thành công! 🎉');
-            if (userGg?.vaiTro === 'admin') {
-                router.push('/admin');
-            } else {
-                router.push('/khuyen-mai');
+
+        const clientId = GOOGLE_CLIENT_ID;
+        if (typeof window !== 'undefined' && window.google?.accounts?.oauth2 && clientId) {
+            try {
+                const tokenClient = window.google.accounts.oauth2.initTokenClient({
+                    client_id: clientId,
+                    scope: 'email profile openid',
+                    callback: async (tokenResponse) => {
+                        if (tokenResponse?.error) {
+                            setDangXuLyGoogle(false);
+                            if (tokenResponse.error !== 'popup_closed_by_user') {
+                                toast.error('Xác thực Google không thành công, vui lòng thử lại!');
+                            }
+                            return;
+                        }
+                        try {
+                            const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                                headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                            });
+                            const userInfo = await userInfoRes.json();
+                            const userGg = await dangNhapGoogle({
+                                email: userInfo.email,
+                                hoTen: userInfo.name || userInfo.given_name || 'Khách Hàng Google',
+                                avatar: userInfo.picture || '',
+                                googleId: userInfo.sub
+                            });
+                            toast.success('Đăng nhập với Google thành công! 🎉');
+                            if (userGg?.vaiTro === 'admin') {
+                                router.push('/admin');
+                            } else {
+                                router.push('/');
+                            }
+                        } catch (err) {
+                            toast.error(err.message || 'Đăng nhập Google thất bại');
+                        } finally {
+                            setDangXuLyGoogle(false);
+                        }
+                    }
+                });
+                tokenClient.requestAccessToken({ prompt: 'select_account' });
+                return;
+            } catch (e) {
+                console.warn('Lỗi khởi tạo Google OAuth2:', e);
+                toast.error('Không thể mở cửa sổ đăng nhập Google. Vui lòng thử lại!');
+                setDangXuLyGoogle(false);
+                return;
             }
-        } catch (err) {
-            toast.error(err.message || 'Lỗi kết nối tài khoản Google');
-        } finally {
-            setDangXuLyGoogle(false);
         }
+
+        toast.info('Đang kết nối dịch vụ Google Sign-In, vui lòng thử lại sau 2 giây!');
+        setDangXuLyGoogle(false);
     };
 
     return (
@@ -267,7 +393,7 @@ export default function TrangDangNhap() {
                                 <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                                     <button
                                         type="button"
-                                        onClick={() => setCheDo('dang_nhap')}
+                                        onClick={() => { setCheDo('dang_nhap'); setMatKhau(''); }}
                                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                             cheDo === 'dang_nhap'
                                                 ? 'bg-white dark:bg-slate-900 text-[#0052cc] dark:text-cyan-400 shadow-xs'
@@ -278,7 +404,7 @@ export default function TrangDangNhap() {
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setCheDo('dang_ky')}
+                                        onClick={() => { setCheDo('dang_ky'); setMatKhau(''); }}
                                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                                             cheDo === 'dang_ky'
                                                 ? 'bg-white dark:bg-slate-900 text-[#0052cc] dark:text-cyan-400 shadow-xs'
@@ -300,9 +426,9 @@ export default function TrangDangNhap() {
                             </div>
                         )}
 
-                        {cheDo !== 'xac_thuc_otp' && (
+                        {/* NÚT GOOGLE SIGN-IN: CHỈ HIỂN THỊ Ở TAB ĐĂNG NHẬP (ẨN HOÀN TOÀN Ở TAB ĐĂNG KÝ) */}
+                        {cheDo === 'dang_nhap' && (
                             <>
-                                {/* Nút Đăng Nhập Với Google */}
                                 <button
                                     type="button"
                                     onClick={xuLyDangNhapGoogle}
@@ -393,7 +519,18 @@ export default function TrangDangNhap() {
                                 <>
                                     {cheDo === 'dang_ky' && (
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Họ và Tên</label>
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Họ và Tên</label>
+                                                {validationDangKy.errors.hoTen ? (
+                                                    <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[9px]">⚠️</span> {validationDangKy.errors.hoTen}
+                                                    </span>
+                                                ) : validationDangKy.isValidHoTen ? (
+                                                    <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <Check className="w-3 h-3" /> Hợp lệ
+                                                    </span>
+                                                ) : null}
+                                            </div>
                                             <div className="relative">
                                                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                 <input
@@ -402,14 +539,33 @@ export default function TrangDangNhap() {
                                                     value={hoTen}
                                                     onChange={(e) => setHoTen(e.target.value)}
                                                     placeholder="Nguyễn Văn A"
-                                                    className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
+                                                    className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-slate-900 dark:text-white text-xs focus:outline-none transition-all ${
+                                                        validationDangKy.errors.hoTen
+                                                            ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-1 focus:ring-rose-500'
+                                                            : validationDangKy.isValidHoTen
+                                                            ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10 focus:ring-1 focus:ring-emerald-500'
+                                                            : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]'
+                                                    }`}
                                                 />
                                             </div>
                                         </div>
                                     )}
 
                                     <div className="space-y-1.5">
-                                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Địa Chỉ Email</label>
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Địa Chỉ Email</label>
+                                            {cheDo === 'dang_ky' && (
+                                                validationDangKy.errors.email ? (
+                                                    <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[9px]">⚠️</span> {validationDangKy.errors.email}
+                                                    </span>
+                                                ) : validationDangKy.isValidEmail ? (
+                                                    <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <Check className="w-3 h-3" /> Hợp lệ
+                                                    </span>
+                                                ) : null
+                                            )}
+                                        </div>
                                         <div className="relative">
                                             <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                             <input
@@ -418,14 +574,31 @@ export default function TrangDangNhap() {
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
                                                 placeholder="email@example.com"
-                                                className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
+                                                className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-slate-900 dark:text-white text-xs focus:outline-none transition-all ${
+                                                    cheDo === 'dang_ky' && validationDangKy.errors.email
+                                                        ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-1 focus:ring-rose-500'
+                                                        : cheDo === 'dang_ky' && validationDangKy.isValidEmail
+                                                        ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10 focus:ring-1 focus:ring-emerald-500'
+                                                        : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]'
+                                                }`}
                                             />
                                         </div>
                                     </div>
 
                                     {cheDo === 'dang_ky' && (
                                         <div className="space-y-1.5">
-                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Số Điện Thoại</label>
+                                            <div className="flex items-center justify-between">
+                                                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Số Điện Thoại</label>
+                                                {validationDangKy.errors.soDienThoai ? (
+                                                    <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[9px]">⚠️</span> {validationDangKy.errors.soDienThoai}
+                                                    </span>
+                                                ) : validationDangKy.isValidSdt ? (
+                                                    <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <Check className="w-3 h-3" /> Hợp lệ
+                                                    </span>
+                                                ) : null}
+                                            </div>
                                             <div className="relative">
                                                 <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                                 <input
@@ -434,7 +607,13 @@ export default function TrangDangNhap() {
                                                     value={soDienThoai}
                                                     onChange={(e) => setSoDienThoai(e.target.value)}
                                                     placeholder="0912 345 678"
-                                                    className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
+                                                    className={`w-full pl-10 pr-4 py-3 rounded-2xl border text-slate-900 dark:text-white text-xs focus:outline-none transition-all ${
+                                                        validationDangKy.errors.soDienThoai
+                                                            ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-1 focus:ring-rose-500'
+                                                            : validationDangKy.isValidSdt
+                                                            ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10 focus:ring-1 focus:ring-emerald-500'
+                                                            : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]'
+                                                    }`}
                                                 />
                                             </div>
                                         </div>
@@ -443,6 +622,17 @@ export default function TrangDangNhap() {
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Mật Khẩu</label>
+                                            {cheDo === 'dang_ky' && (
+                                                validationDangKy.errors.matKhau ? (
+                                                    <span className="text-[10.5px] text-rose-500 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <span className="text-[9px]">⚠️</span> {validationDangKy.errors.matKhau}
+                                                    </span>
+                                                ) : validationDangKy.isValidMatKhau ? (
+                                                    <span className="text-[10.5px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-0.5 animate-in fade-in duration-150">
+                                                        <Check className="w-3 h-3" /> Hợp lệ
+                                                    </span>
+                                                ) : null
+                                            )}
                                             {cheDo === 'dang_nhap' && (
                                                 <button
                                                     type="button"
@@ -461,7 +651,13 @@ export default function TrangDangNhap() {
                                                 value={matKhau}
                                                 onChange={(e) => setMatKhau(e.target.value)}
                                                 placeholder="••••••••"
-                                                className="w-full pl-10 pr-10 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]"
+                                                className={`w-full pl-10 pr-10 py-3 rounded-2xl border text-slate-900 dark:text-white text-xs focus:outline-none transition-all ${
+                                                    cheDo === 'dang_ky' && validationDangKy.errors.matKhau
+                                                        ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-1 focus:ring-rose-500'
+                                                        : cheDo === 'dang_ky' && validationDangKy.isValidMatKhau
+                                                        ? 'border-emerald-500 bg-emerald-50/20 dark:bg-emerald-950/10 focus:ring-1 focus:ring-emerald-500'
+                                                        : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:border-[#0052cc] focus:ring-1 focus:ring-[#0052cc]'
+                                                }`}
                                             />
                                             <button
                                                 type="button"
@@ -475,7 +671,7 @@ export default function TrangDangNhap() {
 
                                     <button
                                         type="submit"
-                                        disabled={dangXuLy || dangXuLyGoogle}
+                                        disabled={dangXuLy || dangXuLyGoogle || (cheDo === 'dang_ky' && !validationDangKy.isAllValid)}
                                         className="w-full py-3.5 rounded-2xl bg-[#0052cc] hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-98 cursor-pointer disabled:opacity-50 mt-2"
                                     >
                                         <span>{dangXuLy ? 'Đang xác thực...' : cheDo === 'dang_nhap' ? 'Đăng Nhập Vào Hệ Thống' : 'Hoàn Tất Đăng Ký (Nhận OTP)'}</span>
@@ -490,4 +686,3 @@ export default function TrangDangNhap() {
         </div>
     );
 }
-
