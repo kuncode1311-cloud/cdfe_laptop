@@ -314,16 +314,29 @@ export default function ModalDangNhapDangKy() {
         }
     }, [mounted]);
 
-    // Xử lý đăng nhập Google chuẩn không hiển thị trước gợi ý tài khoản gây hiểu lầm
+    // Xử lý đăng nhập Google chuẩn - Tự động phát hiện khi tắt popup để không bị treo loading
     const xuLyDangNhapGoogleCustom = () => {
-        if (dangXuLyGoogle || dangXuLy) return;
+        if (dangXuLy) return;
+        if (dangXuLyGoogle) {
+            setDangXuLyGoogle(false);
+            return;
+        }
+
         setDangXuLyGoogle(true);
         setThongBaoLoi('');
 
-        // Tự động hủy trạng thái chờ sau 12 giây nếu popup bị tắt bất ngờ
+        // Tự động hủy trạng thái chờ sau 8 giây tối đa
         const timerSafety = setTimeout(() => {
             setDangXuLyGoogle(false);
-        }, 12000);
+        }, 8000);
+
+        // Lắng nghe sự kiện người dùng đóng popup và quay lại tab chính (window focus)
+        const xuLyFocusLaiTab = () => {
+            setTimeout(() => {
+                setDangXuLyGoogle(false);
+            }, 600);
+        };
+        window.addEventListener('focus', xuLyFocusLaiTab, { once: true });
 
         const clientId = GOOGLE_CLIENT_ID;
         if (typeof window !== 'undefined' && window.google?.accounts?.oauth2 && clientId) {
@@ -333,6 +346,7 @@ export default function ModalDangNhapDangKy() {
                     scope: 'email profile openid',
                     callback: async (tokenResponse) => {
                         clearTimeout(timerSafety);
+                        window.removeEventListener('focus', xuLyFocusLaiTab);
                         if (tokenResponse?.error) {
                             setDangXuLyGoogle(false);
                             if (tokenResponse.error !== 'popup_closed_by_user') {
@@ -359,12 +373,22 @@ export default function ModalDangNhapDangKy() {
                         } finally {
                             setDangXuLyGoogle(false);
                         }
+                    },
+                    // Bắt sự kiện người dùng đóng popup từ Google Identity Services
+                    error_callback: (error) => {
+                        clearTimeout(timerSafety);
+                        window.removeEventListener('focus', xuLyFocusLaiTab);
+                        setDangXuLyGoogle(false);
+                        if (error?.type === 'popup_failed_to_open') {
+                            setThongBaoLoi('Trình duyệt đã chặn cửa sổ đăng nhập Google. Vui lòng cho phép popup và thử lại!');
+                        }
                     }
                 });
                 tokenClient.requestAccessToken({ prompt: 'select_account' });
                 return;
             } catch (e) {
                 clearTimeout(timerSafety);
+                window.removeEventListener('focus', xuLyFocusLaiTab);
                 console.warn('Lỗi khởi tạo Google OAuth2:', e);
                 setThongBaoLoi('Không thể mở cửa sổ đăng nhập Google. Vui lòng thử lại!');
                 setDangXuLyGoogle(false);
@@ -373,6 +397,7 @@ export default function ModalDangNhapDangKy() {
         }
 
         clearTimeout(timerSafety);
+        window.removeEventListener('focus', xuLyFocusLaiTab);
         setThongBaoLoi('Đang kết nối dịch vụ Google Sign-In, vui lòng thử lại sau 2 giây!');
         setDangXuLyGoogle(false);
     };
@@ -774,7 +799,7 @@ export default function ModalDangNhapDangKy() {
                                 <button
                                     type="button"
                                     onClick={xuLyDangNhapGoogleCustom}
-                                    disabled={dangXuLy || dangXuLyGoogle}
+                                    disabled={dangXuLy}
                                     className="w-full h-10 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 transition-all shadow-2xs hover:border-slate-400 dark:hover:border-slate-600 active:scale-[0.99] cursor-pointer disabled:opacity-60"
                                 >
                                     {dangXuLyGoogle ? (
@@ -1088,8 +1113,8 @@ export default function ModalDangNhapDangKy() {
                                             </div>
                                         </div>
 
-                                        {/* Hàng 4: Đồng ý điều khoản & chính sách bảo mật + Badge bảo mật */}
-                                        <div className="flex items-center justify-between text-xs pt-0.5">
+                                        {/* Hàng 4: Đồng ý điều khoản & chính sách bảo mật */}
+                                        <div className="flex items-center text-xs pt-0.5">
                                             <label className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-medium cursor-pointer select-none">
                                                 <input
                                                     type="checkbox"
@@ -1097,12 +1122,9 @@ export default function ModalDangNhapDangKy() {
                                                     className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 dark:border-slate-600 cursor-pointer"
                                                 />
                                                 <span className="text-[11.5px]">
-                                                    Tôi đồng ý <a href="/chinh-sach" target="_blank" className="text-blue-600 dark:text-cyan-400 font-bold hover:underline">Điều khoản & Bảo mật</a>
+                                                    Tôi đồng ý với <a href="/chinh-sach" target="_blank" className="text-blue-600 dark:text-cyan-400 font-bold hover:underline">Điều khoản</a> & <a href="/chinh-sach" target="_blank" className="text-blue-600 dark:text-cyan-400 font-bold hover:underline">Chính sách bảo mật</a>
                                                 </span>
                                             </label>
-                                            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
-                                                <ShieldCheck className="w-3 h-3 text-emerald-500" /> SSL 256-bit
-                                            </span>
                                         </div>
 
                                         <div className="space-y-1.5 pt-1">

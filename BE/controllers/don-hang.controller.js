@@ -2,6 +2,7 @@ const DonHang = require('../models/don-hang.model');
 const SanPham = require('../models/san-pham.model');
 const mongoose = require('mongoose');
 const { guiMailXacNhanDonHang } = require('../services/email.service');
+const { guiThongBaoDonHangTelegram } = require('../services/telegram-bot.service');
 
 /**
  * Controller xử lý nghiệp vụ cho Đơn hàng & Tồn kho
@@ -151,6 +152,9 @@ const taoDonHangMoi = async (req, res) => {
 
         // Tự động gửi email xác nhận đơn hàng kèm hóa đơn chi tiết cho khách
         guiMailXacNhanDonHang(ketQua).catch(err => console.warn('⚠️ Lỗi gửi email xác nhận:', err.message));
+
+        // Tự động bắn thông báo Realtime kèm nút duyệt đơn về Bot Telegram Quản trị viên
+        guiThongBaoDonHangTelegram(ketQua).catch(err => console.warn('⚠️ Lỗi gửi thông báo Telegram:', err.message));
 
         return res.status(201).json(ketQua);
     } catch (loi) {

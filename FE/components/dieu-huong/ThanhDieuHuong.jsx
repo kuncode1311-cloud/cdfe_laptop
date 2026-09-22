@@ -3,9 +3,8 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Search, ShoppingCart, Phone, Menu, ArrowRight, Sun, Moon, User, LogOut, Sparkles, PackageCheck, LayoutDashboard, Ticket } from "lucide-react";
+import { Search, ShoppingCart, Phone, Menu, ArrowRight, User, LogOut, Sparkles, PackageCheck, LayoutDashboard, Ticket } from "lucide-react";
 import { useCart, useGioHang } from "@/contexts/CartContext";
-import { useTheme, useGiaoDien } from "@/contexts/ThemeContext";
 import { useAuth, useNguoiDung } from "@/contexts/AuthContext";
 import { SanPhamService } from "@/services/san-pham.service";
 import { formatCurrency, dinhDangTienVND } from "@/utils/formatCurrency";
@@ -13,7 +12,6 @@ import { slugSanPham } from "@/utils/taoSlug";
 export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
     const router = useRouter();
     const { gio_hang } = useGioHang();
-    const { chu_de, chuyenDoiChuDe } = useGiaoDien();
     const { nguoiDung, daDangNhap, moModalDangNhap, dangXuat } = useNguoiDung();
     const [tuKhoa, setTuKhoa] = useState("");
     const [dangMoGoiY, setDangMoGoiY] = useState(false);
@@ -148,10 +146,6 @@ export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
             <Phone className="w-4 h-4"/>
           </a>
 
-          {/* Nút Đổi Theme Sáng / Tối */}
-          <button onClick={chuyenDoiChuDe} className="w-10 h-10 grid place-items-center rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white cursor-pointer transition-colors" title="Đổi giao diện Sáng / Tối">
-            {chu_de === "sang" ? (<Moon className="w-4 h-4 text-cyan-200"/>) : (<Sun className="w-4 h-4 text-amber-300"/>)}
-          </button>
 
           {/* Nút Đăng Nhập / Tài Khoản Người Dùng */}
           <div ref={menuUserRef} className="relative">

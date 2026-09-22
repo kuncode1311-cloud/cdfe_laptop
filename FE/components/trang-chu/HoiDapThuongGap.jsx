@@ -67,6 +67,77 @@ export default function HoiDapThuongGap() {
         setCauHoiMo(prev => prev === id ? null : id);
     };
 
+    const cotTrai = [DANH_SACH_FAQ[0], DANH_SACH_FAQ[2]];
+    const cotPhai = [DANH_SACH_FAQ[1], DANH_SACH_FAQ[3]];
+
+    const renderTheFaq = (faq) => {
+        const dangMo = cauHoiMo === faq.id;
+        const IconComponent = faq.icon;
+
+        return (
+            <div
+                key={faq.id}
+                className={`bg-white dark:bg-slate-800 rounded-2xl border transition-all duration-200 overflow-hidden ${
+                    dangMo
+                        ? 'border-blue-500 dark:border-blue-500 shadow-[0_8px_26px_rgba(0,82,204,0.12)] ring-2 ring-blue-500/15'
+                        : 'border-blue-100/90 dark:border-slate-700 shadow-[0_4px_20px_rgba(0,82,204,0.06)] hover:shadow-[0_8px_30px_rgba(0,82,204,0.12)] hover:border-blue-300 dark:hover:border-blue-500'
+                }`}
+            >
+                {/* Tiêu đề câu hỏi & Nút toggle */}
+                <button
+                    type="button"
+                    onClick={() => toggleCauHoi(faq.id)}
+                    className="w-full p-4 sm:p-5 flex items-center justify-between gap-3 sm:gap-4 text-left cursor-pointer select-none group"
+                >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                        {/* Icon hình vuông bo góc mềm */}
+                        <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${faq.iconBg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
+                            <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </div>
+
+                        {/* Tag & Câu hỏi */}
+                        <div className="space-y-1 min-w-0">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] sm:text-[10.5px] font-extrabold uppercase tracking-wide ${faq.tagBg}`}>
+                                {faq.tag}
+                            </span>
+                            <h3 className={`font-bold text-[13px] sm:text-[14px] leading-snug transition-colors ${
+                                dangMo ? 'text-blue-600 dark:text-blue-400' : 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                            }`}>
+                                {faq.cauHoi}
+                            </h3>
+                        </div>
+                    </div>
+
+                    {/* Nút mũi tên tròn đổi trạng thái */}
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ${
+                        dangMo
+                            ? 'rotate-90 bg-blue-600 text-white shadow-sm'
+                            : 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900'
+                    }`}>
+                        <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                    </div>
+                </button>
+
+                {/* Nội dung câu trả lời mở rộng */}
+                {dangMo && (
+                    <div className="px-5 pb-5 pt-0 border-t border-slate-100 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 text-xs sm:text-[13px] leading-relaxed space-y-2.5 animate-in fade-in-50 duration-200">
+                        <p className="font-semibold text-slate-800 dark:text-slate-200 pt-3">
+                            {faq.traLoi}
+                        </p>
+                        <ul className="space-y-2">
+                            {faq.diemNoiBat.map((diem, i) => (
+                                <li key={i} className="flex items-start gap-2">
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                                    <span>{diem}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     return (
         <section className="relative rounded-3xl p-6 sm:p-8 lg:p-10 bg-gradient-to-b from-[#dbeafe]/90 via-[#ebf4fe] to-[#dff0fd] dark:from-[#0b1329] dark:via-[#0f172a] dark:to-[#0a1022] border-2 border-blue-200 dark:border-blue-900/70 shadow-[0_16px_45px_-12px_rgba(0,82,204,0.15)] space-y-6 sm:space-y-8 overflow-hidden transition-all">
             {/* Họa tiết lưới chấm trang trí bên trái rõ nét như ảnh mẫu */}
@@ -113,65 +184,20 @@ export default function HoiDapThuongGap() {
                 </div>
             </div>
 
-            {/* 2. Lưới 4 thẻ FAQ chuẩn thiết kế mẫu (2x2) */}
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-                {DANH_SACH_FAQ.map((faq) => {
-                    const dangMo = cauHoiMo === faq.id;
-                    const IconComponent = faq.icon;
+            {/* 2. Bố cục 2 thẻ 1 hàng (2 cột độc lập, không bao giờ bị kéo giãn chiều cao khi bung câu hỏi) */}
+            {/* Desktop & Tablet: 2 cột độc lập để thẻ đối diện không bị giãn trống */}
+            <div className="relative z-10 hidden md:grid md:grid-cols-2 items-start gap-4 sm:gap-5">
+                <div className="flex flex-col gap-4 sm:gap-5">
+                    {cotTrai.map(renderTheFaq)}
+                </div>
+                <div className="flex flex-col gap-4 sm:gap-5">
+                    {cotPhai.map(renderTheFaq)}
+                </div>
+            </div>
 
-                    return (
-                        <div
-                            key={faq.id}
-                            className="bg-white dark:bg-slate-800 rounded-2xl border border-blue-100/90 dark:border-slate-700 shadow-[0_4px_20px_rgba(0,82,204,0.06)] hover:shadow-[0_8px_30px_rgba(0,82,204,0.12)] hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-200 overflow-hidden"
-                        >
-                            {/* Tiêu đề & Nút toggle */}
-                            <button
-                                type="button"
-                                onClick={() => toggleCauHoi(faq.id)}
-                                className="w-full p-5 flex items-center justify-between gap-4 text-left cursor-pointer select-none group"
-                            >
-                                <div className="flex items-center gap-4 min-w-0">
-                                    {/* Icon hình vuông bo góc mềm */}
-                                    <div className={`w-12 h-12 rounded-2xl ${faq.iconBg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
-                                        <IconComponent className="w-6 h-6" />
-                                    </div>
-
-                                    {/* Tag & Câu hỏi */}
-                                    <div className="space-y-1 min-w-0">
-                                        <span className={`inline-block px-2.5 py-0.5 rounded-md text-[10.5px] font-extrabold uppercase tracking-wide ${faq.tagBg}`}>
-                                            {faq.tag}
-                                        </span>
-                                        <h3 className="font-bold text-[13.5px] sm:text-[14px] text-slate-900 dark:text-white leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                            {faq.cauHoi}
-                                        </h3>
-                                    </div>
-                                </div>
-
-                                {/* Nút mũi tên tròn xanh nhạt như ảnh mẫu */}
-                                <div className={`w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 transition-transform duration-200 ${dangMo ? 'rotate-90 bg-blue-600 !text-white' : 'group-hover:bg-blue-100'}`}>
-                                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                                </div>
-                            </button>
-
-                            {/* Nội dung câu trả lời mở rộng */}
-                            {dangMo && (
-                                <div className="px-5 pb-5 pt-0 border-t border-slate-100 dark:border-slate-700/60 text-slate-600 dark:text-slate-300 text-xs sm:text-[13px] leading-relaxed space-y-2 animate-fade-in">
-                                    <p className="font-semibold text-slate-800 dark:text-slate-200 pt-3">
-                                        {faq.traLoi}
-                                    </p>
-                                    <ul className="space-y-2">
-                                        {faq.diemNoiBat.map((diem, i) => (
-                                            <li key={i} className="flex items-start gap-2">
-                                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                                                <span>{diem}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+            {/* Mobile: 1 cột tuần tự từ 1 đến 4 */}
+            <div className="relative z-10 md:hidden flex flex-col gap-3.5">
+                {DANH_SACH_FAQ.map(renderTheFaq)}
             </div>
 
             {/* 3. Thanh Hỗ Trợ Cuối (Bottom CTA Bar) chuẩn pixel ảnh mẫu */}

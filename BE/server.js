@@ -41,6 +41,7 @@ const baoHanhRoutes = require('./routes/bao-hanh.routes');
 const thanhToanRoutes = require('./routes/thanh-toan.routes');
 const lienHeRoutes = require('./routes/lien-he.routes');
 const caiDatRoutes = require('./routes/cai-dat.routes');
+const { khoiTaoTelegramBot } = require('./services/telegram-bot.service');
 
 // 6. Gắn các Tuyến đường REST API chuẩn (/api/...)
 app.use('/api/auth', xacThucRoutes);
@@ -123,4 +124,7 @@ app.listen(PORT, () => {
     console.log(`👉 http://localhost:${PORT}`);
     console.log(`👉 API Docs: http://localhost:${PORT}/`);
     console.log(`=============================================`);
+
+    // Khởi động dịch vụ Telegram Bot quản lý đơn hàng
+    khoiTaoTelegramBot();
 });
