@@ -121,6 +121,14 @@ const taoDonHangMoi = async (req, res) => {
             tt.ho_va_ten = ten;
         }
 
+        // Chuẩn hóa trạng thái thanh toán theo enum hợp lệ
+        const trangThaiHopLe = ['chua_thanh_toan', 'cho_thanh_toan', 'da_thanh_toan', 'that_bai', 'thanh_toan_khi_nhan_hang'];
+        if (!duLieuDonHang.trang_thai_thanh_toan || !trangThaiHopLe.includes(duLieuDonHang.trang_thai_thanh_toan)) {
+            duLieuDonHang.trang_thai_thanh_toan = (duLieuDonHang.hinh_thuc_thanh_toan === 'tien_mat_cod' || duLieuDonHang.hinh_thuc_thanh_toan === 'cod')
+                ? 'thanh_toan_khi_nhan_hang'
+                : (duLieuDonHang.da_thanh_toan ? 'da_thanh_toan' : 'cho_thanh_toan');
+        }
+
         // Nếu tạo mới đơn hàng với trạng thái 'da_giao' luôn thì trừ kho
         if (duLieuDonHang.trang_thai === 'da_giao') {
             await capNhatTonKhoTheoDonHang(duLieuDonHang.danh_sach_san_pham, 'tru');
@@ -133,7 +141,7 @@ const taoDonHangMoi = async (req, res) => {
         const donHangMoi = new DonHang(duLieuDonHang);
         const ketQua = await donHangMoi.save();
 
-        console.log(`📦 Tạo đơn hàng mới thành công: ${ketQua.ma_don_hang}`);
+        console.log(`📦 Tạo đơn hàng mới thành công: ${ketQua.ma_don_hang} | Hình thức: ${ketQua.hinh_thuc_thanh_toan} | Trạng thái TT: ${ketQua.trang_thai_thanh_toan}`);
         return res.status(201).json(ketQua);
     } catch (loi) {
         console.error('Lỗi tạo đơn hàng:', loi);
@@ -144,11 +152,21 @@ const taoDonHangMoi = async (req, res) => {
 // 2. Lấy danh sách tất cả các đơn hàng
 const layDanhSachDonHang = async (req, res) => {
     try {
-        const { trang_thai, id_nguoi_dung } = req.query;
+        const { trang_thai, id_nguoi_dung, email, sdt } = req.query;
         const filter = {};
 
-        if (trang_thai) filter.trang_thai = trang_thai;
-        if (id_nguoi_dung) filter.id_nguoi_dung = id_nguoi_dung;
+        if (trang_thai && trang_thai !== 'tat_ca') filter.trang_thai = trang_thai;
+
+        if (id_nguoi_dung) {
+            const conditions = [{ id_nguoi_dung: id_nguoi_dung }];
+            if (email && email.trim()) {
+                conditions.push({ 'thong_tin_giao_hang.email': email.trim().toLowerCase() });
+            }
+            if (sdt && sdt.trim()) {
+                conditions.push({ 'thong_tin_giao_hang.so_dien_thoai': sdt.trim() });
+            }
+            filter.$or = conditions;
+        }
 
         const danhSachDonHang = await DonHang.find(filter).sort({ createdAt: -1 });
         return res.status(200).json(danhSachDonHang);

@@ -762,26 +762,29 @@ function NoiDungTrangTaiKhoan() {
 
     useEffect(() => {
         const taiDonHang = async () => {
+            if (!nguoiDung) {
+                setDanhSachDonHang([]);
+                return;
+            }
+
             setDangTaiDonHang(true);
             try {
-                const tatCa = await DonHangService.layTatCaDonHangAsync();
                 const laAdmin = nguoiDung?.vaiTro === 'admin' || nguoiDung?.role === 'admin' || nguoiDung?.email === 'admin@laptopnew.vn';
                 if (laAdmin) {
                     // Admin xem tất cả các đơn để quản lý và kiểm tra realtime
-                    setDanhSachDonHang(tatCa);
-                } else if (nguoiDung) {
-                    const donCuaToi = tatCa.filter((dh) => {
-                        if (dh.id_nguoi_dung && (dh.id_nguoi_dung === nguoiDung.id || dh.id_nguoi_dung === nguoiDung._id)) return true;
-                        if (nguoiDung.email && dh.thong_tin_giao_hang?.email === nguoiDung.email) return true;
-                        if (nguoiDung.soDienThoai && dh.thong_tin_giao_hang?.so_dien_thoai === nguoiDung.soDienThoai) return true;
-                        return false;
-                    });
-                    setDanhSachDonHang(donCuaToi);
+                    const tatCa = await DonHangService.layTatCaDonHangAsync();
+                    setDanhSachDonHang(tatCa || []);
                 } else {
-                    setDanhSachDonHang(tatCa.slice(0, 3));
+                    const idUsr = nguoiDung.id || nguoiDung._id || '';
+                    const emailUsr = (nguoiDung.email || '').trim().toLowerCase();
+                    const sdtUsr = (nguoiDung.soDienThoai || nguoiDung.so_dien_thoai || '').trim();
+
+                    const donCuaToi = await DonHangService.layDonHangTheoNguoiDungAsync(idUsr, emailUsr, sdtUsr);
+                    setDanhSachDonHang(donCuaToi || []);
                 }
             } catch (e) {
                 console.error('Lỗi tải đơn hàng:', e);
+                setDanhSachDonHang([]);
             } finally {
                 setDangTaiDonHang(false);
             }

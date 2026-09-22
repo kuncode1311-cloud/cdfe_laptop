@@ -126,6 +126,9 @@ export const DonHangService = {
                 donHangMoi = ketQuaServer;
             }
         } catch (err) {
+            if (err.status === 400 || err.status === 401 || err.status === 403) {
+                throw err;
+            }
             console.warn('⚠️ Lỗi kết nối Express API khi tạo đơn hàng, lưu an toàn vào LocalStorage:', err.message);
         }
 
@@ -166,6 +169,38 @@ export const DonHangService = {
         } catch {
             return local;
         }
+    },
+
+    /**
+     * Lấy danh sách đơn hàng của một người dùng cụ thể từ Server API (Async)
+     */
+    async layDonHangTheoNguoiDungAsync(idNguoiDung, email, sdt) {
+        if (!idNguoiDung && !email && !sdt) return [];
+        const params = new URLSearchParams();
+        if (idNguoiDung) params.append('id_nguoi_dung', idNguoiDung);
+        if (email) params.append('email', email.trim().toLowerCase());
+        if (sdt) params.append('sdt', sdt.trim());
+
+        try {
+            const serverOrders = await apiFetch(`/don-hang?${params.toString()}`, { cache: 'no-store' });
+            if (Array.isArray(serverOrders)) {
+                return serverOrders;
+            }
+        } catch (err) {
+            console.warn('[DonHangService] Lỗi lấy đơn hàng người dùng:', err.message);
+        }
+
+        // Fallback kiểm tra chặt chẽ nếu offline
+        const local = this.layTatCaDonHang();
+        const emailLower = email ? email.trim().toLowerCase() : '';
+        const sdtTrim = sdt ? sdt.trim() : '';
+
+        return local.filter(dh => {
+            if (idNguoiDung && dh.id_nguoi_dung === idNguoiDung) return true;
+            if (emailLower && dh.thong_tin_giao_hang?.email && dh.thong_tin_giao_hang.email.toLowerCase() === emailLower) return true;
+            if (sdtTrim && dh.thong_tin_giao_hang?.so_dien_thoai && dh.thong_tin_giao_hang.so_dien_thoai === sdtTrim) return true;
+            return false;
+        });
     },
 
     /**

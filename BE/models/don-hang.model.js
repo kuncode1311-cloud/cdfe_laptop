@@ -88,7 +88,7 @@ const DonHangSchema = new mongoose.Schema(
         },
         trang_thai_thanh_toan: {
             type: String,
-            enum: ['chua_thanh_toan', 'cho_thanh_toan', 'da_thanh_toan', 'that_bai'],
+            enum: ['chua_thanh_toan', 'cho_thanh_toan', 'da_thanh_toan', 'that_bai', 'thanh_toan_khi_nhan_hang'],
             default: 'chua_thanh_toan'
         },
         payos_order_code: {
