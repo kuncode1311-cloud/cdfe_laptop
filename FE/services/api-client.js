@@ -3,16 +3,29 @@
  * 100% Dữ liệu thực tế từ Database, không dùng dữ liệu cứng giả lập
  */
 export function layApiBaseUrl() {
-    if (process.env.NEXT_PUBLIC_API_URL) {
-        return process.env.NEXT_PUBLIC_API_URL;
-    }
     if (typeof window !== 'undefined') {
+        // Trên trình duyệt: Khi chạy ở Railway, Vercel hay bất kỳ domain nào (kể cả localhost),
+        // luôn ưu tiên gọi Route Handler nội bộ Next.js cùng origin (/api)
+        // để đảm bảo HTTPS, không bị CORS, không bị Mixed Content và không phụ thuộc Express port 5000.
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            return `${window.location.origin}/api`;
+        }
+        if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes('localhost:5000')) {
+            return process.env.NEXT_PUBLIC_API_URL;
+        }
         return `${window.location.origin}/api`;
     }
-    return 'http://localhost:5000/api';
+    // Phía Server (Node.js runtime)
+    if (process.env.NEXT_PUBLIC_API_URL && !process.env.NEXT_PUBLIC_API_URL.includes('localhost:5000')) {
+        return process.env.NEXT_PUBLIC_API_URL;
+    }
+    const port = process.env.PORT || 3000;
+    return `http://127.0.0.1:${port}/api`;
 }
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:5000/api');
+export const API_BASE_URL = typeof window !== 'undefined'
+    ? `${window.location.origin}/api`
+    : (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3000/api');
 
 export const TOKEN_STORAGE_KEY = 'tnt_laptop_token';
 

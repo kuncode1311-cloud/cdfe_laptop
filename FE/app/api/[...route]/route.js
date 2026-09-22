@@ -11,6 +11,18 @@ function taoObjectId(id) {
     return null;
 }
 
+// Xử lý preflight CORS
+export async function OPTIONS() {
+    return new NextResponse(null, {
+        status: 200,
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+    });
+}
+
 // Xử lý GET API
 export async function GET(request, { params }) {
     const { route } = await params;
