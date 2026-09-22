@@ -6191,11 +6191,6 @@ export default function TrangQuanTriCuaHang() {
                                                                             <span className={`font-extrabold text-xs whitespace-nowrap ${daBiKhoa ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'}`}>
                                                                                 {user.hoTen || 'Khách Hàng'}
                                                                             </span>
-                                                                            {user.laTiemNang && (
-                                                                                <span className="px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-black text-[9px] uppercase tracking-wider whitespace-nowrap">
-                                                                                    🔥 VIP
-                                                                                </span>
-                                                                            )}
                                                                         </div>
                                                                         <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap">
                                                                             <span className="truncate max-w-[150px] lg:max-w-[190px] flex items-center gap-1" title={user.email}>

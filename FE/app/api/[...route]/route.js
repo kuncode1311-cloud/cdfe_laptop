@@ -711,7 +711,7 @@ export async function POST(request, { params }) {
                         const payload = JSON.parse(payloadStr);
                         if (payload?.email) {
                             email = payload.email;
-                            hoTen = hoTen || payload.name || payload.given_name || 'Khách Hàng Google VIP';
+                            hoTen = hoTen || payload.name || payload.given_name || 'Khách Hàng Google';
                             avatar = avatar || payload.picture || '';
                             googleId = googleId || payload.sub;
                         }
@@ -750,7 +750,7 @@ export async function POST(request, { params }) {
             if (!user) {
                 const newUser = {
                     id: 'usr_gg_' + Date.now(),
-                    hoTen: hoTen || 'Khách Hàng Google VIP',
+                    hoTen: hoTen || 'Khách Hàng Google',
                     email: emailClean,
                     avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
                     vaiTro: 'khach_hang',

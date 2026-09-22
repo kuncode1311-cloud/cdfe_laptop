@@ -135,7 +135,7 @@ export default function TrangDangNhap() {
                     <CheckCircle2 className="w-8 h-8" />
                 </div>
                 <h2 className="text-xl font-bold">Bạn đã đăng nhập thành công!</h2>
-                <p className="text-sm text-slate-500">Xin chào {nguoiDung?.hoTen || 'Thành viên VIP'}.</p>
+                <p className="text-sm text-slate-500">Xin chào {nguoiDung?.hoTen || 'Thành viên'}.</p>
                 <div className="flex items-center gap-3 pt-2">
                     {nguoiDung?.vaiTro === 'admin' && (
                         <Link href="/admin" className="px-5 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-xs hover:bg-purple-700 transition-all shadow-md">
@@ -178,7 +178,7 @@ export default function TrangDangNhap() {
                     return;
                 }
                 await kichHoatTaiKhoan(email.trim(), otpClean);
-                toast.success('Kích hoạt tài khoản thành công! 🎉 Chào mừng bạn gia nhập VIP.');
+                toast.success('Kích hoạt tài khoản thành công! 🎉 Chào mừng bạn gia nhập TNTP Laptop.');
                 router.push('/');
             } else {
                 const hoTenClean = hoTen.trim();
@@ -225,7 +225,7 @@ export default function TrangDangNhap() {
                     setDemNguoc(90);
                     return;
                 }
-                toast.success('Đăng ký tài khoản VIP thành công! Đã tặng 200 điểm.');
+                toast.success('Đăng ký tài khoản thành công! Đã tặng 200 điểm.');
                 router.push('/');
             }
         } catch (err) {
@@ -331,7 +331,7 @@ export default function TrangDangNhap() {
                             </span>
                             <span className="text-xs font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1">
                                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                                VIP MEMBER CLUB
+                                THÀNH VIÊN TNTP
                             </span>
                         </div>
 
