@@ -196,18 +196,20 @@ export default function TrangTinTuc() {
         @media(max-width:640px){.tt-grid{grid-template-columns:1fr;}}
         .tt-hero { display:grid; grid-template-columns:1.1fr 0.9fr; }
         @media(max-width:900px){.tt-hero{grid-template-columns:1fr;}}
-        .dm-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding-top:10px; padding-bottom:10px; }
-        .dm-btn { padding:7px 14px; border-radius:24px; font-size:12.5px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-sizing:border-box; }
+        .dm-bar { display:flex; align-items:center; gap:6px; padding-top:8px; padding-bottom:8px; width:100%; }
+        @media(min-width:1024px){.dm-bar{flex-wrap:nowrap;justify-content:flex-start;}}
+        @media(max-width:1023px){.dm-bar{flex-wrap:wrap;gap:6px 8px;}}
+        .dm-btn { padding:6.5px 11px; border-radius:20px; font-size:12px; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:5px; transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-sizing:border-box; flex-shrink:0; }
         @media(max-width:640px){
           .dm-bar { gap:6px 6px; padding-top:6px; padding-bottom:6px; }
-          .dm-btn { padding:6px 10px !important; font-size:11.5px !important; gap:4px !important; border-radius:20px !important; }
+          .dm-btn { padding:5px 9px !important; font-size:11.5px !important; gap:4px !important; border-radius:16px !important; }
         }
         .card-tin:hover{box-shadow:0 8px 24px rgba(29,78,216,0.12)!important;transform:translateY(-3px)!important;border-color:#93c5fd!important;}
         .faq-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
         @media(max-width:768px){.faq-grid{grid-template-columns:1fr;}}
       `}</style>
 
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '14px 16px 48px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '12px 6px 48px' }}>
 
         {/* Breadcrumb */}
         <nav style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', marginBottom: '12px', color: '#64748b' }}>
@@ -276,10 +278,12 @@ export default function TrangTinTuc() {
                   style={{
                     background: active ? 'rgba(255,255,255,0.28)' : cm.mauBadgeInactive,
                     color: active ? '#ffffff' : cm.mauBadgeTextInactive,
-                    borderRadius: '12px',
-                    padding: '1px 7px',
-                    fontSize: '11px',
+                    borderRadius: '10px',
+                    padding: '1px 5.5px',
+                    fontSize: '10.5px',
                     fontWeight: '900',
+                    minWidth: '17px',
+                    textAlign: 'center',
                     border: active ? '1px solid rgba(255,255,255,0.4)' : `1px solid ${cm.mauBorderInactive}`,
                     lineHeight: '1.2'
                   }}
