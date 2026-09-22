@@ -3481,18 +3481,26 @@ export default function TrangQuanTriCuaHang() {
             }
 
             if (userDangSua) {
-                await NguoiDungService.capNhatNguoiDung(userDangSua.id || userDangSua._id, payload);
+                const suaId = userDangSua.id || userDangSua._id;
+                await NguoiDungService.capNhatNguoiDung(suaId, payload);
                 hienThongBao(`Đã cập nhật tài khoản ${payload.email}!`);
+                setDanhSachNguoiDung(prev => prev.map(u => {
+                    const uId = u.id || u._id;
+                    if (uId === suaId) {
+                        return { ...u, ...payload };
+                    }
+                    return u;
+                }));
             } else {
                 payload.id = 'usr_' + Date.now();
                 payload.ngayTao = layNgayTaoKhachHang({ createdAt: new Date() });
-                await NguoiDungService.themNguoiDung(payload);
+                const resThem = await NguoiDungService.themNguoiDung(payload);
                 hienThongBao(`Đã thêm tài khoản mới ${payload.email}!`);
+                setDanhSachNguoiDung(prev => [resThem?.id || resThem?._id ? resThem : payload, ...prev]);
             }
 
             setDangMoModalUser(false);
             setUserDangSua(null);
-            taiDuLieuToanBo();
         } catch (err) {
             alert(`Lỗi lưu người dùng: ${err.message}`);
         } finally {
@@ -3526,16 +3534,32 @@ export default function TrangQuanTriCuaHang() {
             if (!dongY) return;
         }
 
+        const capNhat = dangKhoa
+            ? { biKhoa: false, trangThai: 'hoat_dong', lyDoKhoa: '' }
+            : { biKhoa: true, trangThai: 'bi_khoa', lyDoKhoa: 'Quản trị viên tạm khóa tài khoản' };
+
+        // ⚡ Cập nhật Realtime tại chỗ trên row ngay lập tức (không reload giật lag cả table)
+        setDanhSachNguoiDung(prev => prev.map(u => {
+            const uId = u.id || u._id;
+            if (uId === id) {
+                return { ...u, ...capNhat };
+            }
+            return u;
+        }));
+
         setDangXuLyUserId(id);
         try {
-            const capNhat = dangKhoa
-                ? { biKhoa: false, trangThai: 'hoat_dong', lyDoKhoa: '' }
-                : { biKhoa: true, trangThai: 'bi_khoa', lyDoKhoa: 'Quản trị viên tạm khóa tài khoản' };
-
             await NguoiDungService.capNhatNguoiDung(id, capNhat);
             hienThongBao(dangKhoa ? `Đã mở khóa tài khoản ${user.email}!` : `Đã tạm khóa tài khoản ${user.email}!`);
-            taiDuLieuToanBo();
         } catch (err) {
+            // Hoàn nguyên trạng thái cũ nếu API báo lỗi
+            setDanhSachNguoiDung(prev => prev.map(u => {
+                const uId = u.id || u._id;
+                if (uId === id) {
+                    return user;
+                }
+                return u;
+            }));
             canhBao({
                 tieuDe: 'Không Thể Thay Đổi Trạng Thái',
                 noiDung: err.message,
@@ -3556,12 +3580,15 @@ export default function TrangQuanTriCuaHang() {
         });
         if (!dongY) return;
         const id = u.id || u._id;
+
+        // ⚡ Xóa tại chỗ trên row ngay lập tức
+        setDanhSachNguoiDung(prev => prev.filter(item => (item.id || item._id) !== id));
         setDangXuLyUserId(id);
         try {
             await NguoiDungService.xoaNguoiDung(id);
             hienThongBao(`Đã xóa tài khoản ${u.email}!`);
-            taiDuLieuToanBo();
         } catch (err) {
+            setDanhSachNguoiDung(prev => [u, ...prev]);
             canhBao({
                 tieuDe: 'Không Thể Xóa Tài Khoản',
                 noiDung: err.message,
@@ -3584,12 +3611,24 @@ export default function TrangQuanTriCuaHang() {
         if (!dongY) return;
 
         const id = user.id || user._id;
+
+        // ⚡ Cập nhật vai trò tại chỗ trên row ngay lập tức
+        setDanhSachNguoiDung(prev => prev.map(u => {
+            const uId = u.id || u._id;
+            if (uId === id) return { ...u, vaiTro: vaiTroMoi };
+            return u;
+        }));
+
         setDangXuLyUserId(id);
         try {
             await NguoiDungService.capNhatNguoiDung(id, { vaiTro: vaiTroMoi });
             hienThongBao(`Đã cập nhật quyền tài khoản ${user.email}!`);
-            taiDuLieuToanBo();
         } catch (err) {
+            setDanhSachNguoiDung(prev => prev.map(u => {
+                const uId = u.id || u._id;
+                if (uId === id) return user;
+                return u;
+            }));
             canhBao({
                 tieuDe: 'Lỗi Cập Nhật Quyền',
                 noiDung: err.message,
@@ -6057,8 +6096,17 @@ export default function TrangQuanTriCuaHang() {
                                                     const dangXuLy = dangXuLyUserId === uId;
                                                     const daBiKhoa = Boolean(user.biKhoa || user.trangThai === 'bi_khoa');
                                                     return (
-                                                        <tr key={uId} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
-                                                            <td className="py-2 px-2 text-center font-bold text-slate-400 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                        <tr 
+                                                            key={uId} 
+                                                            className={`transition-all duration-200 ${
+                                                                daBiKhoa
+                                                                    ? 'bg-rose-50/95 dark:bg-rose-950/50 hover:!bg-rose-100 dark:hover:!bg-rose-950/70'
+                                                                    : 'odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50'
+                                                            }`}
+                                                        >
+                                                            <td className={`py-2 px-2 text-center font-bold border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap ${
+                                                                daBiKhoa ? 'text-rose-600 dark:text-rose-400 font-black bg-rose-100/60 dark:bg-rose-900/40' : 'text-slate-400'
+                                                            }`}>
                                                                 #{idx + 1}
                                                             </td>
                                                             <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
