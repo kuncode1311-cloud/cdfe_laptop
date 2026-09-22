@@ -137,7 +137,7 @@ export default function TrangChinhSach() {
   }, []);
 
   return (
-    <div className="space-y-3.5 max-w-5xl mx-auto pb-6">
+    <div className="space-y-4 max-w-7xl w-full mx-auto pb-6">
       
       {/* 1. BREADCRUMB */}
       <nav className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-semibold">
@@ -341,7 +341,7 @@ export default function TrangChinhSach() {
       </div>
 
       {/* 3. DẢI BẢO CHỨNG 5 TIÊU CHUẨN */}
-      <div className="max-w-5xl w-full mx-auto mt-2.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-white/90 dark:border-slate-800 py-2.5 px-4 sm:px-6 shadow-xs">
+      <div className="max-w-7xl w-full mx-auto mt-2.5 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-white/90 dark:border-slate-800 py-2.5 px-4 sm:px-6 shadow-xs">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800">
           {TRUST_PILLARS.map((pillar, idx) => {
             const IconComponent = pillar.icon;

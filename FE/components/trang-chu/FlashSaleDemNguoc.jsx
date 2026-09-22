@@ -48,6 +48,7 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
     }, [danhSachSanPham]);
 
     // Đồng hồ đếm ngược Flash Sale đồng bộ với Admin Cài Đặt Khuyến Mãi
+    const [ngay, setNgay] = useState(0);
     const [gio, setGio] = useState(14);
     const [phut, setPhut] = useState(36);
     const [giay, setGiay] = useState(14);
@@ -60,13 +61,16 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
             const diff = target - now;
 
             if (diff > 0) {
-                const totalHours = Math.floor(diff / (1000 * 60 * 60));
+                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                 const s = Math.floor((diff % (1000 * 60)) / 1000);
-                setGio(totalHours);
+                setNgay(d);
+                setGio(h);
                 setPhut(m);
                 setGiay(s);
             } else {
+                setNgay(0);
                 setGio(0);
                 setPhut(0);
                 setGiay(0);
@@ -77,6 +81,13 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
         const timer = setInterval(capNhatDongHo, 1000);
         return () => clearInterval(timer);
     }, [caiDat?.thoi_gian_ket_thuc]);
+
+    // Hiển thị NGÀY:GIỜ:PHÚT khi >= 1 ngày, GIỘ:PHÚT:GIÂY khi < 1 ngày
+    const coDemNgay = ngay > 0;
+    const donViDemNguoc = coDemNgay
+        ? [{ val: ngay, nhan: 'Ngày' }, { val: gio, nhan: 'Giờ' }, { val: phut, nhan: 'Phút' }]
+        : [{ val: gio, nhan: 'Giờ' }, { val: phut, nhan: 'Phút' }, { val: giay, nhan: 'Giây' }];
+
 
     if (danhSach.length === 0 && !dangTai) return null;
 
@@ -152,44 +163,22 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
                             KẾT THÚC TRONG
                         </span>
 
-                        {/* 3 Sleek Glossy Burgundy 3D Glass Boxes: [14] : [36] : [46] */}
+                        {/* Countdown boxes — dùng chung donViDemNguoc */}
                         <div className="flex items-center gap-2 sm:gap-2.5">
-                            {/* Box Giờ */}
-                            <div className="flex flex-col items-center gap-1.5">
-                                <div className="relative w-[58px] h-[58px] sm:w-[64px] sm:h-[64px] bg-gradient-to-b from-[#6A0C16]/90 via-[#48040C]/90 to-[#2A0105]/95 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_10px_22px_rgba(0,0,0,0.35)] overflow-hidden">
-                                    <div className="absolute top-0 inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                                    <span className="text-[28px] sm:text-[32px] font-black tracking-tight tabular-nums leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-                                        {gio.toString().padStart(2, '0')}
-                                    </span>
-                                </div>
-                                <span className="text-[11px] text-white/95 font-bold uppercase tracking-wider drop-shadow-xs">Giờ</span>
-                            </div>
-
-                            <span className="text-white font-black text-2xl pb-6 drop-shadow-sm select-none">:</span>
-
-                            {/* Box Phút */}
-                            <div className="flex flex-col items-center gap-1.5">
-                                <div className="relative w-[58px] h-[58px] sm:w-[64px] sm:h-[64px] bg-gradient-to-b from-[#6A0C16]/90 via-[#48040C]/90 to-[#2A0105]/95 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_10px_22px_rgba(0,0,0,0.35)] overflow-hidden">
-                                    <div className="absolute top-0 inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                                    <span className="text-[28px] sm:text-[32px] font-black tracking-tight tabular-nums leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-                                        {phut.toString().padStart(2, '0')}
-                                    </span>
-                                </div>
-                                <span className="text-[11px] text-white/95 font-bold uppercase tracking-wider drop-shadow-xs">Phút</span>
-                            </div>
-
-                            <span className="text-white font-black text-2xl pb-6 drop-shadow-sm select-none">:</span>
-
-                            {/* Box Giây */}
-                            <div className="flex flex-col items-center gap-1.5">
-                                <div className="relative w-[58px] h-[58px] sm:w-[64px] sm:h-[64px] bg-gradient-to-b from-[#6A0C16]/90 via-[#48040C]/90 to-[#2A0105]/95 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_10px_22px_rgba(0,0,0,0.35)] overflow-hidden">
-                                    <div className="absolute top-0 inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                                    <span className="text-[28px] sm:text-[32px] font-black tracking-tight tabular-nums leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-                                        {giay.toString().padStart(2, '0')}
-                                    </span>
-                                </div>
-                                <span className="text-[11px] text-white/95 font-bold uppercase tracking-wider drop-shadow-xs">Giây</span>
-                            </div>
+                            {donViDemNguoc.map((dv, i) => (
+                                <React.Fragment key={dv.nhan}>
+                                    <div className="flex flex-col items-center gap-1.5">
+                                        <div className="relative w-[58px] h-[58px] sm:w-[64px] sm:h-[64px] bg-gradient-to-b from-[#6A0C16]/90 via-[#48040C]/90 to-[#2A0105]/95 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_10px_22px_rgba(0,0,0,0.35)] overflow-hidden">
+                                            <div className="absolute top-0 inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
+                                            <span className="text-[28px] sm:text-[32px] font-black tracking-tight tabular-nums leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+                                                {dv.val.toString().padStart(2, '0')}
+                                            </span>
+                                        </div>
+                                        <span className="text-[11px] text-white/95 font-bold uppercase tracking-wider drop-shadow-xs">{dv.nhan}</span>
+                                    </div>
+                                    {i < 2 && <span className="text-white font-black text-2xl pb-6 drop-shadow-sm select-none">:</span>}
+                                </React.Fragment>
+                            ))}
                         </div>
 
                         {/* CTA White Pill Button (width ~215-225px, height ~48px) */}
