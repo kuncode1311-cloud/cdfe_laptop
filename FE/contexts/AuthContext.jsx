@@ -71,6 +71,7 @@ export function AuthProvider({ children }) {
 
     const dongModalAuth = () => {
         setDangMoModalAuth(false);
+        setCheDoAuth('dang_nhap');
     };
 
     const chuyenDoiCheDoAuth = (cheDo) => {

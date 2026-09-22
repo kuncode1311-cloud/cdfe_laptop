@@ -187,28 +187,30 @@ export default function ModalDangNhapDangKy() {
         return () => clearTimeout(timer);
     }, [thanhCong, dongModalAuth]);
 
-    // Chỉ reset trạng thái KHI MỞ MỚI MODAL
+    // Đồng bộ trạng thái và reset form khi mở modal hoặc thay đổi chế độ
     useEffect(() => {
-        if (dangMoModalAuth && !prevMoModalRef.current) {
-            setThanhCong(false);
-            setThongBaoLoi('');
-            setThongBaoThanhCong('');
-            setBuocDangKy(1);
-            setBuocQuenPass(1);
-            setMaOtp('');
-            setMatKhau('');
-            setMatKhauXacNhan('');
-            if (cheDoAuth) {
-                setCheDoHienTai(cheDoAuth);
+        if (dangMoModalAuth) {
+            setCheDoHienTai(cheDoAuth || 'dang_nhap');
+            if (!prevMoModalRef.current) {
+                setThanhCong(false);
+                setThongBaoLoi('');
+                setThongBaoThanhCong('');
+                setBuocDangKy(1);
+                setBuocQuenPass(1);
+                setMaOtp('');
+                setMatKhau('');
+                setMatKhauXacNhan('');
+                // Bắn pháo hoa chào đón nhẹ nhàng khi mở modal
+                setTimeout(() => banPhaoHoa(), 150);
             }
-            // Bắn pháo hoa chào đón nhẹ nhàng khi mở modal
-            setTimeout(() => banPhaoHoa(), 150);
         }
         prevMoModalRef.current = dangMoModalAuth;
     }, [dangMoModalAuth, cheDoAuth]);
 
     const dongModalVaReset = () => {
         setThanhCong(false);
+        setCheDoHienTai('dang_nhap');
+        if (chuyenDoiCheDoAuth) chuyenDoiCheDoAuth('dang_nhap');
         dongModalAuth();
     };
 
@@ -271,7 +273,7 @@ export default function ModalDangNhapDangKy() {
                     shape: 'pill',
                     theme: 'outline',
                     size: 'large',
-                    text: 'signin_with',
+                    text: cheDoHienTai === 'dang_ky' ? 'signup_with' : 'signin_with',
                     logo_alignment: 'center',
                     width: chieuRong
                 });
@@ -626,6 +628,11 @@ export default function ModalDangNhapDangKy() {
                                     </div>
                                 )}
                             </div>
+
+                            <p className="text-[10.5px] text-center text-slate-500 dark:text-slate-400 mt-1.5 flex items-center justify-center gap-1 font-medium">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                <span>Tài khoản Google từ trình duyệt của bạn • Bấm vào để xác thực</span>
+                            </p>
 
                             <div className="relative flex items-center justify-center my-2.5">
                                 <div className="border-t-2 border-slate-200 dark:border-slate-700 w-full" />
