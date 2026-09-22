@@ -179,7 +179,7 @@ export default function TrangBaoHanh() {
             </nav>
 
             {/* 2. Hero Search Box Hiện Đại & Trực Quan */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-white via-white to-slate-50/80 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950 border border-slate-200/80 dark:border-slate-800 shadow-sm p-6 sm:p-9 text-center space-y-5">
+            <div className="relative overflow-hidden rounded-3xl bg-white/95 dark:bg-slate-900/95 border-2 border-slate-300 dark:border-slate-700 shadow-xl shadow-slate-900/5 p-6 sm:p-9 text-center space-y-5">
                 {/* Background Glow trang trí */}
                 <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-gradient-to-r from-red-500/10 via-blue-500/10 to-emerald-500/10 blur-3xl pointer-events-none rounded-full" />
 
@@ -209,7 +209,7 @@ export default function TrangBaoHanh() {
                             value={soSerial}
                             onChange={(e) => setSoSerial(e.target.value)}
                             placeholder="Nhập Serial máy, Mã đơn (LPN-...), hoặc SĐT mua hàng..."
-                            className="w-full pl-11 pr-10 py-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#0052cc]/20 focus:border-[#0052cc] transition-all shadow-xs uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400"
+                            className="w-full pl-11 pr-10 py-3.5 rounded-2xl bg-slate-50/90 dark:bg-slate-800/90 border-2 border-slate-300 dark:border-slate-600 text-xs sm:text-sm text-slate-900 dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#0052cc]/20 focus:border-[#0052cc] transition-all shadow-xs uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400"
                         />
                         {soSerial && (
                             <button
@@ -246,7 +246,7 @@ export default function TrangBaoHanh() {
                     <button
                         type="button"
                         onClick={() => setHienModalHuongDan(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-slate-100 hover:bg-blue-50 hover:text-[#0052cc] dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-xs border border-slate-200/80 dark:border-slate-700 transition-all cursor-pointer shadow-xs active:scale-95"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white hover:bg-blue-50 hover:text-[#0052cc] dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs border-2 border-slate-300 dark:border-slate-600 transition-all cursor-pointer shadow-xs active:scale-95"
                     >
                         <HelpCircle className="w-4 h-4 text-[#0052cc] dark:text-cyan-400" />
                         <span>Xem hướng dẫn tìm Số Serial, Mã đơn hàng hoặc tra theo SĐT</span>
@@ -256,8 +256,8 @@ export default function TrangBaoHanh() {
 
             {/* 3. Khối Chính Sách Cam Kết Dịch Vụ - Giúp trang cân đối, chuyên nghiệp */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-2">
-                    <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-[#0052cc] dark:text-cyan-400 flex items-center justify-center">
+                <div className="p-5 rounded-3xl bg-white/95 dark:bg-slate-900/95 border-2 border-slate-300/90 dark:border-slate-700 shadow-md shadow-slate-900/5 hover:shadow-lg hover:border-blue-400 dark:hover:border-slate-600 transition-all duration-200 space-y-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-[#0052cc] dark:text-cyan-400 flex items-center justify-center border border-blue-200/80 dark:border-blue-800/80 shadow-xs">
                         <ShieldCheck className="w-5 h-5" />
                     </div>
                     <h3 className="font-bold text-sm text-slate-900 dark:text-white">Bảo Hành 24 Tháng Chính Hãng</h3>
@@ -266,8 +266,8 @@ export default function TrangBaoHanh() {
                     </p>
                 </div>
 
-                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-2">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <div className="p-5 rounded-3xl bg-white/95 dark:bg-slate-900/95 border-2 border-slate-300/90 dark:border-slate-700 shadow-md shadow-slate-900/5 hover:shadow-lg hover:border-emerald-400 dark:hover:border-slate-600 transition-all duration-200 space-y-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200/80 dark:border-emerald-800/80 shadow-xs">
                         <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <h3 className="font-bold text-sm text-slate-900 dark:text-white">1 Đổi 1 Trong 30 Ngày</h3>
@@ -276,8 +276,8 @@ export default function TrangBaoHanh() {
                     </p>
                 </div>
 
-                <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-2">
-                    <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/50 text-[#EA1E2C] dark:text-red-400 flex items-center justify-center">
+                <div className="p-5 rounded-3xl bg-white/95 dark:bg-slate-900/95 border-2 border-slate-300/90 dark:border-slate-700 shadow-md shadow-slate-900/5 hover:shadow-lg hover:border-red-400 dark:hover:border-slate-600 transition-all duration-200 space-y-2.5">
+                    <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/50 text-[#EA1E2C] dark:text-red-400 flex items-center justify-center border border-red-200/80 dark:border-red-800/80 shadow-xs">
                         <Phone className="w-5 h-5" />
                     </div>
                     <h3 className="font-bold text-sm text-slate-900 dark:text-white">Hỗ Trợ Kỹ Thuật Tận Nơi</h3>

@@ -315,6 +315,29 @@ export default function TrangQuanTriCuaHang() {
     // Cấu hình Banner & Chiến Dịch Khuyến Mãi (Dữ liệu động 100%)
     const [caiDatKm, setCaiDatKm] = useState(() => CaiDatService.layCaiDatKhuyenMai());
     const [formCaiDatKm, setFormCaiDatKm] = useState(() => CaiDatService.layCaiDatKhuyenMai());
+    const [thoiGianHienTaiKm, setThoiGianHienTaiKm] = useState(0);
+
+    useEffect(() => {
+        setThoiGianHienTaiKm(Date.now());
+        const timer = setInterval(() => setThoiGianHienTaiKm(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // Tính toán thời gian đếm ngược còn lại (chuẩn pure React useMemo)
+    const conLaiKm = useMemo(() => {
+        if (!formCaiDatKm?.thoi_gian_ket_thuc || !thoiGianHienTaiKm) {
+            return { hetHan: false, chuoi: 'Chưa đặt', d: 0, h: 0, m: 0, s: 0 };
+        }
+        const target = new Date(formCaiDatKm.thoi_gian_ket_thuc).getTime();
+        const diff = target - thoiGianHienTaiKm;
+        if (diff <= 0) return { hetHan: true, chuoi: 'Đã hết hạn', d: 0, h: 0, m: 0, s: 0 };
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        const chuoi = d > 0 ? `${d} ngày ${h} giờ ${m} phút` : `${h} giờ ${m} phút ${s} giây`;
+        return { hetHan: false, chuoi, d, h, m, s };
+    }, [formCaiDatKm?.thoi_gian_ket_thuc, thoiGianHienTaiKm]);
 
     // Cấu hình Hệ Thống Showroom & Tọa Độ GPS Bản Đồ (Dữ liệu động 100%)
     const [danhSachShowroomAdmin, setDanhSachShowroomAdmin] = useState(DANH_SACH_SHOWROOM_MAC_DINH);
@@ -3240,25 +3263,6 @@ export default function TrangQuanTriCuaHang() {
         const tzOffset = ngayCuoiThang.getTimezoneOffset() * 60000;
         const localISOTime = new Date(ngayCuoiThang.getTime() - tzOffset).toISOString().slice(0, 16);
         setFormCaiDatKm((prev) => ({ ...prev, thoi_gian_ket_thuc: localISOTime }));
-    };
-
-    // Tính toán thời gian còn lại (quy ra ngày nếu >= 24h)
-    const tinhThoiGianConLai = (thoiGianStr) => {
-        if (!thoiGianStr) return { hetHan: false, chuoi: 'Chưa thiết lập', d: 0, h: 0, m: 0 };
-        const target = new Date(thoiGianStr).getTime();
-        const now = Date.now();
-        const diff = target - now;
-        if (diff <= 0) return { hetHan: true, chuoi: 'Đã hết hạn kết thúc', d: 0, h: 0, m: 0 };
-        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        let chuoi = '';
-        if (d > 0) {
-            chuoi = `${d} ngày ${h} giờ ${m} phút`;
-        } else {
-            chuoi = `${h} giờ ${m} phút`;
-        }
-        return { hetHan: false, chuoi, d, h, m };
     };
 
     // ==========================================
@@ -7173,26 +7177,27 @@ export default function TrangQuanTriCuaHang() {
                             </div>
 
                             {/* Layout 2 Cột: Bên Trái là Form Cấu Hình Dễ Thao Tác - Bên Phải là Live Preview 2 Trang */}
-                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                                {/* CỘT TRÁI (7/12): FORM CẤU HÌNH RÕ RÀNG, CHỮ TO RÕ, TRỰC QUAN */}
-                                <form onSubmit={xuLyLuuCaiDatKm} className="xl:col-span-7 space-y-6">
-                                    {/* Khối 1: Nội dung chiến dịch */}
-                                    <div className="bg-white dark:bg-[#0d1527] p-5 sm:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
-                                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-                                            <div className="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center font-black">
-                                                <Tag className="w-5 h-5" />
+                            {/* Layout 2 Cột: Bên Trái là Form Cấu Hình Tối Giản - Bên Phải là 2 Demo Giao Diện Thật 100% */}
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                                {/* CỘT TRÁI (5/12): FORM THAO TÁC TỐI GIẢN, GỌN GÀNG, KHÔNG DƯ THỪA CHỮ */}
+                                <form onSubmit={xuLyLuuCaiDatKm} className="xl:col-span-5 space-y-4">
+                                    <div className="bg-white dark:bg-[#0d1527] p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 flex items-center justify-center font-black">
+                                                    <Tag className="w-4 h-4" />
+                                                </div>
+                                                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Cấu Hình Khuyến Mãi</h3>
                                             </div>
-                                            <div>
-                                                <h3 className="text-base font-black text-slate-900 dark:text-white">1. Tiêu Đề & Thông Điệp Chiến Dịch</h3>
-                                                <p className="text-xs text-slate-500 font-medium">Chỉnh sửa nội dung khuyến mãi hiển thị cho khách hàng</p>
-                                            </div>
+                                            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                                                Đồng bộ 2 trang
+                                            </span>
                                         </div>
 
                                         {/* Tiêu đề chính */}
-                                        <div className="space-y-2">
-                                            <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center justify-between">
-                                                <span>Tiêu Đề Chiến Dịch Khuyến Mãi *</span>
-                                                <span className="text-xs font-semibold text-rose-500">Chữ to trên Banner</span>
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
+                                                Tiêu đề chiến dịch *
                                             </label>
                                             <input
                                                 type="text"
@@ -7200,363 +7205,282 @@ export default function TrangQuanTriCuaHang() {
                                                 value={formCaiDatKm.tieu_de_chinh || ''}
                                                 onChange={(e) => setFormCaiDatKm({ ...formCaiDatKm, tieu_de_chinh: e.target.value })}
                                                 placeholder="VD: ĐẠI TIỆC LAPTOP GAMING & AI PC 2026..."
-                                                className="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 font-black text-sm sm:text-base text-slate-900 dark:text-white focus:border-rose-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none transition-all shadow-inner"
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 font-bold text-xs sm:text-sm text-slate-900 dark:text-white focus:border-rose-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none transition-all"
                                             />
                                         </div>
 
                                         {/* Phụ đề */}
-                                        <div className="space-y-2">
-                                            <label className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                                                Lời Nhắn / Phụ Đề Giới Thiệu Ưu Đãi
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
+                                                Phụ đề / Lời nhắn ưu đãi
                                             </label>
                                             <textarea
                                                 rows="2"
                                                 value={formCaiDatKm.phu_de || ''}
                                                 onChange={(e) => setFormCaiDatKm({ ...formCaiDatKm, phu_de: e.target.value })}
                                                 placeholder="VD: Săn Deal Khủng Đến 35% - Tặng Balo ROG, Chuột Gaming & Voucher 3 Triệu..."
-                                                className="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 font-medium text-sm text-slate-900 dark:text-white focus:border-rose-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none transition-all"
+                                                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 font-medium text-xs sm:text-sm text-slate-900 dark:text-white focus:border-rose-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none transition-all"
                                             />
                                         </div>
 
-                                        {/* 2 trường Badge và Mức giảm */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
-                                                    <Flame className="w-4 h-4 text-red-500" />
-                                                    <span>Badge Nhãn Đỏ Nổi Bật</span>
+                                        {/* 2 trường Badge và Mức giảm trên 1 hàng */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1.5">
+                                                <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1">
+                                                    <Flame className="w-3.5 h-3.5 text-red-500" />
+                                                    <span>Badge nhãn</span>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={formCaiDatKm.badge_noi_bat || ''}
                                                     onChange={(e) => setFormCaiDatKm({ ...formCaiDatKm, badge_noi_bat: e.target.value.toUpperCase() })}
-                                                    placeholder="VD: SIÊU KHUYẾN MÃI, ƯU ĐÃI CÓ HẠN..."
-                                                    className="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 font-black text-sm text-red-600 dark:text-red-400 uppercase focus:border-rose-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none transition-all"
+                                                    placeholder="SIÊU KHUYẾN MÃI"
+                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 font-bold text-xs text-red-600 dark:text-red-400 uppercase focus:border-rose-500 focus:outline-none"
                                                 />
                                             </div>
 
-                                            <div className="space-y-2">
-                                                <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center gap-1.5">
-                                                    <Tag className="w-4 h-4 text-amber-500" />
-                                                    <span>Mức Giảm Tối Đa</span>
+                                            <div className="space-y-1.5">
+                                                <label className="font-bold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1">
+                                                    <Tag className="w-3.5 h-3.5 text-amber-500" />
+                                                    <span>Mức giảm</span>
                                                 </label>
                                                 <input
                                                     type="text"
                                                     value={formCaiDatKm.muc_giam_toi_da || ''}
                                                     onChange={(e) => setFormCaiDatKm({ ...formCaiDatKm, muc_giam_toi_da: e.target.value })}
-                                                    placeholder="VD: GIẢM ĐẾN 35%, 3.000.000đ..."
-                                                    className="w-full px-4 py-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 font-black text-sm text-amber-600 dark:text-amber-400 focus:border-rose-500 focus:bg-white dark:focus:bg-slate-950 focus:outline-none transition-all"
+                                                    placeholder="GIẢM ĐẾN 35%"
+                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900 font-bold text-xs text-amber-600 dark:text-amber-400 focus:border-rose-500 focus:outline-none"
                                                 />
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Khối 2: Thời gian kết thúc đếm ngược (TO RÕ, RÕ RÀNG ÁP DỤNG CẢ 2 TRANG) */}
-                                    <div className="bg-white dark:bg-[#0d1527] p-5 sm:p-7 rounded-3xl border-2 border-amber-300/80 dark:border-amber-700/60 shadow-md shadow-amber-500/5 space-y-5">
-                                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-                                            <div className="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-600 flex items-center justify-center font-black">
-                                                <Clock className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-base font-black text-slate-900 dark:text-white">2. Thời Gian Kết Thúc Đếm Ngược (Countdown)</h3>
-                                                <p className="text-xs text-amber-700 dark:text-amber-400 font-bold">Quy định hạn chót và đồng bộ đồng hồ đếm ngược</p>
-                                            </div>
-                                        </div>
-
-                                        {/* BANNER THÔNG BÁO QUAN TRỌNG: ÁP DỤNG CẢ 2 TRANG (TO RÕ, KHÔNG BỊ NHỎ XÍU) */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-red-950/30 border-2 border-amber-300 dark:border-amber-700/70 shadow-xs space-y-3">
-                                            <div className="flex items-start gap-2.5">
-                                                <div className="p-1.5 bg-amber-500 text-white rounded-xl shrink-0 mt-0.5 shadow-sm">
-                                                    <AlertTriangle className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-sm sm:text-base font-black text-amber-950 dark:text-amber-200 uppercase tracking-tight">
-                                                        ⚠️ MỐC THỜI GIAN NÀY ÁP DỤNG ĐỒNG BỘ CHO CẢ 2 TRANG:
-                                                    </h4>
-                                                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-medium mt-1">
-                                                        Bạn chỉ cần chỉnh <strong>1 lần duy nhất</strong> tại đây, hệ thống sẽ tự động cập nhật thời gian đếm ngược cùng lúc cho:
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-amber-200 dark:border-amber-800 shadow-xs">
-                                                    <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-red-600 to-orange-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
-                                                        1
+                                        {/* Hạn kết thúc đếm ngược (áp dụng cả 2 trang) */}
+                                        <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                            <div className="flex items-center justify-between">
+                                                <label className="font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm flex items-center gap-1.5">
+                                                    <Clock className="w-4 h-4 text-amber-500" />
+                                                    <span>Hạn kết thúc đếm ngược *</span>
+                                                </label>
+                                                {conLaiKm.hetHan ? (
+                                                    <span className="text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-lg border border-red-200 dark:border-red-800">
+                                                        ⚠️ Đã hết hạn
                                                     </span>
-                                                    <div>
-                                                        <div className="font-black text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1">
-                                                            <Flame className="w-3.5 h-3.5 text-red-500" />
-                                                            <span>Flash Sale Trang Chủ</span>
-                                                        </div>
-                                                        <div className="text-[11px] text-slate-500 font-medium">Hộp đếm ngược Ngày/Giờ/Phút</div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-amber-200 dark:border-amber-800 shadow-xs">
-                                                    <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
-                                                        2
+                                                ) : (
+                                                    <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-lg border border-emerald-200 dark:border-emerald-800 font-mono">
+                                                        ⏱️ Còn: {conLaiKm.chuoi}
                                                     </span>
-                                                    <div>
-                                                        <div className="font-black text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-1">
-                                                            <Gift className="w-3.5 h-3.5 text-blue-500" />
-                                                            <span>Trang Khuyến Mãi</span>
-                                                        </div>
-                                                        <div className="text-[11px] text-slate-500 font-medium">Chiến dịch & hạn áp dụng voucher</div>
-                                                    </div>
-                                                </div>
+                                                )}
                                             </div>
-                                        </div>
 
-                                        {/* Ô Chọn Ngày Giờ Kết Thúc - Font to rõ ràng */}
-                                        <div className="space-y-2">
-                                            <label className="font-bold text-slate-800 dark:text-slate-200 text-sm flex items-center justify-between">
-                                                <span className="flex items-center gap-2">
-                                                    <Calendar className="w-4 h-4 text-rose-500" />
-                                                    <span>Hạn Kết Thúc Của Chiến Dịch (Ngày & Giờ) *</span>
-                                                </span>
-                                                <span className="text-xs font-bold text-slate-500">Giờ : Phút - Ngày / Tháng / Năm</span>
-                                            </label>
                                             <input
                                                 type="datetime-local"
                                                 required
                                                 value={formCaiDatKm.thoi_gian_ket_thuc ? formCaiDatKm.thoi_gian_ket_thuc.substring(0, 16) : '2026-09-30T23:59'}
                                                 onChange={(e) => setFormCaiDatKm({ ...formCaiDatKm, thoi_gian_ket_thuc: e.target.value })}
-                                                className="w-full px-4 py-3.5 rounded-2xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-black text-base sm:text-lg font-mono text-slate-900 dark:text-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 focus:outline-none transition-all shadow-xs cursor-pointer"
+                                                className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-black text-sm sm:text-base font-mono text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none cursor-pointer"
                                             />
-                                        </div>
 
-                                        {/* Hiển thị thời gian còn lại (Quy ra ngày nếu >= 24h) */}
-                                        {(() => {
-                                            const conLai = tinhThoiGianConLai(formCaiDatKm.thoi_gian_ket_thuc);
-                                            return (
-                                                <div className={`p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 border ${
-                                                    conLai.hetHan
-                                                        ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-300'
-                                                        : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/60 text-emerald-800 dark:text-emerald-300'
-                                                }`}>
-                                                    <div className="flex items-center gap-2.5">
-                                                        <span className={`w-3 h-3 rounded-full shrink-0 ${conLai.hetHan ? 'bg-red-500' : 'bg-emerald-500 animate-ping'}`} />
-                                                        <span className="text-xs sm:text-sm font-bold">
-                                                            {conLai.hetHan ? 'Trạng thái chiến dịch:' : 'Thời gian đếm ngược còn lại:'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="font-black text-sm sm:text-base font-mono flex items-center gap-1.5">
-                                                        <span>{conLai.chuoi}</span>
-                                                        {!conLai.hetHan && conLai.d > 0 && (
-                                                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100">
-                                                                (Đã quy ra {conLai.d} ngày)
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })()}
-
-                                        {/* Nút bấm chọn nhanh thời hạn (1 Chạm là xong) */}
-                                        <div className="space-y-2 pt-1">
-                                            <div className="text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                                                <Zap className="w-3.5 h-3.5 text-amber-500" />
-                                                <span>Chọn nhanh thời hạn kết thúc (1 click tự động điền):</span>
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
+                                            {/* Nút bấm chọn nhanh thời hạn */}
+                                            <div className="flex flex-wrap gap-1.5 pt-0.5">
                                                 <button
                                                     type="button"
                                                     onClick={() => chonNhanhHanKetThuc(1)}
-                                                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                                                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold cursor-pointer transition-colors"
                                                 >
-                                                    ⏱️ + 1 Ngày (24h)
+                                                    +1 Ngày
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => chonNhanhHanKetThuc(3)}
-                                                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                                                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold cursor-pointer transition-colors"
                                                 >
-                                                    🔥 + 3 Ngày
+                                                    +3 Ngày
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => chonNhanhHanKetThuc(7)}
-                                                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                                                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold cursor-pointer transition-colors"
                                                 >
-                                                    📅 + 7 Ngày (1 tuần)
+                                                    +7 Ngày
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={chonCuoiTuan}
-                                                    className="px-3.5 py-2 rounded-xl bg-amber-100/80 hover:bg-amber-200 dark:bg-amber-950/60 dark:hover:bg-amber-900 text-amber-900 dark:text-amber-200 text-xs font-bold transition-colors cursor-pointer"
+                                                    className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 text-[11px] font-bold cursor-pointer transition-colors"
                                                 >
-                                                    ⚡ Đến Cuối Tuần Này
+                                                    Cuối tuần
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={chonCuoiThang}
-                                                    className="px-3.5 py-2 rounded-xl bg-rose-100/80 hover:bg-rose-200 dark:bg-rose-950/60 dark:hover:bg-rose-900 text-rose-900 dark:text-rose-200 text-xs font-bold transition-colors cursor-pointer"
+                                                    className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-300 text-[11px] font-bold cursor-pointer transition-colors"
                                                 >
-                                                    🎯 Đến Hết Tháng Này
+                                                    Cuối tháng
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Nút Submit To Bự Dưới Form */}
-                                    <div className="pt-2">
-                                        <button
-                                            type="submit"
-                                            disabled={dangLuuKm}
-                                            className={`w-full py-4 rounded-2xl bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-black text-sm sm:text-base uppercase tracking-wider flex items-center justify-center gap-3 shadow-xl shadow-red-500/25 transition-all hover:scale-[1.01] active:scale-[0.99] ${dangLuuKm ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
-                                        >
-                                            {dangLuuKm ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                            <span>{dangLuuKm ? 'ĐANG ĐỒNG BỘ HỆ THỐNG...' : 'LƯU & ÁP DỤNG NGAY CHO CẢ 2 TRANG'}</span>
-                                        </button>
+                                        {/* Nút Submit Lưu */}
+                                        <div className="pt-2">
+                                            <button
+                                                type="submit"
+                                                disabled={dangLuuKm}
+                                                className={`w-full py-3.5 rounded-2xl bg-gradient-to-r from-red-600 via-orange-600 to-amber-500 hover:from-red-700 hover:to-amber-600 text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-red-500/25 transition-all hover:scale-[1.01] active:scale-[0.99] ${dangLuuKm ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                                            >
+                                                {dangLuuKm ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                                <span>{dangLuuKm ? 'ĐANG LƯU CẤU HÌNH...' : 'LƯU & ÁP DỤNG NGAY'}</span>
+                                            </button>
+                                        </div>
                                     </div>
                                 </form>
 
-                                {/* CỘT PHẢI (5/12): LIVE PREVIEW TRỰC QUAN CẢ 2 TRANG */}
-                                <div className="xl:col-span-5 space-y-5 sticky top-24">
+                                {/* CỘT PHẢI (7/12): 2 BẢN DEMO RENDER TỪ GIAO DIỆN THẬT 100% */}
+                                <div className="xl:col-span-7 space-y-4">
                                     <div className="flex items-center justify-between px-1">
                                         <div className="flex items-center gap-2">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                                            <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
-                                                Bản Xem Trước Trực Quan (Live Preview)
+                                            <Eye className="w-4 h-4 text-blue-500" />
+                                            <h3 className="text-xs sm:text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">
+                                                Xem Trước Giao Diện Thật (Live Demo)
                                             </h3>
                                         </div>
-                                        <span className="text-[11px] font-bold text-slate-400">Tự động cập nhật</span>
+                                        <span className="text-[11px] font-bold text-slate-400">Tự động cập nhật tức thì</span>
                                     </div>
 
-                                    {/* 1. Preview Banner Flash Sale (Trang Chủ) */}
-                                    <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d1527] p-5 shadow-sm space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-xs font-black text-red-600 dark:text-red-400">
+                                    {/* 1. DEMO BANNER FLASH SALE TRANG CHỦ (Render chuẩn 100% component FlashSaleDemNguoc) */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between px-1">
+                                            <span className="text-xs font-black text-red-600 dark:text-red-400 uppercase tracking-wider flex items-center gap-1.5">
                                                 <Flame className="w-4 h-4 fill-red-500 text-red-500" />
-                                                <span>1. TRANG CHỦ — BANNER FLASH SALE</span>
-                                            </div>
+                                                1. Hiển thị thực tế tại TRANG CHỦ (Banner Flash Sale)
+                                            </span>
                                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300">
-                                                Live Sync
+                                                Trang Chủ
                                             </span>
                                         </div>
 
-                                        {/* Mini Mockup của Flash Sale Trang Chủ */}
-                                        <div className="rounded-2xl p-4 text-white bg-gradient-to-r from-[#D00A24] via-[#EB2818] to-[#F55208] shadow-md space-y-3">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/30 border border-white/20 text-amber-300 text-[10px] font-bold uppercase">
-                                                    <Flame className="w-3 h-3 fill-amber-300 text-amber-300" />
-                                                    <span>{formCaiDatKm.badge_noi_bat || 'ƯU ĐÃI CÓ HẠN'}</span>
-                                                </div>
-                                                <span className="text-[10px] font-black uppercase text-white/90">KẾT THÚC TRONG</span>
+                                        <div className="relative w-full rounded-2xl overflow-hidden text-white shadow-md border border-white/20 p-4 sm:p-5 bg-gradient-to-r from-[#D00A24] via-[#EB2818] to-[#F55208] min-h-[170px] flex items-center">
+                                            {/* Lớp nền ảnh 3D thật của Flash Sale */}
+                                            <div className="absolute inset-0 z-0">
+                                                <Image
+                                                    src="/images/flash_sale_vivid_bright.jpg"
+                                                    alt="Flash Sale Preview"
+                                                    fill
+                                                    sizes="(max-width: 1200px) 100vw, 700px"
+                                                    className="object-cover object-center"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-r from-[#D00A24]/90 via-[#EB2818]/65 to-[#F55208]/40" />
                                             </div>
 
-                                            <div className="flex items-center justify-between gap-3">
-                                                <div>
-                                                    <div className="text-xl sm:text-2xl font-black italic tracking-tight text-white drop-shadow-sm">
-                                                        FLASH SALE
+                                            <div className="relative z-10 w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                                <div className="space-y-1.5 max-w-[58%]">
+                                                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#450007]/80 backdrop-blur-md border border-white/30 text-amber-300 text-[10px] font-bold uppercase">
+                                                        <Flame className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                                        <span>{formCaiDatKm.badge_noi_bat || 'ƯU ĐÃI CÓ HẠN'}</span>
                                                     </div>
-                                                    <div className="text-xs font-bold text-white/90 line-clamp-1">
+                                                    <h3 className="text-2xl sm:text-3xl font-black italic uppercase tracking-tighter text-white [text-shadow:_0_2px_0_#990014,_0_3px_6px_rgba(0,0,0,0.5)] leading-none">
+                                                        FLASH SALE
+                                                    </h3>
+                                                    <p className="text-xs font-bold text-white uppercase tracking-wide line-clamp-1 drop-shadow-sm">
                                                         {formCaiDatKm.phu_de || 'SĂN DEAL CỰC SỐC - GIÁ TỐT NHẤT NĂM'}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 text-[10px] text-white/90 font-medium pt-0.5">
+                                                        <span>🚚 Miễn phí VC</span>
+                                                        <span>•</span>
+                                                        <span>🛡️ BH 3 năm</span>
+                                                        <span>•</span>
+                                                        <span>🎁 Quà VIP</span>
                                                     </div>
                                                 </div>
 
-                                                {/* Mini Countdown Boxes */}
-                                                {(() => {
-                                                    const conLai = tinhThoiGianConLai(formCaiDatKm.thoi_gian_ket_thuc);
-                                                    const d = conLai.d;
-                                                    const h = conLai.h;
-                                                    const m = conLai.m;
-                                                    const boxes = d > 0
-                                                        ? [{ val: d, nhan: 'Ngày' }, { val: h, nhan: 'Giờ' }, { val: m, nhan: 'Phút' }]
-                                                        : [{ val: h, nhan: 'Giờ' }, { val: m, nhan: 'Phút' }, { val: 0, nhan: 'Giây' }];
-
-                                                    return (
-                                                        <div className="flex items-center gap-1 shrink-0">
-                                                            {boxes.map((b, i) => (
-                                                                <React.Fragment key={b.nhan}>
-                                                                    <div className="flex flex-col items-center">
-                                                                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-black/50 border border-white/30 flex items-center justify-center text-white font-black text-xs sm:text-sm font-mono shadow-inner">
-                                                                            {b.val.toString().padStart(2, '0')}
-                                                                        </div>
-                                                                        <span className="text-[8px] font-bold uppercase text-white/80 mt-0.5">{b.nhan}</span>
+                                                {/* Hộp đếm ngược chuẩn giao diện thật (Quy ra Ngày nếu >= 24h) */}
+                                                <div className="flex flex-col items-end gap-1.5 shrink-0 self-end sm:self-center">
+                                                    <span className="text-[10px] font-black uppercase tracking-wider text-white drop-shadow-xs">
+                                                        KẾT THÚC TRONG
+                                                    </span>
+                                                    <div className="flex items-center gap-1">
+                                                        {(conLaiKm.d > 0
+                                                            ? [{ val: conLaiKm.d, nhan: 'Ngày' }, { val: conLaiKm.h, nhan: 'Giờ' }, { val: conLaiKm.m, nhan: 'Phút' }]
+                                                            : [{ val: conLaiKm.h, nhan: 'Giờ' }, { val: conLaiKm.m, nhan: 'Phút' }, { val: conLaiKm.s, nhan: 'Giây' }]
+                                                        ).map((b, i) => (
+                                                            <React.Fragment key={b.nhan}>
+                                                                <div className="flex flex-col items-center">
+                                                                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-b from-[#6A0C16]/95 via-[#48040C]/95 to-[#2A0105]/95 backdrop-blur-md rounded-xl border border-white/30 flex items-center justify-center text-white font-black text-xs sm:text-sm font-mono shadow-md">
+                                                                        {b.val.toString().padStart(2, '0')}
                                                                     </div>
-                                                                    {i < 2 && <span className="text-white font-black text-xs pb-3">:</span>}
-                                                                </React.Fragment>
-                                                            ))}
-                                                        </div>
-                                                    );
-                                                })()}
+                                                                    <span className="text-[8px] text-white font-bold uppercase mt-0.5">{b.nhan}</span>
+                                                                </div>
+                                                                {i < 2 && <span className="text-white font-black text-sm pb-3">:</span>}
+                                                            </React.Fragment>
+                                                        ))}
+                                                    </div>
+                                                    <div className="px-3 py-1 rounded-full bg-white text-[#D31828] font-black text-[10px] uppercase shadow-sm flex items-center gap-1 mt-0.5">
+                                                        <span>SĂN DEAL NGAY</span>
+                                                        <ArrowRight className="w-3 h-3" />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* 2. Preview Banner Trang Khuyến Mãi */}
-                                    <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d1527] p-5 shadow-sm space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-xs font-black text-blue-600 dark:text-blue-400">
+                                    {/* 2. DEMO HERO BANNER TRANG KHUYẾN MÃI (Render chuẩn 100% component TrangKhuyenMai) */}
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center justify-between px-1">
+                                            <span className="text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                                                 <Gift className="w-4 h-4 text-blue-500" />
-                                                <span>2. TRANG KHUYẾN MÃI (/khuyen-mai)</span>
-                                            </div>
+                                                2. Hiển thị thực tế tại TRANG KHUYẾN MÃI (/khuyen-mai)
+                                            </span>
                                             <Link
                                                 href="/khuyen-mai"
                                                 target="_blank"
                                                 className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                                             >
-                                                <span>Xem live</span>
-                                                <ExternalLink className="w-3 h-3" />
+                                                <span>Mở trang ↗</span>
                                             </Link>
                                         </div>
 
-                                        {/* Mini Mockup Hero Khuyến Mãi */}
-                                        <div className="rounded-2xl p-4 bg-gradient-to-br from-blue-900 via-slate-900 to-indigo-950 text-white border border-blue-500/30 shadow-md space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/30 border border-blue-400/40 text-blue-200 text-[10px] font-bold uppercase">
-                                                    {formCaiDatKm.badge_noi_bat || 'SIÊU KHUYẾN MÃI'}
+                                        <div className="relative w-full rounded-2xl overflow-hidden border border-[#CDE5FC] shadow-sm p-4 sm:p-5 min-h-[170px] flex items-center bg-[#D7EAFD]">
+                                            {/* Lớp nền ảnh 3D thật của Trang Khuyến Mãi */}
+                                            <div className="absolute inset-0 z-0">
+                                                <Image
+                                                    src="/images/khuyen-mai/hero_banner_3d_panoramic_perfect.png"
+                                                    alt="Khuyến Mãi Preview"
+                                                    fill
+                                                    sizes="(max-width: 1200px) 100vw, 700px"
+                                                    className="object-cover object-right sm:object-center"
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-r from-[#D7EAFD]/95 via-[#D7EAFD]/75 to-transparent sm:max-w-[70%]" />
+                                            </div>
+
+                                            {/* Huy hiệu nổi 3D "TIẾT KIỆM ĐẾN" ở góc trên bên phải */}
+                                            <div className="hidden sm:flex flex-col items-center absolute top-3 right-4 bg-white/95 backdrop-blur-md rounded-xl px-3 py-1 shadow-sm border border-[#D5E6F8] text-center z-10">
+                                                <span className="text-[8px] font-extrabold uppercase tracking-wider text-[#0060E6]">
+                                                    TIẾT KIỆM ĐẾN
                                                 </span>
-                                                <span className="text-[11px] font-black text-amber-400 bg-amber-400/20 px-2 py-0.5 rounded-lg">
-                                                    {formCaiDatKm.muc_giam_toi_da || 'GIẢM ĐẾN 35%'}
+                                                <span className="text-sm font-black text-[#0060E6] leading-tight">
+                                                    {formCaiDatKm.muc_giam_toi_da || '3.000.000đ'}
                                                 </span>
                                             </div>
 
-                                            <div className="text-base font-black text-white line-clamp-1">
-                                                {formCaiDatKm.tieu_de_chinh || 'TIÊU ĐỀ CHIẾN DỊCH KHUYẾN MÃI'}
-                                            </div>
-                                            <div className="text-xs text-slate-300 font-medium line-clamp-2">
-                                                {formCaiDatKm.phu_de || 'Phụ đề giới thiệu ưu đãi hấp dẫn dành cho khách hàng.'}
-                                            </div>
-                                            <div className="text-[10px] text-slate-400 font-semibold pt-1 border-t border-white/10 flex items-center justify-between">
-                                                <span>⏳ Hạn kết thúc:</span>
-                                                <span className="font-mono font-bold text-white">
-                                                    {formCaiDatKm.thoi_gian_ket_thuc ? new Date(formCaiDatKm.thoi_gian_ket_thuc).toLocaleString('vi-VN') : '—'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 3. Bảng Tóm Tắt Nhanh */}
-                                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 space-y-2">
-                                        <div className="text-xs font-black text-slate-500 uppercase tracking-wider">
-                                            📋 Tóm tắt cấu hình đang soạn:
-                                        </div>
-                                        <div className="space-y-1 text-xs">
-                                            <div className="flex items-center justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                                                <span className="text-slate-500">Tiêu đề:</span>
-                                                <span className="font-bold text-slate-800 dark:text-white line-clamp-1 max-w-[220px]">
-                                                    {formCaiDatKm.tieu_de_chinh || '(Chưa nhập)'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                                                <span className="text-slate-500">Nhãn Badge:</span>
-                                                <span className="font-bold text-red-600">
-                                                    {formCaiDatKm.badge_noi_bat || 'SIÊU KHUYẾN MÃI'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between py-1 border-b border-slate-200 dark:border-slate-800">
-                                                <span className="text-slate-500">Mức giảm:</span>
-                                                <span className="font-bold text-amber-600">
-                                                    {formCaiDatKm.muc_giam_toi_da || 'GIẢM ĐẾN 35%'}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center justify-between py-1">
-                                                <span className="text-slate-500">Áp dụng:</span>
-                                                <span className="font-bold text-emerald-600">
-                                                    Đồng bộ cả Trang Chủ & Khuyến Mãi
-                                                </span>
+                                            <div className="relative z-10 max-w-[65%] space-y-1.5">
+                                                <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md border border-[#BEDBFE] text-[#0060E6] text-[10px] font-extrabold uppercase">
+                                                    <Gift className="w-3 h-3 text-[#0060E6]" />
+                                                    <span>{formCaiDatKm.badge_noi_bat || 'ƯU ĐÃI CHÍNH HÃNG • TIẾT KIỆM THÔNG MINH'}</span>
+                                                </div>
+                                                <h3 className="text-lg sm:text-xl font-black text-[#0B1736] tracking-tight leading-tight line-clamp-1">
+                                                    {formCaiDatKm.tieu_de_chinh || 'KHO ƯU ĐÃI TNTP'}
+                                                </h3>
+                                                <p className="text-xs text-[#334155] font-semibold line-clamp-1">
+                                                    {formCaiDatKm.phu_de || 'Săn voucher ngay – Mua laptop giá tốt'}
+                                                </p>
+                                                <div className="flex items-center gap-2 pt-1">
+                                                    <span className="inline-flex items-center gap-1 bg-[#0060E6] text-white font-bold text-[10px] px-3 py-1 rounded-lg shadow-sm">
+                                                        <span>Khám phá ưu đãi</span>
+                                                        <ArrowRight className="w-2.5 h-2.5" />
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-500 font-medium">
+                                                        ⏳ Hạn: {formCaiDatKm.thoi_gian_ket_thuc ? new Date(formCaiDatKm.thoi_gian_ket_thuc).toLocaleDateString('vi-VN') : '—'}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
