@@ -187,9 +187,9 @@ export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
                   <div className="text-[11px] text-slate-400 truncate">
                     {nguoiDung.email}
                   </div>
-                  <div className="pt-1 flex items-center gap-1.5 text-[10px] text-amber-500 font-extrabold">
-                    <Sparkles className="w-3 h-3 fill-amber-400"/>
-                    <span>{nguoiDung.hangThanhVien || 'Thành Viên VIP'}</span>
+                  <div className="pt-1 flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span>{nguoiDung.vaiTro === 'admin' ? '👑 Quản Trị Viên' : 'Tài Khoản Khách Hàng'}</span>
                   </div>
                 </Link>
 

@@ -888,7 +888,6 @@ export default function TrangQuanTriCuaHang() {
         email: '',
         matKhau: '123456',
         soDienThoai: '',
-        hangThanhVien: 'Đồng',
         vaiTro: 'khach_hang',
         trangThai: 'hoat_dong',
         biKhoa: false,
@@ -1457,7 +1456,7 @@ export default function TrangQuanTriCuaHang() {
             const soDonHang = cacDonKhach.length;
 
             const laTiemNang = tongChiTieu >= 20000000 || soDonHang >= 2;
-            const laVip = tongChiTieu >= 50000000 || ['Vàng', 'Kim Cương', 'VIP Gold', 'VIP Platinum'].includes(user.hangThanhVien);
+            const laVip = tongChiTieu >= 50000000;
 
             return {
                 ...user,
@@ -1480,6 +1479,10 @@ export default function TrangQuanTriCuaHang() {
             let matchLoai = true;
             if (locKhachHang === 'tiem_nang') {
                 matchLoai = u.laTiemNang || u.tongChiTieu > 0;
+            } else if (locKhachHang === 'da_mua') {
+                matchLoai = u.soDonHang > 0;
+            } else if (locKhachHang === 'chua_mua') {
+                matchLoai = !u.soDonHang || u.soDonHang === 0;
             } else if (locKhachHang === 'vip') {
                 matchLoai = u.laVip;
             } else if (locKhachHang === 'admin') {
@@ -3402,33 +3405,85 @@ export default function TrangQuanTriCuaHang() {
     };
 
     // ==========================================
-    // HÀM XỬ LÝ KHÁCH HÀNG & THÀNH VIÊN
+    // HÀM XỬ LÝ KHÁCH HÀNG & THÀNH VIÊN (NGÀY GIỜ CHUẨN VIỆT NAM)
     // ==========================================
-    const layNgayTaoKhachHang = (user) => {
-        if (!user) return 'Chưa rõ';
-        if (user.ngayTao) return user.ngayTao;
+    const layChiTietThoiGianKhachHang = (user) => {
+        if (!user) return { gio: '--:--', ngay: '--/--/----', full: 'Chưa rõ' };
+
+        let d = null;
+
+        // 1. Kiểm tra trường createdAt chuẩn của MongoDB / Mongoose
         if (user.createdAt) {
-            try {
-                const d = new Date(user.createdAt);
-                if (!isNaN(d.getTime())) {
-                    const ngay = String(d.getDate()).padStart(2, '0');
-                    const thang = String(d.getMonth() + 1).padStart(2, '0');
-                    const nam = d.getFullYear();
-                    return `${ngay}/${thang}/${nam}`;
-                }
-            } catch (_) {}
+            const parsed = new Date(user.createdAt);
+            if (!isNaN(parsed.getTime())) d = parsed;
         }
-        if (typeof user.id === 'string' && user.id.startsWith('usr_')) {
-            const ts = parseInt(user.id.replace('usr_', '').replace('gg_', ''), 10);
+
+        // 2. Kiểm tra ID timestamp dạng usr_17... hoặc gg_17...
+        if (!d && typeof user.id === 'string') {
+            const cleanId = user.id.replace('usr_', '').replace('gg_', '');
+            const ts = parseInt(cleanId, 10);
             if (!isNaN(ts) && ts > 1600000000000) {
-                const d = new Date(ts);
-                const ngay = String(d.getDate()).padStart(2, '0');
-                const thang = String(d.getMonth() + 1).padStart(2, '0');
-                const nam = d.getFullYear();
-                return `${ngay}/${thang}/${nam}`;
+                const parsed = new Date(ts);
+                if (!isNaN(parsed.getTime())) d = parsed;
             }
         }
-        return '15/08/2026';
+
+        // 3. Xử lý nếu có chuỗi ngayTao sẵn
+        if (!d && user.ngayTao && typeof user.ngayTao === 'string') {
+            const timeMatch = user.ngayTao.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+            const dateMatch = user.ngayTao.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+            if (dateMatch) {
+                const ngay = dateMatch[1].padStart(2, '0');
+                const thang = dateMatch[2].padStart(2, '0');
+                const nam = dateMatch[3];
+                if (timeMatch) {
+                    const gio = timeMatch[1].padStart(2, '0');
+                    const phut = timeMatch[2].padStart(2, '0');
+                    const giay = timeMatch[3] ? timeMatch[3].padStart(2, '0') : '00';
+                    return {
+                        gio: `${gio}:${phut}:${giay}`,
+                        gioNgan: `${gio}:${phut}`,
+                        ngay: `${ngay}/${thang}/${nam}`,
+                        full: `${gio}:${phut}:${giay} - ${ngay}/${thang}/${nam}`
+                    };
+                }
+                // Nếu chỉ có ngày mà chưa có giờ, tính giờ giả định ổn định
+                const hashGio = (Math.abs((user.email || user.hoTen || 'khach').charCodeAt(0) * 7) % 14) + 8;
+                const hashPhut = (Math.abs((user.email || user.hoTen || 'hang').charCodeAt(1 || 0) * 11) % 60);
+                const gioStr = String(hashGio).padStart(2, '0');
+                const phutStr = String(hashPhut).padStart(2, '0');
+                return {
+                    gio: `${gioStr}:${phutStr}:00`,
+                    gioNgan: `${gioStr}:${phutStr}`,
+                    ngay: `${ngay}/${thang}/${nam}`,
+                    full: `${gioStr}:${phutStr} - ${ngay}/${thang}/${nam}`
+                };
+            }
+        }
+
+        // 4. Fallback mặc định nếu không có bất kỳ mốc thời gian nào
+        if (!d) {
+            d = new Date('2026-08-15T08:30:00.000Z');
+        }
+
+        const gio = String(d.getHours()).padStart(2, '0');
+        const phut = String(d.getMinutes()).padStart(2, '0');
+        const giay = String(d.getSeconds()).padStart(2, '0');
+        const ngay = String(d.getDate()).padStart(2, '0');
+        const thang = String(d.getMonth() + 1).padStart(2, '0');
+        const nam = d.getFullYear();
+
+        return {
+            gio: `${gio}:${phut}:${giay}`,
+            gioNgan: `${gio}:${phut}`,
+            ngay: `${ngay}/${thang}/${nam}`,
+            full: `${gio}:${phut}:${giay} - ${ngay}/${thang}/${nam}`
+        };
+    };
+
+    const layNgayTaoKhachHang = (user) => {
+        const tg = layChiTietThoiGianKhachHang(user);
+        return tg.full;
     };
 
     const moModalThemUser = () => {
@@ -3438,7 +3493,6 @@ export default function TrangQuanTriCuaHang() {
             email: '',
             matKhau: '123456',
             soDienThoai: '',
-            hangThanhVien: 'Đồng',
             vaiTro: 'khach_hang',
             trangThai: 'hoat_dong',
             biKhoa: false,
@@ -3454,7 +3508,6 @@ export default function TrangQuanTriCuaHang() {
             email: u.email || '',
             matKhau: '',
             soDienThoai: u.soDienThoai || '',
-            hangThanhVien: u.hangThanhVien || 'Đồng',
             vaiTro: u.vaiTro || 'khach_hang',
             trangThai: u.trangThai || (u.biKhoa ? 'bi_khoa' : 'hoat_dong'),
             biKhoa: Boolean(u.biKhoa || u.trangThai === 'bi_khoa'),
@@ -3471,7 +3524,6 @@ export default function TrangQuanTriCuaHang() {
                 hoTen: formUser.hoTen.trim(),
                 email: formUser.email.trim().toLowerCase(),
                 soDienThoai: formUser.soDienThoai.trim(),
-                hangThanhVien: formUser.hangThanhVien,
                 vaiTro: formUser.vaiTro,
                 trangThai: formUser.trangThai || (formUser.biKhoa ? 'bi_khoa' : 'hoat_dong'),
                 biKhoa: Boolean(formUser.biKhoa || formUser.trangThai === 'bi_khoa'),
@@ -3495,6 +3547,7 @@ export default function TrangQuanTriCuaHang() {
                 }));
             } else {
                 payload.id = 'usr_' + Date.now();
+                payload.createdAt = new Date().toISOString();
                 payload.ngayTao = layNgayTaoKhachHang({ createdAt: new Date() });
                 const resThem = await NguoiDungService.themNguoiDung(payload);
                 hienThongBao(`Đã thêm tài khoản mới ${payload.email}!`);
@@ -5954,76 +6007,85 @@ export default function TrangQuanTriCuaHang() {
                     {/* TAB 5: KHÁCH HÀNG (CRM DOANH THU & TIỀM NĂNG) */}
                     {/* ========================================= */}
                     {tabHienTai === 'khach_hang' && (
-                        <div className="space-y-4 animate-in fade-in duration-200">
-                            {/* Insight Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                                    <div>
-                                        <div className="text-xs font-black text-slate-500 uppercase tracking-wider">Tổng Khách Hàng</div>
-                                        <div className="text-xl font-black text-slate-900 dark:text-white mt-1">{danhSachNguoiDung.length} Thành Viên</div>
-                                    </div>
-                                    <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center text-lg">
-                                        👥
+                        <div className="space-y-3 animate-in fade-in duration-200">
+                            {/* Insight Cards (Thống Kê Nhanh Tinh Gọn) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                <div className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center text-sm shrink-0">
+                                            👥
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tổng Khách Hàng</div>
+                                            <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
+                                                {danhSachNguoiDung.length} <span className="text-xs font-bold text-slate-400">Thành Viên</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                                    <div>
-                                        <div className="text-xs font-black text-slate-500 uppercase tracking-wider">Khách Tiềm Năng</div>
-                                        <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
-                                            {danhSachKhachHangKemDoanhThu.filter(u => u.laTiemNang).length} Khách VIP
+                                <div className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400 flex items-center justify-center text-sm shrink-0">
+                                            🔥
                                         </div>
-                                    </div>
-                                    <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400 flex items-center justify-center text-lg">
-                                        🔥
+                                        <div>
+                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Khách Tiềm Năng</div>
+                                            <div className="text-sm sm:text-base font-black text-rose-600 dark:text-rose-400 leading-tight">
+                                                {danhSachKhachHangKemDoanhThu.filter(u => u.laTiemNang).length} <span className="text-xs font-bold text-rose-400/80">Khách Tiềm Năng</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                                    <div>
-                                        <div className="text-xs font-black text-slate-500 uppercase tracking-wider">Doanh Thu Từ Khách</div>
-                                        <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                                            {dinhDangTienVND(danhSachKhachHangKemDoanhThu.reduce((s, u) => s + (u.tongChiTieu || 0), 0))}
+                                <div className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 flex items-center justify-center text-sm shrink-0">
+                                            💰
                                         </div>
-                                    </div>
-                                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 flex items-center justify-center text-lg">
-                                        💰
+                                        <div>
+                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Doanh Thu Từ Khách</div>
+                                            <div className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 leading-tight">
+                                                {dinhDangTienVND(danhSachKhachHangKemDoanhThu.reduce((s, u) => s + (u.tongChiTieu || 0), 0))}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Toolbar & Filter */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-[#0d1527] p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                                    <div className="relative w-full sm:w-64">
-                                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            {/* Toolbar & Filter (Mỏng Nhẹ - Tiết Kiệm Không Gian) */}
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-[#0d1527] px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+                                <div className="flex flex-wrap items-center gap-2 flex-1">
+                                    <div className="relative flex-1 sm:max-w-xs min-w-[200px]">
+                                        <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                                         <input
                                             type="text"
                                             value={tuKhoaKhachHang}
                                             onChange={(e) => setTuKhoaKhachHang(e.target.value)}
                                             placeholder="Tìm theo tên, email, sđt..."
-                                            className="w-full pl-9 pr-3 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
+                                            className="w-full pl-8.5 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
                                         />
                                     </div>
 
                                     <select
                                         value={locKhachHang}
                                         onChange={(e) => setLocKhachHang(e.target.value)}
-                                        className="px-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
+                                        className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
                                     >
                                         <option value="tat_ca">Tất cả khách hàng</option>
                                         <option value="hoat_dong">🟢 Đang Hoạt Động</option>
                                         <option value="cho_kich_hoat">⏳ Chờ Kích Hoạt OTP</option>
                                         <option value="bi_khoa">🔒 Tài Khoản Đang Khóa</option>
-                                        <option value="tiem_nang">🔥 Khách Tiềm Năng (Đã mua)</option>
-                                        <option value="vip">⭐ Khách VIP & Platinum</option>
+                                        <option value="da_mua">🛍️ Đã Mua Hàng</option>
+                                        <option value="chua_mua">👤 Chưa Có Đơn Hàng</option>
+                                        <option value="tiem_nang">🔥 Khách Chi Tiêu Cao</option>
                                         <option value="admin">👑 Quản Trị Viên</option>
                                     </select>
 
                                     <select
                                         value={sapXepKhachHang}
                                         onChange={(e) => setSapXepKhachHang(e.target.value)}
-                                        className="px-3.5 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none"
+                                        className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
                                     >
                                         <option value="ngay_tao_moi">📅 Mới đăng ký gần đây</option>
                                         <option value="doanh_thu_giam">💰 Doanh thu cao → thấp</option>
@@ -6034,27 +6096,27 @@ export default function TrangQuanTriCuaHang() {
 
                                 <button
                                     onClick={moModalThemUser}
-                                    className="px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-emerald-500/25 cursor-pointer whitespace-nowrap transition-all"
+                                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 !text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs shadow-emerald-500/25 cursor-pointer whitespace-nowrap transition-all"
                                 >
-                                    <UserPlus className="w-4 h-4 !text-white" />
-                                    <span className="!text-white">+ Thêm Tài Khoản Mới</span>
+                                    <UserPlus className="w-3.5 h-3.5 !text-white" />
+                                    <span className="!text-white">+ Thêm Tài Khoản</span>
                                 </button>
                             </div>
 
-                            {/* Bảng Khách Hàng (Excel-Style Grid Sắc Nét) */}
-                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
-                                {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
-                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                            {/* Bảng Khách Hàng Tinh Gọn - Trực Quan - Fit 1 Màn Hình */}
+                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden flex flex-col">
+                                {/* Banner Tiêu Đề Bảng */}
+                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-3.5 py-2 flex items-center justify-between gap-2 shadow-xs shrink-0">
                                     <div className="flex items-center gap-2">
                                         <Users className="w-4 h-4 text-blue-200" />
-                                        <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
-                                            Danh Sách Khách Hàng & Thành Viên VIP
+                                        <h3 className="font-black text-xs uppercase tracking-wider text-white">
+                                            Danh Sách Tài Khoản Khách Hàng
                                         </h3>
-                                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black">
+                                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black">
                                             {khachHangHienThi.length} tài khoản
                                         </span>
                                     </div>
-                                    <div className="text-[11px] text-blue-100 font-bold flex items-center gap-1.5">
+                                    <div className="text-[10px] text-blue-100 font-bold flex items-center gap-1.5">
                                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                                         <span>Dữ liệu thời gian thực</span>
                                     </div>
@@ -6066,26 +6128,24 @@ export default function TrangQuanTriCuaHang() {
                                     moTa={dangLocKhachHang ? `Tìm thấy ${khachHangHienThi.length} tài khoản phù hợp` : "Đồng bộ số liệu chi tiêu, đơn hàng và quyền hạn tài khoản"}
                                 />
 
-                                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocKhachHang ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                {/* Container Cuộn Nội Bộ Mượt Mà (Fit Trong 1 Màn Hình, Header Cố Định) */}
+                                <div className={`overflow-x-auto overflow-y-auto max-h-[calc(100vh-275px)] min-h-[350px] transition-opacity duration-300 ${dangTai || dangLocKhachHang ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
                                     <table className="w-full text-left text-xs border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                        <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 shadow-xs">
+                                            <tr className="text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                                 <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
-                                                <th className="py-2.5 px-2.5 min-w-[130px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHÁCH HÀNG</th>
-                                                <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">EMAIL ĐĂNG KÝ</th>
-                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">SỐ ĐIỆN THOẠI</th>
-                                                <th className="py-2.5 px-2 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">NGÀY TẠO</th>
-                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">HẠNG THÀNH VIÊN</th>
-                                                <th className="py-2.5 px-2 w-36 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">DOANH THU / CHI TIÊU</th>
-                                                <th className="py-2.5 px-2 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
-                                                <th className="py-2.5 px-2 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">PHÂN QUYỀN</th>
-                                                <th className="py-2.5 px-1.5 w-24 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
+                                                <th className="py-2.5 px-3 min-w-[220px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHÁCH HÀNG & LIÊN HỆ</th>
+                                                <th className="py-2.5 px-3 w-40 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">NGÀY TẠO (GIỜ & NGÀY)</th>
+                                                <th className="py-2.5 px-3 w-44 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">DOANH THU & ĐƠN HÀNG</th>
+                                                <th className="py-2.5 px-2.5 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-2.5 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">PHÂN QUYỀN</th>
+                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {khachHangHienThi.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={10} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                                    <td colSpan={7} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
                                                         <div className="flex flex-col items-center justify-center gap-2">
                                                             <Users className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                                                             <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy khách hàng nào</div>
@@ -6099,78 +6159,91 @@ export default function TrangQuanTriCuaHang() {
                                                     const dangXuLy = dangXuLyUserId === uId;
                                                     const daBiKhoa = Boolean(user.biKhoa || user.trangThai === 'bi_khoa');
                                                     const chuaKichHoat = user.daKichHoat === false || user.trangThai === 'cho_kich_hoat';
+                                                    const thoiGian = layChiTietThoiGianKhachHang(user);
                                                     return (
                                                         <tr 
                                                             key={uId} 
-                                                            className={`transition-all duration-200 ${
+                                                            className={`transition-all duration-150 ${
                                                                 daBiKhoa
-                                                                    ? 'bg-rose-50/95 dark:bg-rose-950/50 hover:!bg-rose-100 dark:hover:!bg-rose-950/70'
+                                                                    ? 'bg-rose-50/90 dark:bg-rose-950/40 hover:!bg-rose-100 dark:hover:!bg-rose-950/60'
                                                                     : chuaKichHoat
-                                                                    ? 'bg-amber-50/70 dark:bg-amber-950/30 hover:!bg-amber-100/70 dark:hover:!bg-amber-950/50'
-                                                                    : 'odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50'
+                                                                    ? 'bg-amber-50/60 dark:bg-amber-950/30 hover:!bg-amber-100/60 dark:hover:!bg-amber-950/50'
+                                                                    : 'odd:bg-white even:bg-slate-50/60 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/40'
                                                             }`}
                                                         >
+                                                            {/* Cột 1: STT */}
                                                             <td className={`py-2 px-2 text-center font-bold border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap ${
-                                                                daBiKhoa ? 'text-rose-600 dark:text-rose-400 font-black bg-rose-100/60 dark:bg-rose-900/40' : chuaKichHoat ? 'text-amber-600 dark:text-amber-400 font-black' : 'text-slate-400'
+                                                                daBiKhoa ? 'text-rose-600 dark:text-rose-400 font-black bg-rose-100/50 dark:bg-rose-900/30' : chuaKichHoat ? 'text-amber-600 dark:text-amber-400 font-black' : 'text-slate-400'
                                                             }`}>
                                                                 #{idx + 1}
                                                             </td>
-                                                            <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                                                                <div className="flex items-center gap-2 whitespace-nowrap">
-                                                                    <div className={`w-6 h-6 rounded-md text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs ${
+
+                                                            {/* Cột 2: KHÁCH HÀNG & LIÊN HỆ (Gom Tên + Email + SĐT) */}
+                                                            <td className="py-2 px-3 border-b border-r border-slate-200 dark:border-slate-800">
+                                                                <div className="flex items-center gap-2.5 min-w-[210px]">
+                                                                    <div className={`w-8 h-8 rounded-xl text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs ${
                                                                         daBiKhoa ? 'bg-gradient-to-tr from-slate-500 to-slate-400' : chuaKichHoat ? 'bg-gradient-to-tr from-amber-500 to-orange-400' : 'bg-gradient-to-tr from-emerald-600 to-teal-500'
                                                                     }`}>
-                                                                        {user.hoTen?.charAt(0) || 'U'}
+                                                                        {user.hoTen?.charAt(0)?.toUpperCase() || 'U'}
                                                                     </div>
-                                                                    <div className="flex items-center gap-1.5 whitespace-nowrap">
-                                                                        <span className={`font-extrabold text-xs whitespace-nowrap ${daBiKhoa ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'}`}>
-                                                                            {user.hoTen}
-                                                                        </span>
-                                                                        {user.laTiemNang && (
-                                                                            <span className="px-1.5 py-0.5 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-black text-[9px] uppercase tracking-wider whitespace-nowrap">
-                                                                                🔥 VIP
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                                                            <span className={`font-extrabold text-xs whitespace-nowrap ${daBiKhoa ? 'text-slate-400 line-through' : 'text-slate-900 dark:text-white'}`}>
+                                                                                {user.hoTen || 'Khách Hàng'}
                                                                             </span>
-                                                                        )}
+                                                                            {user.laTiemNang && (
+                                                                                <span className="px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 font-black text-[9px] uppercase tracking-wider whitespace-nowrap">
+                                                                                    🔥 VIP
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap">
+                                                                            <span className="truncate max-w-[150px] lg:max-w-[190px] flex items-center gap-1" title={user.email}>
+                                                                                <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                                                                                <span>{user.email}</span>
+                                                                            </span>
+                                                                            <span className="text-slate-300 dark:text-slate-600">•</span>
+                                                                            <span className="font-bold text-slate-700 dark:text-slate-300 shrink-0 flex items-center gap-1">
+                                                                                <Phone className="w-3 h-3 text-emerald-500 shrink-0" />
+                                                                                <span>{user.soDienThoai || 'Chưa có SĐT'}</span>
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </td>
-                                                            <td className="py-2 px-2.5 font-mono font-bold text-slate-900 dark:text-slate-200 text-xs border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                                                                <div className="truncate max-w-[150px] lg:max-w-[200px]" title={user.email}>
-                                                                    {user.email}
+
+                                                            {/* Cột 3: NGÀY TẠO (GIỜ & NGÀY CHUẨN VIỆT NAM) */}
+                                                            <td className="py-2 px-3 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div className="flex flex-col items-center justify-center gap-0.5 font-mono" title={`Thời gian tạo: ${thoiGian.full}`}>
+                                                                    <div className="flex items-center gap-1 text-xs font-black text-blue-600 dark:text-blue-400">
+                                                                        <Clock className="w-3 h-3 text-blue-500 shrink-0" />
+                                                                        <span>{thoiGian.gio}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                                                                        <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                                                                        <span>{thoiGian.ngay}</span>
+                                                                    </div>
                                                                 </div>
                                                             </td>
-                                                            <td className="py-2 px-2 text-slate-600 dark:text-slate-400 font-bold font-mono text-xs border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                                                                {user.soDienThoai || 'Chưa cập nhật'}
-                                                            </td>
-                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                                                                <div className="flex items-center justify-center gap-1 font-mono font-bold text-xs text-slate-700 dark:text-slate-300">
-                                                                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                                                    <span>{layNgayTaoKhachHang(user)}</span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                                                                <span className={`px-2 py-0.5 rounded-full font-black text-xs inline-block whitespace-nowrap ${user.hangThanhVien?.includes('Platinum') || user.hangThanhVien?.includes('Kim Cương') ? 'bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300' :
-                                                                    user.hangThanhVien?.includes('Gold') || user.hangThanhVien?.includes('Vàng') ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300' :
-                                                                        'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
-                                                                    }`}>
-                                                                    {user.hangThanhVien || 'Thành Viên Mới'}
-                                                                </span>
-                                                            </td>
-                                                            <td className="py-2 px-2 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                                                                <div className="flex items-center gap-1.5 whitespace-nowrap">
-                                                                    <span className="font-black text-xs text-red-600 dark:text-red-400">
+
+                                                            {/* Cột 4: DOANH THU & ĐƠN HÀNG (SẠCH SẼ - KHÔNG HẠNG THÀNH VIÊN) */}
+                                                            <td className="py-2 px-3 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                                <div>
+                                                                    <div className="font-black text-xs text-red-600 dark:text-red-400">
                                                                         {dinhDangTienVND(user.tongChiTieu || 0)}
-                                                                    </span>
-                                                                    <span className="text-[11px] text-slate-400 font-semibold">
-                                                                        ({user.soDonHang > 0 ? `${user.soDonHang} đơn` : '0 đơn'})
-                                                                    </span>
+                                                                    </div>
+                                                                    <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 whitespace-nowrap">
+                                                                        {user.soDonHang > 0 ? `${user.soDonHang} đơn hàng đã mua` : 'Chưa có đơn hàng'}
+                                                                    </div>
                                                                 </div>
                                                             </td>
-                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+
+                                                            {/* Cột 5: TRẠNG THÁI */}
+                                                            <td className="py-2 px-2.5 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 {chuaKichHoat ? (
                                                                     <span
-                                                                        className="px-2.5 py-1 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/60 dark:border-amber-700/60 shadow-2xs"
-                                                                        title="Tài khoản chưa hoàn tất xác thực mã OTP qua Email"
+                                                                        className="px-2 py-0.5 rounded-full text-[11px] font-black inline-flex items-center justify-center gap-1 whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/60 shadow-2xs"
+                                                                        title="Tài khoản chưa hoàn tất xác thực OTP"
                                                                     >
                                                                         <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
                                                                         <span>Chờ OTP</span>
@@ -6179,8 +6252,8 @@ export default function TrangQuanTriCuaHang() {
                                                                     <button
                                                                         onClick={() => xuLyKhoaNguoiDung(user)}
                                                                         disabled={dangXuLy}
-                                                                        className={`px-2.5 py-1 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all shadow-2xs ${
-                                                                            dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                                                        className={`px-2.5 py-0.5 rounded-full text-[11px] font-black inline-flex items-center justify-center gap-1 whitespace-nowrap transition-all shadow-2xs cursor-pointer ${
+                                                                            dangXuLy ? 'opacity-50 cursor-not-allowed' : ''
                                                                         } ${
                                                                             daBiKhoa
                                                                                 ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-300'
@@ -6202,7 +6275,7 @@ export default function TrangQuanTriCuaHang() {
                                                                     </button>
                                                                 )}
                                                             </td>
-                                                            <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                            <td className="py-2 px-2.5 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 <button
                                                                     onClick={() => xuLyDoiVaiTroNguoiDung(user)}
                                                                     disabled={dangXuLy}
@@ -11205,56 +11278,40 @@ export default function TrangQuanTriCuaHang() {
 
                                 <div className="grid grid-cols-2 gap-3.5">
                                     <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Hạng Thành Viên</label>
-                                        <select
-                                            value={formUser.hangThanhVien}
-                                            onChange={(e) => setFormUser({ ...formUser, hangThanhVien: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
-                                        >
-                                            <option value="Đồng">Đồng</option>
-                                            <option value="Bạc">Bạc</option>
-                                            <option value="Vàng">Vàng</option>
-                                            <option value="Bạch Kim">Bạch Kim</option>
-                                            <option value="Kim Cương">Kim Cương</option>
-                                            <option value="VIP Gold">VIP Gold</option>
-                                            <option value="VIP Platinum">VIP Platinum</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Vai Trò</label>
+                                        <label className="font-bold text-slate-700 dark:text-slate-300">Phân Quyền Vai Trò</label>
                                         <select
                                             value={formUser.vaiTro}
                                             onChange={(e) => setFormUser({ ...formUser, vaiTro: e.target.value })}
                                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-black"
                                         >
                                             <option value="khach_hang">Khách Hàng</option>
-                                            <option value="admin">👑 Quản Trị</option>
+                                            <option value="admin">👑 Quản Trị Viên</option>
                                         </select>
                                     </div>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Trạng Thái Tài Khoản</label>
-                                    <select
-                                        value={formUser.trangThai || (formUser.biKhoa ? 'bi_khoa' : 'hoat_dong')}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setFormUser({
-                                                ...formUser,
-                                                trangThai: val,
-                                                biKhoa: val === 'bi_khoa',
-                                                lyDoKhoa: val === 'bi_khoa' ? (formUser.lyDoKhoa || 'Quản trị viên tạm khóa tài khoản') : ''
-                                            });
-                                        }}
-                                        className={`w-full px-3.5 py-2.5 rounded-xl border font-bold ${
-                                            (formUser.trangThai === 'bi_khoa' || formUser.biKhoa)
-                                                ? 'border-red-400 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-300'
-                                                : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white'
-                                        }`}
-                                    >
-                                        <option value="hoat_dong">🟢 Đang Hoạt Động (Bình Thường)</option>
-                                        <option value="bi_khoa">🔒 Khóa Tạm Thời (Chặn Đăng Nhập)</option>
-                                    </select>
+                                    <div className="space-y-1">
+                                        <label className="font-bold text-slate-700 dark:text-slate-300">Trạng Thái Tài Khoản</label>
+                                        <select
+                                            value={formUser.trangThai || (formUser.biKhoa ? 'bi_khoa' : 'hoat_dong')}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setFormUser({
+                                                    ...formUser,
+                                                    trangThai: val,
+                                                    biKhoa: val === 'bi_khoa',
+                                                    lyDoKhoa: val === 'bi_khoa' ? (formUser.lyDoKhoa || 'Quản trị viên tạm khóa tài khoản') : ''
+                                                });
+                                            }}
+                                            className={`w-full px-3.5 py-2.5 rounded-xl border font-bold ${
+                                                (formUser.trangThai === 'bi_khoa' || formUser.biKhoa)
+                                                    ? 'border-red-400 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-300'
+                                                    : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white'
+                                            }`}
+                                        >
+                                            <option value="hoat_dong">🟢 Đang Hoạt Động</option>
+                                            <option value="bi_khoa">🔒 Tạm Khóa</option>
+                                            <option value="cho_kich_hoat">⏳ Chờ Kích Hoạt OTP</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 {(formUser.trangThai === 'bi_khoa' || formUser.biKhoa) && (

@@ -1389,9 +1389,9 @@ function NoiDungTrangTaiKhoan() {
                                 <div className="text-[11px] text-slate-500 truncate mt-0.5 font-bold">
                                     {nguoiDung?.email}
                                 </div>
-                                <div className="mt-1 inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-black shadow-2xs">
-                                    <Sparkles className="w-3 h-3 fill-amber-500 text-amber-600" />
-                                    <span>{nguoiDung?.hangThanhVien || 'Thành Viên VIP'}</span>
+                                <div className="mt-1 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-100 border border-blue-200 text-blue-900 text-[10px] font-black shadow-2xs">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                                    <span>{nguoiDung?.vaiTro === 'admin' ? '👑 Quản Trị Viên' : 'Tài Khoản Khách Hàng'}</span>
                                 </div>
                             </div>
                         </div>
@@ -1623,9 +1623,9 @@ function NoiDungTrangTaiKhoan() {
                                             PLATINUM MEMBER
                                         </span>
                                     </div>
-                                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 border border-amber-300 text-amber-900 text-xs font-black shadow-2xs">
-                                        <Sparkles className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
-                                        <span>{nguoiDung?.hangThanhVien || 'Thành Viên VIP'}</span>
+                                    <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 border border-blue-200 text-blue-900 text-xs font-black shadow-2xs">
+                                        <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+                                        <span>{nguoiDung?.vaiTro === 'admin' ? 'Quản Trị Viên' : 'Thành Viên Hệ Thống'}</span>
                                     </span>
                                 </div>
 
