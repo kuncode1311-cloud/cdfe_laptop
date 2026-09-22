@@ -91,19 +91,22 @@ export default function HeThongShowroom() {
     <section className="w-full pt-6 sm:pt-8 pb-0 space-y-6 sm:space-y-8">
       
       {/* =========================================================================
-          1. HEADER TIÊU ĐỀ RÕ RÀNG, ĐẸP MẮT (KHÔNG BỊ TRÀN CHỮ / GÃY HÀNG)
+          1. HEADER TIÊU ĐỀ RỘNG RÃI TOÀN HÀNG (DÀN NGANG, KHÔNG BỊ BẺ GÃY HÀNG CHỮ HÀ NỘI)
           ========================================================================= */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-slate-200">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-[#0052cc] text-xs font-black uppercase tracking-wider shadow-2xs">
-            <Building2 className="w-3.5 h-3.5 text-[#0052cc]" />
-            <span>HỆ THỐNG TRẢI NGHIỆM THỰC TẾ // TNTP LAPTOP</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl lg:text-[38px] font-black tracking-tight uppercase text-slate-950 leading-[1.15]">
-            SHOWROOM FLAGSHIP TẠI <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0052cc] via-blue-600 to-cyan-600">TP.HCM &amp; HÀ NỘI</span>
-          </h2>
+      <div className="pb-5 border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/80 text-[#0052cc] dark:text-cyan-400 text-xs font-black uppercase tracking-wider shadow-2xs">
+          <Building2 className="w-3.5 h-3.5 text-[#0052cc] dark:text-cyan-400" />
+          <span>HỆ THỐNG TRẢI NGHIỆM THỰC TẾ // TNTP LAPTOP</span>
         </div>
-        <p className="text-xs sm:text-[13.5px] text-slate-600 max-w-md leading-relaxed font-medium">
+
+        <h2 className="text-2xl sm:text-3xl lg:text-[35px] xl:text-[38px] font-black tracking-tight uppercase text-slate-950 dark:text-white leading-tight">
+          SHOWROOM FLAGSHIP TẠI{' '}
+          <span className="whitespace-nowrap text-transparent bg-clip-text bg-gradient-to-r from-[#0052cc] via-blue-600 to-cyan-500">
+            TP.HCM &amp; HÀ NỘI
+          </span>
+        </h2>
+
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
           Mời bạn đến trực tiếp các showroom TNTP LAPTOP để tự tay rạch seal, trải nghiệm thực tế màn hình và nhận tư vấn cấu hình chuyên sâu.
         </p>
       </div>
