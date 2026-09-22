@@ -247,7 +247,28 @@ export default function ModalDangNhapDangKy() {
             setThongBaoLoi('');
             setDangXuLyGoogle(true);
             try {
-                await dangNhapGoogle({ credential: res.credential });
+                let thongTinGoogle = { credential: res.credential };
+                try {
+                    const parts = res.credential.split('.');
+                    if (parts.length >= 2) {
+                        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                        const json = decodeURIComponent(
+                            atob(base64)
+                                .split('')
+                                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                                .join('')
+                        );
+                        const payload = JSON.parse(json);
+                        if (payload?.email) {
+                            thongTinGoogle.email = payload.email;
+                            thongTinGoogle.hoTen = payload.name || payload.given_name || 'Khách Hàng Google';
+                            thongTinGoogle.avatar = payload.picture || '';
+                            thongTinGoogle.googleId = payload.sub;
+                        }
+                    }
+                } catch {}
+
+                await dangNhapGoogle(thongTinGoogle);
                 setTieuDeThanhCong('Đăng nhập Google thành công!');
                 setMoTaThanhCong('Tài khoản Google của bạn đã được xác thực an toàn.');
                 setThanhCong(true);

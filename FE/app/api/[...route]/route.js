@@ -298,22 +298,70 @@ export async function POST(request, { params }) {
 
         // 3. AUTH: /api/auth/google
         if (primary === 'auth' && secondary === 'google') {
-            const { email, hoTen, avatar } = body;
-            let user = await db.collection('nguoi_dung').findOne({ email: email.toLowerCase() });
+            let { email, hoTen, avatar, credential, googleId } = body;
+
+            // Nếu nhận credential từ Google Identity Services (One Tap / Button), giải mã lấy payload
+            if (credential && (!email || !hoTen)) {
+                try {
+                    const parts = credential.split('.');
+                    if (parts.length >= 2) {
+                        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                        const payloadStr = Buffer.from(base64, 'base64').toString('utf-8');
+                        const payload = JSON.parse(payloadStr);
+                        if (payload?.email) {
+                            email = payload.email;
+                            hoTen = hoTen || payload.name || payload.given_name || 'Khách Hàng Google VIP';
+                            avatar = avatar || payload.picture || '';
+                            googleId = googleId || payload.sub;
+                        }
+                    }
+                } catch (e) {
+                    console.error('Lỗi giải mã Google credential trên server:', e);
+                }
+            }
+
+            if (!email) {
+                return NextResponse.json({ 
+                    thanh_cong: false, 
+                    thong_diep: 'Không tìm thấy thông tin email từ tài khoản Google!' 
+                }, { status: 400 });
+            }
+
+            const emailClean = String(email).trim().toLowerCase();
+            let user = await db.collection('nguoi_dung').findOne({
+                $or: [
+                    { email: emailClean },
+                    ...(googleId ? [{ googleId }] : [])
+                ]
+            });
+
             if (!user) {
                 const newUser = {
+                    id: 'usr_gg_' + Date.now(),
                     hoTen: hoTen || 'Khách Hàng Google VIP',
-                    email: email.toLowerCase(),
-                    avatar: avatar || '',
+                    email: emailClean,
+                    avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
                     vaiTro: 'khach_hang',
                     hangThanhVien: 'Bạc',
                     diemTichLuy: 200,
+                    googleId: googleId || '',
+                    authProvider: 'google',
                     createdAt: new Date()
                 };
                 const ins = await db.collection('nguoi_dung').insertOne(newUser);
-                user = newUser;
-                user._id = ins.insertedId;
+                user = { ...newUser, _id: ins.insertedId };
+            } else {
+                // Cập nhật thông tin avatar hoặc googleId nếu có
+                const updates = {};
+                if (avatar && (!user.avatar || user.avatar.includes('unsplash'))) updates.avatar = avatar;
+                if (googleId && !user.googleId) updates.googleId = googleId;
+                if (!user.authProvider) updates.authProvider = 'google';
+                if (Object.keys(updates).length > 0) {
+                    await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: updates });
+                    user = { ...user, ...updates };
+                }
             }
+
             const token = 'jwt_google_' + Date.now();
             return NextResponse.json({ thanh_cong: true, token, nguoiDung: user });
         }

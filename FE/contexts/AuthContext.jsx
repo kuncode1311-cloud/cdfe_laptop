@@ -185,17 +185,40 @@ export function AuthProvider({ children }) {
     // Đăng nhập với Google – gửi credential (ID Token) lên BE để verify
     const dangNhapGoogle = async (duLieuGoogle = null) => {
         try {
-            // duLieuGoogle có thể là:
-            // { credential: "eyJhbGci..." }  ← Google Identity Services (One Tap / Button)
-            // { email, hoTen, avatar, googleId } ← Fallback thủ công
             if (!duLieuGoogle) {
                 throw new Error('Không có thông tin đăng nhập Google!');
+            }
+
+            // Tự động giải mã credential phía client để luôn có đủ email, hoTen, avatar
+            let payloadGui = { ...duLieuGoogle };
+            if (payloadGui.credential && (!payloadGui.email || !payloadGui.hoTen)) {
+                try {
+                    const base64Url = payloadGui.credential.split('.')[1];
+                    if (base64Url) {
+                        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                        const jsonPayload = decodeURIComponent(
+                            atob(base64)
+                                .split('')
+                                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                                .join('')
+                        );
+                        const decoded = JSON.parse(jsonPayload);
+                        if (decoded?.email) {
+                            payloadGui.email = decoded.email;
+                            payloadGui.hoTen = payloadGui.hoTen || decoded.name || decoded.given_name || 'Khách Hàng Google';
+                            payloadGui.avatar = payloadGui.avatar || decoded.picture || '';
+                            payloadGui.googleId = payloadGui.googleId || decoded.sub;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Lỗi decode JWT token trên client:', e);
+                }
             }
 
             const res = await fetch(`${API_BASE_URL}/auth/google`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(duLieuGoogle)
+                body: JSON.stringify(payloadGui)
             });
 
             const data = await res.json();
