@@ -183,20 +183,20 @@ export async function GET(request, { params }) {
             const authHeader = request.headers.get('authorization') || '';
             const token = authHeader.replace('Bearer ', '').trim();
             
-            // Tìm người dùng theo token hoặc tài khoản Admin
-            let user = null;
-            if (token && token.length > 5) {
-                user = await db.collection('nguoi_dung').findOne({ 
-                    $or: [{ token }, { email: 'admin@laptopnew.vn' }, { vaiTro: 'admin' }] 
-                }, { projection: { matKhau: 0, mat_khau: 0 } });
+            if (!token || token.length < 5) {
+                return NextResponse.json({ thong_diep: 'Chưa đăng nhập' }, { status: 401 });
             }
-            if (!user) {
-                user = await db.collection('nguoi_dung').findOne({ vaiTro: 'admin' }, { projection: { matKhau: 0, mat_khau: 0 } });
-            }
+
+            // Tìm CHÍNH XÁC người dùng sở hữu token này (Tuyệt đối không fallback sang admin)
+            const user = await db.collection('nguoi_dung').findOne(
+                { token },
+                { projection: { matKhau: 0, mat_khau: 0, maOtp: 0, hanOtp: 0 } }
+            );
+
             if (user) {
                 return NextResponse.json({ hop_le: true, nguoiDung: user });
             }
-            return NextResponse.json({ thong_diep: 'Chưa đăng nhập' }, { status: 401 });
+            return NextResponse.json({ thong_diep: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn' }, { status: 401 });
         }
 
         // 9. CÀI ĐẶT: /api/cai-dat
@@ -249,8 +249,7 @@ export async function POST(request, { params }) {
                     user = {
                         email: 'admin@laptopnew.vn',
                         hoTen: 'Quản Trị Viên Hệ Thống',
-                        vaiTro: 'admin',
-                        hangThanhVien: 'Kim Cương'
+                        vaiTro: 'admin'
                     };
                 }
             }
@@ -443,7 +442,6 @@ export async function POST(request, { params }) {
                     matKhau: tempUser.matKhau,
                     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
                     vaiTro: 'khach_hang',
-                    hangThanhVien: 'Thành Viên Mới',
                     diemTichLuy: 200,
                     viVoucher: [],
                     daKichHoat: true,
@@ -728,6 +726,8 @@ export async function POST(request, { params }) {
                 ]
             });
 
+            const token = 'jwt_google_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+
             if (!user) {
                 const newUser = {
                     id: 'usr_gg_' + Date.now(),
@@ -735,27 +735,30 @@ export async function POST(request, { params }) {
                     email: emailClean,
                     avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
                     vaiTro: 'khach_hang',
-                    hangThanhVien: 'Bạc',
                     diemTichLuy: 200,
                     googleId: googleId || '',
                     authProvider: 'google',
+                    token,
+                    lanDangNhapCuoi: new Date(),
                     createdAt: new Date()
                 };
                 const ins = await db.collection('nguoi_dung').insertOne(newUser);
                 user = { ...newUser, _id: ins.insertedId };
             } else {
-                // Cập nhật thông tin avatar hoặc googleId nếu có
-                const updates = {};
+                // Cập nhật thông tin avatar, googleId và LƯU TOKEN MỚI
+                const updates = { token, lanDangNhapCuoi: new Date() };
                 if (avatar && (!user.avatar || user.avatar.includes('unsplash'))) updates.avatar = avatar;
                 if (googleId && !user.googleId) updates.googleId = googleId;
                 if (!user.authProvider) updates.authProvider = 'google';
-                if (Object.keys(updates).length > 0) {
-                    await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: updates });
-                    user = { ...user, ...updates };
-                }
+                await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: updates });
+                user = { ...user, ...updates };
             }
 
-            const token = 'jwt_google_' + Date.now();
+            delete user.matKhau;
+            delete user.mat_khau;
+            delete user.maOtp;
+            delete user.hanOtp;
+
             return NextResponse.json({ thanh_cong: true, token, nguoiDung: user });
         }
 
