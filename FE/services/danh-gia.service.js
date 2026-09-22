@@ -1,5 +1,4 @@
 import { apiFetch } from './api-client';
-import { DANH_SACH_DANH_GIA } from '@/du-lieu/danh-sach-danh-gia';
 
 /**
  * Service xử lý Đánh Giá & Nhận Xét của Khách Hàng kết nối RESTful API MongoDB Atlas
@@ -13,13 +12,11 @@ export const DanhGiaService = {
     async layDanhGiaTheoSanPhamAsync(idSanPham) {
         try {
             const url = idSanPham ? `/danh-gia?id_san_pham=${encodeURIComponent(idSanPham)}` : '/danh-gia';
-            const fallback = idSanPham ? DANH_SACH_DANH_GIA.filter(d => d.id_san_pham === idSanPham) : DANH_SACH_DANH_GIA;
-            const res = await apiFetch(url, { cache: 'default' }, fallback);
-            if (Array.isArray(res) && res.length > 0) return res;
-            return fallback;
+            const res = await apiFetch(url, { cache: 'default' });
+            return Array.isArray(res) ? res : [];
         } catch (loi) {
             console.warn('[DanhGiaService] Lỗi lấy đánh giá sản phẩm:', loi.message);
-            return idSanPham ? DANH_SACH_DANH_GIA.filter(d => d.id_san_pham === idSanPham) : DANH_SACH_DANH_GIA;
+            return [];
         }
     },
 
@@ -29,12 +26,11 @@ export const DanhGiaService = {
      */
     async layTatCaDanhGiaAsync() {
         try {
-            const res = await apiFetch('/danh-gia', { cache: 'default' }, DANH_SACH_DANH_GIA);
-            if (Array.isArray(res) && res.length > 0) return res;
-            return DANH_SACH_DANH_GIA;
+            const res = await apiFetch('/danh-gia', { cache: 'default' });
+            return Array.isArray(res) ? res : [];
         } catch (loi) {
             console.warn('[DanhGiaService] Lỗi lấy tất cả đánh giá:', loi.message);
-            return DANH_SACH_DANH_GIA;
+            return [];
         }
     },
 

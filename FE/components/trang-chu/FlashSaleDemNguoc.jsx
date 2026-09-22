@@ -8,7 +8,8 @@ import TheSanPham from '@/components/san-pham/TheSanPham';
 import { SanPhamService } from '@/services/san-pham.service';
 
 export default function FlashSaleDemNguoc({ danhSachSanPham }) {
-    const [danhSach, setDanhSach] = useState(() => danhSachSanPham || SanPhamService.layDanhSachFlashSale());
+    const [danhSach, setDanhSach] = useState(() => danhSachSanPham || SanPhamService.layDanhSachFlashSale() || []);
+    const [dangTai, setDangTai] = useState(danhSach.length === 0);
 
     // Nạp danh sách Flash Sale từ MongoDB Atlas qua API
     useEffect(() => {
@@ -19,6 +20,9 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
                     const danhSachSale = data.filter(sp => sp.la_flash_sale);
                     setDanhSach(danhSachSale.length > 0 ? danhSachSale : data);
                 }
+                if (!daHuy) setDangTai(false);
+            }).catch(() => {
+                if (!daHuy) setDangTai(false);
             });
             return () => { daHuy = true; };
         }

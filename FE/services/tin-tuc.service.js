@@ -1,11 +1,10 @@
-import { DANH_SACH_TIN_TUC } from '@/du-lieu/danh-sach-tin-tuc';
 import { apiFetch } from './api-client';
 import { taoSlug } from '@/utils/taoSlug';
 
-let boNhoDemTinTuc = [...DANH_SACH_TIN_TUC];
+let boNhoDemTinTuc = [];
 
 if (typeof window !== 'undefined') {
-    apiFetch('/tin-tuc', { cache: 'no-store' }, DANH_SACH_TIN_TUC)
+    apiFetch('/tin-tuc', { cache: 'no-store' })
         .then((res) => {
             const list = res?.duLieu || res;
             if (Array.isArray(list) && list.length > 0) {
@@ -37,8 +36,8 @@ export const TinTucService = {
         if (params.tat_ca) query.append('tat_ca', 'true');
 
         const url = `/tin-tuc${query.toString() ? `?${query.toString()}` : ''}`;
-        const res = await apiFetch(url, { cache: 'no-store' }, DANH_SACH_TIN_TUC);
-        const list = res?.duLieu || (Array.isArray(res) ? res : DANH_SACH_TIN_TUC);
+        const res = await apiFetch(url, { cache: 'no-store' });
+        const list = res?.duLieu || (Array.isArray(res) ? res : []);
 
         if (Array.isArray(list) && list.length > 0) {
             boNhoDemTinTuc = list;
@@ -59,7 +58,6 @@ export const TinTucService = {
         }
         return (
             boNhoDemTinTuc.find(t => t.id === id || t._id === id || t.slug === id || taoSlug(t.tieu_de) === id) ||
-            DANH_SACH_TIN_TUC.find(t => t.id === id || t._id === id || t.slug === id || taoSlug(t.tieu_de) === id) ||
             null
         );
     },

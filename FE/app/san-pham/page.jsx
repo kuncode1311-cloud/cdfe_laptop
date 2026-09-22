@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Home, ChevronRight, Laptop } from 'lucide-react';
+import { Home, ChevronRight, Laptop, AlertTriangle, RefreshCw } from 'lucide-react';
 import { SanPhamService } from '@/services/san-pham.service';
 import { DANH_SACH_DANH_MUC_ANH } from '@/components/san-pham/BoLocThongMinhAllInOne';
 import ThanhTopBarLocDinh from '@/components/san-pham/ThanhTopBarLocDinh';
@@ -81,16 +81,46 @@ function NoiDungDanhSachSanPham() {
         }));
     }, [hangParam, danhMucParam, tuKhoaParam]);
 
-    // Đồng bộ sản phẩm từ MongoDB Atlas / API
+    // Đồng bộ sản phẩm 100% từ MongoDB Atlas qua API
     const [tatCaSanPham, setTatCaSanPham] = useState(() => SanPhamService.layTatCaSanPham());
+    const [dangTaiSanPham, setDangTaiSanPham] = useState(tatCaSanPham.length === 0);
+    const [loiKetNoi, setLoiKetNoi] = useState(null);
+
+    const taiLaiDuLieu = () => {
+        setDangTaiSanPham(true);
+        setLoiKetNoi(null);
+        SanPhamService.layTatCaSanPhamAsync()
+            .then((data) => {
+                setTatCaSanPham(Array.isArray(data) ? data : []);
+                setLoiKetNoi(null);
+                setDangTaiSanPham(false);
+            })
+            .catch((err) => {
+                console.error('Lỗi kết nối MongoDB Atlas:', err);
+                setLoiKetNoi('Không thể kết nối đến máy chủ MongoDB Atlas. Vui lòng kiểm tra lại dịch vụ Backend.');
+                setDangTaiSanPham(false);
+            });
+    };
 
     useEffect(() => {
         let daHuy = false;
-        SanPhamService.layTatCaSanPhamAsync().then((data) => {
-            if (!daHuy && Array.isArray(data) && data.length > 0) {
-                setTatCaSanPham(data);
-            }
-        });
+        SanPhamService.layTatCaSanPhamAsync()
+            .then((data) => {
+                if (!daHuy) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        setTatCaSanPham(data);
+                    }
+                    setLoiKetNoi(null);
+                    setDangTaiSanPham(false);
+                }
+            })
+            .catch((err) => {
+                if (!daHuy) {
+                    console.error('Lỗi kết nối MongoDB Atlas:', err);
+                    setLoiKetNoi('Không thể kết nối đến máy chủ MongoDB Atlas. Vui lòng kiểm tra lại dịch vụ Backend.');
+                    setDangTaiSanPham(false);
+                }
+            });
         return () => { daHuy = true; };
     }, []);
 
@@ -201,7 +231,39 @@ function NoiDungDanhSachSanPham() {
                     moTa={`Tìm thấy ${danhSachLoc.length} laptop & phụ kiện phù hợp`}
                 />
                 <div className={`transition-opacity duration-300 ${dangLoc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-                    {danhSachLoc.length > 0 ? (
+                    {loiKetNoi ? (
+                        /* Trạng thái lỗi kết nối MongoDB Atlas thật */
+                        <div className="p-12 text-center rounded-3xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 space-y-4 shadow-sm">
+                            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/40 text-red-600 mx-auto flex items-center justify-center">
+                                <AlertTriangle className="w-8 h-8 text-red-600" />
+                            </div>
+                            <h3 className="text-base font-bold text-red-800 dark:text-red-300">
+                                Không Thể Kết Nối Máy Chủ MongoDB Atlas
+                            </h3>
+                            <p className="text-xs text-red-600/90 dark:text-red-400 max-w-md mx-auto leading-relaxed">
+                                {loiKetNoi}
+                            </p>
+                            <button
+                                onClick={taiLaiDuLieu}
+                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold cursor-pointer transition-colors shadow-sm"
+                            >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                <span>Thử Kết Nối Lại</span>
+                            </button>
+                        </div>
+                    ) : dangTaiSanPham ? (
+                        /* Trạng thái đang tải sản phẩm từ MongoDB */
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4">
+                            {[...Array(8)].map((_, i) => (
+                                <div key={i} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse space-y-3">
+                                    <div className="w-full h-44 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                                    <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/3"></div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : danhSachLoc.length > 0 ? (
                         <div className={cheDoHienThi === 'luoi'
                             ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4'
                             : 'space-y-3.5'}>

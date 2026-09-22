@@ -1,10 +1,9 @@
-import { DANH_SACH_MA_GIAM_GIA } from '@/du-lieu/danh-sach-ma-giam-gia';
 import { apiFetch } from './api-client';
 
-let boNhoDemVoucher = [...DANH_SACH_MA_GIAM_GIA];
+let boNhoDemVoucher = [];
 
 if (typeof window !== 'undefined') {
-    apiFetch('/ma-giam-gia', { cache: 'no-store' }, DANH_SACH_MA_GIAM_GIA)
+    apiFetch('/ma-giam-gia', { cache: 'no-store' })
         .then((data) => {
             if (Array.isArray(data) && data.length > 0) {
                 boNhoDemVoucher = data;
@@ -27,7 +26,7 @@ export const MaGiamGiaService = {
      */
     async layDanhSachMaGiamGiaAsync(tatCa = false) {
         const url = tatCa ? '/ma-giam-gia' : '/ma-giam-gia?kich_hoat=true';
-        const data = await apiFetch(url, { cache: 'no-store' }, DANH_SACH_MA_GIAM_GIA);
+        const data = await apiFetch(url, { cache: 'no-store' });
         if (Array.isArray(data) && data.length > 0) {
             boNhoDemVoucher = data;
         }

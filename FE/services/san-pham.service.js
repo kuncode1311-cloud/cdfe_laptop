@@ -1,15 +1,12 @@
-import { DANH_SACH_LAPTOP } from '@/du-lieu/danh-sach-laptop';
 import { apiFetch } from './api-client';
 import { taoSlug } from '@/utils/taoSlug';
 
-// Bộ nhớ tạm chứa danh sách sản phẩm trong phiên chạy hiện tại.
-// Ban đầu dùng dữ liệu mẫu; nếu gọi API thành công thì thay bằng dữ liệu backend.
-let boNhoDemSanPham = [...DANH_SACH_LAPTOP];
+// Bộ nhớ tạm chứa danh sách sản phẩm nạp từ MongoDB Atlas qua API
+let boNhoDemSanPham = [];
 
-// Khi chạy trên trình duyệt, tự động gọi backend lấy danh sách mới nhất.
-// Nếu backend chưa chạy thì apiFetch trả về DANH_SACH_LAPTOP (dữ liệu dự phòng).
+// Khi chạy trên trình duyệt, tự động gọi backend lấy danh sách từ MongoDB Atlas
 if (typeof window !== 'undefined') {
-    apiFetch('/san-pham', { cache: 'default' }, DANH_SACH_LAPTOP)
+    apiFetch('/san-pham', { cache: 'default' })
         .then((data) => {
             if (Array.isArray(data) && data.length > 0) {
                 boNhoDemSanPham = data;
@@ -19,7 +16,7 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Dịch vụ xử lý dữ liệu và truy vấn sản phẩm laptop kết nối Express API
+ * Dịch vụ xử lý dữ liệu và truy vấn sản phẩm laptop kết nối Express API & MongoDB Atlas
  */
 export const SanPhamService = {
     /**
@@ -51,7 +48,7 @@ export const SanPhamService = {
             endpoint += `?${queryString}`;
         }
 
-        const data = await apiFetch(endpoint, { cache: 'no-store' }, DANH_SACH_LAPTOP);
+        const data = await apiFetch(endpoint, { cache: 'no-store' });
         if (Array.isArray(data) && data.length > 0 && !queryString) {
             boNhoDemSanPham = data;
         }

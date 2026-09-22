@@ -5273,7 +5273,7 @@ export default function TrangQuanTriCuaHang() {
                                             className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 cursor-pointer shrink-0 transition-all hover:scale-102 active:scale-98"
                                         >
                                             <Plus className="w-4 h-4 !text-white" />
-                                            <span className="!text-white">+ Thêm Sản Phẩm Mới</span>
+                                            <span className="!text-white">Thêm Sản Phẩm Mới</span>
                                         </button>
                                     </div>
                                 </div>
@@ -5363,13 +5363,13 @@ export default function TrangQuanTriCuaHang() {
                                             <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                                 <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
                                                 <th className="py-2.5 px-2 w-14 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ẢNH</th>
-                                                <th className="py-2.5 px-2.5 min-w-[160px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÊN SẢN PHẨM & CẤU HÌNH</th>
+                                                <th className="py-2.5 px-3 min-w-[200px] max-w-[300px] xl:max-w-[360px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÊN SẢN PHẨM & CẤU HÌNH</th>
                                                 <th className="py-2.5 px-2 w-20 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">HÃNG</th>
                                                 <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">GIÁ BÁN</th>
                                                 <th className="py-2.5 px-2 w-16 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHO</th>
                                                 <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">FLASH SALE</th>
                                                 <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
-                                                <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
+                                                <th className="py-2.5 px-3 w-36 min-w-[135px] text-center border-b-2 border-l border-slate-300 dark:border-slate-700 whitespace-nowrap sticky right-0 bg-slate-100 dark:bg-slate-800 z-20 shadow-[-6px_0_12px_rgba(0,0,0,0.08)]">THAO TÁC</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -5391,7 +5391,7 @@ export default function TrangQuanTriCuaHang() {
                                                     const dangXuLyChung = dangXuLySpId !== null || dangLuuSp;
 
                                                     return (
-                                                        <tr key={idSp} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
+                                                        <tr key={idSp} className="group odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
                                                             <td className="py-2 px-3 text-center font-bold text-slate-400 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 #{idx + 1}
                                                             </td>
@@ -5413,11 +5413,11 @@ export default function TrangQuanTriCuaHang() {
                                                                     <Image src={sp.hinh_anh_chinh} alt={sp.ten_san_pham} fill className="object-contain p-0.5" />
                                                                 </div>
                                                             </td>
-                                                            <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800">
-                                                                <div className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-1 hover:text-blue-600 transition-colors" title={sp.ten_san_pham}>
+                                                            <td className="py-2 px-3 border-b border-r border-slate-200 dark:border-slate-800 max-w-[260px] md:max-w-[300px] xl:max-w-[360px] overflow-hidden">
+                                                                <div className="font-extrabold text-xs text-slate-900 dark:text-white truncate hover:text-blue-600 transition-colors" title={sp.ten_san_pham}>
                                                                     {sp.ten_san_pham}
                                                                 </div>
-                                                                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold line-clamp-1 mt-0.5 flex items-center gap-1.5">
+                                                                <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold truncate mt-0.5 flex items-center gap-1.5" title={thongTin.text}>
                                                                     <span className="shrink-0">{thongTin.icon}</span>
                                                                     <span className="truncate">{thongTin.text}</span>
                                                                 </div>
@@ -5474,31 +5474,35 @@ export default function TrangQuanTriCuaHang() {
                                                                     <span className="whitespace-nowrap">{sp.con_hang !== false ? 'Đang bán' : 'Tạm ẩn'}</span>
                                                                 </button>
                                                             </td>
-                                                            <td className="py-2 px-1.5 text-center border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                                                                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                                                            <td className="py-2 px-2 text-center border-b border-l border-slate-200 dark:border-slate-800 whitespace-nowrap sticky right-0 z-10 bg-white group-odd:bg-white group-even:bg-slate-50/70 dark:bg-[#0d1527] dark:group-odd:bg-[#0d1527] dark:group-even:bg-[#090f1d] group-hover:!bg-blue-50/90 dark:group-hover:!bg-blue-950/90 shadow-[-6px_0_12px_rgba(0,0,0,0.08)]">
+                                                                <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
                                                                     <Link
                                                                         href={`/san-pham/${sp.id || sp.slug || sp._id}`}
                                                                         target="_blank"
-                                                                        className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 transition-colors"
-                                                                        title="Xem hiển thị ngoài website khách hàng"
+                                                                        className="p-1.5 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 transition-all hover:scale-105 active:scale-95 inline-flex items-center justify-center shadow-2xs"
+                                                                        title="Xem ngoài website khách hàng"
                                                                     >
                                                                         <ExternalLink className="w-3.5 h-3.5" />
                                                                     </Link>
                                                                     <button
+                                                                        type="button"
                                                                         onClick={() => moModalSuaSp(sp)}
                                                                         disabled={dangXuLyChung}
-                                                                        className={`p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                        title="Chỉnh sửa chi tiết sản phẩm"
+                                                                        className={`px-2 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs inline-flex items-center gap-1 shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Chỉnh sửa sản phẩm"
                                                                     >
                                                                         <Edit3 className="w-3.5 h-3.5" />
+                                                                        <span>Sửa</span>
                                                                     </button>
                                                                     <button
+                                                                        type="button"
                                                                         onClick={() => xuLyXoaSanPham(idSp, sp.ten_san_pham)}
                                                                         disabled={dangXuLyChung}
-                                                                        className={`p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                        title="Xóa sản phẩm"
+                                                                        className={`px-2 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs inline-flex items-center gap-1 shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Xóa vĩnh viễn sản phẩm"
                                                                     >
                                                                         {dangXuLyItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                                        <span>Xóa</span>
                                                                     </button>
                                                                 </div>
                                                             </td>
