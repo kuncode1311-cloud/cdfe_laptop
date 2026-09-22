@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const NguoiDung = require('../models/nguoi-dung.model');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'TNTP_LAPTOP_SECURITY_KEY_2026';
@@ -71,35 +72,11 @@ const dangKy = async (req, res) => {
             });
         }
 
-        // 6. Kiểm tra email đã tồn tại chưa
+        // 6. Kiểm tra email đã tồn tại chưa trong bảng người dùng chính thức
         const taiKhoanTonTai = await NguoiDung.findOne({ email: emailClean });
-        if (taiKhoanTonTai) {
-            if (taiKhoanTonTai.daKichHoat !== false) {
-                return res.status(400).json({
-                    thong_diep: `Địa chỉ Email "${emailClean}" đã được đăng ký tài khoản trước đó! Vui lòng chuyển sang tab Đăng Nhập hoặc dùng chức năng Quên Mật Khẩu.`
-                });
-            }
-
-            // Nếu tài khoản đã đăng ký nhưng CHƯA kích hoạt, cho phép cập nhật thông tin và gửi lại mã OTP mới
-            const maOtpMoi = Math.floor(100000 + Math.random() * 900000).toString();
-            const hanOtpMoi = new Date(Date.now() + 10 * 60 * 1000);
-            const salt = await bcrypt.genSalt(10);
-            taiKhoanTonTai.matKhau = await bcrypt.hash(mkClean, salt);
-            taiKhoanTonTai.hoTen = hoTenClean;
-            taiKhoanTonTai.soDienThoai = sdtClean;
-            taiKhoanTonTai.maOtp = maOtpMoi;
-            taiKhoanTonTai.hanOtp = hanOtpMoi;
-            taiKhoanTonTai.loaiOtp = 'kich_hoat';
-            await taiKhoanTonTai.save();
-
-            console.log(`✉️ [Đăng Ký - Gửi Lại OTP] Email: ${emailClean} | OTP: ${maOtpMoi}`);
-            // Gửi email nền (không chặn HTTP response)
-            guiMailKichHoatTaiKhoan(emailClean, taiKhoanTonTai.hoTen, maOtpMoi).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
-
-            return res.status(200).json({
-                yeuCauOtp: true,
-                email: emailClean,
-                thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư!`
+        if (taiKhoanTonTai && taiKhoanTonTai.daKichHoat !== false) {
+            return res.status(400).json({
+                thong_diep: `Địa chỉ Email "${emailClean}" đã được đăng ký tài khoản trước đó! Vui lòng chuyển sang tab Đăng Nhập hoặc dùng chức năng Quên Mật Khẩu.`
             });
         }
 
@@ -111,25 +88,25 @@ const dangKy = async (req, res) => {
         const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
         const hanOtp = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
 
-        // Tạo tài khoản mới với trạng thái daKichHoat = false (chờ OTP)
-        const nguoiDungMoi = new NguoiDung({
-            id: 'usr_' + Date.now(),
-            hoTen: hoTenClean,
-            email: emailClean,
-            soDienThoai: sdtClean,
-            matKhau: matKhauHash,
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-            vaiTro: 'khach_hang',
-            hangThanhVien: 'Thành Viên Mới',
-            daKichHoat: false,
-            maOtp: maOtp,
-            hanOtp: hanOtp,
-            loaiOtp: 'kich_hoat'
-        });
+        // LƯU VÀO BẢNG TẠM: TUYỆT ĐỐI KHÔNG LƯU VÀO NguoiDung KHI CHƯA XÁC THỰC OTP
+        await mongoose.connection.collection('dang_ky_tam').updateOne(
+            { email: emailClean },
+            {
+                $set: {
+                    hoTen: hoTenClean,
+                    email: emailClean,
+                    soDienThoai: sdtClean,
+                    matKhau: matKhauHash,
+                    maOtp,
+                    hanOtp,
+                    loaiOtp: 'kich_hoat',
+                    updatedAt: new Date()
+                }
+            },
+            { upsert: true }
+        );
 
-        await nguoiDungMoi.save();
-
-        console.log(`✉️ [Đăng Ký Mới - Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
+        console.log(`✉️ [Đăng Ký - Lưu Bảng Tạm & Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
         // Gửi email nền (không chặn HTTP response)
         guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
 
@@ -156,17 +133,66 @@ const kichHoatTaiKhoan = async (req, res) => {
         }
 
         const emailChuan = email.trim().toLowerCase();
-        const user = await NguoiDung.findOne({ email: emailChuan });
+        const otpClean = String(otp).trim();
 
+        // 1. Kiểm tra trong bảng tạm dang_ky_tam trước
+        const tempUser = await mongoose.connection.collection('dang_ky_tam').findOne({ email: emailChuan });
+        if (tempUser) {
+            if (String(tempUser.maOtp).trim() !== otpClean) {
+                return res.status(400).json({ thong_diep: 'Mã OTP không chính xác, vui lòng kiểm tra lại email!' });
+            }
+
+            if (tempUser.hanOtp && new Date() > new Date(tempUser.hanOtp)) {
+                return res.status(400).json({ thong_diep: 'Mã OTP đã hết hạn! Vui lòng yêu cầu gửi lại mã mới.' });
+            }
+
+            // Kiểm tra xem đã có tài khoản chính thức chưa
+            const daCo = await NguoiDung.findOne({ email: emailChuan });
+            if (daCo && daCo.daKichHoat !== false) {
+                await mongoose.connection.collection('dang_ky_tam').deleteMany({ email: emailChuan });
+                return res.status(400).json({ thong_diep: 'Tài khoản này đã được kích hoạt từ trước rồi! Vui lòng đăng nhập.' });
+            }
+
+            // Tạo tài khoản chính thức trong NguoiDung
+            const nguoiDungMoi = new NguoiDung({
+                id: 'usr_' + Date.now(),
+                hoTen: tempUser.hoTen,
+                email: tempUser.email,
+                soDienThoai: tempUser.soDienThoai,
+                matKhau: tempUser.matKhau,
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+                vaiTro: 'khach_hang',
+                hangThanhVien: 'Thành Viên Mới',
+                daKichHoat: true,
+                trangThai: 'hoat_dong',
+                diemTichLuy: 200,
+                viVoucher: []
+            });
+            await nguoiDungMoi.save();
+
+            // Xóa bản ghi tạm
+            await mongoose.connection.collection('dang_ky_tam').deleteMany({ email: emailChuan });
+
+            console.log(`🎉 [Kích Hoạt Tài Khoản Thành Công Từ Bảng Tạm] Email: ${emailChuan}`);
+            const token = taoToken(nguoiDungMoi);
+            return res.status(200).json({
+                thong_diep: 'Kích hoạt tài khoản thành công! Chào mừng bạn gia nhập TNTP Laptop Store.',
+                token,
+                nguoiDung: nguoiDungMoi
+            });
+        }
+
+        // Fallback: Kiểm tra trong NguoiDung nếu có tài khoản cũ chưa kích hoạt
+        const user = await NguoiDung.findOne({ email: emailChuan });
         if (!user) {
-            return res.status(404).json({ thong_diep: 'Không tìm thấy thông tin đăng ký cho Email này!' });
+            return res.status(404).json({ thong_diep: 'Không tìm thấy thông tin đăng ký cho Email này! Vui lòng đăng ký lại.' });
         }
 
         if (user.daKichHoat) {
             return res.status(400).json({ thong_diep: 'Tài khoản này đã được kích hoạt từ trước rồi!' });
         }
 
-        if (!user.maOtp || user.maOtp !== otp.trim()) {
+        if (!user.maOtp || user.maOtp !== otpClean) {
             return res.status(400).json({ thong_diep: 'Mã OTP không chính xác, vui lòng kiểm tra lại email!' });
         }
 
@@ -176,6 +202,7 @@ const kichHoatTaiKhoan = async (req, res) => {
 
         // Kích hoạt tài khoản
         user.daKichHoat = true;
+        user.trangThai = 'hoat_dong';
         user.maOtp = null;
         user.hanOtp = null;
         user.loaiOtp = null;
@@ -503,6 +530,25 @@ const guiLaiOtp = async (req, res) => {
         }
 
         const emailChuan = email.trim().toLowerCase();
+
+        // 1. Kiểm tra trong bảng tạm dang_ky_tam trước (trường hợp khách đang đăng ký và bấm gửi lại OTP)
+        const tempUser = await mongoose.connection.collection('dang_ky_tam').findOne({ email: emailChuan });
+        if (tempUser) {
+            const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
+            await mongoose.connection.collection('dang_ky_tam').updateOne(
+                { _id: tempUser._id },
+                { $set: { maOtp, hanOtp, updatedAt: new Date() } }
+            );
+            guiMailKichHoatTaiKhoan(emailChuan, tempUser.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
+            return res.status(200).json({
+                thong_diep: `Mã OTP kích hoạt mới đã được gửi tới email ${emailChuan}! Vui lòng kiểm tra hộp thư.`,
+                email: emailChuan,
+                daGuiEmail: true
+            });
+        }
+
+        // 2. Kiểm tra trong bảng chính thức NguoiDung (cho Quên mật khẩu hoặc tài khoản cũ)
         const user = await NguoiDung.findOne({ email: emailChuan });
 
         if (!user) {

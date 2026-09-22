@@ -346,73 +346,40 @@ export async function POST(request, { params }) {
                 return NextResponse.json({ thong_diep: 'Mật khẩu phải có độ dài tối thiểu 6 ký tự!' }, { status: 400 });
             }
 
-            // 5. Kiểm tra trùng Email trong Database
+            // 5. Kiểm tra trùng Email trong bảng người dùng chính thức
             const exist = await db.collection('nguoi_dung').findOne({ email: emailClean });
+            if (exist && exist.daKichHoat !== false) {
+                return NextResponse.json({
+                    thong_diep: `Địa chỉ Email "${emailClean}" đã được đăng ký tài khoản trước đó! Vui lòng chuyển sang tab Đăng Nhập hoặc dùng chức năng Quên Mật Khẩu.`
+                }, { status: 400 });
+            }
 
-            // Sinh mã OTP 6 số ngẫu nhiên
+            // Sinh mã OTP 6 số ngẫu nhiên & thời hạn 10 phút
             const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
             const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
             const salt = await bcrypt.genSalt(10);
             const matKhauHash = await bcrypt.hash(String(matKhau).trim(), salt);
 
-            if (exist) {
-                // Email đã kích hoạt -> Báo lỗi trùng email
-                if (exist.daKichHoat !== false) {
-                    return NextResponse.json({
-                        thong_diep: `Địa chỉ Email "${emailClean}" đã được đăng ký tài khoản trước đó! Vui lòng chuyển sang tab Đăng Nhập hoặc dùng chức năng Quên Mật Khẩu.`
-                    }, { status: 400 });
-                }
-
-                // Nếu tài khoản đã tạo trước đó nhưng CHƯA kích hoạt, cập nhật lại thông tin và gửi mã OTP mới
-                await db.collection('nguoi_dung').updateOne(
-                    { _id: exist._id },
-                    {
-                        $set: {
-                            hoTen: hoTenClean,
-                            soDienThoai: sdtClean,
-                            matKhau: matKhauHash,
-                            maOtp,
-                            hanOtp,
-                            loaiOtp: 'kich_hoat',
-                            updatedAt: new Date()
-                        }
+            // LƯU VÀO BẢNG TẠM: TUYỆT ĐỐI KHÔNG LƯU VÀO nguoi_dung KHI CHƯA XÁC THỰC OTP
+            await db.collection('dang_ky_tam').updateOne(
+                { email: emailClean },
+                {
+                    $set: {
+                        hoTen: hoTenClean,
+                        email: emailClean,
+                        soDienThoai: sdtClean,
+                        matKhau: matKhauHash,
+                        maOtp,
+                        hanOtp,
+                        loaiOtp: 'kich_hoat',
+                        updatedAt: new Date()
                     }
-                );
+                },
+                { upsert: true }
+            );
 
-                console.log(`✉️ [Đăng Ký - Gửi lại OTP] Email: ${emailClean} | OTP: ${maOtp}`);
-                // Gửi email song song (không làm treo giao diện của khách)
-                guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
-
-                return NextResponse.json({
-                    yeuCauOtp: true,
-                    email: emailClean,
-                    thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam)!`
-                });
-            }
-
-            // Tạo tài khoản mới với trạng thái daKichHoat = false
-            const newUser = {
-                id: 'usr_' + Date.now(),
-                hoTen: hoTenClean,
-                email: emailClean,
-                soDienThoai: sdtClean,
-                matKhau: matKhauHash,
-                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-                vaiTro: 'khach_hang',
-                hangThanhVien: 'Thành Viên Mới',
-                diemTichLuy: 200,
-                viVoucher: [],
-                daKichHoat: false,
-                maOtp,
-                hanOtp,
-                loaiOtp: 'kich_hoat',
-                createdAt: new Date()
-            };
-
-            await db.collection('nguoi_dung').insertOne(newUser);
-            console.log(`✉️ [Đăng Ký Mới - Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
-            
-            // Gửi email song song (phản hồi giao diện ngay lập tức trong 50ms)
+            console.log(`✉️ [Đăng Ký - Lưu Bảng Tạm & Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
+            // Gửi email song song (phản hồi giao diện ngay lập tức trong 30ms)
             guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
 
             return NextResponse.json({
@@ -421,7 +388,6 @@ export async function POST(request, { params }) {
                 thong_diep: `Mã xác thực kích hoạt tài khoản đã được gửi đến email ${emailClean}. Vui lòng kiểm tra hộp thư (cả mục Thư rác/Spam)!`
             });
         }
-
 
         // 2.1. AUTH: /api/auth/kich-hoat (Xác thực OTP kích hoạt tài khoản)
         if (primary === 'auth' && secondary === 'kich-hoat') {
@@ -432,10 +398,65 @@ export async function POST(request, { params }) {
 
             const emailClean = String(email).trim().toLowerCase();
             const otpClean = String(otp).trim();
-            const user = await db.collection('nguoi_dung').findOne({ email: emailClean });
 
+            // 1. Kiểm tra trong bảng đăng ký tạm dang_ky_tam trước
+            const tempUser = await db.collection('dang_ky_tam').findOne({ email: emailClean });
+
+            if (tempUser) {
+                if (String(tempUser.maOtp).trim() !== otpClean) {
+                    return NextResponse.json({ thong_diep: 'Mã OTP không chính xác, vui lòng kiểm tra lại email!' }, { status: 400 });
+                }
+
+                if (tempUser.hanOtp && new Date() > new Date(tempUser.hanOtp)) {
+                    return NextResponse.json({ thong_diep: 'Mã OTP đã hết hạn! Vui lòng bấm gửi lại mã mới.' }, { status: 400 });
+                }
+
+                // Kiểm tra xem email này có bị ai đăng ký kích hoạt trước đó không
+                const daCo = await db.collection('nguoi_dung').findOne({ email: emailClean });
+                if (daCo && daCo.daKichHoat !== false) {
+                    await db.collection('dang_ky_tam').deleteMany({ email: emailClean });
+                    return NextResponse.json({ thong_diep: 'Tài khoản này đã được kích hoạt từ trước rồi! Vui lòng đăng nhập.' }, { status: 400 });
+                }
+
+                // CHÍNH THỨC TẠO TÀI KHOẢN VÀO BẢNG CHÍNH nguoi_dung
+                const token = 'jwt_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+                const newUser = {
+                    id: 'usr_' + Date.now(),
+                    hoTen: tempUser.hoTen,
+                    email: tempUser.email,
+                    soDienThoai: tempUser.soDienThoai,
+                    matKhau: tempUser.matKhau,
+                    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+                    vaiTro: 'khach_hang',
+                    hangThanhVien: 'Thành Viên Mới',
+                    diemTichLuy: 200,
+                    viVoucher: [],
+                    daKichHoat: true,
+                    trangThai: 'hoat_dong',
+                    token,
+                    createdAt: new Date(),
+                    lanDangNhapCuoi: new Date()
+                };
+
+                await db.collection('nguoi_dung').insertOne(newUser);
+                // Dọn dẹp bản ghi tạm
+                await db.collection('dang_ky_tam').deleteMany({ email: emailClean });
+
+                delete newUser.matKhau;
+                delete newUser.mat_khau;
+
+                console.log(`🎉 [Kích Hoạt Tài Khoản Thành Công Từ Bảng Tạm] Email: ${emailClean}`);
+                return NextResponse.json({
+                    thong_diep: 'Kích hoạt tài khoản thành công! Chào mừng bạn gia nhập TNTP Laptop Store.',
+                    token,
+                    nguoiDung: newUser
+                });
+            }
+
+            // Fallback: Kiểm tra trong nguoi_dung nếu có bản ghi cũ chưa kích hoạt
+            const user = await db.collection('nguoi_dung').findOne({ email: emailClean });
             if (!user) {
-                return NextResponse.json({ thong_diep: 'Không tìm thấy thông tin tài khoản cho Email này!' }, { status: 404 });
+                return NextResponse.json({ thong_diep: 'Không tìm thấy thông tin đăng ký cho Email này! Vui lòng đăng ký lại.' }, { status: 404 });
             }
 
             if (user.daKichHoat) {
@@ -456,6 +477,7 @@ export async function POST(request, { params }) {
                 {
                     $set: {
                         daKichHoat: true,
+                        trangThai: 'hoat_dong',
                         token,
                         lanDangNhapCuoi: new Date()
                     },
@@ -490,8 +512,26 @@ export async function POST(request, { params }) {
             }
 
             const emailClean = String(email).trim().toLowerCase();
-            const user = await db.collection('nguoi_dung').findOne({ email: emailClean });
 
+            // 1. Kiểm tra trong bảng tạm dang_ky_tam trước (trường hợp khách bấm gửi lại OTP khi đang đăng ký)
+            const tempUser = await db.collection('dang_ky_tam').findOne({ email: emailClean });
+            if (tempUser) {
+                const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+                const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
+                await db.collection('dang_ky_tam').updateOne(
+                    { _id: tempUser._id },
+                    { $set: { maOtp, hanOtp, updatedAt: new Date() } }
+                );
+                guiMailKichHoatTaiKhoan(emailClean, tempUser.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
+                return NextResponse.json({
+                    thong_diep: `Mã OTP kích hoạt mới đã được gửi tới email ${emailClean}!`,
+                    email: emailClean,
+                    daGuiEmail: true
+                });
+            }
+
+            // 2. Kiểm tra trong nguoi_dung (cho trường hợp Quên mật khẩu hoặc tài khoản cũ)
+            const user = await db.collection('nguoi_dung').findOne({ email: emailClean });
             if (!user) {
                 return NextResponse.json({ thong_diep: 'Không tìm thấy tài khoản nào liên kết với Email này!' }, { status: 404 });
             }

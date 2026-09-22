@@ -1486,8 +1486,10 @@ export default function TrangQuanTriCuaHang() {
                 matchLoai = u.vaiTro === 'admin';
             } else if (locKhachHang === 'bi_khoa') {
                 matchLoai = Boolean(u.biKhoa || u.trangThai === 'bi_khoa');
+            } else if (locKhachHang === 'cho_kich_hoat') {
+                matchLoai = u.daKichHoat === false || u.trangThai === 'cho_kich_hoat';
             } else if (locKhachHang === 'hoat_dong') {
-                matchLoai = !u.biKhoa && u.trangThai !== 'bi_khoa';
+                matchLoai = !u.biKhoa && u.trangThai !== 'bi_khoa' && u.daKichHoat !== false && u.trangThai !== 'cho_kich_hoat';
             }
 
             return matchTuKhoa && matchLoai;
@@ -6011,6 +6013,7 @@ export default function TrangQuanTriCuaHang() {
                                     >
                                         <option value="tat_ca">Tất cả khách hàng</option>
                                         <option value="hoat_dong">🟢 Đang Hoạt Động</option>
+                                        <option value="cho_kich_hoat">⏳ Chờ Kích Hoạt OTP</option>
                                         <option value="bi_khoa">🔒 Tài Khoản Đang Khóa</option>
                                         <option value="tiem_nang">🔥 Khách Tiềm Năng (Đã mua)</option>
                                         <option value="vip">⭐ Khách VIP & Platinum</option>
@@ -6095,24 +6098,27 @@ export default function TrangQuanTriCuaHang() {
                                                     const uId = user.id || user._id;
                                                     const dangXuLy = dangXuLyUserId === uId;
                                                     const daBiKhoa = Boolean(user.biKhoa || user.trangThai === 'bi_khoa');
+                                                    const chuaKichHoat = user.daKichHoat === false || user.trangThai === 'cho_kich_hoat';
                                                     return (
                                                         <tr 
                                                             key={uId} 
                                                             className={`transition-all duration-200 ${
                                                                 daBiKhoa
                                                                     ? 'bg-rose-50/95 dark:bg-rose-950/50 hover:!bg-rose-100 dark:hover:!bg-rose-950/70'
+                                                                    : chuaKichHoat
+                                                                    ? 'bg-amber-50/70 dark:bg-amber-950/30 hover:!bg-amber-100/70 dark:hover:!bg-amber-950/50'
                                                                     : 'odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50'
                                                             }`}
                                                         >
                                                             <td className={`py-2 px-2 text-center font-bold border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap ${
-                                                                daBiKhoa ? 'text-rose-600 dark:text-rose-400 font-black bg-rose-100/60 dark:bg-rose-900/40' : 'text-slate-400'
+                                                                daBiKhoa ? 'text-rose-600 dark:text-rose-400 font-black bg-rose-100/60 dark:bg-rose-900/40' : chuaKichHoat ? 'text-amber-600 dark:text-amber-400 font-black' : 'text-slate-400'
                                                             }`}>
                                                                 #{idx + 1}
                                                             </td>
                                                             <td className="py-2 px-2.5 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 <div className="flex items-center gap-2 whitespace-nowrap">
                                                                     <div className={`w-6 h-6 rounded-md text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs ${
-                                                                        daBiKhoa ? 'bg-gradient-to-tr from-slate-500 to-slate-400' : 'bg-gradient-to-tr from-emerald-600 to-teal-500'
+                                                                        daBiKhoa ? 'bg-gradient-to-tr from-slate-500 to-slate-400' : chuaKichHoat ? 'bg-gradient-to-tr from-amber-500 to-orange-400' : 'bg-gradient-to-tr from-emerald-600 to-teal-500'
                                                                     }`}>
                                                                         {user.hoTen?.charAt(0) || 'U'}
                                                                     </div>
@@ -6161,30 +6167,40 @@ export default function TrangQuanTriCuaHang() {
                                                                 </div>
                                                             </td>
                                                             <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                                                                <button
-                                                                    onClick={() => xuLyKhoaNguoiDung(user)}
-                                                                    disabled={dangXuLy}
-                                                                    className={`px-2.5 py-1 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all shadow-2xs ${
-                                                                        dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                                                                    } ${
-                                                                        daBiKhoa
-                                                                            ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-300'
-                                                                            : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
-                                                                    }`}
-                                                                    title={daBiKhoa ? 'Tài khoản đang bị khóa tạm thời. Bấm để mở khóa!' : 'Tài khoản đang hoạt động bình thường. Bấm để tạm khóa!'}
-                                                                >
-                                                                    {daBiKhoa ? (
-                                                                        <>
-                                                                            <Lock className="w-3 h-3 text-red-600 dark:text-red-400 shrink-0" />
-                                                                            <span>Tạm Khóa</span>
-                                                                        </>
-                                                                    ) : (
-                                                                        <>
-                                                                            <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                                                            <span>Hoạt Động</span>
-                                                                        </>
-                                                                    )}
-                                                                </button>
+                                                                {chuaKichHoat ? (
+                                                                    <span
+                                                                        className="px-2.5 py-1 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/60 dark:border-amber-700/60 shadow-2xs"
+                                                                        title="Tài khoản chưa hoàn tất xác thực mã OTP qua Email"
+                                                                    >
+                                                                        <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                                                                        <span>Chờ OTP</span>
+                                                                    </span>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => xuLyKhoaNguoiDung(user)}
+                                                                        disabled={dangXuLy}
+                                                                        className={`px-2.5 py-1 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all shadow-2xs ${
+                                                                            dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                                                        } ${
+                                                                            daBiKhoa
+                                                                                ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-300'
+                                                                                : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
+                                                                        }`}
+                                                                        title={daBiKhoa ? 'Tài khoản đang bị khóa tạm thời. Bấm để mở khóa!' : 'Tài khoản đang hoạt động bình thường. Bấm để tạm khóa!'}
+                                                                    >
+                                                                        {daBiKhoa ? (
+                                                                            <>
+                                                                                <Lock className="w-3 h-3 text-red-600 dark:text-red-400 shrink-0" />
+                                                                                <span>Tạm Khóa</span>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                                                                <span>Hoạt Động</span>
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                )}
                                                             </td>
                                                             <td className="py-2 px-2 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
                                                                 <button
