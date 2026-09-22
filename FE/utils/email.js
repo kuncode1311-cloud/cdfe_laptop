@@ -14,7 +14,7 @@ async function guiMailBangTransporter(mailOptions) {
     const brevoApiKey = process.env.BREVO_API_KEY;
     if (brevoApiKey) {
         try {
-            const brevoSender = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER || 'trikun114@gmail.com';
+            const brevoSender = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
             const danhSachTo = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to]).map(e => ({ email: String(e).trim() }));
             const resBrevo = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',

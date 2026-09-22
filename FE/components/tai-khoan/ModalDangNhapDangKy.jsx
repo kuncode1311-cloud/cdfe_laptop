@@ -21,9 +21,7 @@ import {
 import { useNguoiDung } from '@/contexts/AuthContext';
 
 // Google Client ID
-const GOOGLE_CLIENT_ID =
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
-    '789044829668-4uhe7csc4tq093jifv1vul2ofgm5vkt7.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
 
 /**
  * Modal Đăng Nhập / Đăng Ký / Quên Mật Khẩu Chuẩn Công Nghệ Siêu Mượt
