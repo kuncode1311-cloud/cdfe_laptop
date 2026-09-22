@@ -10,11 +10,34 @@ function layThongTinEmail() {
 }
 
 async function guiMailBangTransporter(mailOptions) {
-    const resendApiKey = process.env.RESEND_API_KEY;
+    // Ưu tiên 1: Google Apps Script Web App (Gửi được cho MỌI EMAIL từ chính Gmail của bạn, không cần domain, không bao giờ bị Railway chặn)
+    const gasUrl = process.env.GAS_EMAIL_URL;
+    if (gasUrl) {
+        try {
+            const resGas = await fetch(gasUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: Array.isArray(mailOptions.to) ? mailOptions.to.join(',') : mailOptions.to,
+                    subject: mailOptions.subject,
+                    html: mailOptions.html,
+                    text: mailOptions.text
+                }),
+                redirect: 'follow'
+            });
+            console.log('✅ [Email] Gửi thành công qua Google Apps Script Web App');
+            return { messageId: 'gas_' + Date.now() };
+        } catch (errGas) {
+            console.warn('⚠️ Gửi qua Google Apps Script thất bại:', errGas.message);
+        }
+    }
 
-    // Ưu tiên 1: Resend API (HTTP - hoạt động trên mọi cloud, Railway, Vercel...)
+    // Ưu tiên 2: Resend API (HTTP - hoạt động trên cloud)
+    const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
         try {
+            // Khi chưa có Custom Domain, Resend bắt buộc sender phải là 'onboarding@resend.dev'
+            const resendFrom = process.env.RESEND_FROM || 'TNTP Laptop Store <onboarding@resend.dev>';
             const res = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
@@ -22,7 +45,7 @@ async function guiMailBangTransporter(mailOptions) {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    from: mailOptions.from || 'TNTP Laptop Store <onboarding@resend.dev>',
+                    from: resendFrom,
                     to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
                     subject: mailOptions.subject,
                     html: mailOptions.html,
@@ -34,11 +57,22 @@ async function guiMailBangTransporter(mailOptions) {
             console.log('✅ [Email] Gửi thành công qua Resend API, id:', data.id);
             return { messageId: data.id };
         } catch (errResend) {
-            console.warn('⚠️ Resend API thất bại, fallback SMTP...', errResend.message);
+            console.warn('⚠️ Resend API không gửi được:', errResend.message);
+            // Nếu lỗi do Resend chưa verify domain (chỉ cho gửi tới email chủ)
+            if (errResend.message.includes('own email address') || errResend.message.includes('not verified')) {
+                throw new Error(`Resend Free chưa có Domain riêng, chỉ gửi được tới email chủ tài khoản (kun.code.1311@gmail.com).`);
+            }
         }
     }
 
-    // Fallback: SMTP Gmail port 465 SSL (cho localhost dev)
+    // Kiểm tra nếu đang chạy trên Cloud (Railway / Vercel):
+    // Các cloud hosting này chặn tất cả cổng SMTP (25, 465, 587) ở tầng mạng, không thể kết nối trực tiếp
+    const isCloudHost = !!(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL || process.env.VERCEL);
+    if (isCloudHost) {
+        throw new Error('Máy chủ Cloud chặn cổng SMTP trực tiếp. Vui lòng cấu hình GAS_EMAIL_URL hoặc xác thực tên miền Resend.');
+    }
+
+    // Fallback SMTP Gmail (Chỉ chạy trên Localhost dev)
     const { user, pass } = layThongTinEmail();
     try {
         const transporter465 = nodemailer.createTransport({

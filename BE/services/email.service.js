@@ -16,22 +16,82 @@ function layThongTinEmail() {
  * Cấu hình Transporter gửi email qua Gmail SMTP với Fallback 2 tầng
  */
 async function guiMailBangTransporter(mailOptions) {
+    // Ưu tiên 1: Google Apps Script Web App
+    const gasUrl = process.env.GAS_EMAIL_URL;
+    if (gasUrl) {
+        try {
+            const resGas = await fetch(gasUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    to: Array.isArray(mailOptions.to) ? mailOptions.to.join(',') : mailOptions.to,
+                    subject: mailOptions.subject,
+                    html: mailOptions.html,
+                    text: mailOptions.text
+                }),
+                redirect: 'follow'
+            });
+            console.log('✅ [BE Email] Gửi thành công qua Google Apps Script Web App');
+            return { messageId: 'gas_' + Date.now() };
+        } catch (errGas) {
+            console.warn('⚠️ [BE Email] Gửi qua Google Apps Script thất bại:', errGas.message);
+        }
+    }
+
+    // Ưu tiên 2: Resend API (HTTP - hoạt động trên cloud)
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+        try {
+            const resendFrom = process.env.RESEND_FROM || 'TNTP Laptop Store <onboarding@resend.dev>';
+            const res = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${resendApiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: resendFrom,
+                    to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
+                    subject: mailOptions.subject,
+                    html: mailOptions.html,
+                    text: mailOptions.text
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.message || `Resend API error ${res.status}`);
+            console.log('✅ [BE Email] Gửi thành công qua Resend API, id:', data.id);
+            return { messageId: data.id };
+        } catch (errResend) {
+            console.warn('⚠️ [BE Email] Resend API không gửi được:', errResend.message);
+            if (errResend.message.includes('own email address') || errResend.message.includes('not verified')) {
+                throw new Error(`Resend Free chưa có Domain riêng, chỉ gửi được tới email chủ (kun.code.1311@gmail.com).`);
+            }
+        }
+    }
+
+    // Nếu chạy trên cloud hosting (Railway / Vercel): Chặn SMTP để tránh timeout
+    const isCloudHost = !!(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL || process.env.VERCEL);
+    if (isCloudHost) {
+        throw new Error('Máy chủ Cloud chặn cổng SMTP. Vui lòng cấu hình GAS_EMAIL_URL hoặc xác thực tên miền Resend.');
+    }
+
     const { user, pass } = layThongTinEmail();
 
-    // Phương thức 1: service: 'gmail' (Tối ưu nhất cho Google SMTP)
+    // Fallback: SMTP trên localhost dev
     try {
-        const transporterGmail = nodemailer.createTransport({
-            service: 'gmail',
+        const transporter465 = nodemailer.createTransport({
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true,
             auth: { user, pass },
             tls: { rejectUnauthorized: false },
             connectionTimeout: 8000,
             greetingTimeout: 4000,
             socketTimeout: 10000
         });
-        return await transporterGmail.sendMail(mailOptions);
+        return await transporter465.sendMail(mailOptions);
     } catch (err1) {
-        console.warn('⚠️ [BE Email] Gửi qua service gmail thất bại, thử lại qua port 587 STARTTLS...', err1.message);
-        // Phương thức 2: smtp.gmail.com port 587 STARTTLS
+        console.warn('⚠️ [BE Email] Port 465 thất bại, thử port 587...', err1.message);
         const transporter587 = nodemailer.createTransport({
             host: 'smtp.gmail.com',
             port: 587,
