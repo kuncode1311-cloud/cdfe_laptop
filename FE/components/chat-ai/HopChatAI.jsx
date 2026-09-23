@@ -222,7 +222,7 @@ export default function HopChatAI() {
 
             {/* 2. CỬA SỔ HỘP THOẠI CHAT RESPONSIVE CHUẨN MỰC */}
             {dangMo && (
-                <div className="flex flex-col w-[calc(100vw-24px)] sm:w-[380px] md:w-[390px] h-[500px] sm:h-[530px] max-h-[80vh] bg-white border border-slate-300 shadow-2xl shadow-slate-900/20 rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95">
+                <div className="flex flex-col w-[calc(100vw-24px)] sm:w-[390px] md:w-[410px] h-[510px] sm:h-[540px] max-h-[82vh] bg-white border border-slate-300 shadow-2xl shadow-slate-900/20 rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-200 animate-in fade-in zoom-in-95">
                     {/* Header Hộp Chat - Xanh Đậm Hoàng Gia Sắc Nét */}
                     <div className="relative bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 px-4 py-3 flex items-center justify-between text-white shadow-md">
                         <div className="flex items-center gap-2.5">

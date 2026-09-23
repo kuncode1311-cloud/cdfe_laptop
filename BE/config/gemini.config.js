@@ -19,9 +19,8 @@ module.exports = {
     // Thứ tự ưu tiên mô hình AI (Model chốt chuẩn và ổn định của Google AI Studio)
     danhSachModelUuTien: [
         'gemini-2.5-flash',       // Tốc độ cao, suy luận logic tốt nhất
-        'gemini-2.0-flash',       // Mô hình thế hệ mới ổn định
-        'gemini-1.5-flash',       // Mô hình phổ thông tương thích cực rộng
-        'gemini-2.5-flash-lite'   // Mô hình dự phòng nhẹ và tiết kiệm token
+        'gemini-2.5-flash-lite',  // Mô hình dự phòng nhẹ và siêu nhanh
+        'gemini-flash-latest'     // Mô hình cập nhật mới nhất
     ],
 
     // Cấu hình sinh nội dung mặc định
