@@ -29,20 +29,47 @@ function layThongSoNhanh(sanPham) {
         const ketQua = [];
         const tenSp = (sanPham.ten_san_pham || '').toLowerCase();
 
-        // 1. Lót chuột & Bàn di chuột
-        if (tenSp.includes('lót chuột') || tenSp.includes('mousepad') || tenSp.includes('deskmat') || tenSp.includes('bàn di chuột')) {
+        // 1. Keo tản nhiệt CPU/GPU (Thermal Grizzly, v.v.)
+        if (tenSp.includes('keo tản nhiệt') || tenSp.includes('thermal grizzly') || thongSo.do_dan_nhiet) {
+            if (thongSo.do_dan_nhiet) {
+                const match = thongSo.do_dan_nhiet.match(/[\d.]+\s*W\/mK/i);
+                ketQua.push(match ? match[0] : '14.2 W/mK');
+            }
+            if (thongSo.trong_luong) {
+                const match = thongSo.trong_luong.match(/\d+[\.,\d]*\s*(g|gram)/i);
+                ketQua.push(match ? match[0] : '2g');
+            } else {
+                ketQua.push('Keo tản nhiệt');
+            }
+        }
+        // 2. Ổ cứng SSD & RAM nâng cấp
+        else if (tenSp.includes('ssd') || tenSp.includes('ổ cứng') || thongSo.chuan_giao_tiep) {
+            if (thongSo.dung_luong) {
+                const match = thongSo.dung_luong.match(/\d+\s*(TB|GB)/i);
+                ketQua.push(match ? match[0] : thongSo.dung_luong.split(' ')[0]);
+            }
+            if (thongSo.toc_do) {
+                const match = thongSo.toc_do.match(/\d+[\.,\d]*\s*MB\/s/i);
+                if (match) ketQua.push(match[0]);
+            }
+            if (thongSo.chuan_giao_tiep) {
+                ketQua.push(thongSo.chuan_giao_tiep.includes('M.2') ? 'M.2 NVMe' : 'PCIe');
+            }
+        }
+        // 3. Lót chuột & Bàn di chuột
+        else if (tenSp.includes('lót chuột') || tenSp.includes('mousepad') || tenSp.includes('deskmat') || tenSp.includes('bàn di chuột')) {
             ketQua.push(thongSo.kich_thuoc || '900x400mm');
             ketQua.push(thongSo.chat_lieu_be_mat || 'Vải Micro-weave');
             ketQua.push(thongSo.che_do_led || 'Chống trượt');
         }
-        // 2. Giá đỡ & Đế tản nhiệt laptop
-        else if (tenSp.includes('giá đỡ') || tenSp.includes('tản nhiệt') || tenSp.includes('sò lạnh') || tenSp.includes('gt500')) {
+        // 4. Giá đỡ & Đế tản nhiệt laptop
+        else if (tenSp.includes('giá đỡ') || tenSp.includes('đế tản nhiệt') || tenSp.includes('sò lạnh') || tenSp.includes('gt500')) {
             ketQua.push(thongSo.loai_linh_kien ? thongSo.loai_linh_kien.split(' ')[0] + ' ' + (thongSo.loai_linh_kien.split(' ')[1] || '') : 'Đế tản nhiệt');
             if (thongSo.toc_do_quat) ketQua.push(thongSo.toc_do_quat.match(/\d+\s*RPM/i)?.[0] || thongSo.toc_do_quat);
             else if (thongSo.chat_lieu) ketQua.push('Nhôm CNC');
             ketQua.push(thongSo.hieu_qua_giam_nhiet || thongSo.tinh_nang_dac_biet || 'Làm mát cực nhanh');
         }
-        // 3. Hub & Cáp Type-C / Thunderbolt
+        // 5. Hub & Cáp Type-C / Thunderbolt
         else if (tenSp.includes('hub') || tenSp.includes('dock') || tenSp.includes('cáp chuyển') || tenSp.includes('thunderbolt')) {
             ketQua.push(thongSo.bang_thong_truyen_du_lieu ? thongSo.bang_thong_truyen_du_lieu.match(/\d+Gbps/i)?.[0] || 'Tốc độ cao' : '40Gbps');
             ketQua.push(Array.isArray(thongSo.so_cong_dau_ra) ? `${thongSo.so_cong_dau_ra.length} Cổng` : (thongSo.so_cong_dau_ra?.match(/\d+\s*cổng/i)?.[0] || 'Đa cổng'));
@@ -310,7 +337,7 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
     // =========================================================================
     return (
         <div className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-300/80 hover:border-blue-500 dark:border-slate-700 dark:hover:border-cyan-400 shadow-sm hover:shadow-[0_16px_36px_-10px_rgba(0,82,204,0.2)] hover:-translate-y-1 flex flex-col justify-between overflow-hidden transition-all duration-300 h-full relative">
-            {/* 1. PRODUCT IMAGE SHOWCASE (Chuẩn e-commerce cao cấp, GIÃN FULL CARD 100%, TỶ LỆ 16:9 CHUẨN XỊN) */}
+            {/* 1. PRODUCT IMAGE SHOWCASE (TỶ LỆ 16:9 CHUẨN XỊN, GẮN BADGE GỌN GÀNG) */}
             <div className="relative w-full aspect-[16/9] bg-white dark:bg-slate-900 flex items-center justify-center border-b border-slate-100 dark:border-slate-800/80 overflow-hidden">
                 <Link href={`/san-pham/${slugSanPham(sanPham)}`} className="relative w-full h-full block">
                     <Image
@@ -323,12 +350,23 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                     />
                 </Link>
 
-                {/* Badge giảm giá góc trên trái (Gradient lửa đỏ hồng bo góc mềm) */}
-                {sanPham.phan_tram_giam_gia > 0 && (
-                    <span className="absolute top-2.5 left-2.5 px-2 py-0.5 rounded-lg bg-gradient-to-r from-[#EA1E2C] to-rose-600 text-white font-black text-[10.5px] shadow-sm select-none leading-tight tracking-tight flex items-center gap-0.5">
-                        <span>-{sanPham.phan_tram_giam_gia}%</span>
-                    </span>
-                )}
+                {/* Badge giảm giá & Flash Sale góc trên trái của ảnh (Gọn gàng, không đè tiêu đề) */}
+                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 select-none">
+                    {sanPham.phan_tram_giam_gia > 0 && (
+                        <span className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-[#EA1E2C] to-rose-600 text-white font-black text-[10.5px] shadow-sm leading-tight tracking-tight">
+                            -{sanPham.phan_tram_giam_gia}%
+                        </span>
+                    )}
+                    {sanPham.la_flash_sale ? (
+                        <span className="px-1.5 py-0.5 rounded-lg bg-red-600 text-white font-black text-[9.5px] shadow-xs flex items-center gap-0.5 tracking-tight uppercase">
+                            ⚡ Flash Sale
+                        </span>
+                    ) : tagTrangThai ? (
+                        <span className={`px-1.5 py-0.5 rounded-lg text-[9.5px] font-bold shadow-xs ${tagTrangThai.mau}`}>
+                            {tagTrangThai.text}
+                        </span>
+                    ) : null}
+                </div>
 
                 {/* Nút yêu thích góc trên phải (Heart icon viên kính tròn gọn) */}
                 <button
@@ -336,7 +374,7 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                         e.preventDefault();
                         chuyenDoiYeuThich(sanPham);
                     }}
-                    className={`absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md flex items-center justify-center shadow-sm border border-slate-200/80 dark:border-slate-700 transition-all hover:scale-110 active:scale-95 cursor-pointer ${
+                    className={`absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md flex items-center justify-center shadow-sm border border-slate-200/80 dark:border-slate-700 transition-all hover:scale-110 active:scale-95 cursor-pointer z-10 ${
                         daYeuThich
                             ? 'text-[#EA1E2C]'
                             : 'text-slate-400 hover:text-[#EA1E2C]'
@@ -347,96 +385,67 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                 </button>
             </div>
 
-            {/* 2. BODY KHU VỰC THÔNG TIN (Ngay hàng thẳng lối 100%, đồng bộ tuyệt đối) */}
+            {/* 2. BODY KHU VỰC THÔNG TIN (Tối giản, ngay hàng thẳng lối 100%, không bị che chữ) */}
             <div className="p-3 flex flex-col flex-1 justify-between gap-1.5">
-                {/* META ROW: [BRAND] [⚡ Flash Sale] ... ⭐ 4.9 (46) - Cố định h-[20px] */}
+                {/* META ROW: [BRAND] ... ⭐ 5.0 (Cố định 1 dòng 20px, không wrap che chữ) */}
                 <div className="h-[20px] flex items-center justify-between gap-1 text-[11px]">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* Brand Badge: dark navy 9.5px bold */}
-                        <span className="px-1.5 py-0.5 rounded bg-[#0F172A] text-white text-[9.5px] font-black uppercase tracking-wider">
-                            {sanPham.hang_san_xuat}
-                        </span>
+                    <span
+                        className="px-2 py-0.5 rounded bg-[#0F172A] text-white text-[9.5px] font-black uppercase tracking-wider max-w-[125px] truncate"
+                        title={sanPham.hang_san_xuat}
+                    >
+                        {sanPham.hang_san_xuat}
+                    </span>
 
-                        {/* Flash Sale Badge: pale red */}
-                        {sanPham.la_flash_sale ? (
-                            <span className="px-1.5 py-0.5 rounded bg-red-50 text-[#EA1E2C] border border-red-200/60 text-[9.5px] font-bold flex items-center gap-0.5">
-                                ⚡ Flash Sale
-                            </span>
-                        ) : tagTrangThai ? (
-                            <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-bold border ${tagTrangThai.mau}`}>
-                                {tagTrangThai.text}
-                            </span>
-                        ) : null}
-                    </div>
-
-                    {/* Rating: 11px semibold */}
-                    <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold text-[10.5px] sm:text-[11px] shrink-0">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        <span className="font-bold">{sanPham.diem_danh_gia_tb ? sanPham.diem_danh_gia_tb.toFixed(1) : '5.0'}</span>
-                        <span className="text-slate-400 font-normal">
-                            ({sanPham.so_luong_danh_gia || sanPham.so_luong_da_ban || 114})
-                        </span>
+                    <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-bold text-[11px] shrink-0">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <span>{sanPham.diem_danh_gia_tb ? sanPham.diem_danh_gia_tb.toFixed(1) : '5.0'}</span>
                     </div>
                 </div>
 
-                {/* 3. PRODUCT NAME (13-13.5px, weight 700 - Cố định h-[38px] đúng 2 dòng) */}
+                {/* 3. PRODUCT NAME (Cố định h-[38px] đúng 2 dòng, không bị đè che) */}
                 <Link href={`/san-pham/${slugSanPham(sanPham)}`} className="h-[38px] block overflow-hidden">
                     <h4
-                        className="text-[13px] sm:text-[13.5px] font-bold text-[#0F172A] dark:text-white line-clamp-2 leading-[19px] group-hover:text-[#0052cc] dark:group-hover:text-cyan-400 transition-colors"
+                        className="text-[13px] font-bold text-[#0F172A] dark:text-white line-clamp-2 leading-[19px] group-hover:text-[#0052cc] dark:group-hover:text-cyan-400 transition-colors"
                         title={sanPham.ten_san_pham}
                     >
                         {sanPham.ten_san_pham}
                     </h4>
                 </Link>
 
-                {/* 4. PRICE (Giá sale đỏ đậm 18-19.5px + Giá cũ - Cố định h-[24px]) */}
-                <div className="h-[24px] flex items-baseline gap-2 overflow-hidden">
-                    <span className="text-[18px] sm:text-[19.5px] font-black text-[#EA1E2C] tracking-tight leading-none">
+                {/* 4. PRICE (Giá sale đỏ đậm 18px + Giá cũ - Cố định h-[22px]) */}
+                <div className="h-[22px] flex items-baseline gap-2 overflow-hidden">
+                    <span className="text-[17px] sm:text-[18px] font-black text-[#EA1E2C] tracking-tight leading-none">
                         {dinhDangTienVND(sanPham.gia_khuyen_mai)}
                     </span>
                     {sanPham.gia_goc > sanPham.gia_khuyen_mai && (
-                        <span className="text-[11px] sm:text-[11.5px] text-slate-400 line-through font-normal">
+                        <span className="text-[11px] text-slate-400 line-through font-normal">
                             {dinhDangTienVND(sanPham.gia_goc)}
                         </span>
                     )}
                 </div>
 
-                {/* 5. SPECS (Cố định h-[22px], chip đa sắc thanh lịch không đơn điệu) */}
-                <div className="h-[22px] flex items-center gap-1 overflow-hidden whitespace-nowrap text-[10px]">
-                    {cacThongSo.slice(0, 3).map((ts, idx) => {
-                        const mauChip = [
-                            'bg-blue-50 text-blue-700 dark:bg-blue-950/70 dark:text-cyan-300 border-blue-200/60 dark:border-blue-900/50',
-                            'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-900/50',
-                            'bg-purple-50 text-purple-700 dark:bg-purple-950/70 dark:text-purple-300 border-purple-200/60 dark:border-purple-900/50'
-                        ][idx % 3];
-
-                        return (
-                            <span
-                                key={idx}
-                                className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold border shrink-0 truncate max-w-[115px] ${mauChip}`}
-                            >
-                                {ts}
-                            </span>
-                        );
-                    })}
-                </div>
-
-                {/* 6. GIFT / WARRANTY (Cố định h-[20px] trên 100% tất cả các card) */}
-                <div className="h-[20px] flex items-center text-[10px] overflow-hidden">
-                    {sanPham.qua_tang && sanPham.qua_tang.length > 0 ? (
-                        <div className="text-emerald-700 dark:text-emerald-400 truncate flex items-center gap-1 font-medium" title={sanPham.qua_tang[0].ten_qua_tang}>
-                            <Gift className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span className="truncate">{sanPham.qua_tang[0].ten_qua_tang}</span>
-                        </div>
-                    ) : (
-                        <div className="text-slate-500 dark:text-slate-400 truncate flex items-center gap-1 font-normal">
-                            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                            <span className="truncate">{sanPham.thong_so?.che_do_bao_hanh || 'Bảo hành chính hãng 24-36 tháng'}</span>
-                        </div>
+                {/* 5. SPECS CHIPS (Tối giản 2 chip tinh hoa từ DB, gọn gàng và không rối mắt) */}
+                <div className="h-[22px] flex items-center gap-1.5 overflow-hidden text-[10px]">
+                    {cacThongSo.slice(0, 2).map((ts, idx) => (
+                        <span
+                            key={idx}
+                            className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-[10px] border border-slate-200/70 dark:border-slate-700 shrink-0 truncate max-w-[110px]"
+                        >
+                            {ts}
+                        </span>
+                    ))}
+                    {sanPham.qua_tang && sanPham.qua_tang.length > 0 && (
+                        <span
+                            className="px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200/60 shrink-0 truncate flex items-center gap-1"
+                            title={sanPham.qua_tang[0].ten_qua_tang}
+                        >
+                            <Gift className="w-2.5 h-2.5 shrink-0" />
+                            <span className="truncate">Quà tặng</span>
+                        </span>
                     )}
                 </div>
 
-                {/* 7. FLASH SALE STOCK PROGRESS BAR CHUẨN TGDD CÓ HIỆU ỨNG CHẠY CHẠY LIÊN TỤC */}
+                {/* 6. FLASH SALE STOCK PROGRESS BAR (Chỉ hiện khi hienThiThanhFlashSale = true) */}
                 {hienThiThanhFlashSale && (() => {
                     const daBan = sanPham.so_luong_da_ban || 114;
                     const tonKho = sanPham.so_luong_ton_kho !== undefined ? sanPham.so_luong_ton_kho : 25;
@@ -446,25 +455,17 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                     return (
                         <div className="pt-0.5">
                             <div className="relative w-full h-[24px] bg-[#FFEADA] dark:bg-slate-800 rounded-full overflow-hidden flex items-center shadow-inner border border-orange-200/60 dark:border-slate-700/60">
-                                {/* Dải tiến trình gradient lửa đỏ cam */}
                                 <div
                                     className="absolute inset-y-0 left-0 bg-gradient-to-r from-[#FF7A00] via-[#FF3B00] to-[#E11D48] rounded-full transition-all duration-500 shadow-sm overflow-hidden"
                                     style={{ width: `${phanTram}%` }}
                                 >
-                                    {/* 1. HIỆU ỨNG SỌC CHÉO CHẠY CUỘN LIÊN TỤC (Barber-pole stripes) */}
                                     <div className="absolute inset-0 flash-sale-stripes opacity-75" />
-
-                                    {/* 2. ĐẦU MÚT PHÁT SÁNG BEACON (Bốc cháy ở mép tiến trình) */}
                                     <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-r from-transparent via-white/80 to-amber-200 rounded-r-full blur-[0.5px]" />
                                     <div className="absolute right-0.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-white animate-ping opacity-75" />
                                 </div>
-
-                                {/* 3. VỆT SÁNG SHIMMER LƯỚT QUA TOÀN BỘ THANH TIẾN TRÌNH */}
                                 <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-full">
                                     <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-25deg] flash-sale-shimmer" />
                                 </div>
-
-                                {/* 4. NỘI DUNG CHỮ TRÊN THANH TIẾN TRÌNH */}
                                 <div className="relative z-10 w-full px-2.5 flex items-center justify-between text-[11px] font-bold select-none">
                                     <span className="flex items-center gap-1 tracking-tight text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                                         <Flame className="w-3.5 h-3.5 fill-amber-300 text-amber-300 animate-flame-wiggle shrink-0" />
@@ -479,8 +480,8 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                     );
                 })()}
 
-                {/* 8. BOTTOM CTA (mt-auto sát đáy, nút cao 38px, nằm ngang hàng trên toàn bộ card) */}
-                <div className="pt-1.5 mt-auto border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5">
+                {/* 7. BOTTOM CTA (Nút Thêm vào giỏ sang xịn, nút So sánh vuông gọn khi hỗ trợ) */}
+                <div className="pt-2 mt-auto border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5">
                     <button
                         onClick={() => themVaoGioHang(sanPham)}
                         className="flex-1 h-9 px-3 rounded-xl bg-[#0052cc] hover:bg-[#003da5] text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-[0.98] transition-all cursor-pointer"
@@ -491,7 +492,7 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                     {hoTroSoSanh && (
                         <button
                             onClick={() => themVaoSoSanh(sanPham)}
-                            className={`h-9 px-2.5 rounded-xl border transition-all cursor-pointer shrink-0 flex items-center gap-1 text-xs font-bold ${
+                            className={`h-9 w-9 rounded-xl border transition-all cursor-pointer shrink-0 flex items-center justify-center text-xs font-bold ${
                                 daTrongSoSanh
                                     ? 'bg-blue-50 border-blue-500 text-[#0052cc] dark:bg-slate-800 dark:text-cyan-400 shadow-xs'
                                     : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:text-[#0052cc] hover:border-[#0052cc] hover:bg-blue-50/50'
@@ -499,7 +500,6 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                             title={daTrongSoSanh ? 'Bỏ so sánh' : 'So sánh sản phẩm'}
                         >
                             <GitCompare className="w-3.5 h-3.5" />
-                            <span className="text-[11px] font-bold">{daTrongSoSanh ? 'Đã chọn' : 'So sánh'}</span>
                         </button>
                     )}
                 </div>

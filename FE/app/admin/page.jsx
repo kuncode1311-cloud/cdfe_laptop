@@ -5400,7 +5400,7 @@ export default function TrangQuanTriCuaHang() {
                                 />
 
                                 <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocDonHang ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-                                    <table className="w-full text-left text-xs border-collapse">
+                                    <table className="w-full min-w-[1050px] text-left text-xs border-collapse">
                                         <thead>
                                             <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                                 <th className="py-2.5 px-2 w-20 text-center whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
@@ -5824,7 +5824,7 @@ export default function TrangQuanTriCuaHang() {
                                         className="w-full px-3 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
                                     >
                                         <option value="tat_ca">📊 Tình trạng tồn kho</option>
-                                        <option value="con_hang">✅ Đang bán (Còn hàng)</option>
+                                        <option value="con_hang">✅ Đang mở bán (Còn hàng)</option>
                                         <option value="sap_het">⚠️ Sắp hết hàng (≤ 5)</option>
                                         <option value="tam_an">🛑 Tạm ẩn / Hết kho</option>
                                         <option value="flash_sale">🔥 Chỉ xem Flash Sale</option>
@@ -5868,19 +5868,19 @@ export default function TrangQuanTriCuaHang() {
                                     moTa={dangLocSanPham ? `Tìm thấy ${sanPhamHienThi.length} sản phẩm phù hợp` : "Hệ thống đang tải số lượng tồn kho, giá bán và cấu hình máy"}
                                 />
 
-                                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocSanPham ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-                                    <table className="w-full text-left text-xs border-collapse">
-                                        <thead>
-                                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
-                                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
-                                                <th className="py-2.5 px-2 w-14 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ẢNH</th>
-                                                <th className="py-2.5 px-3 min-w-[200px] max-w-[300px] xl:max-w-[360px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÊN SẢN PHẨM & CẤU HÌNH</th>
-                                                <th className="py-2.5 px-2 w-20 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">HÃNG</th>
-                                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">GIÁ BÁN</th>
-                                                <th className="py-2.5 px-2 w-16 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHO</th>
-                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">FLASH SALE</th>
-                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
-                                                <th className="py-2.5 px-3 w-36 min-w-[135px] text-center border-b-2 border-l border-slate-300 dark:border-slate-700 whitespace-nowrap sticky right-0 bg-slate-100 dark:bg-slate-800 z-20 shadow-[-6px_0_12px_rgba(0,0,0,0.08)]">THAO TÁC</th>
+                                <div className={`overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-[380px] transition-opacity duration-300 ${dangTai || dangLocSanPham ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                    <table className="w-full text-left text-xs border-collapse table-fixed">
+                                        <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 shadow-xs">
+                                            <tr className="text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                                <th className="py-2.5 px-1 w-9 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
+                                                <th className="py-2.5 px-1 w-12 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ẢNH</th>
+                                                <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÊN SẢN PHẨM & CẤU HÌNH</th>
+                                                <th className="py-2.5 px-1 w-20 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">HÃNG</th>
+                                                <th className="py-2.5 px-1.5 w-24 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">GIÁ BÁN</th>
+                                                <th className="py-2.5 px-1 w-11 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHO</th>
+                                                <th className="py-2.5 px-1 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">FLASH SALE</th>
+                                                <th className="py-2.5 px-1 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-1 w-28 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -5911,10 +5911,10 @@ export default function TrangQuanTriCuaHang() {
                                                                     : 'odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50'
                                                             }`}
                                                         >
-                                                            <td className={`py-2 px-3 text-center font-bold border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 font-black' : 'border-slate-200 dark:border-slate-800 text-slate-400'}`}>
+                                                            <td className={`py-2 px-1 text-center font-bold border-b border-r whitespace-nowrap text-[11px] ${daAnSp ? 'border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 font-black' : 'border-slate-200 dark:border-slate-800 text-slate-400'}`}>
                                                                 #{idx + 1}
                                                             </td>
-                                                            <td className={`py-2 px-3 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                            <td className={`py-1.5 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                                 <div
                                                                     onClick={() => setModalXemAnh({
                                                                         url: sp.hinh_anh_chinh,
@@ -5926,14 +5926,14 @@ export default function TrangQuanTriCuaHang() {
                                                                         variants: sp.tuy_chon_phien_ban || [],
                                                                         activeVariantIndex: 0
                                                                     })}
-                                                                    className="w-10 h-10 rounded-xl bg-white dark:bg-slate-800 p-1 mx-auto relative border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs cursor-pointer group hover:border-blue-500 transition-all hover:scale-105"
+                                                                    className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 p-0.5 mx-auto relative border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs cursor-pointer group hover:border-blue-500 transition-all hover:scale-105"
                                                                     title="Bấm để phóng to xem ảnh sắc nét"
                                                                 >
                                                                     <Image src={sp.hinh_anh_chinh} alt={sp.ten_san_pham} fill className="object-contain p-0.5" />
                                                                 </div>
                                                             </td>
-                                                            <td className={`py-2 px-3 border-b border-r max-w-[260px] md:max-w-[300px] xl:max-w-[360px] overflow-hidden ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                            <td className={`py-2 px-2.5 border-b border-r overflow-hidden ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                                <div className="flex items-center gap-1.5 min-w-0">
                                                                     {daAnSp && (
                                                                         <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-2xs shrink-0">
                                                                             ĐÃ ẨN
@@ -5943,18 +5943,18 @@ export default function TrangQuanTriCuaHang() {
                                                                         {sp.ten_san_pham}
                                                                     </div>
                                                                 </div>
-                                                                <div className={`text-[11px] font-semibold truncate mt-0.5 flex items-center gap-1.5 ${daAnSp ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-500 dark:text-slate-400'}`} title={thongTin.text}>
+                                                                <div className={`text-[11px] font-semibold truncate mt-0.5 flex items-center gap-1 min-w-0 ${daAnSp ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-500 dark:text-slate-400'}`} title={thongTin.text}>
                                                                     <span className="shrink-0">{thongTin.icon}</span>
                                                                     <span className="truncate">{thongTin.text}</span>
                                                                 </div>
                                                             </td>
-                                                            <td className={`py-2 px-2 border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <span className="inline-block px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-black uppercase text-xs border border-indigo-100 dark:border-indigo-900 whitespace-nowrap">
+                                                            <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                                <span className="inline-block px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-black uppercase text-[10px] border border-indigo-100 dark:border-indigo-900 whitespace-nowrap">
                                                                     {sp.hang_san_xuat}
                                                                 </span>
                                                             </td>
                                                             <td className={`py-2 px-2 border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                                                <div className="flex flex-col leading-tight whitespace-nowrap">
                                                                     <span className="font-black text-xs text-red-600 dark:text-red-400">
                                                                         {dinhDangTienVND(sp.gia_khuyen_mai)}
                                                                     </span>
@@ -5965,16 +5965,16 @@ export default function TrangQuanTriCuaHang() {
                                                                     )}
                                                                 </div>
                                                             </td>
-                                                            <td className={`py-2 px-2 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-black whitespace-nowrap ${sp.so_luong_ton_kho > 5 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : sp.so_luong_ton_kho > 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'}`}>
+                                                            <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-black whitespace-nowrap ${sp.so_luong_ton_kho > 5 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : sp.so_luong_ton_kho > 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'}`}>
                                                                     {sp.so_luong_ton_kho || 0}
                                                                 </span>
                                                             </td>
-                                                            <td className={`py-2 px-2 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                            <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => xuLyToggleFlashSale(sp)}
-                                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                                                                    className={`px-2 py-0.5 rounded-full text-[11px] font-black inline-flex items-center justify-center gap-1 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
                                                                         sp.la_flash_sale
                                                                             ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 ring-1 ring-rose-500/20 hover:bg-rose-100'
                                                                             : 'bg-slate-100 text-slate-500 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
@@ -5985,53 +5985,53 @@ export default function TrangQuanTriCuaHang() {
                                                                     <span className="whitespace-nowrap">{sp.la_flash_sale ? 'Bật Deal' : 'Tắt Deal'}</span>
                                                                 </button>
                                                             </td>
-                                                            <td className={`py-2 px-2 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                            <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => xuLyToggleConHang(sp)}
-                                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
+                                                                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
                                                                         sp.con_hang !== false
                                                                             ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 ring-1 ring-emerald-500/20 hover:bg-emerald-100'
                                                                             : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-800 hover:bg-rose-200'
                                                                     }`}
-                                                                    title={sp.con_hang !== false ? 'Đang mở bán - Bấm để tạm ẩn (chuyển nền đỏ)' : 'Đang tạm ẩn (nền đỏ) - Bấm để mở bán ngay'}
+                                                                    title={sp.con_hang !== false ? 'Đang mở bán - Bấm để tạm ẩn' : 'Đang tạm ẩn - Bấm để mở bán'}
                                                                 >
-                                                                    <span className={`w-2 h-2 rounded-full shrink-0 ${sp.con_hang !== false ? 'bg-emerald-500 animate-pulse' : 'bg-rose-600'}`} />
-                                                                    <span className="whitespace-nowrap">{sp.con_hang !== false ? 'Đang bán' : 'Tạm ẩn (Đã ẩn)'}</span>
+                                                                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sp.con_hang !== false ? 'bg-emerald-500 animate-pulse' : 'bg-rose-600'}`} />
+                                                                    <span className="whitespace-nowrap">{sp.con_hang !== false ? 'Đang mở bán' : 'Tạm ẩn'}</span>
                                                                 </button>
                                                             </td>
-                                                            <td className={`py-2 px-2 text-center border-b border-l whitespace-nowrap sticky right-0 z-10 shadow-[-6px_0_12px_rgba(0,0,0,0.08)] ${
+                                                            <td className={`py-2 px-1 text-center border-b whitespace-nowrap ${
                                                                 daAnSp
-                                                                    ? '!bg-rose-100 dark:!bg-rose-950 border-rose-200 dark:border-rose-900/60'
-                                                                    : 'border-slate-200 dark:border-slate-800 bg-white group-odd:bg-white group-even:bg-slate-50/70 dark:bg-[#0d1527] dark:group-odd:bg-[#0d1527] dark:group-even:bg-[#090f1d] group-hover:!bg-blue-50/90 dark:group-hover:!bg-blue-950/90'
+                                                                    ? 'border-rose-200 dark:border-rose-900/60'
+                                                                    : 'border-slate-200 dark:border-slate-800'
                                                             }`}>
-                                                                <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                                                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                                                                     <Link
                                                                         href={`/san-pham/${sp.id || sp.slug || sp._id}`}
                                                                         target="_blank"
-                                                                        className="p-1.5 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 transition-all hover:scale-105 active:scale-95 inline-flex items-center justify-center shadow-2xs"
+                                                                        className="p-1 rounded-md bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 transition-all hover:scale-105 active:scale-95 inline-flex items-center justify-center shadow-2xs"
                                                                         title="Xem ngoài website khách hàng"
                                                                     >
-                                                                        <ExternalLink className="w-3.5 h-3.5" />
+                                                                        <ExternalLink className="w-3 h-3" />
                                                                     </Link>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => moModalSuaSp(sp)}
                                                                         disabled={dangXuLyChung}
-                                                                        className={`px-2 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs inline-flex items-center gap-1 shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        className={`px-1.5 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] inline-flex items-center gap-0.5 shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                                         title="Chỉnh sửa sản phẩm"
                                                                     >
-                                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                                        <Edit3 className="w-3 h-3" />
                                                                         <span>Sửa</span>
                                                                     </button>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => xuLyXoaSanPham(idSp, sp.ten_san_pham)}
                                                                         disabled={dangXuLyChung}
-                                                                        className={`px-2 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs inline-flex items-center gap-1 shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        className={`px-1.5 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] inline-flex items-center gap-0.5 shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                                         title="Xóa vĩnh viễn sản phẩm"
                                                                     >
-                                                                        {dangXuLyItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                                        {dangXuLyItem ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
                                                                         <span>Xóa</span>
                                                                     </button>
                                                                 </div>
@@ -6109,7 +6109,7 @@ export default function TrangQuanTriCuaHang() {
                                 />
 
                                 <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocDanhMuc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-                                    <table className="w-full text-left text-xs border-collapse">
+                                    <table className="w-full min-w-[950px] text-left text-xs border-collapse">
                                         <thead>
                                             <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                                 <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
@@ -6359,7 +6359,7 @@ export default function TrangQuanTriCuaHang() {
 
                                 {/* Container Cuộn Nội Bộ Mượt Mà (Fit Trong 1 Màn Hình, Header Cố Định) */}
                                 <div className={`overflow-x-auto overflow-y-auto max-h-[calc(100vh-275px)] min-h-[350px] transition-opacity duration-300 ${dangTai || dangLocKhachHang ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-                                    <table className="w-full text-left text-xs border-collapse">
+                                    <table className="w-full min-w-[1050px] text-left text-xs border-collapse">
                                         <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 shadow-xs">
                                             <tr className="text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                                 <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
@@ -6659,7 +6659,7 @@ export default function TrangQuanTriCuaHang() {
                                 />
 
                                 <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocVoucher ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-                                    <table className="w-full text-left text-xs border-collapse">
+                                    <table className="w-full min-w-[1050px] text-left text-xs border-collapse">
                                         <thead>
                                             <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                                 <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">
@@ -6672,7 +6672,7 @@ export default function TrangQuanTriCuaHang() {
                                                 <th className="py-2.5 px-2 w-24 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ĐƠN TỐI THIỂU</th>
                                                 <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ĐÃ SĂN / TỔNG</th>
                                                 <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">THỜI HẠN</th>
-                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-2 w-28 min-w-[110px] text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
                                                 <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
@@ -6975,7 +6975,7 @@ export default function TrangQuanTriCuaHang() {
                                 />
 
                                 <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocTinTuc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
-                                    <table className="w-full text-left text-xs border-collapse">
+                                    <table className="w-full min-w-[1050px] text-left text-xs border-collapse">
                                         <thead>
                                             <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                                 <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
@@ -6985,7 +6985,7 @@ export default function TrangQuanTriCuaHang() {
                                                 <th className="py-2.5 px-2 w-32 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÁC GIẢ & NGÀY</th>
                                                 <th className="py-2.5 px-2 w-16 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">LƯỢT XEM</th>
                                                 <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TIÊU ĐIỂM</th>
-                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-2 w-28 min-w-[110px] text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
                                                 <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>

@@ -41,6 +41,7 @@ const baoHanhRoutes = require('./routes/bao-hanh.routes');
 const thanhToanRoutes = require('./routes/thanh-toan.routes');
 const lienHeRoutes = require('./routes/lien-he.routes');
 const caiDatRoutes = require('./routes/cai-dat.routes');
+const troLyAiRoutes = require('./routes/tro-ly-ai.routes');
 const { khoiTaoTelegramBot } = require('./services/telegram-bot.service');
 
 // 6. Gắn các Tuyến đường REST API chuẩn (/api/...)
@@ -59,6 +60,8 @@ app.use('/api/lien-he', lienHeRoutes);
 app.use('/lien-he', lienHeRoutes);
 app.use('/api/cai-dat', caiDatRoutes);
 app.use('/cai-dat', caiDatRoutes);
+app.use('/api/tro-ly-ai', troLyAiRoutes);
+app.use('/tro-ly-ai', troLyAiRoutes);
 
 // 7. Gắn các Tuyến đường tương thích ngược (/api/san_pham, /san_pham,...)
 app.use('/auth', xacThucRoutes);

@@ -13,10 +13,14 @@ export function layLoaiSanPham(sp) {
     const danhMuc = Array.isArray(sp.danh_muc) ? sp.danh_muc : [];
     const ten = (sp.ten_san_pham || '').toLowerCase();
 
-    // 1. Phụ kiện KHÔNG hỗ trợ so sánh: Balo, Túi chống sốc, Lót chuột, Dây cáp, Củ sạc, v.v.
+    // 1. Phụ kiện & Linh kiện KHÔNG hỗ trợ so sánh: Balo, Túi chống sốc, Lót chuột, Dây cáp, Củ sạc, Pin sạc, Keo tản, SSD, v.v.
     if (
         danhMuc.includes('balo-tui-chong-soc') ||
-        danhMuc.includes('phu-kien-gear') && !danhMuc.includes('chuot-lot-chuot') && !danhMuc.includes('ban-phim-co') && !danhMuc.includes('tai-nghe-loa') ||
+        danhMuc.includes('linh-kien') ||
+        danhMuc.includes('linh-kien-nang-cap') ||
+        danhMuc.includes('sac-cap-hub') ||
+        danhMuc.includes('de-tan-gia-do') ||
+        (danhMuc.includes('phu-kien-gear') && !danhMuc.includes('chuot-lot-chuot') && !danhMuc.includes('ban-phim-co') && !danhMuc.includes('tai-nghe-loa')) ||
         ten.includes('túi chống sốc') ||
         ten.includes('túi đựng') ||
         ten.includes('balo') ||
@@ -26,6 +30,13 @@ export function layLoaiSanPham(sp) {
         ten.includes('mousepad') ||
         ten.includes('dây cáp') ||
         ten.includes('củ sạc') ||
+        ten.includes('pin sạc') ||
+        ten.includes('sạc dự phòng') ||
+        ten.includes('keo tản') ||
+        ten.includes('thermal grizzly') ||
+        ten.includes('ổ cứng') ||
+        ten.includes('ssd') ||
+        ten.includes('ram') ||
         ten.includes('giá đỡ')
     ) {
         return 'khong_ho_tro';

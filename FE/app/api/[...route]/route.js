@@ -214,6 +214,16 @@ export async function GET(request, { params }) {
                     }
                 }
 
+                // Loại bỏ triệt để địa chỉ giả lập mẫu (123 Nguyễn Thị Minh Khai) nếu có
+                if (Array.isArray(user.danhSachDiaChi)) {
+                    user.danhSachDiaChi = user.danhSachDiaChi.filter(dc => {
+                        const chiTiet = (dc.diaChiChiTiet || '').toLowerCase();
+                        const phuong = (dc.phuongXa || '').toLowerCase();
+                        const quan = (dc.quanHuyen || '').toLowerCase();
+                        return dc.id !== 'dc_1' && !chiTiet.includes('minh khai') && !(phuong.includes('bến thành') && (quan.includes('quận 1') || quan.includes('quan 1')));
+                    });
+                }
+
                 return NextResponse.json({ hop_le: true, nguoiDung: user });
             }
             return NextResponse.json({ thong_diep: 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn' }, { status: 401 });
@@ -386,6 +396,20 @@ export async function GET(request, { params }) {
             });
         }
 
+        // 13. TRỢ LÝ AI: /api/tro-ly-ai/trang-thai
+        if (primary === 'tro-ly-ai' || primary === 'chat-ai') {
+            try {
+                const expressBase = process.env.BACKEND_URL || process.env.EXPRESS_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+                const cleanBase = expressBase.replace(/\/api\/?$/, '');
+                const beRes = await fetch(`${cleanBase}/api/tro-ly-ai/trang-thai`, { signal: AbortSignal.timeout(5000) });
+                if (beRes.ok) {
+                    const data = await beRes.json();
+                    return NextResponse.json(data);
+                }
+            } catch {}
+            return NextResponse.json({ thanh_cong: true, trang_thai: 'san_sang' });
+        }
+
         return NextResponse.json({ thong_diep: `API ${route.join('/')} sẵn sàng` });
     } catch (err) {
         console.error(`[API Route GET Error] /api/${route.join('/')}:`, err);
@@ -402,6 +426,52 @@ export async function POST(request, { params }) {
         const primary = route[0];
         const secondary = route[1];
         const body = await request.json().catch(() => ({}));
+
+        // 0. TRỢ LÝ AI: /api/tro-ly-ai/chat hoặc /api/tro-ly-ai
+        if (primary === 'tro-ly-ai' || primary === 'chat-ai') {
+            try {
+                const expressBase = process.env.BACKEND_URL || process.env.EXPRESS_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+                const cleanBase = expressBase.replace(/\/api\/?$/, '');
+                const expressUrl = `${cleanBase}/api/tro-ly-ai/chat`;
+                const beRes = await fetch(expressUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                    signal: AbortSignal.timeout(28000)
+                });
+                if (beRes.ok) {
+                    const data = await beRes.json();
+                    return NextResponse.json(data);
+                }
+            } catch (err) {
+                console.warn('⚠️ [Next.js API] Không thể gọi tới Express BE:', err.message);
+            }
+
+            // Fallback khi Express tắt: lấy top 3 sản phẩm nổi bật
+            const spFallback = await db.collection('san_pham').find({ con_hang: true }).limit(3).toArray();
+            return NextResponse.json({
+                thanh_cong: true,
+                cau_tra_loi: 'Dạ em chào Bạn nè! TNTP Laptop lên ngay mấy siêu phẩm công nghệ hot nhất, giá cực êm cho Bạn quẹo lựa đây ạ ✨🚀',
+                san_pham_goi_y: spFallback.map(sp => ({
+                    id: sp.id || sp.slug,
+                    slug: sp.slug || sp.id,
+                    ten_san_pham: sp.ten_san_pham,
+                    hang_san_xuat: sp.hang_san_xuat,
+                    gia_goc: sp.gia_goc || 0,
+                    gia_khuyen_mai: sp.gia_khuyen_mai || 0,
+                    phan_tram_giam_gia: sp.phan_tram_giam_gia || 0,
+                    hinh_anh_chinh: sp.hinh_anh_chinh || '/images/sp/macbook_pro_16_m3max.jpg',
+                    thong_so: sp.thong_so || {},
+                    qua_tang: sp.qua_tang || [],
+                    con_hang: true
+                })),
+                goi_y_tiep_theo: [
+                    'Shop có hỗ trợ trả góp 0% không?',
+                    'Chính sách bảo hành và đổi trả thế nào?',
+                    'Shop có giao hàng hỏa tốc trong ngày không?'
+                ]
+            });
+        }
 
         // 1. AUTH: /api/auth/dang-nhap
         if (primary === 'auth' && (secondary === 'dang-nhap' || secondary === 'login')) {
@@ -913,7 +983,8 @@ export async function POST(request, { params }) {
                     id: 'usr_gg_' + Date.now(),
                     hoTen: hoTen || 'Khách Hàng Google',
                     email: emailClean,
-                    avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+                    avatar: avatar || '',
+                    danhSachDiaChi: [],
                     vaiTro: 'khach_hang',
                     diemTichLuy: 200,
                     googleId: googleId || '',
@@ -1116,6 +1187,17 @@ export async function PUT(request, { params }) {
             if (body.diaChi !== undefined) capNhat.diaChi = body.diaChi;
             if (body.ngaySinh !== undefined) capNhat.ngaySinh = body.ngaySinh;
             if (body.gioiTinh !== undefined) capNhat.gioiTinh = body.gioiTinh;
+            if (Array.isArray(body.danhSachDiaChi)) {
+                capNhat.danhSachDiaChi = body.danhSachDiaChi.filter(dc => {
+                    const chiTiet = (dc.diaChiChiTiet || '').toLowerCase();
+                    const phuong = (dc.phuongXa || '').toLowerCase();
+                    const quan = (dc.quanHuyen || '').toLowerCase();
+                    if (dc.id === 'dc_1') return false;
+                    if (chiTiet.includes('minh khai')) return false;
+                    if (phuong.includes('bến thành') && (quan.includes('quận 1') || quan.includes('quan 1'))) return false;
+                    return true;
+                });
+            }
             capNhat.updatedAt = new Date();
 
             await db.collection('nguoi_dung').updateOne({ _id: user._id }, { $set: capNhat });

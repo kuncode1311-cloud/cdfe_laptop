@@ -18,7 +18,7 @@ import {
     Compass, 
     ChevronDown 
 } from 'lucide-react';
-import { AuthContext } from '@/contexts/AuthContext';
+import { AuthContext, locDiaChiHopLe } from '@/contexts/AuthContext';
 import { 
     DiaGioiHanhChinhService, 
     khopTuKhoaDiaChi, 
@@ -217,7 +217,7 @@ function OChonDiaGioi({
 export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidationChange }) {
     const authCtx = useContext(AuthContext);
     const nguoiDung = authCtx?.nguoiDung;
-    const danhSachDiaChi = Array.isArray(nguoiDung?.danhSachDiaChi) ? nguoiDung.danhSachDiaChi : [];
+    const danhSachDiaChi = locDiaChiHopLe(Array.isArray(nguoiDung?.danhSachDiaChi) ? nguoiDung.danhSachDiaChi : []);
 
     // Tab chọn: 'mac_dinh' (Địa chỉ tài khoản / Sổ địa chỉ) vs 'moi' (Nhập địa chỉ mới khác)
     const [cheDoDiaChi, setCheDoDiaChi] = useState(danhSachDiaChi.length > 0 || nguoiDung ? 'mac_dinh' : 'moi');

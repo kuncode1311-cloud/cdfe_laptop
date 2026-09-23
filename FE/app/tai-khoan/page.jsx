@@ -60,7 +60,7 @@ import {
     Package,
     QrCode
 } from 'lucide-react';
-import { useNguoiDung } from '@/contexts/AuthContext';
+import { useNguoiDung, locDiaChiHopLe } from '@/contexts/AuthContext';
 import { useGioHang } from '@/contexts/CartContext';
 import { toast } from 'sonner';
 import { DonHangService } from '@/services/don-hang.service';
@@ -68,9 +68,7 @@ import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 import { 
     DiaGioiHanhChinhService, 
     khopTuKhoaDiaChi, 
-    DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP,
-    DANH_SACH_63_TINH_THANH_CHUAN,
-    TRA_CUU_SAP_NHAP_V2
+    DANH_SACH_63_TINH_THANH_CHUAN
 } from '@/services/dia-gioi-hanh-chinh.service';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import ModalThanhToanQR from '@/components/thanh-toan/ModalThanhToanQR';
@@ -252,8 +250,8 @@ function BoChonDiaGioi({
 
     return (
         <div className="relative" ref={refContainer}>
-            <label className="block text-[11px] font-black text-slate-700 mb-1 flex items-center gap-1.5">
-                {Icon && <Icon className="w-3.5 h-3.5 text-emerald-600" />}
+            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+                {Icon && <Icon className="w-3.5 h-3.5 text-slate-500" />}
                 <span>{label}</span>
             </label>
 
@@ -261,12 +259,12 @@ function BoChonDiaGioi({
                 type="button"
                 disabled={disabled}
                 onClick={() => setDangMo(!dangMo)}
-                className={`w-full px-3.5 py-2.5 rounded-2xl border-2 text-left flex items-center justify-between text-xs font-bold transition-all ${
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-left flex items-center justify-between text-xs font-semibold transition-all ${
                     disabled
                         ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
                         : dangMo
                         ? 'bg-white border-emerald-500 ring-2 ring-emerald-100 shadow-sm'
-                        : 'bg-white border-slate-200 hover:border-slate-300 text-slate-800 cursor-pointer'
+                        : 'border-slate-300 bg-white hover:border-slate-400 text-slate-800 cursor-pointer'
                 }`}
             >
                 <span className={`truncate ${!giaTri ? 'text-slate-400 font-medium' : 'text-slate-900 font-bold'}`}>
@@ -635,7 +633,11 @@ function NoiDungTrangTaiKhoan() {
             setSoDienThoai(nguoiDung.soDienThoai || '');
             setGioiTinh(nguoiDung.gioiTinh || 'nam');
             setNgaySinh(nguoiDung.ngaySinh || '');
-            setAvatarChon(nguoiDung.avatar || AVATAR_PRESETS[0]);
+            // Nếu người dùng chưa chọn avatar hoặc là link ảnh mẫu unsplash cũ thì để trống (hiển thị icon mặc định)
+            const avatarHopLe = (nguoiDung.avatar && !nguoiDung.avatar.includes('photo-1534528741775-53994a69daeb')) 
+                ? nguoiDung.avatar 
+                : '';
+            setAvatarChon(avatarHopLe);
             setAvatarLoi(false);
         }
     }, [nguoiDung]);
@@ -687,6 +689,18 @@ function NoiDungTrangTaiKhoan() {
             setThongBao({ loai: 'thanh_cong', noiDung: 'Đã đổi ảnh đại diện mới thành công!' });
         } catch (err) {
             console.error('Lỗi đổi avatar:', err);
+        }
+    };
+
+    const xuLyXoaAvatar = async () => {
+        setAvatarChon('');
+        setAvatarLoi(false);
+        setMoModalChonAvatar(false);
+        try {
+            await capNhatHoSo({ avatar: '' });
+            setThongBao({ loai: 'thanh_cong', noiDung: 'Đã đặt lại ảnh đại diện về icon mặc định!' });
+        } catch (err) {
+            console.error('Lỗi xóa avatar:', err);
         }
     };
 
@@ -963,63 +977,32 @@ function NoiDungTrangTaiKhoan() {
         return '';
     }, [formDiaChi.diaChiChiTiet, daChamDiaChi.diaChiChiTiet]);
 
-    const [cheDoDiaGioi, setCheDoDiaGioi] = useState('v2'); // 'v2' (API v2 - 34 Tỉnh sau sáp nhập) hoặc 'v1' (63 Tỉnh truyền thống)
-    const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP);
+    const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_63_TINH_THANH_CHUAN);
     const [danhSachQuan, setDanhSachQuan] = useState([]);
     const [danhSachXa, setDanhSachXa] = useState([]);
 
-    // 1. Tải danh sách tỉnh thành theo chuẩn đang chọn (mặc định V2 - 34 Tỉnh/TP sau sáp nhập)
+    // Tải danh sách 63 tỉnh thành chuẩn quốc gia
     useEffect(() => {
         let isMounted = true;
-        if (cheDoDiaGioi === 'v2') {
-            DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async().then(res => {
-                if (isMounted && Array.isArray(res) && res.length > 0) {
-                    setDanhSachTinh(res);
-                }
-            });
-        } else {
-            DiaGioiHanhChinhService.layDanhSachTinhThanhAsync().then(res => {
-                if (isMounted && Array.isArray(res) && res.length > 0) {
-                    setDanhSachTinh(res);
-                }
-            });
-        }
+        DiaGioiHanhChinhService.layDanhSachTinhThanhAsync().then(res => {
+            if (isMounted && Array.isArray(res) && res.length > 0) {
+                setDanhSachTinh(res);
+            }
+        });
         return () => { isMounted = false; };
-    }, [cheDoDiaGioi]);
+    }, []);
 
-    // Chuyển đổi giữa 2 chuẩn địa giới (v2 34 tỉnh vs v1 63 tỉnh)
-    const doiCheDoDiaGioi = async (cheDoMoi) => {
-        if (cheDoMoi === cheDoDiaGioi) return;
-        setCheDoDiaGioi(cheDoMoi);
-        setFormDiaChi(prev => ({ ...prev, tinhThanh: '', quanHuyen: '', phuongXa: '' }));
-        setDanhSachQuan([]);
-        setDanhSachXa([]);
-        if (cheDoMoi === 'v2') {
-            const dsV2 = await DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async();
-            setDanhSachTinh(dsV2 || DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP);
-        } else {
-            const dsV1 = await DiaGioiHanhChinhService.layDanhSachTinhThanhAsync();
-            setDanhSachTinh(dsV1 || DANH_SACH_63_TINH_THANH_CHUAN);
-        }
-    };
-
+    // Đồng bộ sổ địa chỉ của người dùng (Loại bỏ triệt để và vĩnh viễn mọi dữ liệu mẫu mock address)
     useEffect(() => {
-        if (nguoiDung?.danhSachDiaChi && nguoiDung.danhSachDiaChi.length > 0) {
-            setDanhSachDiaChi(nguoiDung.danhSachDiaChi);
-        } else if (nguoiDung) {
-            setDanhSachDiaChi([
-                {
-                    id: 'dc_1',
-                    hoTen: nguoiDung.hoTen || 'Lê Trí',
-                    soDienThoai: nguoiDung.soDienThoai || '0912 345 678',
-                    diaChiChiTiet: '123 Nguyễn Thị Minh Khai',
-                    phuongXa: 'Phường Bến Thành',
-                    quanHuyen: 'Quận 1',
-                    tinhThanh: 'Thành phố Hồ Chí Minh',
-                    macDinh: true,
-                    loaiDiaChi: 'nha_rieng'
-                }
-            ]);
+        if (nguoiDung) {
+            const dsHopLe = locDiaChiHopLe(nguoiDung.danhSachDiaChi);
+            setDanhSachDiaChi(dsHopLe);
+            // Nếu phát hiện dữ liệu người dùng còn chứa địa chỉ mẫu, lập tức đồng bộ làm sạch cả AuthContext & Database
+            if (Array.isArray(nguoiDung.danhSachDiaChi) && nguoiDung.danhSachDiaChi.length !== dsHopLe.length) {
+                capNhatHoSo({ danhSachDiaChi: dsHopLe }).catch(() => {});
+            }
+        } else {
+            setDanhSachDiaChi([]);
         }
     }, [nguoiDung]);
 
@@ -1027,17 +1010,9 @@ function NoiDungTrangTaiKhoan() {
         setFormDiaChi(prev => ({ ...prev, tinhThanh: tinh.name, quanHuyen: '', phuongXa: '' }));
         setDanhSachQuan([]);
         setDanhSachXa([]);
-
-        if (cheDoDiaGioi === 'v2') {
-            if (tinh.code) {
-                const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(tinh.code);
-                setDanhSachXa(dsXa || []);
-            }
-        } else {
-            if (tinh.code) {
-                const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(tinh.code);
-                setDanhSachQuan(dsQuan || []);
-            }
+        if (tinh.code) {
+            const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(tinh.code);
+            setDanhSachQuan(dsQuan || []);
         }
     };
 
@@ -1057,10 +1032,9 @@ function NoiDungTrangTaiKhoan() {
     const batDauThemDiaChi = () => {
         setIdDiaChiSua(null);
         setDaChamDiaChi({ hoTen: false, soDienThoai: false, diaChiChiTiet: false });
-        setCheDoDiaGioi('v2');
         setFormDiaChi({
-            hoTen: hoTen || '',
-            soDienThoai: soDienThoai || '',
+            hoTen: hoTen || nguoiDung?.hoTen || '',
+            soDienThoai: soDienThoai || nguoiDung?.soDienThoai || '',
             diaChiChiTiet: '',
             phuongXa: '',
             quanHuyen: '',
@@ -1076,46 +1050,30 @@ function NoiDungTrangTaiKhoan() {
     const batDauSuaDiaChi = async (dc) => {
         setIdDiaChiSua(dc.id);
         setDaChamDiaChi({ hoTen: false, soDienThoai: false, diaChiChiTiet: false });
-        const laV1 = Boolean(dc.quanHuyen && dc.quanHuyen.trim());
-        const cheDo = laV1 ? 'v1' : 'v2';
-        setCheDoDiaGioi(cheDo);
-
         setFormDiaChi({
-            hoTen: dc.hoTen,
-            soDienThoai: dc.soDienThoai,
-            diaChiChiTiet: dc.diaChiChiTiet,
-            phuongXa: dc.phuongXa,
+            hoTen: dc.hoTen || '',
+            soDienThoai: dc.soDienThoai || '',
+            diaChiChiTiet: dc.diaChiChiTiet || '',
+            phuongXa: dc.phuongXa || '',
             quanHuyen: dc.quanHuyen || '',
-            tinhThanh: dc.tinhThanh,
-            macDinh: dc.macDinh,
+            tinhThanh: dc.tinhThanh || '',
+            macDinh: Boolean(dc.macDinh),
             loaiDiaChi: dc.loaiDiaChi || 'nha_rieng'
         });
         setDangMoFormDiaChi(true);
 
-        if (cheDo === 'v2') {
-            const listTinhV2 = await DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async();
-            setDanhSachTinh(listTinhV2);
-            if (dc.tinhThanh) {
-                const foundTinh = listTinhV2.find(t => khopTuKhoaDiaChi(t, dc.tinhThanh));
-                if (foundTinh) {
-                    const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(foundTinh.code);
-                    setDanhSachXa(dsXa || []);
-                }
-            }
-        } else {
-            const listTinhV1 = await DiaGioiHanhChinhService.layDanhSachTinhThanhAsync();
-            setDanhSachTinh(listTinhV1);
-            if (dc.tinhThanh) {
-                const foundTinh = listTinhV1.find(t => khopTuKhoaDiaChi(t, dc.tinhThanh));
-                if (foundTinh) {
-                    const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(foundTinh.code);
-                    setDanhSachQuan(dsQuan || []);
-                    if (dc.quanHuyen) {
-                        const foundQuan = (dsQuan || []).find(q => khopTuKhoaDiaChi(q, dc.quanHuyen));
-                        if (foundQuan) {
-                            const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(foundQuan.code);
-                            setDanhSachXa(dsXa || []);
-                        }
+        const listTinh = await DiaGioiHanhChinhService.layDanhSachTinhThanhAsync();
+        setDanhSachTinh(listTinh);
+        if (dc.tinhThanh) {
+            const foundTinh = listTinh.find(t => khopTuKhoaDiaChi(t, dc.tinhThanh));
+            if (foundTinh) {
+                const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(foundTinh.code);
+                setDanhSachQuan(dsQuan || []);
+                if (dc.quanHuyen) {
+                    const foundQuan = (dsQuan || []).find(q => khopTuKhoaDiaChi(q, dc.quanHuyen));
+                    if (foundQuan) {
+                        const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(foundQuan.code);
+                        setDanhSachXa(dsXa || []);
                     }
                 }
             }
@@ -1138,17 +1096,17 @@ function NoiDungTrangTaiKhoan() {
         }
 
         if (!formDiaChi.tinhThanh) {
-            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Tỉnh/Thành phố!' });
+            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Tỉnh / Thành phố!' });
             return;
         }
 
-        if (cheDoDiaGioi === 'v1' && !formDiaChi.quanHuyen) {
-            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Quận/Huyện!' });
+        if (!formDiaChi.quanHuyen) {
+            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Quận / Huyện!' });
             return;
         }
 
         if (!formDiaChi.phuongXa) {
-            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Phường/Xã!' });
+            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Phường / Xã!' });
             return;
         }
 
@@ -1359,19 +1317,18 @@ function NoiDungTrangTaiKhoan() {
                         {/* 1. Header Hồ Sơ Người Dùng */}
                         <div className="flex items-center gap-3 pb-3.5 border-b-2 border-slate-200">
                             <div className="relative w-13 h-13 shrink-0">
-                                <div className="w-13 h-13 rounded-2xl ring-2 ring-blue-500/40 overflow-hidden bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center shadow-md relative">
+                                <div className={`w-13 h-13 rounded-2xl ring-2 ${avatarChon && !avatarLoi ? 'ring-blue-500/40 bg-slate-900' : 'ring-slate-200 bg-slate-100'} overflow-hidden flex items-center justify-center shadow-md relative`}>
                                     {!avatarLoi && avatarChon ? (
                                         <img
                                             src={avatarChon}
-                                            alt=""
+                                            alt={hoTen || 'Avatar'}
                                             referrerPolicy="no-referrer"
                                             onError={() => setAvatarLoi(true)}
                                             className="w-full h-full object-cover"
                                         />
-                                    ) : null}
-                                    <span className="absolute inset-0 flex items-center justify-center text-lg font-black text-white -z-10 select-none">
-                                        {hoTen?.charAt(0)?.toUpperCase() || 'T'}
-                                    </span>
+                                    ) : (
+                                        <User className="w-6 h-6 text-slate-400" />
+                                    )}
                                 </div>
                                 <button
                                     onClick={() => setMoModalChonAvatar(true)}
@@ -2589,316 +2546,236 @@ function NoiDungTrangTaiKhoan() {
 
                             {/* Form Thêm/Sửa địa chỉ: Phân vùng màu sắc trực quan theo chức năng */}
                             {dangMoFormDiaChi && (
-                                <form onSubmit={xuLyLuuDiaChi} className="p-4 sm:p-5 rounded-2xl bg-white border-2 border-emerald-400 space-y-4 animate-in fade-in duration-200 shadow-md">
-                                    <div className="flex items-center justify-between pb-2.5 border-b border-emerald-100">
-                                        <div className="flex items-center gap-2 font-black text-sm text-slate-900">
-                                            <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                                                <MapPin className="w-3.5 h-3.5" />
+                                <form onSubmit={xuLyLuuDiaChi} className="p-5 sm:p-6 rounded-2xl bg-white border-2 border-emerald-500 shadow-lg space-y-4 animate-in fade-in duration-200">
+                                    {/* Header Form */}
+                                    <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                                                <MapPin className="w-4 h-4" />
                                             </div>
-                                            <span>{idDiaChiSua ? 'Cập Nhật Địa Chỉ Nhận Hàng' : 'Thiết Lập Địa Chỉ Nhận Hàng Mới'}</span>
+                                            <div>
+                                                <h3 className="font-black text-sm text-slate-900">
+                                                    {idDiaChiSua ? 'Cập Nhật Địa Chỉ Nhận Hàng' : 'Thêm Địa Chỉ Nhận Hàng Mới'}
+                                                </h3>
+                                                <p className="text-[11px] text-slate-500">
+                                                    Vui lòng điền chính xác thông tin để đơn hàng được giao nhanh chóng nhất
+                                                </p>
+                                            </div>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setDangMoFormDiaChi(false)}
-                                            className="w-7 h-7 rounded-lg bg-slate-100 text-slate-400 hover:text-slate-700 flex items-center justify-center cursor-pointer transition-colors"
+                                            className="w-8 h-8 rounded-xl bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 flex items-center justify-center cursor-pointer transition-colors"
+                                            title="Đóng form"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
                                     </div>
 
-                                    {/* PHÂN VÙNG 1: THÔNG TIN NGƯỜI NHẬN (TONE BLUE) */}
-                                    <div className="p-3.5 rounded-xl bg-blue-50/50 border border-blue-200/80 space-y-2.5">
-                                        <div className="text-[11px] font-black text-blue-800 uppercase tracking-wider flex items-center gap-1.5">
-                                            <User className="w-3.5 h-3.5 text-blue-600" />
-                                            <span>1. Người Nhận Hàng</span>
-                                        </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                                                    Họ và tên người nhận *
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="text"
-                                                        required
-                                                        placeholder="Ví dụ: Lê Trí"
-                                                        value={formDiaChi.hoTen}
-                                                        onChange={(e) => {
-                                                            setFormDiaChi({ ...formDiaChi, hoTen: e.target.value });
-                                                            setDaChamDiaChi(prev => ({ ...prev, hoTen: true }));
-                                                        }}
-                                                        onBlur={() => setDaChamDiaChi(prev => ({ ...prev, hoTen: true }))}
-                                                        className={`w-full pl-9 pr-8 py-2 rounded-xl border-2 text-xs font-bold transition-all ${
-                                                            daChamDiaChi.hoTen && loiDiaChiHoTen
-                                                                ? 'border-rose-500 bg-rose-50/40 text-rose-900 focus:border-rose-600 focus:ring-2 focus:ring-rose-200'
-                                                                : daChamDiaChi.hoTen && !loiDiaChiHoTen && formDiaChi.hoTen.trim()
-                                                                ? 'border-emerald-500 bg-emerald-50/20 text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100'
-                                                                : 'border-blue-200 bg-white text-slate-900 focus:outline-none focus:border-blue-500'
-                                                        }`}
-                                                    />
-                                                    <User className="w-3.5 h-3.5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                                                    {daChamDiaChi.hoTen && loiDiaChiHoTen && (
-                                                        <AlertCircle className="w-3.5 h-3.5 text-rose-500 absolute right-2.5 top-1/2 -translate-y-1/2" />
-                                                    )}
-                                                    {daChamDiaChi.hoTen && !loiDiaChiHoTen && formDiaChi.hoTen.trim() && (
-                                                        <Check className="w-3.5 h-3.5 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2" />
-                                                    )}
-                                                </div>
+                                    {/* Hàng 1: Người nhận (Họ tên & SĐT) - Chia 2 cột đều nhau */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+                                                <span>Họ và tên người nhận</span>
+                                                <span className="text-rose-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    placeholder="Ví dụ: Nguyễn Văn A"
+                                                    value={formDiaChi.hoTen}
+                                                    onChange={(e) => {
+                                                        setFormDiaChi({ ...formDiaChi, hoTen: e.target.value });
+                                                        setDaChamDiaChi(prev => ({ ...prev, hoTen: true }));
+                                                    }}
+                                                    onBlur={() => setDaChamDiaChi(prev => ({ ...prev, hoTen: true }))}
+                                                    className={`w-full pl-9 pr-8 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                                                        daChamDiaChi.hoTen && loiDiaChiHoTen
+                                                            ? 'border-rose-400 bg-rose-50/40 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-100'
+                                                            : daChamDiaChi.hoTen && !loiDiaChiHoTen && formDiaChi.hoTen.trim()
+                                                            ? 'border-emerald-500 bg-white text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100'
+                                                            : 'border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                                                    }`}
+                                                />
+                                                <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                                 {daChamDiaChi.hoTen && loiDiaChiHoTen && (
-                                                    <p className="text-[10.5px] font-bold text-rose-600 flex items-center gap-1 mt-1">
-                                                        <AlertCircle className="w-3 h-3 shrink-0" />
-                                                        <span>{loiDiaChiHoTen}</span>
-                                                    </p>
+                                                    <AlertCircle className="w-4 h-4 text-rose-500 absolute right-2.5 top-1/2 -translate-y-1/2" />
+                                                )}
+                                                {daChamDiaChi.hoTen && !loiDiaChiHoTen && formDiaChi.hoTen.trim() && (
+                                                    <Check className="w-4 h-4 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2" />
                                                 )}
                                             </div>
+                                            {daChamDiaChi.hoTen && loiDiaChiHoTen && (
+                                                <p className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-1">
+                                                    <AlertCircle className="w-3 h-3 shrink-0" />
+                                                    <span>{loiDiaChiHoTen}</span>
+                                                </p>
+                                            )}
+                                        </div>
 
-                                            <div>
-                                                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                                                    Số điện thoại liên hệ *
-                                                </label>
-                                                <div className="relative">
-                                                    <input
-                                                        type="tel"
-                                                        required
-                                                        placeholder="Ví dụ: 0912 345 678"
-                                                        value={formDiaChi.soDienThoai}
-                                                        onChange={(e) => {
-                                                            setFormDiaChi({ ...formDiaChi, soDienThoai: e.target.value });
-                                                            setDaChamDiaChi(prev => ({ ...prev, soDienThoai: true }));
-                                                        }}
-                                                        onBlur={() => setDaChamDiaChi(prev => ({ ...prev, soDienThoai: true }))}
-                                                        className={`w-full pl-9 pr-8 py-2 rounded-xl border-2 text-xs font-bold transition-all ${
-                                                            daChamDiaChi.soDienThoai && loiDiaChiSoDienThoai
-                                                                ? 'border-rose-500 bg-rose-50/40 text-rose-900 focus:border-rose-600 focus:ring-2 focus:ring-rose-200'
-                                                                : daChamDiaChi.soDienThoai && !loiDiaChiSoDienThoai && formDiaChi.soDienThoai.trim()
-                                                                ? 'border-emerald-500 bg-emerald-50/20 text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100'
-                                                                : 'border-blue-200 bg-white text-slate-900 focus:outline-none focus:border-blue-500'
-                                                        }`}
-                                                    />
-                                                    <Phone className="w-3.5 h-3.5 text-blue-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                                                    {daChamDiaChi.soDienThoai && loiDiaChiSoDienThoai && (
-                                                        <AlertCircle className="w-3.5 h-3.5 text-rose-500 absolute right-2.5 top-1/2 -translate-y-1/2" />
-                                                    )}
-                                                    {daChamDiaChi.soDienThoai && !loiDiaChiSoDienThoai && formDiaChi.soDienThoai.trim() && (
-                                                        <Check className="w-3.5 h-3.5 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2" />
-                                                    )}
-                                                </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+                                                <span>Số điện thoại liên hệ</span>
+                                                <span className="text-rose-500">*</span>
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type="tel"
+                                                    required
+                                                    placeholder="Ví dụ: 0912 345 678"
+                                                    value={formDiaChi.soDienThoai}
+                                                    onChange={(e) => {
+                                                        setFormDiaChi({ ...formDiaChi, soDienThoai: e.target.value });
+                                                        setDaChamDiaChi(prev => ({ ...prev, soDienThoai: true }));
+                                                    }}
+                                                    onBlur={() => setDaChamDiaChi(prev => ({ ...prev, soDienThoai: true }))}
+                                                    className={`w-full pl-9 pr-8 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
+                                                        daChamDiaChi.soDienThoai && loiDiaChiSoDienThoai
+                                                            ? 'border-rose-400 bg-rose-50/40 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-100'
+                                                            : daChamDiaChi.soDienThoai && !loiDiaChiSoDienThoai && formDiaChi.soDienThoai.trim()
+                                                            ? 'border-emerald-500 bg-white text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100'
+                                                            : 'border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                                                    }`}
+                                                />
+                                                <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                                 {daChamDiaChi.soDienThoai && loiDiaChiSoDienThoai && (
-                                                    <p className="text-[10.5px] font-bold text-rose-600 flex items-center gap-1 mt-1">
-                                                        <AlertCircle className="w-3 h-3 shrink-0" />
-                                                        <span>{loiDiaChiSoDienThoai}</span>
-                                                    </p>
+                                                    <AlertCircle className="w-4 h-4 text-rose-500 absolute right-2.5 top-1/2 -translate-y-1/2" />
+                                                )}
+                                                {daChamDiaChi.soDienThoai && !loiDiaChiSoDienThoai && formDiaChi.soDienThoai.trim() && (
+                                                    <Check className="w-4 h-4 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2" />
                                                 )}
                                             </div>
+                                            {daChamDiaChi.soDienThoai && loiDiaChiSoDienThoai && (
+                                                <p className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-1">
+                                                    <AlertCircle className="w-3 h-3 shrink-0" />
+                                                    <span>{loiDiaChiSoDienThoai}</span>
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
 
-                                    {/* PHÂN VÙNG 2: ĐỊA GIỚI HÀNH CHÍNH (TONE EMERALD/TEAL) - CHUẨN API V2 VÀ V1 */}
-                                    <div className="p-3.5 rounded-xl bg-emerald-50/50 border border-emerald-200/80 space-y-2.5">
-                                        <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-emerald-200/60">
-                                            <div className="text-[11px] font-black text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                                                <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                                                <span>2. Địa Giới Hành Chính</span>
-                                            </div>
+                                    {/* Hàng 2: Tỉnh/Thành phố, Quận/Huyện, Phường/Xã - Chia 3 cột ngay ngắn trên desktop, 1 cột trên mobile */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                        <BoChonDiaGioi
+                                            label="Tỉnh / Thành phố *"
+                                            icon={Building2}
+                                            danhSach={danhSachTinh}
+                                            giaTri={formDiaChi.tinhThanh}
+                                            onChon={chonTinhThanh}
+                                            placeholder="Chọn Tỉnh / Thành phố..."
+                                        />
 
-                                            {/* Tab chuyển đổi chuẩn địa giới: Chuẩn Mới 34 Tỉnh/TP vs Chuẩn 63 Tỉnh/TP */}
-                                            <div className="flex items-center gap-1 p-0.5 bg-emerald-100/80 rounded-xl border border-emerald-300">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => doiCheDoDiaGioi('v2')}
-                                                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black transition-all cursor-pointer flex items-center gap-1 ${
-                                                        cheDoDiaGioi === 'v2'
-                                                            ? 'bg-emerald-700 text-white shadow-xs'
-                                                            : 'text-emerald-900 hover:bg-emerald-200/60'
-                                                    }`}
-                                                    title="Chuẩn API v2 sau sáp nhập - 34 Tỉnh/Thành phố trực thuộc Trung ương"
-                                                >
-                                                    <Zap className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
-                                                    <span>API v2 (34 Tỉnh/TP Mới)</span>
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => doiCheDoDiaGioi('v1')}
-                                                    className={`px-2.5 py-1 rounded-lg text-[10.5px] font-black transition-all cursor-pointer flex items-center gap-1 ${
-                                                        cheDoDiaGioi === 'v1'
-                                                            ? 'bg-blue-700 text-white shadow-xs'
-                                                            : 'text-emerald-900 hover:bg-emerald-200/60'
-                                                    }`}
-                                                    title="Chuẩn hành chính 63 Tỉnh/Thành phố truyền thống (Có Tỉnh Bến Tre, Tiền Giang, Long An...)"
-                                                >
-                                                    <span>63 Tỉnh/TP (Truyền Thống)</span>
-                                                </button>
-                                            </div>
-                                        </div>
+                                        <BoChonDiaGioi
+                                            label="Quận / Huyện *"
+                                            icon={Compass}
+                                            danhSach={danhSachQuan}
+                                            giaTri={formDiaChi.quanHuyen}
+                                            onChon={chonQuanHuyen}
+                                            placeholder={formDiaChi.tinhThanh ? `Chọn Quận / Huyện (${danhSachQuan.length})...` : "Chọn Tỉnh / TP trước"}
+                                            disabled={!formDiaChi.tinhThanh}
+                                        />
 
-                                        {/* Ghi chú chỉ dẫn sáp nhập thông minh khi ở chế độ V2 */}
-                                        {cheDoDiaGioi === 'v2' ? (
-                                            <>
-                                                <div className="p-2 rounded-lg bg-emerald-100/60 border border-emerald-300/80 text-[10.5px] text-emerald-900 flex items-start gap-1.5 leading-relaxed">
-                                                    <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-                                                    <div>
-                                                        <span className="font-black">Lưu ý chuẩn API v2: </span>
-                                                        <span>
-                                                            Theo cấu trúc mới, 63 tỉnh cũ được sáp nhập thành 34 tỉnh/TP. 
-                                                            Khu vực <strong>Bến Tre, Trà Vinh</strong> thuộc <strong>Tỉnh Vĩnh Long</strong>; 
-                                                            <strong> Tiền Giang</strong> thuộc <strong>Tỉnh Đồng Tháp</strong>; 
-                                                            <strong> Bình Dương</strong> thuộc <strong>TP. Hồ Chí Minh</strong>; 
-                                                            <strong> Long An</strong> thuộc <strong>Tây Ninh</strong>.
-                                                            (Hoặc bấm tab <strong>63 Tỉnh/TP (Truyền Thống)</strong> ở trên nếu muốn chọn riêng Tỉnh Bến Tre).
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                                    <BoChonDiaGioi
-                                                        label="Tỉnh / Thành phố (34 Tỉnh/TP Sau Sáp Nhập) *"
-                                                        icon={Building2}
-                                                        danhSach={danhSachTinh}
-                                                        giaTri={formDiaChi.tinhThanh}
-                                                        onChon={chonTinhThanh}
-                                                        placeholder="Gõ tìm Tỉnh/TP (VD: Vĩnh Long, Hà Nội, HCM...)"
-                                                    />
-
-                                                    <BoChonDiaGioi
-                                                        label="Phường / Xã (Chuẩn hành chính mới) *"
-                                                        icon={Home}
-                                                        danhSach={danhSachXa}
-                                                        giaTri={formDiaChi.phuongXa}
-                                                        onChon={chonPhuongXa}
-                                                        placeholder={formDiaChi.tinhThanh ? `Chọn Phường / Xã (${danhSachXa.length} nơi)...` : "Vui lòng chọn Tỉnh / TP trước"}
-                                                        disabled={!formDiaChi.tinhThanh}
-                                                    />
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="p-2 rounded-lg bg-blue-50 border border-blue-200 text-[10.5px] text-blue-900 flex items-center gap-1.5 leading-tight">
-                                                    <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                                                    <span>
-                                                        Chuẩn 63 Tỉnh/Thành phố truyền thống (3 cấp: Tỉnh ➔ Quận/Huyện ➔ Phường/Xã đầy đủ như Tỉnh Bến Tre, Tiền Giang, Long An...).
-                                                    </span>
-                                                </div>
-
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                                    <BoChonDiaGioi
-                                                        label="Tỉnh / Thành phố (63 Tỉnh) *"
-                                                        icon={Building2}
-                                                        danhSach={danhSachTinh}
-                                                        giaTri={formDiaChi.tinhThanh}
-                                                        onChon={chonTinhThanh}
-                                                        placeholder="Chọn Tỉnh / TP..."
-                                                    />
-
-                                                    <BoChonDiaGioi
-                                                        label="Quận / Huyện *"
-                                                        icon={Compass}
-                                                        danhSach={danhSachQuan}
-                                                        giaTri={formDiaChi.quanHuyen}
-                                                        onChon={chonQuanHuyen}
-                                                        placeholder={formDiaChi.tinhThanh ? `Chọn Quận / Huyện (${danhSachQuan.length})...` : "Chọn Tỉnh trước"}
-                                                        disabled={!formDiaChi.tinhThanh}
-                                                    />
-
-                                                    <BoChonDiaGioi
-                                                        label="Phường / Xã *"
-                                                        icon={Home}
-                                                        danhSach={danhSachXa}
-                                                        giaTri={formDiaChi.phuongXa}
-                                                        onChon={chonPhuongXa}
-                                                        placeholder={formDiaChi.quanHuyen ? `Chọn Phường / Xã (${danhSachXa.length})...` : "Chọn Huyện trước"}
-                                                        disabled={!formDiaChi.quanHuyen}
-                                                    />
-                                                </div>
-                                            </>
-                                        )}
+                                        <BoChonDiaGioi
+                                            label="Phường / Xã *"
+                                            icon={Home}
+                                            danhSach={danhSachXa}
+                                            giaTri={formDiaChi.phuongXa}
+                                            onChon={chonPhuongXa}
+                                            placeholder={formDiaChi.quanHuyen ? `Chọn Phường / Xã (${danhSachXa.length})...` : "Chọn Quận / Huyện trước"}
+                                            disabled={!formDiaChi.quanHuyen}
+                                        />
                                     </div>
 
-                                    {/* PHÂN VÙNG 3: ĐỊA CHỈ CHI TIẾT (TONE PURPLE) */}
-                                    <div className="p-3.5 rounded-xl bg-purple-50/50 border border-purple-200/80 space-y-2">
-                                        <label className="block text-[11px] font-black text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
-                                            <MapPin className="w-3.5 h-3.5 text-purple-600" />
-                                            <span>3. Số Nhà, Tên Đường, Tòa Nhà Chi Tiết *</span>
+                                    {/* Hàng 3: Địa chỉ chi tiết (Số nhà, tên đường...) */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+                                            <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                                            <span>Số nhà, tên đường, tòa nhà chi tiết</span>
+                                            <span className="text-rose-500">*</span>
                                         </label>
                                         <div className="relative">
                                             <input
                                                 type="text"
                                                 required
-                                                placeholder="Ví dụ: 123 Nguyễn Thị Minh Khai, Tòa nhà Bitexco tầng 12..."
+                                                placeholder="Ví dụ: Số 25, Đường Lê Lợi, Phường Bến Nghé"
                                                 value={formDiaChi.diaChiChiTiet}
                                                 onChange={(e) => {
                                                     setFormDiaChi({ ...formDiaChi, diaChiChiTiet: e.target.value });
                                                     setDaChamDiaChi(prev => ({ ...prev, diaChiChiTiet: true }));
                                                 }}
                                                 onBlur={() => setDaChamDiaChi(prev => ({ ...prev, diaChiChiTiet: true }))}
-                                                className={`w-full pl-9 pr-8 py-2 rounded-xl border-2 text-xs font-bold transition-all ${
+                                                className={`w-full pl-9 pr-8 py-2.5 rounded-xl border text-xs font-semibold transition-all ${
                                                     daChamDiaChi.diaChiChiTiet && loiDiaChiChiTiet
-                                                        ? 'border-rose-500 bg-rose-50/40 text-rose-900 focus:border-rose-600 focus:ring-2 focus:ring-rose-200'
+                                                        ? 'border-rose-400 bg-rose-50/40 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-100'
                                                         : daChamDiaChi.diaChiChiTiet && !loiDiaChiChiTiet && formDiaChi.diaChiChiTiet.trim()
-                                                        ? 'border-emerald-500 bg-emerald-50/20 text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100'
-                                                        : 'border-purple-200 bg-white text-slate-900 focus:outline-none focus:border-purple-500'
+                                                        ? 'border-emerald-500 bg-white text-slate-900 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100'
+                                                        : 'border-slate-300 bg-white text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
                                                 }`}
                                             />
-                                            <MapPin className="w-3.5 h-3.5 text-purple-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                                            <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                             {daChamDiaChi.diaChiChiTiet && loiDiaChiChiTiet && (
-                                                <AlertCircle className="w-3.5 h-3.5 text-rose-500 absolute right-2.5 top-1/2 -translate-y-1/2" />
+                                                <AlertCircle className="w-4 h-4 text-rose-500 absolute right-2.5 top-1/2 -translate-y-1/2" />
                                             )}
                                             {daChamDiaChi.diaChiChiTiet && !loiDiaChiChiTiet && formDiaChi.diaChiChiTiet.trim() && (
-                                                <Check className="w-3.5 h-3.5 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2" />
+                                                <Check className="w-4 h-4 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2" />
                                             )}
                                         </div>
                                         {daChamDiaChi.diaChiChiTiet && loiDiaChiChiTiet && (
-                                            <p className="text-[10.5px] font-bold text-rose-600 flex items-center gap-1 mt-1">
+                                            <p className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-1">
                                                 <AlertCircle className="w-3 h-3 shrink-0" />
                                                 <span>{loiDiaChiChiTiet}</span>
                                             </p>
                                         )}
                                     </div>
 
-                                    {/* PHÂN VÙNG 4: PHÂN LOẠI & THIẾT LẬP MẶC ĐỊNH */}
-                                    <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                                        <div className="flex items-center gap-3 text-xs font-bold">
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormDiaChi({ ...formDiaChi, loaiDiaChi: 'nha_rieng' })}
-                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                                                    formDiaChi.loaiDiaChi === 'nha_rieng'
-                                                        ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <Home className="w-3.5 h-3.5" />
-                                                <span>Nhà riêng</span>
-                                            </button>
+                                    {/* Hàng 4: Loại địa chỉ, Checkbox mặc định & Nút hành động */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2 border-t border-slate-100">
+                                        <div className="flex flex-wrap items-center gap-3">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormDiaChi({ ...formDiaChi, loaiDiaChi: 'nha_rieng' })}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                                                        formDiaChi.loaiDiaChi === 'nha_rieng'
+                                                            ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                                                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                                                    }`}
+                                                >
+                                                    <Home className="w-3.5 h-3.5" />
+                                                    <span>Nhà riêng</span>
+                                                </button>
 
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormDiaChi({ ...formDiaChi, loaiDiaChi: 'van_phong' })}
-                                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
-                                                    formDiaChi.loaiDiaChi === 'van_phong'
-                                                        ? 'bg-purple-600 border-purple-600 text-white shadow-xs'
-                                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <Building2 className="w-3.5 h-3.5" />
-                                                <span>Văn phòng</span>
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormDiaChi({ ...formDiaChi, loaiDiaChi: 'van_phong' })}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                                                        formDiaChi.loaiDiaChi === 'van_phong'
+                                                            ? 'bg-purple-600 border-purple-600 text-white shadow-xs'
+                                                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                                                    }`}
+                                                >
+                                                    <Building2 className="w-3.5 h-3.5" />
+                                                    <span>Văn phòng</span>
+                                                </button>
+                                            </div>
 
-                                            <label className="flex items-center gap-1.5 cursor-pointer ml-1 select-none">
+                                            <label className="flex items-center gap-2 cursor-pointer select-none ml-1">
                                                 <input
                                                     type="checkbox"
                                                     checked={formDiaChi.macDinh}
                                                     onChange={(e) => setFormDiaChi({ ...formDiaChi, macDinh: e.target.checked })}
                                                     className="rounded text-emerald-600 accent-emerald-600 w-4 h-4 cursor-pointer"
                                                 />
-                                                <span className="text-slate-800 text-xs font-bold">Đặt làm địa chỉ mặc định</span>
+                                                <span className="text-slate-700 text-xs font-bold">Đặt làm địa chỉ mặc định</span>
                                             </label>
                                         </div>
 
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 self-end sm:self-auto">
                                             <button
                                                 type="button"
                                                 onClick={() => setDangMoFormDiaChi(false)}
-                                                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 cursor-pointer transition-colors"
+                                                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors"
                                             >
                                                 Hủy bỏ
                                             </button>
@@ -2990,13 +2867,9 @@ function NoiDungTrangTaiKhoan() {
                                                 )}
                                                 <button
                                                     type="button"
-                                                    onClick={() => {
-                                                        setIdDiaChiSua(dc.id);
-                                                        setFormDiaChi(dc);
-                                                        setDangMoFormDiaChi(true);
-                                                    }}
+                                                    onClick={() => batDauSuaDiaChi(dc)}
                                                     className="p-2 rounded-xl text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 bg-white cursor-pointer transition-all shadow-2xs active:scale-95"
-                                                    title="Sửa địa chỉ"
+                                                    title="Chỉnh sửa địa chỉ"
                                                 >
                                                     <Edit3 className="w-4 h-4" />
                                                 </button>
@@ -3613,6 +3486,19 @@ function NoiDungTrangTaiKhoan() {
                         </div>
 
                         <div className="grid grid-cols-3 gap-3 pt-2">
+                            <button
+                                type="button"
+                                onClick={xuLyXoaAvatar}
+                                className={`relative aspect-square rounded-2xl overflow-hidden ring-2 transition-all hover:scale-105 cursor-pointer shadow-sm flex flex-col items-center justify-center bg-slate-100 ${
+                                    !avatarChon ? 'ring-blue-600 scale-105 shadow-md shadow-blue-500/40 bg-blue-50/60' : 'ring-transparent hover:ring-slate-300'
+                                }`}
+                                title="Dùng icon mặc định (Không đặt ảnh)"
+                            >
+                                <User className={`w-8 h-8 ${!avatarChon ? 'text-blue-600' : 'text-slate-400'}`} />
+                                <span className={`text-[10.5px] font-bold mt-1 ${!avatarChon ? 'text-blue-700 font-black' : 'text-slate-500'}`}>
+                                    Icon Mặc Định
+                                </span>
+                            </button>
                             {AVATAR_PRESETS.map((img, i) => (
                                 <button
                                     key={i}
@@ -3627,8 +3513,19 @@ function NoiDungTrangTaiKhoan() {
                             ))}
                         </div>
 
-                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-                            <span className="text-[11px] text-slate-400">Avatar tự động đồng bộ lên tài khoản</span>
+                        <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
+                            {avatarChon ? (
+                                <button
+                                    type="button"
+                                    onClick={xuLyXoaAvatar}
+                                    className="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-rose-300 bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 font-bold text-xs cursor-pointer flex items-center gap-1.5 transition-colors"
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>Đặt về icon mặc định</span>
+                                </button>
+                            ) : (
+                                <span className="text-[11px] text-slate-400 font-medium">Đang dùng icon mặc định</span>
+                            )}
                             <button
                                 type="button"
                                 onClick={() => setMoModalChonAvatar(false)}

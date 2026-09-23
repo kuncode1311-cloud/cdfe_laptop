@@ -165,7 +165,7 @@ const kichHoatTaiKhoan = async (req, res) => {
                 email: tempUser.email,
                 soDienThoai: tempUser.soDienThoai,
                 matKhau: tempUser.matKhau,
-                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+                avatar: '',
                 vaiTro: 'khach_hang',
                 hangThanhVien: 'Thành Viên Mới',
                 daKichHoat: true,
@@ -409,7 +409,7 @@ const dangNhapGoogle = async (req, res) => {
                 email: emailChuan,
                 soDienThoai: '',
                 matKhau: matKhauHash,
-                avatar: googleAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+                avatar: googleAvatar || '',
                 vaiTro: 'khach_hang',
                 hangThanhVien: 'Thành Viên',
                 viVoucher: [],
@@ -701,7 +701,7 @@ const capNhatHoSo = async (req, res) => {
 
         if (duLieu.hoTen) user.hoTen = duLieu.hoTen.trim();
         if (duLieu.soDienThoai !== undefined) user.soDienThoai = duLieu.soDienThoai.trim();
-        if (duLieu.avatar) user.avatar = duLieu.avatar.trim();
+        if (duLieu.avatar !== undefined) user.avatar = typeof duLieu.avatar === 'string' ? duLieu.avatar.trim() : '';
         if (duLieu.gioiTinh) user.gioiTinh = duLieu.gioiTinh;
         if (duLieu.ngaySinh !== undefined) user.ngaySinh = duLieu.ngaySinh;
         if (Array.isArray(duLieu.danhSachDiaChi)) user.danhSachDiaChi = duLieu.danhSachDiaChi;

@@ -5,6 +5,36 @@ import { API_BASE_URL, TOKEN_STORAGE_KEY } from '@/services/api-client';
 export const AuthContext = createContext(undefined);
 const USER_STORAGE_KEY = 'tnt_laptop_user';
 
+export const laDiaChiGiaLap = (dc) => {
+    if (!dc || typeof dc !== 'object') return true;
+    if (dc.id === 'dc_1') return true;
+    const chiTiet = (dc.diaChiChiTiet || '').toLowerCase();
+    const phuong = (dc.phuongXa || '').toLowerCase();
+    const quan = (dc.quanHuyen || '').toLowerCase();
+    const tinh = (dc.tinhThanh || '').toLowerCase();
+    
+    if (chiTiet.includes('minh khai')) return true;
+    if (phuong.includes('bến thành') || phuong.includes('ben thanh')) return true;
+    if (quan.includes('quận 1') || quan.includes('quan 1')) return true;
+    if (chiTiet.includes('123') && (tinh.includes('hồ chí minh') || tinh.includes('ho chi minh'))) return true;
+    if (dc.hoTen === 'Lê Trí' && (dc.soDienThoai === '0912 345 678' || dc.soDienThoai === '0912345678')) return true;
+    return false;
+};
+
+export const locDiaChiHopLe = (danhSach) => {
+    if (!Array.isArray(danhSach)) return [];
+    return danhSach.filter(dc => !laDiaChiGiaLap(dc));
+};
+
+export const lamSachDuLieuNguoiDung = (user) => {
+    if (!user || typeof user !== 'object') return user;
+    const userMoi = { ...user };
+    if (Array.isArray(userMoi.danhSachDiaChi)) {
+        userMoi.danhSachDiaChi = locDiaChiHopLe(userMoi.danhSachDiaChi);
+    }
+    return userMoi;
+};
+
 export function AuthProvider({ children }) {
     const [nguoiDung, setNguoiDung] = useState(null);
     const [token, setToken] = useState(null);
@@ -26,7 +56,12 @@ export function AuthProvider({ children }) {
                     try {
                         const parsedUser = JSON.parse(userLuu);
                         if (!daHuy && parsedUser) {
-                            setNguoiDung(parsedUser);
+                            const cleanUser = lamSachDuLieuNguoiDung(parsedUser);
+                            setNguoiDung(cleanUser);
+                            // Nếu trong localStorage có địa chỉ giả lập/mẫu, ghi đè làm sạch ngay lập tức
+                            if (JSON.stringify(cleanUser) !== userLuu) {
+                                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser));
+                            }
                         }
                     } catch (err) {
                         console.warn('Lỗi đọc user cache:', err);
@@ -54,8 +89,9 @@ export function AuthProvider({ children }) {
                             if (res.ok) {
                                 const data = await res.json();
                                 if (data.nguoiDung) {
-                                    setNguoiDung(data.nguoiDung);
-                                    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
+                                    const cleanUser = lamSachDuLieuNguoiDung(data.nguoiDung);
+                                    setNguoiDung(cleanUser);
+                                    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser));
                                 }
                             } else if (res.status === 401) {
                                 // Token hết hạn thực sự trên server -> xóa phiên
@@ -117,11 +153,12 @@ export function AuthProvider({ children }) {
             }
 
             if (data.token && data.nguoiDung) {
+                const cleanUser = lamSachDuLieuNguoiDung(data.nguoiDung);
                 setToken(data.token);
-                setNguoiDung(data.nguoiDung);
+                setNguoiDung(cleanUser);
                 localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
-                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
-                return data.nguoiDung;
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser));
+                return cleanUser;
             }
 
             throw new Error('Dữ liệu phản hồi từ server không hợp lệ');
@@ -169,10 +206,11 @@ export function AuthProvider({ children }) {
             }
 
             if (data.token && data.nguoiDung) {
+                const cleanUser = lamSachDuLieuNguoiDung(data.nguoiDung);
                 setToken(data.token);
-                setNguoiDung(data.nguoiDung);
+                setNguoiDung(cleanUser);
                 localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
-                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser));
             }
 
             return data;
@@ -227,11 +265,12 @@ export function AuthProvider({ children }) {
             }
 
             if (data.token && data.nguoiDung) {
+                const cleanUser = lamSachDuLieuNguoiDung(data.nguoiDung);
                 setToken(data.token);
-                setNguoiDung(data.nguoiDung);
+                setNguoiDung(cleanUser);
                 localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
-                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
-                return data.nguoiDung;
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser));
+                return cleanUser;
             }
             throw new Error('Không nhận được token từ server');
         } catch (error) {
@@ -294,10 +333,11 @@ export function AuthProvider({ children }) {
             throw new Error(data.thong_diep || 'Không thể đặt lại mật khẩu, vui lòng thử lại!');
         }
         if (data.token && data.nguoiDung) {
+            const cleanUser = lamSachDuLieuNguoiDung(data.nguoiDung);
             setToken(data.token);
-            setNguoiDung(data.nguoiDung);
+            setNguoiDung(cleanUser);
             localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
-            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
+            localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser));
         }
         return data;
     };
@@ -330,15 +370,16 @@ export function AuthProvider({ children }) {
             }
 
             if (data.nguoiDung) {
-                setNguoiDung(data.nguoiDung);
-                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.nguoiDung));
+                const cleanUser = lamSachDuLieuNguoiDung(data.nguoiDung);
+                setNguoiDung(cleanUser);
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser));
             }
 
             return data;
         } catch (error) {
             console.error('Lỗi cập nhật hồ sơ:', error.message);
             if (nguoiDung) {
-                const userMoi = { ...nguoiDung, ...duLieuCapNhat };
+                const userMoi = lamSachDuLieuNguoiDung({ ...nguoiDung, ...duLieuCapNhat });
                 setNguoiDung(userMoi);
                 localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userMoi));
             }

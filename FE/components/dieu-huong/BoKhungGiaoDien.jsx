@@ -6,6 +6,7 @@ import MenuDanhMuc from '@/components/dieu-huong/MenuDanhMuc';
 import ChanTrang from '@/components/dieu-huong/ChanTrang';
 import NutLienHeNoi from '@/components/dieu-huong/NutLienHeNoi';
 import ThanhSoSanhNoi from '@/components/so-sanh/ThanhSoSanhNoi';
+import HopChatAI from '@/components/chat-ai/HopChatAI';
 
 /**
  * Bộ khung điều phối giao diện:
@@ -47,6 +48,7 @@ export default function BoKhungGiaoDien({ children }) {
             </div>
             <ThanhSoSanhNoi />
             <NutLienHeNoi />
+            <HopChatAI />
         </div>
     );
 }

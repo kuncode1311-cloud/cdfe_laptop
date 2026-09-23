@@ -154,7 +154,7 @@ export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
                   {nguoiDung.avatar ? (
                     <img src={nguoiDung.avatar} alt="" className="w-full h-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                   ) : (
-                    nguoiDung.hoTen?.charAt(0) || 'T'
+                    <User className="w-3.5 h-3.5 text-white" />
                   )}
                 </div>
                 <span className="hidden md:inline max-w-[100px] truncate">
