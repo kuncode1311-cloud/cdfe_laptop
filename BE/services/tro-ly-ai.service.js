@@ -223,15 +223,19 @@ QUY TẮC BẮT BUỘC:
 2. TUYỆT ĐỐI KHÔNG CỘC LỐC, KHÔNG CỤT NGỦN: Luôn có lời chào/dạ thưa lịch thiệp, diễn đạt trọn vẹn và kết thúc bằng câu hỏi mở hoặc lời mời xem đồ.
 3. TUYỆT ĐỐI KHÔNG NGẮT CÂU LỬNG LƠ GIỮA CHỪNG: Viết câu trọn vẹn chủ ngữ - vị ngữ, không để dở dang chữ hay số.
 4. TUYỆT ĐỐI CẤM LIỆT KÊ TEXT: Không bao giờ gõ danh sách sản phẩm hay gạch đầu dòng trong "cau_tra_loi" (Không gõ: "* Món 1...", "* Món 2...").
-5. TỰ ĐỘNG GẮN CARD SẢN PHẨM: Mọi sản phẩm hoặc phụ kiện bạn muốn giới thiệu cho khách BẮT BUỘC PHẢI ĐƯA ID VÀO MẢNG "id_san_pham_phu_hop" (chọn từ 2 đến 4 ID từ danh sách bên trên). Hệ thống sẽ tự động vẽ thành các Thẻ Sản Phẩm (Cards) có ảnh, thông số và nút mua cho khách!
-6. GỢI Ý TIẾP THEO ("goi_y_tiep_theo"): Đưa ra 3 câu hỏi gợi ý ngắn gọn, thú vị và bám sát chính xác chủ đề món đồ khách vừa hỏi.
+5. ĐÍNH KÈM THẺ SẢN PHẨM ("id_san_pham_phu_hop"):
+   - Khi khách CHỈ CHÀO HỎI, XÃ GIAO, GIỚI THIỆU TÊN, HOẶC HỎI THÔNG TIN CHUNG (như "hi", "hi pro", "tôi tên trí", "shop ở đâu", "chào em"):
+     -> BẮT BUỘC ĐỂ MẢNG "id_san_pham_phu_hop": [] (MẢNG RỖNG). Tuyệt đối KHÔNG tự ý gợi ý sản phẩm khi khách chưa hỏi mua.
+   - CHỈ KHI khách hỏi mua, tìm kiếm, tư vấn cấu hình, máy móc, phụ kiện cụ thể:
+     -> Mới chọn 2-3 ID từ danh sách kho hàng bên trên đưa vào mảng "id_san_pham_phu_hop" để hệ thống vẽ thẻ sản phẩm.
+6. GỢI Ý TIẾP THEO ("goi_y_tiep_theo"): Đưa ra 3 câu hỏi gợi ý ngắn gọn, thú vị và bám sát chính xác chủ đề hoặc nhu cầu khách có thể hỏi tiếp.
 7. CHUẨN JSON: Tuyệt đối không dùng dấu ngoặc kép (") bên trong văn bản "cau_tra_loi", nếu cần trích dẫn hãy dùng dấu nháy đơn (') như 'chiến mã', 'em chuột'.
 
 ĐỊNH DẠNG ĐẦU RA BẮT BUỘC (DUY NHẤT 1 KHỐI JSON HỢP LỆ):
 {
   "cau_tra_loi": "Câu trả lời lịch thiệp, duyên dáng, trọn vẹn ý (2-3 câu hoàn chỉnh, không cộc lốc, không ngắt lửng lơ)",
-  "id_san_pham_phu_hop": ["id_sp_1", "id_sp_2"],
-  "goi_y_tiep_theo": ["Gợi ý 1 liên quan món vừa hỏi", "Gợi ý 2 liên quan món vừa hỏi", "Gợi ý 3 liên quan món vừa hỏi"]
+  "id_san_pham_phu_hop": [],
+  "goi_y_tiep_theo": ["Gợi ý 1", "Gợi ý 2", "Gợi ý 3"]
 }`;
 
     let cauTraLoiCuoiCung = '';
@@ -266,13 +270,13 @@ QUY TẮC BẮT BUỘC:
     } catch (loiAi) {
         console.error('❌ [Trợ lý AI Service] Lỗi gọi Gemini:', loiAi.message);
         cauTraLoiCuoiCung = taoCauPhanHoiFallback(tieuChi);
-        danhSachIdGoiY = danhSachSanPhamThucTe.slice(0, 3).map(sp => sp.id || sp.slug);
+        danhSachIdGoiY = tieuChi.coNhuCauSanPham ? danhSachSanPhamThucTe.slice(0, 3).map(sp => sp.id || sp.slug) : [];
     }
 
     // Kết nối lại dữ liệu sản phẩm đầy đủ để Frontend hiển thị Thẻ Sản Phẩm (Product Card)
     let sanPhamGoiYChiTiet = [];
 
-    if (danhSachIdGoiY.length > 0) {
+    if (danhSachIdGoiY.length > 0 && danhSachSanPhamThucTe.length > 0) {
         sanPhamGoiYChiTiet = danhSachSanPhamThucTe.filter(sp => {
             const spId = String(sp.id || '').toLowerCase();
             const spSlug = String(sp.slug || '').toLowerCase();
@@ -284,8 +288,8 @@ QUY TẮC BẮT BUỘC:
         });
     }
 
-    // Nếu không lọc được ID nào, luôn lấy 2-3 sản phẩm phù hợp nhất để KHÁCH LUÔN THẤY CARD SẢN PHẨM CÓ NÚT MUA NGAY
-    if (sanPhamGoiYChiTiet.length === 0 && danhSachSanPhamThucTe.length > 0) {
+    // Chỉ tự động bổ sung thẻ sản phẩm khi khách THỰC SỰ có nhu cầu tìm/mua sản phẩm mà AI chưa chọn kịp ID
+    if (sanPhamGoiYChiTiet.length === 0 && tieuChi.coNhuCauSanPham && danhSachSanPhamThucTe.length > 0) {
         sanPhamGoiYChiTiet = danhSachSanPhamThucTe.slice(0, 3);
     }
 

@@ -131,6 +131,17 @@ function phanTichYDinhCauHoi(cauHoi = '') {
         tieuChi.tuKhoa = matchPhanCung.map(k => k.trim());
     }
 
+    // 6. Nhận diện xem khách có thực sự muốn tìm kiếm / mua sản phẩm hay chỉ là chào hỏi xã giao
+    const laChaoHoiHoacXaGiao = /^(hi|hello|alo|chào|chao|ê|hey|tôi tên|mình tên|anh tên|em tên|bạn tên|shop ơi|ad ơi|admin ơi|chào shop|chào ad|chào em|chào bạn|hi shop|hi ad|hi pro|hi shop pro)[\s!.,?~]*$/i.test(text)
+        || /^(shop ở đâu|địa chỉ|mấy giờ|có ship không|chính sách|bảo hành|trả góp|hotline|liên hệ|ở đâu)[\s!.,?~]*$/i.test(text);
+
+    const coTuKhoaTimKiem = /(mua|tìm|tim|tư vấn|tu van|giá|gia|bao nhiêu|báo giá|gợi ý|goi y|xem|có con nào|máy tính|laptop|chuột|phím|sạc|tai nghe|balo|tản nhiệt|ssd|ram|gear|phụ kiện)/i.test(text);
+
+    tieuChi.coNhuCauSanPham = Boolean(
+        (tieuChi.hang || tieuChi.danhMuc || tieuChi.laPhuKien || tieuChi.giaMin !== null || tieuChi.giaMax !== null || tieuChi.tuKhoa.length > 0 || coTuKhoaTimKiem)
+        && !laChaoHoiHoacXaGiao
+    );
+
     return tieuChi;
 }
 
@@ -222,6 +233,12 @@ function sapXepTheoYeuCau(danhSach, tieuChi, rawText) {
 async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
     const rawText = cauHoiKhachHang.toLowerCase().trim();
     const tieuChi = phanTichYDinhCauHoi(cauHoiKhachHang);
+
+    // Nếu khách chỉ chào hỏi xã giao hoặc chưa có nhu cầu tìm sản phẩm, KHÔNG tìm kiếm DB
+    if (!tieuChi.coNhuCauSanPham) {
+        return [];
+    }
+
     let danhSachKetQua = [];
 
     // Chỉ truy vấn MongoDB nếu kết nối đã sẵn sàng (readyState === 1)
@@ -343,7 +360,7 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
  */
 function dinhDangNguCanhSanPham(danhSachSanPham = []) {
     if (!danhSachSanPham || danhSachSanPham.length === 0) {
-        return "Hiện chưa có danh sách cụ thể trong kho.";
+        return "Khách hàng hiện đang chào hỏi xã giao hoặc hỏi thông tin chung, CHƯA có nhu cầu xem sản phẩm cụ thể. Bạn tuyệt đối KHÔNG đề xuất sản phẩm nào (BẮT BUỘC để mảng \"id_san_pham_phu_hop\": [] rỗng).";
     }
 
     let text = "=== DANH SÁCH MÃ SẢN PHẨM & PHỤ KIỆN CÓ SẴN TRONG KHO SHOWROOM ===\n";

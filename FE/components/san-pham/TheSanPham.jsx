@@ -212,13 +212,25 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
     const hoTroSoSanh = coTheSoSanh(sanPham);
     const cacThongSo = layThongSoNhanh(sanPham);
 
-    // Xác định tag trạng thái phụ
+    // Xác định tag trạng thái phụ (Màu sắc đậm đà, rực rỡ, tương phản tuyệt đối)
     const tagTrangThai = sanPham.la_flash_sale
-        ? { text: '⚡ Flash Sale', mau: 'text-[#F3123C] bg-red-50 dark:bg-red-950/40 border-red-200/60' }
+        ? {
+            text: 'Flash Sale',
+            icon: '⚡',
+            mau: 'bg-gradient-to-r from-[#FF0033] via-[#FF5500] to-[#FFA600] text-white shadow-md shadow-orange-600/35 border-amber-200/60'
+        }
         : sanPham.la_ban_chay
-        ? { text: '🔥 Bán Chạy', mau: 'text-amber-600 bg-amber-50 dark:bg-amber-950/40 border-amber-200/60' }
+        ? {
+            text: 'Bán Chạy',
+            icon: '🔥',
+            mau: 'bg-gradient-to-r from-[#FF4500] via-[#FF6A00] to-[#FFA000] text-white shadow-md shadow-orange-500/35 border-amber-200/60'
+        }
         : sanPham.la_san_pham_moi
-        ? { text: '✨ Mới', mau: 'text-blue-600 bg-blue-50 dark:bg-blue-950/40 border-blue-200/60' }
+        ? {
+            text: 'Hàng Mới',
+            icon: '✨',
+            mau: 'bg-gradient-to-r from-[#0052D4] via-[#4364F7] to-[#6FB1FC] text-white shadow-md shadow-blue-500/35 border-cyan-200/60'
+        }
         : null;
 
     // =========================================================================
@@ -240,7 +252,7 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                     />
                     {sanPham.phan_tram_giam_gia > 0 && (
-                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-[#F3123C] text-white font-bold text-[10px]">
+                        <span className="absolute top-2 left-2 px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#E50914] to-[#B81D24] text-white font-black text-[11px] shadow-md shadow-red-700/35 border border-white/25">
                             -{sanPham.phan_tram_giam_gia}%
                         </span>
                     )}
@@ -252,8 +264,9 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                             {sanPham.hang_san_xuat}
                         </span>
                         {tagTrangThai && (
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${tagTrangThai.mau}`}>
-                                {tagTrangThai.text}
+                            <span className={`px-2.5 py-0.5 rounded-md text-[10.5px] font-black uppercase tracking-wider border flex items-center gap-1 ${tagTrangThai.mau}`}>
+                                <span>{tagTrangThai.icon}</span>
+                                <span>{tagTrangThai.text}</span>
                             </span>
                         )}
                         <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 text-xs ml-auto font-bold">
@@ -350,22 +363,19 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                     />
                 </Link>
 
-                {/* Badge giảm giá & Flash Sale góc trên trái của ảnh (Gọn gàng, không đè tiêu đề) */}
-                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 select-none">
+                {/* Badge giảm giá & Flash Sale / Bán chạy góc trên trái của ảnh (To rõ, rực rỡ, độ tương phản cao, nổi bật trên mọi ảnh) */}
+                <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 z-10 select-none flex-wrap max-w-[85%]">
                     {sanPham.phan_tram_giam_gia > 0 && (
-                        <span className="px-2 py-0.5 rounded-lg bg-gradient-to-r from-[#EA1E2C] to-rose-600 text-white font-black text-[10.5px] shadow-sm leading-tight tracking-tight">
+                        <span className="px-2.5 py-1 rounded-md bg-gradient-to-r from-[#E50914] to-[#B81D24] text-white font-black text-[11px] sm:text-[11.5px] shadow-md shadow-red-700/35 border border-white/25 leading-tight tracking-tight flex items-center justify-center">
                             -{sanPham.phan_tram_giam_gia}%
                         </span>
                     )}
-                    {sanPham.la_flash_sale ? (
-                        <span className="px-1.5 py-0.5 rounded-lg bg-red-600 text-white font-black text-[9.5px] shadow-xs flex items-center gap-0.5 tracking-tight uppercase">
-                            ⚡ Flash Sale
+                    {tagTrangThai && (
+                        <span className={`px-2.5 py-1 rounded-md font-black text-[11px] sm:text-[11.5px] leading-tight tracking-wider uppercase border flex items-center gap-1 ${tagTrangThai.mau}`}>
+                            <span className="text-xs">{tagTrangThai.icon}</span>
+                            <span>{tagTrangThai.text}</span>
                         </span>
-                    ) : tagTrangThai ? (
-                        <span className={`px-1.5 py-0.5 rounded-lg text-[9.5px] font-bold shadow-xs ${tagTrangThai.mau}`}>
-                            {tagTrangThai.text}
-                        </span>
-                    ) : null}
+                    )}
                 </div>
 
                 {/* Nút yêu thích góc trên phải (Heart icon viên kính tròn gọn) */}
