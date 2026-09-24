@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 /**
  * Schema Đơn hàng Laptop
- * Dựa trên cấu trúc dữ liệu thực tế từ FE/db.json
+ * Dựa trên cấu trúc dữ liệu MongoDB của hệ thống
  */
 const DonHangSchema = new mongoose.Schema(
     {

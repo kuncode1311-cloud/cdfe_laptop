@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LienHeService } from '@/services/lien-he.service';
-import { CaiDatService, DANH_SACH_SHOWROOM_MAC_DINH } from '@/services/cai-dat.service';
+import { CaiDatService } from '@/services/cai-dat.service';
 
 // Danh sách các chủ đề tư vấn thông dụng để khách chọn nhanh
 const DANH_SACH_CHU_DE = [
@@ -36,8 +36,8 @@ const DANH_SACH_CHU_DE = [
 
 export default function TrangLienHe() {
     // 1. Quản lý danh sách showroom & tọa độ GPS động từ Admin
-    const [danhSachShowroom, setDanhSachShowroom] = useState(DANH_SACH_SHOWROOM_MAC_DINH);
-    const [showroomHienTai, setShowroomHienTai] = useState(DANH_SACH_SHOWROOM_MAC_DINH[0]);
+    const [danhSachShowroom, setDanhSachShowroom] = useState([]);
+    const [showroomHienTai, setShowroomHienTai] = useState(null);
 
     useEffect(() => {
         // Tải danh sách showroom từ Backend hoặc LocalStorage

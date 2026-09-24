@@ -15,8 +15,17 @@ const PORT = process.env.PORT || 5000;
 ketNoiCoSoDuLieu();
 
 // 4. Middlewares
+const corsOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
+    .split(',')
+    .map(url => url.trim())
+    .filter(Boolean);
+
 app.use(cors({
-    origin: '*',
+    origin(origin, callback) {
+        // Cho phép Postman/server-to-server (không có Origin) và frontend đã khai báo.
+        if (!origin || corsOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error(`CORS không cho phép origin: ${origin}`));
+    },
     credentials: true
 }));
 app.use(express.json());
@@ -46,7 +55,6 @@ const { khoiTaoTelegramBot } = require('./services/telegram-bot.service');
 
 // 6. Gắn các Tuyến đường REST API chuẩn (/api/...)
 app.use('/api/auth', xacThucRoutes);
-app.use('/api/xac-thuc', xacThucRoutes);
 app.use('/api/san-pham', sanPhamRoutes);
 app.use('/api/don-hang', donHangRoutes);
 app.use('/api/ma-giam-gia', maGiamGiaRoutes);
@@ -57,28 +65,8 @@ app.use('/api/tin-tuc', tinTucRoutes);
 app.use('/api/bao-hanh', baoHanhRoutes);
 app.use('/api/thanh-toan', thanhToanRoutes);
 app.use('/api/lien-he', lienHeRoutes);
-app.use('/lien-he', lienHeRoutes);
 app.use('/api/cai-dat', caiDatRoutes);
-app.use('/cai-dat', caiDatRoutes);
 app.use('/api/tro-ly-ai', troLyAiRoutes);
-app.use('/tro-ly-ai', troLyAiRoutes);
-
-// 7. Gắn các Tuyến đường tương thích ngược (/api/san_pham, /san_pham,...)
-app.use('/auth', xacThucRoutes);
-app.use('/api/san_pham', sanPhamRoutes);
-app.use('/api/don_hang', donHangRoutes);
-app.use('/api/ma_giam_gia', maGiamGiaRoutes);
-app.use('/api/danh_gia', danhGiaRoutes);
-app.use('/api/nguoi_dung', nguoiDungRoutes);
-app.use('/api/tin_tuc', tinTucRoutes);
-
-app.use('/san_pham', sanPhamRoutes);
-app.use('/don_hang', donHangRoutes);
-app.use('/ma_giam_gia', maGiamGiaRoutes);
-app.use('/danh_gia', danhGiaRoutes);
-app.use('/nguoi_dung', nguoiDungRoutes);
-app.use('/tin_tuc', tinTucRoutes);
-app.use('/tin-tuc', tinTucRoutes);
 
 // 8. Tuyến đường kiểm tra máy chủ
 app.get('/', (req, res) => {

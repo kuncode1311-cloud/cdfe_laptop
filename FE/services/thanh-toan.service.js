@@ -1,8 +1,13 @@
-import { API_BASE_URL } from './api-client';
+import { apiFetch } from './api-client';
 
-const PAYMENT_BANK_BIN = '970452'; // KienlongBank BIN
-const PAYMENT_BANK_ACCOUNT_NO = '0345151438';
-const PAYMENT_BANK_ACCOUNT_NAME = 'LE MINH TRI';
+const PAYMENT_BANK_BIN = process.env.NEXT_PUBLIC_PAYMENT_BANK_BIN;
+const PAYMENT_BANK_ACCOUNT_NO = process.env.NEXT_PUBLIC_PAYMENT_BANK_ACCOUNT_NO;
+const PAYMENT_BANK_ACCOUNT_NAME = process.env.NEXT_PUBLIC_PAYMENT_BANK_ACCOUNT_NAME;
+
+export function taoVietQrTuEnv(amount, noiDung) {
+    if (!PAYMENT_BANK_BIN || !PAYMENT_BANK_ACCOUNT_NO || !PAYMENT_BANK_ACCOUNT_NAME) return null;
+    return `https://img.vietqr.io/image/${PAYMENT_BANK_BIN}-${PAYMENT_BANK_ACCOUNT_NO}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(noiDung)}&accountName=${encodeURIComponent(PAYMENT_BANK_ACCOUNT_NAME)}`;
+}
 
 /**
  * Service xử lý thanh toán PayOS & QR Chuyển Khoản Ngân Hàng
@@ -14,30 +19,25 @@ export const ThanhToanService = {
      */
     async taoYeuCauThanhToan(thongTinDon) {
         try {
-            const res = await fetch(`${API_BASE_URL}/thanh-toan/tao-link`, {
+            const data = await apiFetch('/thanh-toan/tao-link', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify(thongTinDon),
-                signal: AbortSignal.timeout(3000)
+                timeoutMs: 3000
             });
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data.success) {
-                    return data;
-                }
-            }
+            if (data.success) return data;
         } catch (err) {
             console.warn('⚠️ Backend PayOS phản hồi chậm (>3s), lập tức kích hoạt VietQR tức thì:', err.message);
         }
 
-        // Dự phòng tự tạo VietQR trực tiếp siêu tốc 0ms nếu Backend chưa kịp phản hồi
+        if (!PAYMENT_BANK_BIN || !PAYMENT_BANK_ACCOUNT_NO || !PAYMENT_BANK_ACCOUNT_NAME) {
+            throw new Error('Backend thanh toán không phản hồi và chưa cấu hình VietQR trên môi trường.');
+        }
+
+        // Dự phòng VietQR lấy từ biến môi trường, không chứa thông tin ngân hàng trong source.
         const amount = Math.max(1000, Math.round(Number(thongTinDon.tong_tien) || 0));
         const codeSuffix = thongTinDon.ma_don_hang ? thongTinDon.ma_don_hang.slice(-6) : Math.floor(100000 + Math.random() * 900000);
         const noiDung = `TRIKUN ${codeSuffix}`.slice(0, 25);
-        const qrUrl = `https://img.vietqr.io/image/${PAYMENT_BANK_BIN}-${PAYMENT_BANK_ACCOUNT_NO}-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(noiDung)}&accountName=${encodeURIComponent(PAYMENT_BANK_ACCOUNT_NAME)}`;
+        const qrUrl = taoVietQrTuEnv(amount, noiDung);
 
         return {
             success: true,
@@ -63,12 +63,7 @@ export const ThanhToanService = {
      */
     async kiemTraTrangThai(orderCode) {
         try {
-            const res = await fetch(`${API_BASE_URL}/thanh-toan/kiem-tra/${encodeURIComponent(orderCode)}`, {
-                signal: AbortSignal.timeout(2500)
-            });
-            if (res.ok) {
-                return await res.json();
-            }
+            return await apiFetch(`/thanh-toan/kiem-tra/${encodeURIComponent(orderCode)}`, { timeoutMs: 2500 });
         } catch (err) {
             // Im lặng bỏ qua timeout để polling tiếp tục chu kỳ sau mượt mà
         }

@@ -117,7 +117,7 @@ import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 import { DanhMucService } from '@/services/danh-muc.service';
 import { NguoiDungService } from '@/services/nguoi-dung.service';
 import { TinTucService } from '@/services/tin-tuc.service';
-import { CaiDatService, CAI_DAT_KHUYEN_MAI_MAC_DINH, DANH_SACH_SHOWROOM_MAC_DINH } from '@/services/cai-dat.service';
+import { CaiDatService } from '@/services/cai-dat.service';
 import { formatCurrency, dinhDangTienVND } from '@/utils/formatCurrency';
 import { taoSlug, slugTinTuc } from '@/utils/taoSlug';
 import { inHoaDonBanHang } from '@/utils/inHoaDon';
@@ -341,7 +341,7 @@ export default function TrangQuanTriCuaHang() {
     }, [formCaiDatKm?.thoi_gian_ket_thuc, thoiGianHienTaiKm]);
 
     // Cấu hình Hệ Thống Showroom & Tọa Độ GPS Bản Đồ (Dữ liệu động 100%)
-    const [danhSachShowroomAdmin, setDanhSachShowroomAdmin] = useState(DANH_SACH_SHOWROOM_MAC_DINH);
+    const [danhSachShowroomAdmin, setDanhSachShowroomAdmin] = useState([]);
     const [dangLuuShowroom, setDangLuuShowroom] = useState(false);
     const [showroomDangXemTruoc, setShowroomDangXemTruoc] = useState(0);
     const [soLuongChuaXuLyLienHe, setSoLuongChuaXuLyLienHe] = useState(0);

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 /**
  * Schema Đánh giá & Bình luận sản phẩm
- * Dựa trên cấu trúc dữ liệu thực tế từ FE/db.json
+ * Dựa trên cấu trúc dữ liệu MongoDB của hệ thống
  */
 const DanhGiaSchema = new mongoose.Schema(
     {

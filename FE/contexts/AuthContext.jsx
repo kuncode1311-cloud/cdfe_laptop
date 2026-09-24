@@ -1,30 +1,26 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { API_BASE_URL, TOKEN_STORAGE_KEY } from '@/services/api-client';
+import { API_BASE_URL, apiFetch, TOKEN_STORAGE_KEY } from '@/services/api-client';
 
 export const AuthContext = createContext(undefined);
 const USER_STORAGE_KEY = 'tnt_laptop_user';
 
-export const laDiaChiGiaLap = (dc) => {
-    if (!dc || typeof dc !== 'object') return true;
-    if (dc.id === 'dc_1') return true;
-    const chiTiet = (dc.diaChiChiTiet || '').toLowerCase();
-    const phuong = (dc.phuongXa || '').toLowerCase();
-    const quan = (dc.quanHuyen || '').toLowerCase();
-    const tinh = (dc.tinhThanh || '').toLowerCase();
-    
-    if (chiTiet.includes('minh khai')) return true;
-    if (phuong.includes('bến thành') || phuong.includes('ben thanh')) return true;
-    if (quan.includes('quận 1') || quan.includes('quan 1')) return true;
-    if (chiTiet.includes('123') && (tinh.includes('hồ chí minh') || tinh.includes('ho chi minh'))) return true;
-    if (dc.hoTen === 'Lê Trí' && (dc.soDienThoai === '0912 345 678' || dc.soDienThoai === '0912345678')) return true;
-    return false;
+// Tương thích response cũ trong context, nhưng mọi request auth đều đi qua apiFetch.
+const fetch = async (url, options = {}) => {
+    const endpoint = url.startsWith(API_BASE_URL) ? url.slice(API_BASE_URL.length) : url;
+    try {
+        const data = await apiFetch(endpoint, options);
+        return { ok: true, status: 200, json: async () => data };
+    } catch (error) {
+        return {
+            ok: false,
+            status: error.status || 500,
+            json: async () => error.data || { thong_diep: error.message }
+        };
+    }
 };
 
-export const locDiaChiHopLe = (danhSach) => {
-    if (!Array.isArray(danhSach)) return [];
-    return danhSach.filter(dc => !laDiaChiGiaLap(dc));
-};
+export const locDiaChiHopLe = (danhSach) => Array.isArray(danhSach) ? danhSach : [];
 
 export const lamSachDuLieuNguoiDung = (user) => {
     if (!user || typeof user !== 'object') return user;

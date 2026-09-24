@@ -148,7 +148,7 @@ export default function TrangSoSanh() {
                     },
                     {
                         ten: 'Đánh giá & Lượt bán',
-                        trichXuat: (sp) => `⭐ ${sp.diem_danh_gia_tb ? sp.diem_danh_gia_tb.toFixed(1) : '5.0'} (${sp.so_luong_danh_gia || 24} nhận xét)`
+                        trichXuat: (sp) => `⭐ ${sp.diem_danh_gia_tb?.toFixed(1) || '—'} (${sp.so_luong_danh_gia || 0} nhận xét)`
                     }
                 ]
             },

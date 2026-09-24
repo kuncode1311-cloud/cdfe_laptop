@@ -15,7 +15,7 @@ import {
     Zap 
 } from 'lucide-react';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
-import { ThanhToanService } from '@/services/thanh-toan.service';
+import { ThanhToanService, taoVietQrTuEnv } from '@/services/thanh-toan.service';
 import { toast } from 'sonner';
 
 export default function ModalThanhToanQR({ 
@@ -46,13 +46,13 @@ export default function ModalThanhToanQR({
     const orderCode = duLieuThanhToan?.orderCode || donHang?.ma_don_hang;
     const amount = duLieuThanhToan?.amount || donHang?.tong_tien_thanh_toan || 0;
     const description = duLieuThanhToan?.description || `TRIKUN ${String(donHang?.ma_don_hang || '').slice(-6)}`;
-    const qrImageUrl = duLieuThanhToan?.qrImageUrl || `https://img.vietqr.io/image/970452-0345151438-compact2.png?amount=${amount}&addInfo=${encodeURIComponent(description)}&accountName=LE%20MINH%20TRI`;
+    const qrImageUrl = duLieuThanhToan?.qrImageUrl || taoVietQrTuEnv(amount, description);
 
     const bankInfo = {
-        nganHang: duLieuThanhToan?.thongTinNganHang?.nganHang || 'KienlongBank (Ngân Hàng Kiên Long)',
-        bin: duLieuThanhToan?.thongTinNganHang?.bin || '970452',
-        soTaiKhoan: duLieuThanhToan?.thongTinNganHang?.soTaiKhoan || '0345151438',
-        chuTaiKhoan: duLieuThanhToan?.thongTinNganHang?.tenChuTaiKhoan || 'LE MINH TRI',
+        nganHang: duLieuThanhToan?.thongTinNganHang?.nganHang || '',
+        bin: duLieuThanhToan?.thongTinNganHang?.bin || process.env.NEXT_PUBLIC_PAYMENT_BANK_BIN || '',
+        soTaiKhoan: duLieuThanhToan?.thongTinNganHang?.soTaiKhoan || process.env.NEXT_PUBLIC_PAYMENT_BANK_ACCOUNT_NO || '',
+        chuTaiKhoan: duLieuThanhToan?.thongTinNganHang?.tenChuTaiKhoan || process.env.NEXT_PUBLIC_PAYMENT_BANK_ACCOUNT_NAME || '',
         soTien: amount,
         noiDung: description
     };

@@ -273,7 +273,7 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                             <span>{sanPham.diem_danh_gia_tb ? sanPham.diem_danh_gia_tb.toFixed(1) : '5.0'}</span>
                             <span className="text-slate-400 font-normal">
-                                ({sanPham.so_luong_danh_gia || sanPham.so_luong_da_ban || 114})
+                                ({sanPham.so_luong_danh_gia || sanPham.so_luong_da_ban || 0})
                             </span>
                         </div>
                     </div>
@@ -457,7 +457,7 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
 
                 {/* 6. FLASH SALE STOCK PROGRESS BAR (Chỉ hiện khi hienThiThanhFlashSale = true) */}
                 {hienThiThanhFlashSale && (() => {
-                    const daBan = sanPham.so_luong_da_ban || 114;
+                    const daBan = sanPham.so_luong_da_ban || 0;
                     const tonKho = sanPham.so_luong_ton_kho !== undefined ? sanPham.so_luong_ton_kho : 25;
                     const tongSo = sanPham.tong_so_luong || (daBan + tonKho) || 200;
                     const phanTram = Math.min(100, Math.max(18, Math.round((daBan / (tongSo || 1)) * 100)));

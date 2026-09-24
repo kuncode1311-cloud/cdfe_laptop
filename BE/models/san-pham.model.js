@@ -3,7 +3,7 @@ const taoSlug = require('../utils/tao-slug');
 
 /**
  * Schema Sản phẩm Laptop
- * Dựa trên cấu trúc dữ liệu thực tế từ FE/db.json
+ * Dựa trên cấu trúc dữ liệu MongoDB của hệ thống
  */
 const SanPhamSchema = new mongoose.Schema(
     {

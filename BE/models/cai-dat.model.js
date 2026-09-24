@@ -18,30 +18,24 @@ const ShowroomSchema = new mongoose.Schema(
             trim: true
         },
         hotline: {
-            type: String,
-            default: '1900.8946'
+            type: String
         },
         hotline_di_dong: {
-            type: String,
-            default: '0948.37.79.79'
+            type: String
         },
         gio_mo_cua: {
-            type: String,
-            default: '08:30 - 21:30'
+            type: String
         },
         vi_do: {
             type: Number,
-            required: true,
-            default: 10.7601
+            required: true
         },
         kinh_do: {
             type: Number,
-            required: true,
-            default: 106.6632
+            required: true
         },
         la_mac_dinh: {
-            type: Boolean,
-            default: false
+            type: Boolean
         }
     },
     { _id: false }

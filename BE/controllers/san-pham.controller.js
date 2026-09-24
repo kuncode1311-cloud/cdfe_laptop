@@ -1,57 +1,5 @@
-const fs = require('fs');
-const path = require('path');
-const mongoose = require('mongoose');
 const SanPham = require('../models/san-pham.model');
 const taoSlug = require('../utils/tao-slug');
-
-// Hàm đọc nhanh từ db.json nếu MongoDB chưa sẵn sàng (tránh treo request 10s)
-const docSanPhamTuDbJson = (req, res) => {
-    try {
-        const duongDanDb = path.join(__dirname, '..', '..', 'FE', 'db.json');
-        if (fs.existsSync(duongDanDb)) {
-            const duLieu = JSON.parse(fs.readFileSync(duongDanDb, 'utf-8'));
-            let danhSach = duLieu.san_pham || [];
-            if (req.query.danh_muc) {
-                const cats = req.query.danh_muc.split(',').map(c => c.trim().toLowerCase());
-                danhSach = danhSach.filter(sp => (sp.danh_muc || []).some(dm => cats.includes(dm.toLowerCase())));
-            }
-            if (req.query.hang_san_xuat) {
-                const brands = req.query.hang_san_xuat.split(',').map(b => b.trim().toLowerCase());
-                danhSach = danhSach.filter(sp => brands.includes((sp.hang_san_xuat || '').toLowerCase()));
-            }
-            if (req.query.tu_khoa || req.query.q) {
-                const kw = (req.query.tu_khoa || req.query.q).toLowerCase();
-                danhSach = danhSach.filter(sp => (sp.ten_san_pham || '').toLowerCase().includes(kw));
-            }
-            if (req.query.limit) {
-                danhSach = danhSach.slice(0, Number(req.query.limit));
-            }
-            return res.status(200).json(danhSach);
-        }
-    } catch (e) {
-        console.error('Lỗi đọc fallback db.json:', e.message);
-    }
-    return res.status(200).json([]);
-};
-
-const docChiTietTuDbJson = (req, res) => {
-    try {
-        const duongDanDb = path.join(__dirname, '..', '..', 'FE', 'db.json');
-        if (fs.existsSync(duongDanDb)) {
-            const duLieu = JSON.parse(fs.readFileSync(duongDanDb, 'utf-8'));
-            const danhSach = duLieu.san_pham || [];
-            const decodedId = decodeURIComponent(req.params.id || '').toLowerCase().trim();
-            const sp = danhSach.find(s =>
-                (s.id && s.id.toLowerCase() === decodedId) ||
-                (s.slug && s.slug.toLowerCase() === decodedId) ||
-                (s.ma_san_pham && s.ma_san_pham.toLowerCase() === decodedId) ||
-                (s.ten_san_pham && s.ten_san_pham.toLowerCase().includes(decodedId))
-            );
-            if (sp) return res.status(200).json(sp);
-        }
-    } catch (e) { }
-    return res.status(404).json({ thong_diep: 'Không tìm thấy sản phẩm' });
-};
 
 /**
  * Controller xử lý nghiệp vụ cho Sản phẩm Laptop
@@ -62,10 +10,6 @@ const layTatCaSanPham = async (req, res) => {
     // Thiết lập HTTP Caching tối ưu cho Server Railway & Trình duyệt khách (cache 60s)
     res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
 
-    // Nếu MongoDB chưa kết nối sẵn sàng (tránh treo 10 giây), nạp ngay từ db.json
-    if (mongoose.connection.readyState !== 1) {
-        return docSanPhamTuDbJson(req, res);
-    }
     try {
         const {
             tu_khoa,
@@ -146,32 +90,7 @@ const layTatCaSanPham = async (req, res) => {
         const danhSachSanPham = await query;
         return res.status(200).json(danhSachSanPham);
     } catch (loi) {
-        console.warn('⚠️ MongoDB Atlas chưa phản hồi, tự động nạp từ db.json:', loi.message);
-        try {
-            const duongDanDb = path.join(__dirname, '..', '..', 'FE', 'db.json');
-            if (fs.existsSync(duongDanDb)) {
-                const duLieu = JSON.parse(fs.readFileSync(duongDanDb, 'utf-8'));
-                let danhSach = duLieu.san_pham || [];
-                if (req.query.danh_muc) {
-                    const cats = req.query.danh_muc.split(',').map(c => c.trim().toLowerCase());
-                    danhSach = danhSach.filter(sp => (sp.danh_muc || []).some(dm => cats.includes(dm.toLowerCase())));
-                }
-                if (req.query.hang_san_xuat) {
-                    const brands = req.query.hang_san_xuat.split(',').map(b => b.trim().toLowerCase());
-                    danhSach = danhSach.filter(sp => brands.includes((sp.hang_san_xuat || '').toLowerCase()));
-                }
-                if (req.query.tu_khoa || req.query.q) {
-                    const kw = (req.query.tu_khoa || req.query.q).toLowerCase();
-                    danhSach = danhSach.filter(sp => (sp.ten_san_pham || '').toLowerCase().includes(kw));
-                }
-                if (req.query.limit) {
-                    danhSach = danhSach.slice(0, Number(req.query.limit));
-                }
-                return res.status(200).json(danhSach);
-            }
-        } catch (e) {
-            console.error('Lỗi đọc fallback db.json:', e.message);
-        }
+        console.error('Lỗi lấy danh sách sản phẩm từ MongoDB:', loi.message);
         return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi lấy danh sách sản phẩm', chi_tiet: loi.message });
     }
 };
@@ -181,10 +100,6 @@ const laySanPhamTheoId = async (req, res) => {
     // Cache chi tiết sản phẩm 120s
     res.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
 
-    // Nếu MongoDB chưa kết nối sẵn sàng, tìm ngay trong db.json
-    if (mongoose.connection.readyState !== 1) {
-        return docChiTietTuDbJson(req, res);
-    }
     try {
         const { id } = req.params;
         const decodedId = decodeURIComponent(id).trim();
@@ -230,66 +145,8 @@ const laySanPhamTheoId = async (req, res) => {
 
         return res.status(200).json(sanPham);
     } catch (loi) {
-        console.warn('⚠️ Lỗi MongoDB, chuyển sang tìm trong db.json:', loi.message);
-        try {
-            const duongDanDb = path.join(__dirname, '..', '..', 'FE', 'db.json');
-            if (fs.existsSync(duongDanDb)) {
-                const duLieu = JSON.parse(fs.readFileSync(duongDanDb, 'utf-8'));
-                const danhSach = duLieu.san_pham || [];
-                const decodedId = decodeURIComponent(req.params.id || '').toLowerCase().trim();
-                const sp = danhSach.find(s => 
-                    (s.id && s.id.toLowerCase() === decodedId) ||
-                    (s.slug && s.slug.toLowerCase() === decodedId) ||
-                    (s.ma_san_pham && s.ma_san_pham.toLowerCase() === decodedId) ||
-                    (s.ten_san_pham && s.ten_san_pham.toLowerCase().includes(decodedId))
-                );
-                if (sp) return res.status(200).json(sp);
-            }
-        } catch (e) { }
+        console.error('Lỗi lấy chi tiết sản phẩm từ MongoDB:', loi.message);
         return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi lấy chi tiết sản phẩm', chi_tiet: loi.message });
-    }
-};
-
-// Hàm đồng bộ hai chiều với FE/db.json để đảm bảo tính nhất quán dữ liệu
-const dongBoDbJson = (thaoTac, duLieu, id) => {
-    try {
-        const duongDanDb = path.join(__dirname, '..', '..', 'FE', 'db.json');
-        if (fs.existsSync(duongDanDb)) {
-            const dbData = JSON.parse(fs.readFileSync(duongDanDb, 'utf-8'));
-            if (!Array.isArray(dbData.san_pham)) dbData.san_pham = [];
-
-            if (thaoTac === 'them') {
-                dbData.san_pham.unshift(duLieu);
-            } else if (thaoTac === 'sua') {
-                const targetId = (id || '').toLowerCase();
-                const idx = dbData.san_pham.findIndex(s => 
-                    (s.id && s.id.toLowerCase() === targetId) || 
-                    (s.slug && s.slug.toLowerCase() === targetId) || 
-                    (s.ma_san_pham && s.ma_san_pham.toLowerCase() === targetId)
-                );
-                if (idx >= 0) {
-                    const spHienTai = dbData.san_pham[idx];
-                    const thongSoMerged = (duLieu.thong_so && typeof duLieu.thong_so === 'object')
-                        ? { ...(spHienTai.thong_so || {}), ...duLieu.thong_so }
-                        : (spHienTai.thong_so || {});
-                    dbData.san_pham[idx] = { 
-                        ...spHienTai, 
-                        ...duLieu,
-                        ...(duLieu.thong_so ? { thong_so: thongSoMerged } : {})
-                    };
-                }
-            } else if (thaoTac === 'xoa') {
-                const targetId = (id || '').toLowerCase();
-                dbData.san_pham = dbData.san_pham.filter(s => 
-                    (s.id && s.id.toLowerCase() !== targetId) && 
-                    (s.slug && s.slug.toLowerCase() !== targetId) && 
-                    (s.ma_san_pham && s.ma_san_pham.toLowerCase() !== targetId)
-                );
-            }
-            fs.writeFileSync(duongDanDb, JSON.stringify(dbData, null, 2), 'utf-8');
-        }
-    } catch (e) {
-        console.error('Lỗi đồng bộ db.json:', e.message);
     }
 };
 
@@ -307,27 +164,17 @@ const themSanPham = async (req, res) => {
             duLieuMoi.hinh_anh_chinh = '/images/sp/asus_rog_scar18.jpg';
         }
 
-        // Đồng bộ trước vào db.json
-        dongBoDbJson('them', duLieuMoi);
-
-        // Lưu vào MongoDB nếu đã kết nối
-        if (mongoose.connection.readyState === 1) {
-            const sanPhamDaCo = await SanPham.findOne({
-                $or: [{ id: duLieuMoi.id }, { slug: duLieuMoi.slug }, { ma_san_pham: duLieuMoi.ma_san_pham }]
-            });
-
-            if (!sanPhamDaCo) {
-                const sanPhamMoi = new SanPham(duLieuMoi);
-                await sanPhamMoi.save();
-            }
+        const sanPhamDaCo = await SanPham.findOne({
+            $or: [{ id: duLieuMoi.id }, { slug: duLieuMoi.slug }, { ma_san_pham: duLieuMoi.ma_san_pham }]
+        });
+        if (sanPhamDaCo) {
+            return res.status(409).json({ thong_diep: 'Sản phẩm đã tồn tại' });
         }
-
-        return res.status(201).json(duLieuMoi);
+        const sanPhamMoi = await SanPham.create(duLieuMoi);
+        return res.status(201).json(sanPhamMoi);
     } catch (loi) {
         console.error('Lỗi thêm sản phẩm:', loi);
-        // Nếu lỗi MongoDB nhưng đã ghi db.json thì vẫn trả về thành công
-        dongBoDbJson('them', duLieuMoi);
-        return res.status(201).json(duLieuMoi);
+        return res.status(500).json({ thong_diep: 'Không thể thêm sản phẩm', chi_tiet: loi.message });
     }
 };
 
@@ -340,31 +187,19 @@ const capNhatSanPham = async (req, res) => {
             duLieuCapNhat.slug = taoSlug(duLieuCapNhat.ten_san_pham);
         }
 
-        // Đồng bộ trước vào db.json
-        dongBoDbJson('sua', duLieuCapNhat, id);
-
-        // Cập nhật MongoDB nếu đã kết nối
-        if (mongoose.connection.readyState === 1) {
-            let sanPham = await SanPham.findOneAndUpdate(
-                { $or: [{ slug: id }, { id: id }, { ma_san_pham: id }] },
-                { $set: duLieuCapNhat },
-                { new: true, runValidators: true }
-            );
-
-            if (!sanPham && id.match(/^[0-9a-fA-F]{24}$/)) {
-                sanPham = await SanPham.findByIdAndUpdate(id, { $set: duLieuCapNhat }, { new: true });
-            }
-
-            if (sanPham) {
-                return res.status(200).json(sanPham);
-            }
+        let sanPham = await SanPham.findOneAndUpdate(
+            { $or: [{ slug: id }, { id }, { ma_san_pham: id }] },
+            { $set: duLieuCapNhat },
+            { new: true, runValidators: true }
+        );
+        if (!sanPham && id.match(/^[0-9a-fA-F]{24}$/)) {
+            sanPham = await SanPham.findByIdAndUpdate(id, { $set: duLieuCapNhat }, { new: true, runValidators: true });
         }
-
-        return res.status(200).json({ id, ...duLieuCapNhat });
+        if (!sanPham) return res.status(404).json({ thong_diep: 'Không tìm thấy sản phẩm' });
+        return res.status(200).json(sanPham);
     } catch (loi) {
         console.error('Lỗi cập nhật sản phẩm:', loi);
-        dongBoDbJson('sua', duLieuCapNhat, id);
-        return res.status(200).json({ id, ...duLieuCapNhat });
+        return res.status(500).json({ thong_diep: 'Không thể cập nhật sản phẩm', chi_tiet: loi.message });
     }
 };
 
@@ -372,25 +207,17 @@ const capNhatSanPham = async (req, res) => {
 const xoaSanPham = async (req, res) => {
     const { id } = req.params;
     try {
-        // Đồng bộ xóa trong db.json
-        dongBoDbJson('xoa', null, id);
-
-        // Xóa trong MongoDB nếu đã kết nối
-        if (mongoose.connection.readyState === 1) {
-            let sanPham = await SanPham.findOneAndDelete({
-                $or: [{ slug: id }, { id: id }, { ma_san_pham: id }]
-            });
-
-            if (!sanPham && id.match(/^[0-9a-fA-F]{24}$/)) {
-                await SanPham.findByIdAndDelete(id);
-            }
+        let sanPham = await SanPham.findOneAndDelete({
+            $or: [{ slug: id }, { id }, { ma_san_pham: id }]
+        });
+        if (!sanPham && id.match(/^[0-9a-fA-F]{24}$/)) {
+            sanPham = await SanPham.findByIdAndDelete(id);
         }
-
+        if (!sanPham) return res.status(404).json({ thong_diep: 'Không tìm thấy sản phẩm' });
         return res.status(200).json({ thong_diep: 'Đã xóa sản phẩm thành công', id });
     } catch (loi) {
         console.error('Lỗi xóa sản phẩm:', loi);
-        dongBoDbJson('xoa', null, id);
-        return res.status(200).json({ thong_diep: 'Đã xóa sản phẩm thành công', id });
+        return res.status(500).json({ thong_diep: 'Không thể xóa sản phẩm', chi_tiet: loi.message });
     }
 };
 

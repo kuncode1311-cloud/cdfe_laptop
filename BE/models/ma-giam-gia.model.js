@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 /**
  * Schema Mã giảm giá (Voucher)
- * Dựa trên cấu trúc dữ liệu thực tế từ FE/db.json
+ * Dựa trên cấu trúc dữ liệu MongoDB của hệ thống
  */
 const MaGiamGiaSchema = new mongoose.Schema(
     {

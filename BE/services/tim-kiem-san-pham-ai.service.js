@@ -4,8 +4,6 @@
  * Sắp xếp độ ưu tiên chuẩn xác: Hỏi chuột ra chuột thật trước lót chuột.
  */
 
-const fs = require('fs');
-const path = require('path');
 const SanPham = require('../models/san-pham.model');
 
 // Danh sách các thương hiệu phổ biến được chuẩn hóa
@@ -146,27 +144,6 @@ function phanTichYDinhCauHoi(cauHoi = '') {
 }
 
 /**
- * Đọc dữ liệu sản phẩm dự phòng từ file json dự phòng chuẩn
- */
-function docSanPhamFallback() {
-    const cacDuongDan = [
-        path.join(__dirname, '..', 'backup_db', 'sanphams.json'),
-        path.join(__dirname, '..', '..', 'FE', 'db.json')
-    ];
-
-    for (const p of cacDuongDan) {
-        if (fs.existsSync(p)) {
-            try {
-                const duLieu = JSON.parse(fs.readFileSync(p, 'utf-8'));
-                if (Array.isArray(duLieu)) return duLieu;
-                if (Array.isArray(duLieu.san_pham)) return duLieu.san_pham;
-            } catch {}
-        }
-    }
-    return [];
-}
-
-/**
  * Kiểm tra xem một sản phẩm có phải phụ kiện / linh kiện hay không
  */
 function laPhuKienLinhKien(sp) {
@@ -283,70 +260,7 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
             const rawList = await query.limit(10).lean().exec();
             danhSachKetQua = sapXepTheoYeuCau(rawList, tieuChi, rawText).slice(0, soLuongToiDa);
         } catch (e) {
-            console.warn('⚠️ [Tìm kiếm sản phẩm AI] Truy vấn MongoDB gặp sự cố, chuyển fallback json:', e.message);
-        }
-    }
-
-    // Nếu không tìm thấy hoặc MongoDB chưa sẵn sàng, lọc từ file backup chuẩn
-    if (!danhSachKetQua || danhSachKetQua.length === 0) {
-        const danhSachFull = docSanPhamFallback();
-        let dsLoc = danhSachFull.filter(sp => sp.con_hang !== false);
-
-        if (tieuChi.hang) {
-            dsLoc = dsLoc.filter(sp => (sp.hang_san_xuat || '').toLowerCase() === tieuChi.hang);
-        }
-
-        if (tieuChi.danhMuc) {
-            const locTheoDanhMuc = dsLoc.filter(sp => (sp.danh_muc || []).map(d => d.toLowerCase()).includes(tieuChi.danhMuc));
-            if (locTheoDanhMuc.length > 0) {
-                dsLoc = locTheoDanhMuc;
-            } else if (tieuChi.laPhuKien) {
-                const locTheoTuKhoa = dsLoc.filter(sp => {
-                    const ten = (sp.ten_san_pham || '').toLowerCase();
-                    if (tieuChi.hoiBanPhim) return ten.includes('phím') || ten.includes('keyboard');
-                    if (tieuChi.hoiChuot) return ten.includes('chuột');
-                    if (tieuChi.hoiLotChuot) return ten.includes('lót chuột') || ten.includes('pad');
-                    if (tieuChi.hoiSac) return ten.includes('sạc') || ten.includes('hub');
-                    if (tieuChi.hoiTaiNghe) return ten.includes('tai nghe') || ten.includes('loa');
-                    if (tieuChi.hoiBalo) return ten.includes('balo') || ten.includes('túi');
-                    if (tieuChi.hoiTanNhiet) return ten.includes('tản nhiệt') || ten.includes('giá đỡ');
-                    return false;
-                });
-                if (locTheoTuKhoa.length > 0) dsLoc = locTheoTuKhoa;
-            }
-        }
-
-        if (tieuChi.giaMin !== null) {
-            dsLoc = dsLoc.filter(sp => (sp.gia_khuyen_mai || 0) >= tieuChi.giaMin);
-        }
-
-        if (tieuChi.giaMax !== null) {
-            dsLoc = dsLoc.filter(sp => (sp.gia_khuyen_mai || 0) <= tieuChi.giaMax);
-        }
-
-        if (tieuChi.tuKhoa.length > 0) {
-            dsLoc = dsLoc.filter(sp => {
-                const ten = (sp.ten_san_pham || '').toLowerCase();
-                return tieuChi.tuKhoa.some(kw => ten.includes(kw.toLowerCase()));
-            });
-        }
-
-        // Sắp xếp bám sát câu hỏi
-        dsLoc = sapXepTheoYeuCau(dsLoc, tieuChi, rawText);
-        danhSachKetQua = dsLoc.slice(0, soLuongToiDa);
-
-        // Nếu câu hỏi về phụ kiện mà chưa có kết quả, lấy ngay các phụ kiện hot từ danhSachFull
-        if (danhSachKetQua.length === 0 && tieuChi.laPhuKien) {
-            const phuKienList = danhSachFull.filter(sp => laPhuKienLinhKien(sp) && sp.con_hang !== false);
-            danhSachKetQua = sapXepTheoYeuCau(phuKienList, tieuChi, rawText).slice(0, 4);
-        }
-
-        // Nếu vẫn không ra gì, lấy top 4 sản phẩm bán chạy phù hợp với loại hình
-        if (danhSachKetQua.length === 0 && danhSachFull.length > 0) {
-            const dsChuan = tieuChi.laPhuKien 
-                ? danhSachFull.filter(sp => laPhuKienLinhKien(sp)) 
-                : danhSachFull.filter(sp => !laPhuKienLinhKien(sp));
-            danhSachKetQua = (dsChuan.length > 0 ? dsChuan : danhSachFull).slice(0, 4);
+            console.error('❌ [Tìm kiếm sản phẩm AI] Truy vấn MongoDB gặp sự cố:', e.message);
         }
     }
 

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useGioHang } from '@/contexts/CartContext';
 import { DonHangService } from '@/services/don-hang.service';
-import { ThanhToanService } from '@/services/thanh-toan.service';
+import { ThanhToanService, taoVietQrTuEnv } from '@/services/thanh-toan.service';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import FormThongTinGiaoHang from '@/components/thanh-toan/FormThongTinGiaoHang';
 import PhuongThucThanhToanComponent from '@/components/thanh-toan/PhuongThucThanhToan';
@@ -220,7 +220,7 @@ function NoiDungTrangThanhToan() {
             orderCode: dh.ma_don_hang,
             amount: dh.tong_tien_thanh_toan,
             description: `TRIKUN ${String(dh.ma_don_hang || '').slice(-6)}`,
-            qrImageUrl: `https://img.vietqr.io/image/970452-0345151438-compact2.png?amount=${dh.tong_tien_thanh_toan || 0}&addInfo=${encodeURIComponent(`TRIKUN ${String(dh.ma_don_hang || '').slice(-6)}`)}&accountName=LE%20MINH%20TRI`
+            qrImageUrl: taoVietQrTuEnv(dh.tong_tien_thanh_toan || 0, `TRIKUN ${String(dh.ma_don_hang || '').slice(-6)}`)
         });
     };
 

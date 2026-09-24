@@ -13,7 +13,7 @@ import {
     X
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { API_BASE_URL } from '@/services/api-client';
+import { apiFetch } from '@/services/api-client';
 
 export default function DanhGiaSanPham({ 
     idSanPham = '', 
@@ -85,9 +85,7 @@ export default function DanhGiaSanPham({
 
         const taiDanhGiaTuDb = async () => {
             try {
-                const res = await fetch(`${API_BASE_URL}/danh-gia/${idSanPham}`);
-                if (!res.ok) return;
-                const data = await res.json();
+                const data = await apiFetch(`/danh-gia/${idSanPham}`);
                 if (isCancelled) return;
 
                 if (Array.isArray(data) && data.length > 0) {
@@ -209,25 +207,17 @@ export default function DanhGiaSanPham({
 
         setDangGui(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/danh-gia`, {
+            const dataDaLuu = await apiFetch('/danh-gia', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(danhGiaMoi)
             });
-
-            if (res.ok) {
-                const dataDaLuu = await res.json();
-                const itemHienThi = {
-                    ...danhGiaMoi,
-                    ...dataDaLuu,
-                    ten_nguoi_dung: dataDaLuu.ho_ten || dataDaLuu.ten_nguoi_dung || danhGiaMoi.ten_nguoi_dung
-                };
-                setDanhSach(prev => [itemHienThi, ...prev]);
-                toast.success('Đã lưu đánh giá vào cơ sở dữ liệu MongoDB Atlas thành công!');
-            } else {
-                setDanhSach(prev => [danhGiaMoi, ...prev]);
-                toast.success('Gửi đánh giá thành công!');
-            }
+            const itemHienThi = {
+                ...danhGiaMoi,
+                ...dataDaLuu,
+                ten_nguoi_dung: dataDaLuu.ho_ten || dataDaLuu.ten_nguoi_dung || danhGiaMoi.ten_nguoi_dung
+            };
+            setDanhSach(prev => [itemHienThi, ...prev]);
+            toast.success('Đã lưu đánh giá vào cơ sở dữ liệu MongoDB Atlas thành công!');
         } catch (err) {
             console.warn('Lỗi kết nối lưu đánh giá:', err);
             setDanhSach(prev => [danhGiaMoi, ...prev]);
@@ -256,7 +246,7 @@ export default function DanhGiaSanPham({
         toast.success('Đã ghi nhận nhận xét hữu ích!');
 
         try {
-            await fetch(`${API_BASE_URL}/danh-gia/${id}/thich`, { method: 'PATCH' });
+            await apiFetch(`/danh-gia/${id}/thich`, { method: 'PATCH' });
         } catch (err) {
             // Không ngắt mạch giao diện người dùng
         }
