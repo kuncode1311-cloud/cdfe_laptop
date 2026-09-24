@@ -112,8 +112,16 @@ const dangKy = async (req, res) => {
         );
 
         console.log(`✉️ [Đăng Ký - Lưu Bảng Tạm & Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
-        // Gửi email nền (không chặn HTTP response)
-        guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp).catch(e => console.warn('Lỗi gửi mail nền:', e.message));
+        const ketQuaGuiMail = await guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp);
+        if (!ketQuaGuiMail.thanhCong) {
+            return res.status(502).json({
+                yeuCauOtp: true,
+                email: emailClean,
+                daGuiEmail: false,
+                thong_diep: 'Không thể gửi email OTP. Vui lòng thử gửi lại sau.',
+                chi_tiet: ketQuaGuiMail.loi
+            });
+        }
 
         return res.status(200).json({
             yeuCauOtp: true,
@@ -490,7 +498,10 @@ const yeuCauQuenMatKhau = async (req, res) => {
             user.hanOtp = hanOtp;
             user.loaiOtp = 'kich_hoat';
             await user.save();
-            guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
+            const ketQuaGuiMail = await guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp);
+            if (!ketQuaGuiMail.thanhCong) {
+                return res.status(502).json({ thong_diep: 'Không thể gửi email OTP. Vui lòng thử lại.', daGuiEmail: false });
+            }
             return res.status(200).json({
                 thong_diep: `Tài khoản chưa được kích hoạt! Đã gửi lại mã OTP kích hoạt mới tới email ${emailChuan}.`,
                 email: emailChuan,
@@ -509,8 +520,10 @@ const yeuCauQuenMatKhau = async (req, res) => {
 
         console.log(`🔑 [OTP Quên Mật Khẩu] Email: ${emailChuan} | Mã OTP: ${maOtp} (Hết hạn lúc: ${hanOtp.toLocaleTimeString()})`);
 
-        // Gửi qua Nodemailer nền (không chặn HTTP response)
-        guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
+        const ketQuaGuiMail = await guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp);
+        if (!ketQuaGuiMail.thanhCong) {
+            return res.status(502).json({ thong_diep: 'Không thể gửi email OTP. Vui lòng thử lại.', daGuiEmail: false });
+        }
 
         return res.status(200).json({
             thong_diep: `Mã OTP đã được gửi đến email ${emailChuan}! Vui lòng kiểm tra hộp thư (cả mục Spam/Thư rác).`,
