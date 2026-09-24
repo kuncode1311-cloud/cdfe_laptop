@@ -733,11 +733,30 @@ const capNhatHoSo = async (req, res) => {
     }
 };
 
-// 10. Đổi mật khẩu trực tiếp cho người dùng đã đăng nhập (với mật khẩu cũ & mật khẩu mới)
+const guiOtpDoiMatKhau = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user.userId || req.user._id;
+        const conditions = [{ id: userId }, { email: req.user?.email }];
+        if (mongoose.isValidObjectId(userId)) conditions.push({ _id: userId });
+        const user = await NguoiDung.findOne({ $or: conditions });
+        if (!user) return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản.' });
+        user.maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.hanOtp = new Date(Date.now() + 10 * 60 * 1000);
+        user.loaiOtp = 'doi_mat_khau';
+        await user.save();
+        const ketQua = await guiMailOTPQuenMatKhau(user.email, user.hoTen, user.maOtp);
+        if (!ketQua.thanhCong) return res.status(502).json({ thong_diep: 'Không thể gửi mã OTP. Vui lòng thử lại.' });
+        return res.json({ thanhCong: true, thong_diep: `Mã xác thực đã gửi tới ${user.email}.`, email: user.email });
+    } catch (loi) {
+        return res.status(500).json({ thong_diep: 'Không thể gửi mã OTP.', chi_tiet: loi.message });
+    }
+};
+
+// Đổi mật khẩu sau khi xác thực OTP email.
 const doiMatKhau = async (req, res) => {
     try {
         const userId = req.user.id || req.user.userId || req.user._id;
-        const { matKhauCu, matKhauMoi } = req.body;
+        const { matKhauMoi, otp } = req.body;
 
         if (!matKhauMoi || matKhauMoi.length < 6) {
             return res.status(400).json({ thong_diep: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' });
@@ -751,23 +770,17 @@ const doiMatKhau = async (req, res) => {
             return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản người dùng!' });
         }
 
-        const laTaiKhoanGoogle = user.authProvider === 'google' || Boolean(user.googleId);
-
-        // Nếu là tài khoản thường hoặc tài khoản Google đã từng đặt mật khẩu riêng, cần xác thực mật khẩu cũ
-        if (!laTaiKhoanGoogle || (user.coMatKhau && matKhauCu)) {
-            if (!matKhauCu) {
-                return res.status(400).json({ thong_diep: 'Vui lòng nhập mật khẩu hiện tại đang dùng!' });
-            }
-            const hopLe = await bcrypt.compare(matKhauCu, user.matKhau);
-            if (!hopLe) {
-                return res.status(400).json({ thong_diep: 'Mật khẩu hiện tại không chính xác!' });
-            }
+        if (!otp || user.loaiOtp !== 'doi_mat_khau' || user.maOtp !== otp.trim() || !user.hanOtp || user.hanOtp < new Date()) {
+            return res.status(400).json({ thong_diep: 'Mã xác thực không đúng hoặc đã hết hạn.' });
         }
 
         // Băm mật khẩu mới với bcrypt
         const salt = await bcrypt.genSalt(10);
         user.matKhau = await bcrypt.hash(matKhauMoi, salt);
         user.coMatKhau = true;
+        user.maOtp = null;
+        user.hanOtp = null;
+        user.loaiOtp = null;
         await user.save();
 
         console.log(`🔒 [Thiết Lập / Đổi Mật Khẩu Thành Công] User: ${user.email}`);
@@ -807,6 +820,7 @@ module.exports = {
     xacNhanOtp,
     datLaiMatKhau,
     capNhatHoSo,
+    guiOtpDoiMatKhau,
     doiMatKhau,
     dangXuat
 };

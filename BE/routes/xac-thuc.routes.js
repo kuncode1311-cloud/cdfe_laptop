@@ -11,6 +11,7 @@ const {
     xacNhanOtp,
     datLaiMatKhau,
     capNhatHoSo,
+    guiOtpDoiMatKhau,
     doiMatKhau,
     dangXuat
 } = require('../controllers/xac-thuc.controller');
@@ -32,6 +33,7 @@ router.post('/dat-lai-mat-khau', datLaiMatKhau);
 // Tuyến đường Quản lý hồ sơ cá nhân & Đổi mật khẩu (Yêu cầu Token)
 router.get('/toi', xacThucToken, layThongTinCaNhan);
 router.put('/cap-nhat-ho-so', xacThucToken, capNhatHoSo);
+router.post('/doi-mat-khau/gui-otp', xacThucToken, guiOtpDoiMatKhau);
 router.put('/doi-mat-khau', xacThucToken, doiMatKhau);
 
 module.exports = router;
