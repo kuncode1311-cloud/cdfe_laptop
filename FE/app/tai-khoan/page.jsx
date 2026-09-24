@@ -1189,6 +1189,18 @@ function NoiDungTrangTaiKhoan() {
     const [loiMatKhauCu, setLoiMatKhauCu] = useState('');
     const [loiMatKhauMoi, setLoiMatKhauMoi] = useState('');
     const [loiChungDoiPass, setLoiChungDoiPass] = useState('');
+    const [demNguocDoiPass, setDemNguocDoiPass] = useState(0);
+
+    // Đếm ngược gửi lại OTP đổi mật khẩu
+    useEffect(() => {
+        let timer;
+        if (demNguocDoiPass > 0) {
+            timer = setInterval(() => {
+                setDemNguocDoiPass((prev) => (prev > 0 ? prev - 1 : 0));
+            }, 1000);
+        }
+        return () => clearInterval(timer);
+    }, [demNguocDoiPass]);
 
     const loiXacNhanMatKhau = useMemo(() => {
         if (!daChamXacNhan && !xacNhanMatKhauMoi) return '';
@@ -1238,30 +1250,52 @@ function NoiDungTrangTaiKhoan() {
         setDangDoiPass(true);
         try {
             if (!daGuiOtpDoiMatKhau) {
-                await guiOtpDoiMatKhau(matKhauCu);
+                const res = await guiOtpDoiMatKhau(matKhauCu);
                 setDaGuiOtpDoiMatKhau(true);
+                setDemNguocDoiPass(60);
                 setLoiChungDoiPass('');
+                toast.success(res?.thong_diep || `Mã xác thực OTP đã được gửi về email ${nguoiDung?.email || ''}!`);
                 return;
             }
-            if (otpDoiMatKhau.length !== 6) throw new Error('Vui lòng nhập đủ 6 số xác thực.');
-            await doiMatKhau(matKhauMoi, otpDoiMatKhau, matKhauCu);
-            setThongBao({
-                loai: 'thanh_cong',
-                noiDung: 'Thiết lập mật khẩu thành công! Bạn có thể sử dụng mật khẩu này để đăng nhập trực tiếp.'
-            });
+            if (otpDoiMatKhau.length !== 6) {
+                setLoiChungDoiPass('Vui lòng nhập đủ 6 chữ số mã OTP xác thực.');
+                return;
+            }
+            const res = await doiMatKhau(matKhauMoi, otpDoiMatKhau, matKhauCu);
+            toast.success(res?.thong_diep || 'Thiết lập mật khẩu thành công! Giờ đây bạn có thể dùng mật khẩu này để đăng nhập.');
             setMatKhauCu('');
             setMatKhauMoi('');
             setOtpDoiMatKhau('');
             setDaGuiOtpDoiMatKhau(false);
             setXacNhanMatKhauMoi('');
             setLoiChungDoiPass('');
+            setDemNguocDoiPass(0);
         } catch (err) {
             const msg = err.message || 'Có lỗi xảy ra, vui lòng thử lại!';
             if (msg.toLowerCase().includes('hiện tại') || msg.toLowerCase().includes('không chính xác')) {
                 setLoiMatKhauCu(msg);
+                toast.error(msg);
             } else {
                 setLoiChungDoiPass(msg);
+                toast.error(msg);
             }
+        } finally {
+            setDangDoiPass(false);
+        }
+    };
+
+    const xuLyGuiLaiOtpDoiPass = async () => {
+        if (dangDoiPass || demNguocDoiPass > 0) return;
+        setDangDoiPass(true);
+        setLoiChungDoiPass('');
+        try {
+            const res = await guiOtpDoiMatKhau(matKhauCu);
+            setDemNguocDoiPass(60);
+            toast.success(res?.thong_diep || `Đã gửi lại mã OTP tới ${nguoiDung?.email}!`);
+        } catch (err) {
+            const msg = err.message || 'Không thể gửi lại mã OTP.';
+            setLoiChungDoiPass(msg);
+            toast.error(msg);
         } finally {
             setDangDoiPass(false);
         }
@@ -3095,12 +3129,6 @@ function NoiDungTrangTaiKhoan() {
                                             </div>
 
                                             {/* Xác nhận mật khẩu mới */}
-                                            {daGuiOtpDoiMatKhau && (
-                                                <div className="space-y-1.5">
-                                                    <label className="text-xs font-black text-slate-800">Mã xác thực gửi về email</label>
-                                                    <input value={otpDoiMatKhau} onChange={(e) => setOtpDoiMatKhau(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" maxLength={6} placeholder="Nhập 6 số" className="w-full px-3.5 py-2.5 rounded-xl border-2 border-emerald-300 text-center tracking-[0.5em] font-black focus:outline-none focus:border-emerald-600" />
-                                                </div>
-                                            )}
                                             <div className="space-y-1.5">
                                                 <label className="text-xs font-black text-slate-800 flex items-center justify-between">
                                                     <span className="flex items-center gap-2">
@@ -3119,6 +3147,7 @@ function NoiDungTrangTaiKhoan() {
                                                     <input
                                                         type={hienXacNhanMatKhau ? 'text' : 'password'}
                                                         required
+                                                        disabled={daGuiOtpDoiMatKhau}
                                                         value={xacNhanMatKhauMoi}
                                                         onChange={(e) => {
                                                             setXacNhanMatKhauMoi(e.target.value);
@@ -3132,7 +3161,7 @@ function NoiDungTrangTaiKhoan() {
                                                                 : daChamXacNhan && !loiXacNhanMatKhau && xacNhanMatKhauMoi && xacNhanMatKhauMoi === matKhauMoi
                                                                 ? 'border-emerald-500 bg-emerald-50/30 text-slate-900 focus:border-emerald-600 focus:ring-4 focus:ring-emerald-500/20'
                                                                 : 'border-purple-300 hover:border-purple-400 bg-white text-slate-900 focus:border-purple-600 focus:ring-4 focus:ring-purple-500/20'
-                                                        }`}
+                                                        } ${daGuiOtpDoiMatKhau ? 'bg-slate-50 cursor-not-allowed opacity-80' : ''}`}
                                                     />
                                                     <button
                                                         type="button"
@@ -3150,25 +3179,59 @@ function NoiDungTrangTaiKhoan() {
                                                 )}
                                             </div>
 
-                                            {/* Lỗi chung / OTP đã gửi — hiện inline trong form */}
+                                            {/* BƯỚC 2: KHUNG NHẬP MÃ OTP KHI ĐÃ GỬI THÀNH CÔNG */}
+                                            {daGuiOtpDoiMatKhau && (
+                                                <div className="space-y-3.5 p-4 sm:p-5 rounded-2xl bg-indigo-50/70 border-2 border-indigo-200 animate-in fade-in duration-200">
+                                                    <div className="flex items-center justify-between pb-2 border-b border-indigo-100">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                                                                <KeyRound className="w-4 h-4" />
+                                                            </div>
+                                                            <div>
+                                                                <h4 className="text-xs font-black text-slate-900">Xác Thực Mã OTP Bảo Mật</h4>
+                                                                <p className="text-[10.5px] text-slate-500">Mã 6 chữ số gửi tới: <strong className="text-blue-600">{nguoiDung?.email}</strong></p>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            disabled={demNguocDoiPass > 0 || dangDoiPass}
+                                                            onClick={xuLyGuiLaiOtpDoiPass}
+                                                            className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 cursor-pointer disabled:text-slate-400 disabled:no-underline"
+                                                        >
+                                                            <RefreshCw className={`w-3 h-3 ${dangDoiPass ? 'animate-spin' : ''}`} />
+                                                            <span>{demNguocDoiPass > 0 ? `Gửi lại (${demNguocDoiPass}s)` : 'Gửi lại mã OTP'}</span>
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="space-y-1.5">
+                                                        <label className="text-xs font-black text-slate-700">Mã Xác Thực (6 chữ số):</label>
+                                                        <input
+                                                            type="text"
+                                                            inputMode="numeric"
+                                                            maxLength={6}
+                                                            required
+                                                            value={otpDoiMatKhau}
+                                                            onChange={(e) => setOtpDoiMatKhau(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                            placeholder="••••••"
+                                                            className="w-full py-3 rounded-xl border-2 border-indigo-300 bg-white text-indigo-700 text-xl font-black tracking-[8px] text-center focus:outline-none focus:border-indigo-600 focus:ring-4 focus:ring-indigo-400/20 transition-all shadow-xs"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Lỗi chung / Cảnh báo */}
                                             {loiChungDoiPass && (
                                                 <div className="flex items-start gap-2.5 bg-rose-50 border border-rose-300 rounded-xl p-3 text-xs font-bold text-rose-700">
                                                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                                                     <span>{loiChungDoiPass}</span>
                                                 </div>
                                             )}
-                                            {daGuiOtpDoiMatKhau && !loiChungDoiPass && (
-                                                <div className="flex items-start gap-2.5 bg-emerald-50 border border-emerald-300 rounded-xl p-3 text-xs font-bold text-emerald-700">
-                                                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
-                                                    <span>Mã xác thực đã gửi về email của bạn. Nhập mã bên trên rồi bấm xác nhận!</span>
-                                                </div>
-                                            )}
 
-                                            {/* Nút Submit Rực Rỡ, Đậm Màu, Không Bị Tệp Màu */}
-                                            <div className="pt-2">
+                                            {/* Nút Submit Rực Rỡ, Đậm Màu */}
+                                            <div className="pt-2 space-y-2">
                                                 <button
                                                     type="submit"
-                                                    disabled={dangDoiPass || (daChamXacNhan && !!loiXacNhanMatKhau) || matKhauMoi.length < 6}
+                                                    disabled={dangDoiPass || (daChamXacNhan && !!loiXacNhanMatKhau) || matKhauMoi.length < 6 || (daGuiOtpDoiMatKhau && otpDoiMatKhau.length !== 6)}
                                                     className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-black text-xs sm:text-sm shadow-xl shadow-indigo-500/30 border-2 border-indigo-400/60 active:scale-[0.98] transition-all cursor-pointer disabled:from-indigo-400 disabled:via-blue-400 disabled:to-purple-400 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                                 >
                                                     {dangDoiPass ? (
@@ -3176,13 +3239,28 @@ function NoiDungTrangTaiKhoan() {
                                                             <RefreshCw className="w-4 h-4 animate-spin" />
                                                             <span>Đang xử lý bảo mật...</span>
                                                         </>
-                                                    ) : (
+                                                    ) : daGuiOtpDoiMatKhau ? (
                                                         <>
                                                             <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
-                                                            <span>{daGuiOtpDoiMatKhau ? 'Xác Nhận & Cập Nhật Mật Khẩu' : 'Gửi Mã Xác Thực Qua Email'}</span>
+                                                            <span>Xác Thực & Cập Nhật Mật Khẩu Ngay</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Mail className="w-4 h-4 stroke-[2.5]" />
+                                                            <span>Tiếp Tục & Gửi Mã OTP Qua Email</span>
                                                         </>
                                                     )}
                                                 </button>
+
+                                                {daGuiOtpDoiMatKhau && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setDaGuiOtpDoiMatKhau(false)}
+                                                        className="w-full text-center text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer pt-1 font-bold transition-colors"
+                                                    >
+                                                        ← Quay lại chỉnh sửa thông tin mật khẩu
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </form>

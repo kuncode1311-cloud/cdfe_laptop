@@ -741,9 +741,12 @@ const guiOtpDoiMatKhau = async (req, res) => {
         const user = await NguoiDung.findOne({ $or: conditions });
         if (!user) return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản.' });
 
-        // Nếu client gửi mật khẩu cũ, kiểm tra tính chính xác trước khi gửi OTP
+        // Bắt buộc kiểm tra mật khẩu hiện tại nếu tài khoản có mật khẩu
         const { matKhauCu } = req.body || {};
-        if (matKhauCu && user.matKhau && user.authProvider !== 'google') {
+        if (user.matKhau && user.authProvider !== 'google') {
+            if (!matKhauCu || !matKhauCu.trim()) {
+                return res.status(400).json({ thong_diep: 'Vui lòng nhập mật khẩu hiện tại đang dùng!' });
+            }
             const hopLe = await bcrypt.compare(matKhauCu, user.matKhau);
             if (!hopLe) {
                 return res.status(400).json({ thong_diep: 'Mật khẩu hiện tại không chính xác!' });
@@ -785,8 +788,11 @@ const doiMatKhau = async (req, res) => {
             return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản người dùng!' });
         }
 
-        // Kiểm tra mật khẩu cũ nếu có
-        if (matKhauCu && user.matKhau && user.authProvider !== 'google') {
+        // Bắt buộc kiểm tra mật khẩu cũ nếu tài khoản có mật khẩu
+        if (user.matKhau && user.authProvider !== 'google') {
+            if (!matKhauCu || !matKhauCu.trim()) {
+                return res.status(400).json({ thong_diep: 'Vui lòng nhập mật khẩu hiện tại đang dùng!' });
+            }
             const hopLe = await bcrypt.compare(matKhauCu, user.matKhau);
             if (!hopLe) {
                 return res.status(400).json({ thong_diep: 'Mật khẩu hiện tại không chính xác!' });
