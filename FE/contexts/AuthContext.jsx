@@ -385,39 +385,20 @@ export function AuthProvider({ children }) {
 
     // Đổi mật khẩu cá nhân
     const guiOtpDoiMatKhau = async () => {
-        const tokenHienTai = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
-        const res = await fetch(`${API_BASE_URL}/auth/doi-mat-khau/gui-otp`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${tokenHienTai}` }
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.thong_diep || 'Không thể gửi mã xác thực.');
-        return data;
+        return await apiFetch('/auth/doi-mat-khau/gui-otp', { method: 'POST' });
     };
 
     const doiMatKhau = async (matKhauMoi, otp) => {
         try {
-            const tokenHienTai = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
-            const res = await fetch(`${API_BASE_URL}/auth/doi-mat-khau`, {
+            const data = await apiFetch('/auth/doi-mat-khau', {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${tokenHienTai}`
-                },
                 body: JSON.stringify({ matKhauMoi, otp })
             });
-
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.thong_diep || 'Đổi mật khẩu thất bại!');
-            }
-
             if (nguoiDung) {
                 const userMoi = { ...nguoiDung, coMatKhau: true };
                 setNguoiDung(userMoi);
                 localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userMoi));
             }
-
             return data;
         } catch (error) {
             console.error('Lỗi đổi mật khẩu:', error.message);
