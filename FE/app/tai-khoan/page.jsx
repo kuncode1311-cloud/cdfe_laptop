@@ -534,6 +534,7 @@ function NoiDungTrangTaiKhoan() {
         moModalDangNhap,
         capNhatHoSo,
         doiMatKhau,
+        guiOtpDoiMatKhau,
         dangXuat,
         capNhatViVoucher
     } = useNguoiDung();
@@ -1176,6 +1177,8 @@ function NoiDungTrangTaiKhoan() {
 
     const [matKhauCu, setMatKhauCu] = useState('');
     const [matKhauMoi, setMatKhauMoi] = useState('');
+    const [otpDoiMatKhau, setOtpDoiMatKhau] = useState('');
+    const [daGuiOtpDoiMatKhau, setDaGuiOtpDoiMatKhau] = useState(false);
     const [xacNhanMatKhauMoi, setXacNhanMatKhauMoi] = useState('');
     const [hienMatKhauCu, setHienMatKhauCu] = useState(false);
     const [hienMatKhauMoi, setHienMatKhauMoi] = useState(false);
@@ -1183,6 +1186,8 @@ function NoiDungTrangTaiKhoan() {
     const [dangDoiPass, setDangDoiPass] = useState(false);
     const [daChamMatKhauMoi, setDaChamMatKhauMoi] = useState(false);
     const [daChamXacNhan, setDaChamXacNhan] = useState(false);
+    const [loiMatKhauCu, setLoiMatKhauCu] = useState('');
+    const [loiMatKhauMoi, setLoiMatKhauMoi] = useState('');
 
     const loiXacNhanMatKhau = useMemo(() => {
         if (!daChamXacNhan && !xacNhanMatKhauMoi) return '';
@@ -1212,12 +1217,15 @@ function NoiDungTrangTaiKhoan() {
 
     const xuLyDoiMatKhau = async (e) => {
         e.preventDefault();
-        if (canNhapMatKhauCu && !matKhauCu) {
-            setThongBao({ loai: 'loi', noiDung: 'Vui lòng nhập mật khẩu hiện tại đang dùng!' });
+        setLoiMatKhauCu('');
+        setLoiMatKhauMoi('');
+
+        if (canNhapMatKhauCu && !matKhauCu.trim()) {
+            setLoiMatKhauCu('Vui lòng nhập mật khẩu hiện tại đang dùng!');
             return;
         }
         if (matKhauMoi.length < 6) {
-            setThongBao({ loai: 'loi', noiDung: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' });
+            setLoiMatKhauMoi('Mật khẩu mới phải có tối thiểu 6 ký tự!');
             return;
         }
         if (matKhauMoi !== xacNhanMatKhauMoi) {
@@ -1227,16 +1235,29 @@ function NoiDungTrangTaiKhoan() {
 
         setDangDoiPass(true);
         try {
-            await doiMatKhau(matKhauCu, matKhauMoi);
+            if (!daGuiOtpDoiMatKhau) {
+                await guiOtpDoiMatKhau();
+                setDaGuiOtpDoiMatKhau(true);
+                setThongBao({ loai: 'thanh_cong', noiDung: 'Mã xác thực đã gửi về email của bạn.' });
+                return;
+            }
+            if (otpDoiMatKhau.length !== 6) throw new Error('Vui lòng nhập đủ 6 số xác thực.');
+            await doiMatKhau(matKhauMoi, otpDoiMatKhau);
             setThongBao({
                 loai: 'thanh_cong',
                 noiDung: 'Thiết lập mật khẩu thành công! Bạn có thể sử dụng mật khẩu này để đăng nhập trực tiếp.'
             });
             setMatKhauCu('');
             setMatKhauMoi('');
+            setOtpDoiMatKhau('');
+            setDaGuiOtpDoiMatKhau(false);
             setXacNhanMatKhauMoi('');
         } catch (err) {
-            setThongBao({ loai: 'loi', noiDung: err.message || 'Mật khẩu hiện tại không chính xác!' });
+            if (err.message?.toLowerCase().includes('mật khẩu') && err.message?.toLowerCase().includes('hiện tại')) {
+                setLoiMatKhauCu(err.message);
+            } else {
+                setThongBao({ loai: 'loi', noiDung: err.message || 'Mật khẩu hiện tại không chính xác!' });
+            }
         } finally {
             setDangDoiPass(false);
         }
@@ -2980,9 +3001,9 @@ function NoiDungTrangTaiKhoan() {
                                                             type={hienMatKhauCu ? 'text' : 'password'}
                                                             required
                                                             value={matKhauCu}
-                                                            onChange={(e) => setMatKhauCu(e.target.value)}
+                                                            onChange={(e) => { setMatKhauCu(e.target.value); setLoiMatKhauCu(''); }}
                                                             placeholder="Nhập mật khẩu đang dùng của bạn..."
-                                                            className="w-full px-3.5 pr-11 py-2.5 rounded-xl border-2 border-amber-300 hover:border-amber-400 bg-white text-slate-900 text-xs sm:text-sm font-bold focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-400/20 transition-all shadow-xs"
+                                                            className={`w-full px-3.5 pr-11 py-2.5 rounded-xl border-2 hover:border-amber-400 bg-white text-slate-900 text-xs sm:text-sm font-bold focus:outline-none focus:ring-4 transition-all shadow-xs ${loiMatKhauCu ? 'border-rose-500 focus:border-rose-600 focus:ring-rose-500/20' : 'border-amber-300 focus:border-amber-500 focus:ring-amber-400/20'}`}
                                                         />
                                                         <button
                                                             type="button"
@@ -2992,6 +3013,12 @@ function NoiDungTrangTaiKhoan() {
                                                             {hienMatKhauCu ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                         </button>
                                                     </div>
+                                                    {loiMatKhauCu && (
+                                                        <p className="text-[11px] font-black text-rose-600 flex items-center gap-1.5 mt-1 bg-rose-50 p-2 rounded-lg border border-rose-300">
+                                                            <AlertCircle className="w-4 h-4 shrink-0" />
+                                                            <span>{loiMatKhauCu}</span>
+                                                        </p>
+                                                    )}
                                                 </div>
                                             )}
 
@@ -3008,9 +3035,9 @@ function NoiDungTrangTaiKhoan() {
                                                         type={hienMatKhauMoi ? 'text' : 'password'}
                                                         required
                                                         value={matKhauMoi}
-                                                        onChange={(e) => setMatKhauMoi(e.target.value)}
+                                                        onChange={(e) => { setMatKhauMoi(e.target.value); setLoiMatKhauMoi(''); }}
                                                         placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
-                                                        className="w-full px-3.5 pr-11 py-2.5 rounded-xl border-2 border-blue-300 hover:border-blue-400 bg-white text-slate-900 text-xs sm:text-sm font-bold focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-500/20 transition-all shadow-xs"
+                                                        className={`w-full px-3.5 pr-11 py-2.5 rounded-xl border-2 hover:border-blue-400 bg-white text-slate-900 text-xs sm:text-sm font-bold focus:outline-none focus:ring-4 transition-all shadow-xs ${loiMatKhauMoi ? 'border-rose-500 focus:border-rose-600 focus:ring-rose-500/20' : 'border-blue-300 focus:border-blue-600 focus:ring-blue-500/20'}`}
                                                     />
                                                     <button
                                                         type="button"
@@ -3020,6 +3047,12 @@ function NoiDungTrangTaiKhoan() {
                                                         {hienMatKhauMoi ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                                     </button>
                                                 </div>
+                                                {loiMatKhauMoi && (
+                                                    <p className="text-[11px] font-black text-rose-600 flex items-center gap-1.5 mt-1 bg-rose-50 p-2 rounded-lg border border-rose-300">
+                                                        <AlertCircle className="w-4 h-4 shrink-0" />
+                                                        <span>{loiMatKhauMoi}</span>
+                                                    </p>
+                                                )}
 
                                                 {/* Visual Meter Đo Độ Mạnh Mật Khẩu (Rực Rỡ, Đậm Màu) */}
                                                 {matKhauMoi && (
@@ -3058,6 +3091,12 @@ function NoiDungTrangTaiKhoan() {
                                             </div>
 
                                             {/* Xác nhận mật khẩu mới */}
+                                            {daGuiOtpDoiMatKhau && (
+                                                <div className="space-y-1.5">
+                                                    <label className="text-xs font-black text-slate-800">Mã xác thực gửi về email</label>
+                                                    <input value={otpDoiMatKhau} onChange={(e) => setOtpDoiMatKhau(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" maxLength={6} placeholder="Nhập 6 số" className="w-full px-3.5 py-2.5 rounded-xl border-2 border-emerald-300 text-center tracking-[0.5em] font-black focus:outline-none focus:border-emerald-600" />
+                                                </div>
+                                            )}
                                             <div className="space-y-1.5">
                                                 <label className="text-xs font-black text-slate-800 flex items-center justify-between">
                                                     <span className="flex items-center gap-2">
@@ -3122,7 +3161,7 @@ function NoiDungTrangTaiKhoan() {
                                                     ) : (
                                                         <>
                                                             <ShieldCheck className="w-5 h-5 stroke-[2.5]" />
-                                                            <span>{canNhapMatKhauCu ? 'Cập Nhật Mật Khẩu Mới' : 'Thiết Lập Mật Khẩu Ngay'}</span>
+                                                            <span>{daGuiOtpDoiMatKhau ? 'Xác Nhận & Cập Nhật Mật Khẩu' : 'Gửi Mã Xác Thực Qua Email'}</span>
                                                         </>
                                                     )}
                                                 </button>
