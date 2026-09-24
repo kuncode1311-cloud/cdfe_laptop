@@ -743,13 +743,9 @@ const doiMatKhau = async (req, res) => {
             return res.status(400).json({ thong_diep: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' });
         }
 
-        const user = await NguoiDung.findOne({
-            $or: [
-                { id: userId },
-                { _id: userId },
-                { email: req.user?.email }
-            ]
-        });
+        const dieuKienTimUser = [{ id: userId }, { email: req.user?.email }];
+        if (mongoose.isValidObjectId(userId)) dieuKienTimUser.push({ _id: userId });
+        const user = await NguoiDung.findOne({ $or: dieuKienTimUser });
 
         if (!user) {
             return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản người dùng!' });

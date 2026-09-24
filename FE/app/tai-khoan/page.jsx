@@ -1854,7 +1854,7 @@ function NoiDungTrangTaiKhoan() {
                                         <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 text-white flex items-center justify-center shrink-0 shadow-inner">
                                             <PackageCheck className="w-5 h-5 text-amber-100" />
                                         </div>
-                                        <span>Đơn Hàng Của Tôi & Lộ Trình Realtime</span>
+                                            <span>Đơn Hàng Của Tôi & Tiến Độ Giao Hàng</span>
                                     </h2>
                                     <p className="text-xs text-amber-100 mt-1 font-semibold">
                                         Cập nhật thời gian thực từng khâu đóng gói niêm phong và bàn giao hỏa tốc.
@@ -2911,7 +2911,7 @@ function NoiDungTrangTaiKhoan() {
                                 </div>
                                 <span className="px-3 py-1 rounded-full bg-emerald-400/25 border border-emerald-300/40 text-emerald-200 text-xs font-black self-start sm:self-auto flex items-center gap-1.5 shadow-2xs">
                                     <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-                                    <span>Bảo Mật 256-Bit</span>
+                                    <span>Tài khoản an toàn</span>
                                 </span>
                             </div>
 
@@ -2931,7 +2931,7 @@ function NoiDungTrangTaiKhoan() {
                                             </div>
                                             <div className="flex-1 min-w-0 text-xs">
                                                 <div className="font-black text-slate-900 flex items-center justify-between gap-2">
-                                                    <span className="text-sm font-black">Tài Khoản Google OAuth 2.0</span>
+                                                    <span className="text-sm font-black">Tài Khoản Google</span>
                                                     <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-[10.5px] shadow-xs">
                                                         ✓ Bảo vệ 2 lớp
                                                     </span>
