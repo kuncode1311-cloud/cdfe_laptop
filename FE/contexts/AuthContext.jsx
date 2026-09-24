@@ -384,7 +384,18 @@ export function AuthProvider({ children }) {
     };
 
     // Đổi mật khẩu cá nhân
-    const doiMatKhau = async (matKhauCu, matKhauMoi) => {
+    const guiOtpDoiMatKhau = async () => {
+        const tokenHienTai = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
+        const res = await fetch(`${API_BASE_URL}/auth/doi-mat-khau/gui-otp`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${tokenHienTai}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.thong_diep || 'Không thể gửi mã xác thực.');
+        return data;
+    };
+
+    const doiMatKhau = async (matKhauMoi, otp) => {
         try {
             const tokenHienTai = token || (typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null);
             const res = await fetch(`${API_BASE_URL}/auth/doi-mat-khau`, {
@@ -393,7 +404,7 @@ export function AuthProvider({ children }) {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${tokenHienTai}`
                 },
-                body: JSON.stringify({ matKhauCu, matKhauMoi })
+                body: JSON.stringify({ matKhauMoi, otp })
             });
 
             const data = await res.json();
@@ -479,6 +490,7 @@ export function AuthProvider({ children }) {
                 capNhatViVoucher,
                 capNhatHoSo,
                 doiMatKhau,
+                guiOtpDoiMatKhau,
                 dangMoModalAuth,
                 cheDoAuth,
                 moModalDangNhap,
