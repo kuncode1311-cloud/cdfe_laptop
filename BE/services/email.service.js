@@ -1,28 +1,20 @@
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
 require('dotenv').config();
-const nodemailer = require('nodemailer');
 
-const DEFAULT_EMAIL_USER = 'kun.code.1311@gmail.com';
-const DEFAULT_EMAIL_PASS = 'wqdonpjwpjzmntsl';
+const emailUser = process.env.EMAIL_USER || 'kun.code.1311@gmail.com';
+const brevoApiKey = process.env.BREVO_API_KEY;
+const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || emailUser;
 
-function layThongTinEmail() {
-    const user = process.env.EMAIL_USER || DEFAULT_EMAIL_USER;
-    const pass = (process.env.EMAIL_PASS || DEFAULT_EMAIL_PASS).replace(/\s+/g, '');
-    return { user, pass };
+if (!brevoApiKey) {
+    console.warn('⚠️ Thiếu BREVO_API_KEY; chức năng gửi email sẽ không hoạt động trên production.');
 }
 
-/**
- * Cấu hình Transporter gửi email qua Gmail SMTP với Fallback 2 tầng
- */
 async function guiMailBangTransporter(mailOptions) {
-    // Ưu tiên 1: Brevo API (Gửi được cho MỌI EMAIL bất kỳ, 300 email/ngày)
-    const brevoApiKey = process.env.BREVO_API_KEY;
+    // Ưu tiên 1: Brevo API (hoạt động trên Railway — SMTP bị chặn)
     if (brevoApiKey) {
         try {
-            const brevoSender = process.env.BREVO_SENDER_EMAIL || process.env.EMAIL_USER;
-            const danhSachTo = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to]).map(e => ({ email: String(e).trim() }));
-            const resBrevo = await fetch('https://api.brevo.com/v3/smtp/email', {
+            const danhSachTo = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to])
+                .map(e => ({ email: String(e).trim() }));
+            const res = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
                 headers: {
                     'api-key': brevoApiKey,
@@ -30,115 +22,32 @@ async function guiMailBangTransporter(mailOptions) {
                     'accept': 'application/json'
                 },
                 body: JSON.stringify({
-                    sender: {
-                        name: process.env.BREVO_SENDER_NAME || 'Trí Kun',
-                        email: brevoSender
-                    },
+                    sender: { name: process.env.BREVO_SENDER_NAME || 'Trí Kun', email: brevoSenderEmail },
                     to: danhSachTo,
                     subject: mailOptions.subject,
                     htmlContent: mailOptions.html,
                     textContent: mailOptions.text
                 })
             });
-            const dataBrevo = await resBrevo.json();
-            if (!resBrevo.ok) {
-                throw new Error(dataBrevo?.message || `Brevo error ${resBrevo.status}`);
-            }
-            console.log('✅ [BE Email] Gửi thành công qua Brevo API, messageId:', dataBrevo.messageId);
-            return { messageId: dataBrevo.messageId };
-        } catch (errBrevo) {
-            console.warn('⚠️ [BE Email] Brevo API không gửi được:', errBrevo.message);
-        }
-    }
-
-    // Ưu tiên 2: Google Apps Script Web App
-    const gasUrl = process.env.GAS_EMAIL_URL;
-    if (gasUrl) {
-        try {
-            const resGas = await fetch(gasUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    to: Array.isArray(mailOptions.to) ? mailOptions.to.join(',') : mailOptions.to,
-                    subject: mailOptions.subject,
-                    html: mailOptions.html,
-                    text: mailOptions.text
-                }),
-                redirect: 'follow'
-            });
-            console.log('✅ [BE Email] Gửi thành công qua Google Apps Script Web App');
-            return { messageId: 'gas_' + Date.now() };
-        } catch (errGas) {
-            console.warn('⚠️ [BE Email] Gửi qua Google Apps Script thất bại:', errGas.message);
-        }
-    }
-
-    // Ưu tiên 2: Resend API (HTTP - hoạt động trên cloud)
-    const resendApiKey = process.env.RESEND_API_KEY;
-    if (resendApiKey) {
-        try {
-            const resendFrom = process.env.RESEND_FROM || 'Trí Kun <onboarding@resend.dev>';
-            const res = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${resendApiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    from: resendFrom,
-                    to: Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to],
-                    subject: mailOptions.subject,
-                    html: mailOptions.html,
-                    text: mailOptions.text
-                })
-            });
             const data = await res.json();
-            if (!res.ok) throw new Error(data?.message || `Resend API error ${res.status}`);
-            console.log('✅ [BE Email] Gửi thành công qua Resend API, id:', data.id);
-            return { messageId: data.id };
-        } catch (errResend) {
-            console.warn('⚠️ [BE Email] Resend API không gửi được:', errResend.message);
-            if (errResend.message.includes('own email address') || errResend.message.includes('not verified')) {
-                throw new Error(`Resend Free chưa có Domain riêng, chỉ gửi được tới email chủ (kun.code.1311@gmail.com).`);
-            }
+            if (!res.ok) throw new Error(data?.message || `Brevo error ${res.status}`);
+            console.log('✅ [BE Email] Gửi thành công qua Brevo API, messageId:', data.messageId);
+            return { messageId: data.messageId };
+        } catch (err) {
+            console.warn('⚠️ [BE Email] Brevo API lỗi:', err.message);
+            throw err;
         }
     }
 
-    // Nếu chạy trên cloud hosting (Railway / Vercel): Chặn SMTP để tránh timeout
-    const isCloudHost = !!(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL || process.env.VERCEL);
-    if (isCloudHost) {
-        throw new Error('Máy chủ Cloud chặn cổng SMTP. Vui lòng cấu hình GAS_EMAIL_URL hoặc xác thực tên miền Resend.');
+    // Fallback: Nodemailer SMTP (chỉ chạy được ở localhost)
+    const isCloud = !!(process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL || process.env.VERCEL);
+    if (isCloud) {
+        throw new Error('Railway chặn SMTP. Vui lòng cấu hình BREVO_API_KEY trong Railway Variables.');
     }
-
-    const { user, pass } = layThongTinEmail();
-
-    // Fallback: SMTP trên localhost dev
-    try {
-        const transporter465 = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true,
-            auth: { user, pass },
-            tls: { rejectUnauthorized: false },
-            connectionTimeout: 8000,
-            greetingTimeout: 4000,
-            socketTimeout: 10000
-        });
-        return await transporter465.sendMail(mailOptions);
-    } catch (err1) {
-        console.warn('⚠️ [BE Email] Port 465 thất bại, thử port 587...', err1.message);
-        const transporter587 = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 587,
-            secure: false,
-            auth: { user, pass },
-            tls: { rejectUnauthorized: false },
-            connectionTimeout: 8000,
-            greetingTimeout: 4000,
-            socketTimeout: 10000
-        });
-        return await transporter587.sendMail(mailOptions);
-    }
+    const nodemailer = require('nodemailer');
+    const emailPass = (process.env.EMAIL_PASS || '').replace(/\s+/g, '');
+    const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: emailUser, pass: emailPass } });
+    return transporter.sendMail(mailOptions);
 }
 
 /**
@@ -200,7 +109,7 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
 
     try {
         const info = await guiMailBangTransporter({
-            from: `"Trí Kun" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
+            from: `"Trí Kun" <${emailUser}>`,
             to: emailNhan,
             subject: `[Trí Kun] Mã OTP đặt lại mật khẩu của bạn là: ${maOtp}`,
             text: `Mã xác thực OTP của bạn là: ${maOtp}. Mã có hiệu lực trong 10 phút. Tuyệt đối không chia sẻ mã này cho ai.`,
@@ -266,7 +175,7 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
 
     try {
         const info = await guiMailBangTransporter({
-            from: `"Trí Kun" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
+            from: `"Trí Kun" <${emailUser}>`,
             to: emailNhan,
             subject: `[Trí Kun] Mã OTP kích hoạt tài khoản của bạn: ${maOtp}`,
             text: `Mã kích hoạt tài khoản của bạn là: ${maOtp}`,
@@ -385,7 +294,7 @@ async function guiMailXacNhanDonHang(donHang) {
 
     try {
         const info = await guiMailBangTransporter({
-            from: `"Trí Kun" <${process.env.EMAIL_USER || 'kun.code.1311@gmail.com'}>`,
+            from: `"Trí Kun" <${emailUser}>`,
             to: emailNhan,
             subject: `[Trí Kun] Xác nhận đơn hàng #${maDon} thành công - ${tenKhach}`,
             html: htmlContent
