@@ -1188,6 +1188,7 @@ function NoiDungTrangTaiKhoan() {
     const [daChamXacNhan, setDaChamXacNhan] = useState(false);
     const [loiMatKhauCu, setLoiMatKhauCu] = useState('');
     const [loiMatKhauMoi, setLoiMatKhauMoi] = useState('');
+    const [loiChungDoiPass, setLoiChungDoiPass] = useState('');
 
     const loiXacNhanMatKhau = useMemo(() => {
         if (!daChamXacNhan && !xacNhanMatKhauMoi) return '';
@@ -1219,6 +1220,7 @@ function NoiDungTrangTaiKhoan() {
         e.preventDefault();
         setLoiMatKhauCu('');
         setLoiMatKhauMoi('');
+        setLoiChungDoiPass('');
 
         if (canNhapMatKhauCu && !matKhauCu.trim()) {
             setLoiMatKhauCu('Vui lòng nhập mật khẩu hiện tại đang dùng!');
@@ -1229,7 +1231,7 @@ function NoiDungTrangTaiKhoan() {
             return;
         }
         if (matKhauMoi !== xacNhanMatKhauMoi) {
-            setThongBao({ loai: 'loi', noiDung: 'Mật khẩu xác nhận không trùng khớp với mật khẩu mới!' });
+            setLoiMatKhauMoi('Mật khẩu xác nhận không trùng khớp!');
             return;
         }
 
@@ -1238,7 +1240,7 @@ function NoiDungTrangTaiKhoan() {
             if (!daGuiOtpDoiMatKhau) {
                 await guiOtpDoiMatKhau();
                 setDaGuiOtpDoiMatKhau(true);
-                setThongBao({ loai: 'thanh_cong', noiDung: 'Mã xác thực đã gửi về email của bạn.' });
+                setLoiChungDoiPass('');
                 return;
             }
             if (otpDoiMatKhau.length !== 6) throw new Error('Vui lòng nhập đủ 6 số xác thực.');
@@ -1252,11 +1254,13 @@ function NoiDungTrangTaiKhoan() {
             setOtpDoiMatKhau('');
             setDaGuiOtpDoiMatKhau(false);
             setXacNhanMatKhauMoi('');
+            setLoiChungDoiPass('');
         } catch (err) {
-            if (err.message?.toLowerCase().includes('mật khẩu') && err.message?.toLowerCase().includes('hiện tại')) {
-                setLoiMatKhauCu(err.message);
+            const msg = err.message || 'Có lỗi xảy ra, vui lòng thử lại!';
+            if (msg.toLowerCase().includes('hiện tại') || msg.toLowerCase().includes('không chính xác')) {
+                setLoiMatKhauCu(msg);
             } else {
-                setThongBao({ loai: 'loi', noiDung: err.message || 'Mật khẩu hiện tại không chính xác!' });
+                setLoiChungDoiPass(msg);
             }
         } finally {
             setDangDoiPass(false);
@@ -3145,6 +3149,20 @@ function NoiDungTrangTaiKhoan() {
                                                     </p>
                                                 )}
                                             </div>
+
+                                            {/* Lỗi chung / OTP đã gửi — hiện inline trong form */}
+                                            {loiChungDoiPass && (
+                                                <div className="flex items-start gap-2.5 bg-rose-50 border border-rose-300 rounded-xl p-3 text-xs font-bold text-rose-700">
+                                                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                                                    <span>{loiChungDoiPass}</span>
+                                                </div>
+                                            )}
+                                            {daGuiOtpDoiMatKhau && !loiChungDoiPass && (
+                                                <div className="flex items-start gap-2.5 bg-emerald-50 border border-emerald-300 rounded-xl p-3 text-xs font-bold text-emerald-700">
+                                                    <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                                                    <span>Mã xác thực đã gửi về email của bạn. Nhập mã bên trên rồi bấm xác nhận!</span>
+                                                </div>
+                                            )}
 
                                             {/* Nút Submit Rực Rỡ, Đậm Màu, Không Bị Tệp Màu */}
                                             <div className="pt-2">
