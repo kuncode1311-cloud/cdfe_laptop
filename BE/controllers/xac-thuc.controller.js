@@ -23,7 +23,7 @@ const taoToken = (nguoiDung) => {
     );
 };
 
-const { guiMailOTPQuenMatKhau, guiMailKichHoatTaiKhoan } = require('../services/email.service');
+const { guiMailOTPQuenMatKhau, guiMailOTPDoiMatKhau, guiMailKichHoatTaiKhoan } = require('../services/email.service');
 
 // 1. Đăng ký tài khoản người dùng mới (Bắt buộc xác thực Email qua OTP)
 const dangKy = async (req, res) => {
@@ -740,14 +740,29 @@ const guiOtpDoiMatKhau = async (req, res) => {
         if (mongoose.isValidObjectId(userId)) conditions.push({ _id: userId });
         const user = await NguoiDung.findOne({ $or: conditions });
         if (!user) return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản.' });
+
+        // Nếu client gửi mật khẩu cũ, kiểm tra tính chính xác trước khi gửi OTP
+        const { matKhauCu } = req.body || {};
+        if (matKhauCu && user.matKhau && user.authProvider !== 'google') {
+            const hopLe = await bcrypt.compare(matKhauCu, user.matKhau);
+            if (!hopLe) {
+                return res.status(400).json({ thong_diep: 'Mật khẩu hiện tại không chính xác!' });
+            }
+        }
+
         user.maOtp = Math.floor(100000 + Math.random() * 900000).toString();
         user.hanOtp = new Date(Date.now() + 10 * 60 * 1000);
         user.loaiOtp = 'doi_mat_khau';
         await user.save();
-        const ketQua = await guiMailOTPQuenMatKhau(user.email, user.hoTen, user.maOtp);
-        if (!ketQua.thanhCong) return res.status(502).json({ thong_diep: 'Không thể gửi mã OTP. Vui lòng thử lại.' });
+
+        const ketQua = await guiMailOTPDoiMatKhau(user.email, user.hoTen, user.maOtp);
+        if (!ketQua.thanhCong) {
+            console.error('⚠️ [BE] Lỗi gửi email OTP:', ketQua.loi);
+            return res.status(502).json({ thong_diep: 'Không thể gửi mã OTP qua email. Vui lòng thử lại sau.' });
+        }
         return res.json({ thanhCong: true, thong_diep: `Mã xác thực đã gửi tới ${user.email}.`, email: user.email });
     } catch (loi) {
+        console.error('❌ [BE] Lỗi trong guiOtpDoiMatKhau:', loi);
         return res.status(500).json({ thong_diep: 'Không thể gửi mã OTP.', chi_tiet: loi.message });
     }
 };
@@ -756,7 +771,7 @@ const guiOtpDoiMatKhau = async (req, res) => {
 const doiMatKhau = async (req, res) => {
     try {
         const userId = req.user.id || req.user.userId || req.user._id;
-        const { matKhauMoi, otp } = req.body;
+        const { matKhauMoi, otp, matKhauCu } = req.body || {};
 
         if (!matKhauMoi || matKhauMoi.length < 6) {
             return res.status(400).json({ thong_diep: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' });
@@ -770,7 +785,15 @@ const doiMatKhau = async (req, res) => {
             return res.status(404).json({ thong_diep: 'Không tìm thấy tài khoản người dùng!' });
         }
 
-        if (!otp || user.loaiOtp !== 'doi_mat_khau' || user.maOtp !== otp.trim() || !user.hanOtp || user.hanOtp < new Date()) {
+        // Kiểm tra mật khẩu cũ nếu có
+        if (matKhauCu && user.matKhau && user.authProvider !== 'google') {
+            const hopLe = await bcrypt.compare(matKhauCu, user.matKhau);
+            if (!hopLe) {
+                return res.status(400).json({ thong_diep: 'Mật khẩu hiện tại không chính xác!' });
+            }
+        }
+
+        if (!otp || user.loaiOtp !== 'doi_mat_khau' || user.maOtp !== String(otp).trim() || !user.hanOtp || user.hanOtp < new Date()) {
             return res.status(400).json({ thong_diep: 'Mã xác thực không đúng hoặc đã hết hạn.' });
         }
 

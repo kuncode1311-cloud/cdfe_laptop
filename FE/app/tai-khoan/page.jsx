@@ -1238,13 +1238,13 @@ function NoiDungTrangTaiKhoan() {
         setDangDoiPass(true);
         try {
             if (!daGuiOtpDoiMatKhau) {
-                await guiOtpDoiMatKhau();
+                await guiOtpDoiMatKhau(matKhauCu);
                 setDaGuiOtpDoiMatKhau(true);
                 setLoiChungDoiPass('');
                 return;
             }
             if (otpDoiMatKhau.length !== 6) throw new Error('Vui lòng nhập đủ 6 số xác thực.');
-            await doiMatKhau(matKhauMoi, otpDoiMatKhau);
+            await doiMatKhau(matKhauMoi, otpDoiMatKhau, matKhauCu);
             setThongBao({
                 loai: 'thanh_cong',
                 noiDung: 'Thiết lập mật khẩu thành công! Bạn có thể sử dụng mật khẩu này để đăng nhập trực tiếp.'

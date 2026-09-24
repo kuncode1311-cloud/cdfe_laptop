@@ -384,15 +384,18 @@ export function AuthProvider({ children }) {
     };
 
     // Đổi mật khẩu cá nhân
-    const guiOtpDoiMatKhau = async () => {
-        return await apiFetch('/auth/doi-mat-khau/gui-otp', { method: 'POST' });
+    const guiOtpDoiMatKhau = async (matKhauCu = '') => {
+        return await apiFetch('/auth/doi-mat-khau/gui-otp', {
+            method: 'POST',
+            body: JSON.stringify({ matKhauCu })
+        });
     };
 
-    const doiMatKhau = async (matKhauMoi, otp) => {
+    const doiMatKhau = async (matKhauMoi, otp, matKhauCu = '') => {
         try {
             const data = await apiFetch('/auth/doi-mat-khau', {
                 method: 'PUT',
-                body: JSON.stringify({ matKhauMoi, otp })
+                body: JSON.stringify({ matKhauMoi, otp, matKhauCu })
             });
             if (nguoiDung) {
                 const userMoi = { ...nguoiDung, coMatKhau: true };

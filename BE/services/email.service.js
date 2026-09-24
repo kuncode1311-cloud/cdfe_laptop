@@ -9,20 +9,23 @@ if (!brevoApiKey) {
 }
 
 async function guiMailBangTransporter(mailOptions) {
+    const key = process.env.BREVO_API_KEY || brevoApiKey;
+    const sender = process.env.BREVO_SENDER_EMAIL || brevoSenderEmail || emailUser;
+
     // Ưu tiên 1: Brevo API (hoạt động trên Railway — SMTP bị chặn)
-    if (brevoApiKey) {
+    if (key) {
         try {
             const danhSachTo = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to])
                 .map(e => ({ email: String(e).trim() }));
             const res = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
                 headers: {
-                    'api-key': brevoApiKey,
+                    'api-key': key,
                     'Content-Type': 'application/json',
                     'accept': 'application/json'
                 },
                 body: JSON.stringify({
-                    sender: { name: process.env.BREVO_SENDER_NAME || 'Trí Kun', email: brevoSenderEmail },
+                    sender: { name: process.env.BREVO_SENDER_NAME || 'Trí Kun Laptop', email: sender },
                     to: danhSachTo,
                     subject: mailOptions.subject,
                     htmlContent: mailOptions.html,
@@ -120,6 +123,80 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
         return { thanhCong: true, messageId: info.messageId };
     } catch (err) {
         console.error(`❌ [Nodemailer] Lỗi khi gửi email đến ${emailNhan}:`, err.message);
+        return { thanhCong: false, loi: err.message };
+    }
+}
+
+/**
+ * Gửi email mã OTP Đổi Mật Khẩu
+ */
+async function guiMailOTPDoiMatKhau(emailNhan, hoTen, maOtp) {
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
+            .container { max-width: 520px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); border: 1px solid #e2e8f0; }
+            .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding: 28px 24px; text-align: center; color: #ffffff; }
+            .logo-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 8px; font-weight: 900; font-size: 13px; letter-spacing: 1px; margin-bottom: 8px; }
+            .title { font-size: 20px; font-weight: 800; margin: 0; }
+            .body-content { padding: 32px 28px; }
+            .greeting { font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 12px; }
+            .desc { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 24px; }
+            .otp-box { background: #f5f3ff; border: 2px dashed #7c3aed; border-radius: 14px; padding: 18px; text-align: center; margin: 20px 0; }
+            .otp-label { font-size: 12px; font-weight: 700; color: #6d28d9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+            .otp-code { font-size: 32px; font-weight: 900; color: #6d28d9; letter-spacing: 8px; font-family: monospace; }
+            .warning { font-size: 12px; color: #ef4444; margin-top: 14px; line-height: 1.5; }
+            .footer { background: #f8fafc; padding: 20px 24px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="logo-badge">TRÍ KUN LAPTOP</div>
+                <h1 class="title">Xác Nhận Đổi Mật Khẩu</h1>
+            </div>
+            <div class="body-content">
+                <div class="greeting">Xin chào ${hoTen || 'Quý khách'},</div>
+                <div class="desc">
+                    Chúng tôi nhận được yêu cầu <strong>đổi mật khẩu đăng nhập</strong> cho tài khoản <strong>${emailNhan}</strong> tại hệ thống <strong>Trí Kun Laptop Store</strong>.
+                    <br><br>
+                    Vui lòng sử dụng mã OTP dưới đây để hoàn tất việc xác thực và lưu mật khẩu mới:
+                </div>
+                
+                <div class="otp-box">
+                    <div class="otp-label">MÃ XÁC THỰC OTP (Hết hạn trong 10 phút)</div>
+                    <div class="otp-code">${maOtp}</div>
+                </div>
+
+                <div class="warning">
+                    ⚠️ <strong>Lưu ý bảo mật:</strong> Nếu bạn KHÔNG thực hiện yêu cầu này, vui lòng liên hệ ngay với hỗ trợ hoặc đổi mật khẩu tài khoản email để bảo vệ an toàn.
+                </div>
+            </div>
+            <div class="footer">
+                Trí Kun Laptop // Hệ thống Laptop Gaming, AI PC & Đồ Họa hàng đầu 2026<br>
+                Hotline hỗ trợ: 1900.8946 • Email: support@tntplaptop.vn
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    try {
+        const info = await guiMailBangTransporter({
+            from: `"Trí Kun Laptop" <${emailUser}>`,
+            to: emailNhan,
+            subject: `[Trí Kun] Mã OTP xác nhận đổi mật khẩu: ${maOtp}`,
+            text: `Mã xác thực OTP đổi mật khẩu của bạn là: ${maOtp}. Mã có hiệu lực trong 10 phút. Tuyệt đối không chia sẻ mã này cho ai.`,
+            html: htmlContent
+        });
+
+        console.log(`✅ [Email] Đã gửi OTP đổi mật khẩu đến ${emailNhan} - MessageId: ${info.messageId}`);
+        return { thanhCong: true, messageId: info.messageId };
+    } catch (err) {
+        console.error(`❌ [Email] Lỗi khi gửi OTP đổi mật khẩu đến ${emailNhan}:`, err.message);
         return { thanhCong: false, loi: err.message };
     }
 }
@@ -309,6 +386,7 @@ async function guiMailXacNhanDonHang(donHang) {
 
 module.exports = {
     guiMailOTPQuenMatKhau,
+    guiMailOTPDoiMatKhau,
     guiMailKichHoatTaiKhoan,
     guiMailXacNhanDonHang
 };

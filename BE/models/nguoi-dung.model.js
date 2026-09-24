@@ -90,7 +90,7 @@ const NguoiDungSchema = new mongoose.Schema(
         },
         loaiOtp: {
             type: String,
-            enum: ['quen_mat_khau', 'kich_hoat', null],
+            enum: ['quen_mat_khau', 'kich_hoat', 'doi_mat_khau', null],
             default: null
         },
         daKichHoat: {
