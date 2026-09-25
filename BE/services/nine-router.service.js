@@ -1,5 +1,5 @@
 const DEFAULT_BASE_URL = 'https://api-trikun.up.railway.app/v1';
-const DEFAULT_MODEL = 'ag/gemini-3.8-flash-high';
+const DEFAULT_MODEL = 'ag/gemini-3.8-flash';
 
 function layCauHinhNineRouter() {
     return {

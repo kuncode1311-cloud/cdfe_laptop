@@ -239,16 +239,6 @@ QUY TẮC BẮT BUỘC:
   "goi_y_tiep_theo": ["Gợi ý 1", "Gợi ý 2", "Gợi ý 3"]
 }`;
 
-    // Prompt gọn cho 9Router: giữ quy tắc nghiệp vụ, giảm lượng token phải xử lý mỗi lượt chat.
-    const systemPromptNineRouter = `Bạn là trợ lý tư vấn của TNTP Laptop. Trả lời tiếng Việt thân thiện, lịch sự, sát câu hỏi, tối đa 2-3 câu ngắn. Không khẳng định tính năng hoặc hàng tồn khi dữ liệu dưới đây không có.
-
-Sản phẩm thực tế có thể gợi ý:
-${nguCanhSanPham}
-
-Chỉ trả về một JSON hợp lệ, không markdown:
-{"cau_tra_loi":"Câu trả lời ngắn, đầy đủ ý và kết thúc bằng lời mời hoặc câu hỏi phù hợp","id_san_pham_phu_hop":[],"goi_y_tiep_theo":["Câu hỏi 1","Câu hỏi 2","Câu hỏi 3"]}
-Nếu khách chỉ chào hoặc hỏi thông tin chung, để id_san_pham_phu_hop rỗng. Chỉ chọn 2-3 ID có trong danh sách khi khách hỏi mua hoặc tư vấn sản phẩm. Gợi ý tiếp theo phải bám sát câu hỏi của khách.`;
-
     let cauTraLoiCuoiCung = '';
     let danhSachIdGoiY = [];
     let goiYTiepTheo = taoGoiYTiepTheoMacDinh(tieuChi);
@@ -267,11 +257,7 @@ Nếu khách chỉ chào hoặc hỏi thông tin chung, để id_san_pham_phu_ho
         let phanHoiText;
         if (layCauHinhNineRouter().apiKey) {
             try {
-                phanHoiText = await goiNineRouter({
-                    ...yeuCauAi,
-                    systemPrompt: systemPromptNineRouter,
-                    generationConfig: { temperature: 0.5, maxOutputTokens: 512 }
-                });
+                phanHoiText = await goiNineRouter(yeuCauAi);
                 if (!bocTachJsonTuAi(phanHoiText)?.cau_tra_loi) {
                     throw new Error('9Router trả về sai định dạng phản hồi chatbot');
                 }
