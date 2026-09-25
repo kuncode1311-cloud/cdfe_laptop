@@ -4,6 +4,7 @@
  */
 
 const { goiGeminiXoayKey } = require('./gemini-xoay-key.service');
+const { goiNineRouter, layCauHinhNineRouter } = require('./nine-router.service');
 const { timKiemSanPhamPhuHop, dinhDangNguCanhSanPham, phanTichYDinhCauHoi } = require('./tim-kiem-san-pham-ai.service');
 
 /**
@@ -243,7 +244,7 @@ QUY TẮC BẮT BUỘC:
     let goiYTiepTheo = taoGoiYTiepTheoMacDinh(tieuChi);
 
     try {
-        const phanHoiText = await goiGeminiXoayKey({
+        const yeuCauAi = {
             systemPrompt,
             userPrompt: `CÂU HỎI CỦA KHÁCH HÀNG: "${tinNhan}"`,
             lichSuChat,
@@ -252,7 +253,21 @@ QUY TẮC BẮT BUỘC:
                 maxOutputTokens: 1024,
                 responseMimeType: 'application/json'
             }
-        });
+        };
+        let phanHoiText;
+        if (layCauHinhNineRouter().apiKey) {
+            try {
+                phanHoiText = await goiNineRouter(yeuCauAi);
+                if (!bocTachJsonTuAi(phanHoiText)?.cau_tra_loi) {
+                    throw new Error('9Router trả về sai định dạng phản hồi chatbot');
+                }
+            } catch (loiRouter) {
+                console.warn(`[Trợ lý AI] 9Router lỗi (${loiRouter.message}); thử Gemini.`);
+                phanHoiText = await goiGeminiXoayKey(yeuCauAi);
+            }
+        } else {
+            phanHoiText = await goiGeminiXoayKey(yeuCauAi);
+        }
 
         const duLieuJson = bocTachJsonTuAi(phanHoiText);
 
@@ -268,7 +283,7 @@ QUY TẮC BẮT BUỘC:
             cauTraLoiCuoiCung = taoCauPhanHoiFallback(tieuChi);
         }
     } catch (loiAi) {
-        console.error('❌ [Trợ lý AI Service] Lỗi gọi Gemini:', loiAi.message);
+        console.error('❌ [Trợ lý AI Service] Lỗi gọi AI:', loiAi.message);
         cauTraLoiCuoiCung = taoCauPhanHoiFallback(tieuChi);
         danhSachIdGoiY = tieuChi.coNhuCauSanPham ? danhSachSanPhamThucTe.slice(0, 3).map(sp => sp.id || sp.slug) : [];
     }

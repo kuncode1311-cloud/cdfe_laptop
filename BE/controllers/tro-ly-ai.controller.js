@@ -5,9 +5,10 @@
 
 const { xuLyTroLyChat } = require('../services/tro-ly-ai.service');
 const { layTrangThaiKeyHienTai } = require('../services/gemini-xoay-key.service');
+const { layCauHinhNineRouter } = require('../services/nine-router.service');
 
 /**
- * Endpoint tiếp nhận câu hỏi của khách hàng và trả lời bằng Gemini AI (RAG)
+ * Endpoint tiếp nhận câu hỏi và trả lời bằng 9Router, dự phòng Gemini (RAG)
  * POST /api/tro-ly-ai/chat
  */
 const xuLyChatAI = async (req, res) => {
@@ -51,7 +52,15 @@ const xuLyChatAI = async (req, res) => {
  */
 const kiemTraTrangThai = async (req, res) => {
     try {
-        const thongTinTrangThai = layTrangThaiKeyHienTai();
+        const nineRouterConfig = layCauHinhNineRouter();
+        const thongTinTrangThai = {
+            nhaCungCapUuTien: nineRouterConfig.apiKey ? '9Router' : 'Gemini',
+            nineRouter: {
+                daCauHinh: Boolean(nineRouterConfig.apiKey),
+                model: nineRouterConfig.model
+            },
+            gemini: layTrangThaiKeyHienTai()
+        };
         return res.status(200).json({
             thanh_cong: true,
             du_lieu: thongTinTrangThai
