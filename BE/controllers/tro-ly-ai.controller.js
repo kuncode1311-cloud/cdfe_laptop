@@ -26,10 +26,17 @@ const xuLyChatAI = async (req, res) => {
         const danhSachLichSu = Array.isArray(lich_su_chat) 
             ? lich_su_chat 
             : (Array.isArray(history) ? history : []);
+        // FE có thể đã thêm câu hỏi hiện tại vào lịch sử; chỉ gửi nó một lần tới model.
+        const lichSuTruocCauHoi = [...danhSachLichSu];
+        const tinCuoi = lichSuTruocCauHoi.at(-1);
+        if (tinCuoi && tinCuoi.role === 'user' &&
+            String(tinCuoi.content || tinCuoi.text || '').trim() === cauHoi.trim()) {
+            lichSuTruocCauHoi.pop();
+        }
 
         const ketQua = await xuLyTroLyChat({
             tinNhan: cauHoi.trim(),
-            lichSuChat: danhSachLichSu
+            lichSuChat: lichSuTruocCauHoi
         });
 
         return res.status(200).json({

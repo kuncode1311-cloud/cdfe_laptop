@@ -196,7 +196,9 @@ async function xuLyTroLyChat({ tinNhan, lichSuChat = [] }) {
 
     // 1. Phân tích ý định & tìm kiếm sản phẩm thực tế trong Database phù hợp với nhu cầu khách
     const tieuChi = phanTichYDinhCauHoi(tinNhan);
+    const batDauTraCuu = Date.now();
     const danhSachSanPhamThucTe = await timKiemSanPhamPhuHop(tinNhan, 5);
+    const thoiGianTraCuu = Date.now() - batDauTraCuu;
     const nguCanhSanPham = dinhDangNguCanhSanPham(danhSachSanPhamThucTe);
 
     // 2. Xây dựng System Prompt tối ưu: LỊCH THIỆP - VUI TÍNH - KHÔNG CỘC LỐC - TRỌN VẸN CÂU
@@ -255,19 +257,24 @@ QUY TẮC BẮT BUỘC:
             }
         };
         let phanHoiText;
+        let nhaCungCap = 'Gemini';
+        let batDauGoiAi = Date.now();
         if (layCauHinhNineRouter().apiKey) {
             try {
                 phanHoiText = await goiNineRouter(yeuCauAi);
                 if (!bocTachJsonTuAi(phanHoiText)?.cau_tra_loi) {
                     throw new Error('9Router trả về sai định dạng phản hồi chatbot');
                 }
+                nhaCungCap = '9Router';
             } catch (loiRouter) {
-                console.warn(`[Trợ lý AI] 9Router lỗi (${loiRouter.message}); thử Gemini.`);
+                console.warn(`[Trợ lý AI] 9Router lỗi sau ${Date.now() - batDauGoiAi}ms (${loiRouter.message}); thử Gemini.`);
+                batDauGoiAi = Date.now();
                 phanHoiText = await goiGeminiXoayKey(yeuCauAi);
             }
         } else {
             phanHoiText = await goiGeminiXoayKey(yeuCauAi);
         }
+        console.info(`[Trợ lý AI] tra_cuu=${thoiGianTraCuu}ms ai=${Date.now() - batDauGoiAi}ms provider=${nhaCungCap}`);
 
         const duLieuJson = bocTachJsonTuAi(phanHoiText);
 
