@@ -106,6 +106,7 @@ export default function HopChatAI() {
 
     const cuonCuoiRef = useRef(null);
     const oNhapRef = useRef(null);
+    const idTinNhanRef = useRef(0);
 
     // Tự động cuộn xuống tin nhắn mới nhất
     useEffect(() => {
@@ -129,9 +130,11 @@ export default function HopChatAI() {
         if (!textGui || dangTai) return;
 
         setTinNhanNhap('');
+        idTinNhanRef.current += 1;
+        const luotChat = idTinNhanRef.current;
 
         const tinNhanNguoiDung = {
-            id: `user-${Date.now()}`,
+            id: `user-${luotChat}`,
             role: 'user',
             noiDung: textGui
         };
@@ -139,6 +142,7 @@ export default function HopChatAI() {
         const danhSachMoi = [...danhSachTinNhan, tinNhanNguoiDung];
         setDanhSachTinNhan(danhSachMoi);
         setDangTai(true);
+        const aiId = `model-${luotChat}`;
 
         try {
             const lichSu = danhSachMoi.slice(1).map(m => ({
@@ -146,38 +150,46 @@ export default function HopChatAI() {
                 content: m.noiDung
             }));
 
-            const ketQua = await TroLyAiService.guiTinNhan(textGui, lichSu);
+            const ketQua = await TroLyAiService.guiTinNhanStream(textGui, lichSu, text => {
+                setDanhSachTinNhan(prev => {
+                    const index = prev.findIndex(msg => msg.id === aiId);
+                    if (index < 0) return [...prev, { id: aiId, role: 'model', noiDung: text, san_pham_goi_y: [], goi_y_tiep_theo: [] }];
+                    return prev.map(msg => msg.id === aiId ? { ...msg, noiDung: text } : msg);
+                });
+            });
 
             if (ketQua && ketQua.thanh_cong) {
                 const tinNhanAI = {
-                    id: `model-${Date.now()}`,
+                    id: aiId,
                     role: 'model',
                     noiDung: ketQua.cau_tra_loi || 'Dạ TNTP Laptop xin gửi Bạn các gợi ý phù hợp nhất:',
                     san_pham_goi_y: ketQua.san_pham_goi_y || [],
                     goi_y_tiep_theo: ketQua.goi_y_tiep_theo || []
                 };
-                setDanhSachTinNhan(prev => [...prev, tinNhanAI]);
+                setDanhSachTinNhan(prev => prev.some(msg => msg.id === aiId)
+                    ? prev.map(msg => msg.id === aiId ? tinNhanAI : msg)
+                    : [...prev, tinNhanAI]);
             } else {
-                setDanhSachTinNhan(prev => [
-                    ...prev,
-                    {
-                        id: `model-${Date.now()}`,
+                setDanhSachTinNhan(prev => {
+                    const errorMsg = {
+                        id: aiId,
                         role: 'model',
                         noiDung: ketQua?.thong_diep || 'Dạ kết nối với hệ thống đang bận, Bạn vui lòng thử lại sau giây lát nhé ạ.',
                         san_pham_goi_y: []
-                    }
-                ]);
+                    };
+                    return prev.some(msg => msg.id === aiId) ? prev.map(msg => msg.id === aiId ? errorMsg : msg) : [...prev, errorMsg];
+                });
             }
         } catch {
-            setDanhSachTinNhan(prev => [
-                ...prev,
-                {
-                    id: `model-${Date.now()}`,
+            setDanhSachTinNhan(prev => {
+                const errorMsg = {
+                    id: aiId,
                     role: 'model',
                     noiDung: 'Dạ đường truyền mạng tạm thời gián đoạn, Bạn có thể gửi lại câu hỏi hoặc gọi trực tiếp Hotline **0948.37.79.79** để được hỗ trợ tức thì nhé ạ! 🙏',
                     san_pham_goi_y: []
-                }
-            ]);
+                };
+                return prev.some(msg => msg.id === aiId) ? prev.map(msg => msg.id === aiId ? errorMsg : msg) : [...prev, errorMsg];
+            });
         } finally {
             setDangTai(false);
         }
@@ -335,7 +347,7 @@ export default function HopChatAI() {
                         ))}
 
                         {/* Chỉ báo AI đang suy nghĩ */}
-                        {dangTai && (
+                        {dangTai && danhSachTinNhan.at(-1)?.role === 'user' && (
                             <div className="flex items-center gap-2 text-slate-800 text-xs bg-white border border-slate-300 w-fit px-3 py-2 rounded-2xl rounded-tl-none shadow-xs">
                                 <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
                                 <span className="font-bold text-slate-800">Đang chọn sản phẩm phù hợp...</span>

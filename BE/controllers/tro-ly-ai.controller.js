@@ -53,6 +53,33 @@ const xuLyChatAI = async (req, res) => {
     }
 };
 
+// NDJSON: các dòng text đang sinh, sau cùng là kết quả đầy đủ có thẻ sản phẩm.
+const xuLyChatAIStream = async (req, res) => {
+    const { tin_nhan, lich_su_chat } = req.body || {};
+    if (typeof tin_nhan !== 'string' || !tin_nhan.trim()) {
+        return res.status(400).json({ thanh_cong: false, thong_diep: 'Vui lòng cung cấp nội dung tin nhắn hợp lệ.' });
+    }
+    const lichSu = Array.isArray(lich_su_chat) ? [...lich_su_chat] : [];
+    if (lichSu.at(-1)?.role === 'user' && String(lichSu.at(-1)?.content || '').trim() === tin_nhan.trim()) lichSu.pop();
+    res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+    try {
+        const ketQua = await xuLyTroLyChat({
+            tinNhan: tin_nhan.trim(),
+            lichSuChat: lichSu,
+            onText: text => { if (!res.destroyed) res.write(JSON.stringify({ type: 'text', text }) + '\n'); }
+        });
+        if (!res.destroyed) res.write(JSON.stringify({ type: 'done', result: { thanh_cong: true, ...ketQua } }) + '\n');
+    } catch (error) {
+        console.error('[Trợ lý AI] Stream lỗi:', error.message);
+        if (!res.destroyed) res.write(JSON.stringify({ type: 'error', message: 'Không thể kết nối Trợ lý AI.' }) + '\n');
+    } finally {
+        res.end();
+    }
+};
+
 /**
  * Endpoint kiểm tra tình trạng hoạt động của các API Key và mô hình AI
  * GET /api/tro-ly-ai/trang-thai
@@ -83,5 +110,6 @@ const kiemTraTrangThai = async (req, res) => {
 
 module.exports = {
     xuLyChatAI,
+    xuLyChatAIStream,
     kiemTraTrangThai
 };

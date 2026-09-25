@@ -3,9 +3,44 @@
  * Hỗ trợ lấy câu trả lời tư vấn và danh sách Thẻ Sản Phẩm (Product Card) tương tác.
  */
 
-import { apiFetch } from './api-client';
+import { apiFetch, layApiBaseUrl } from './api-client';
 
 export const TroLyAiService = {
+    async guiTinNhanStream(tinNhan, lichSuChat = [], onText = () => {}) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 35000);
+        try {
+            const response = await fetch(`${layApiBaseUrl()}/tro-ly-ai/chat/stream`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tin_nhan: tinNhan.trim(), lich_su_chat: lichSuChat }),
+                signal: controller.signal
+            });
+            if (!response.ok || !response.body) throw new Error(`Chat HTTP ${response.status}`);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let result;
+            while (true) {
+                const { value, done } = await reader.read();
+                buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+                const lines = buffer.split('\n');
+                buffer = lines.pop();
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    const event = JSON.parse(line);
+                    if (event.type === 'text') onText(event.text);
+                    if (event.type === 'done') result = event.result;
+                    if (event.type === 'error') throw new Error(event.message);
+                }
+                if (done) break;
+            }
+            if (!result) throw new Error('Phản hồi chat chưa hoàn tất');
+            return result;
+        } finally {
+            clearTimeout(timeout);
+        }
+    },
     /**
      * Gửi câu hỏi của khách hàng lên Trợ lý AI
      * @param {string} tinNhan - Nội dung câu hỏi của khách hàng

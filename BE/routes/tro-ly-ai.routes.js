@@ -9,6 +9,7 @@ const troLyAiController = require('../controllers/tro-ly-ai.controller');
 
 // 1. Gửi tin nhắn trò chuyện với Trợ lý AI (Hỗ trợ cả /chat và /)
 router.post('/chat', troLyAiController.xuLyChatAI);
+router.post('/chat/stream', troLyAiController.xuLyChatAIStream);
 router.post('/', troLyAiController.xuLyChatAI);
 
 // 2. Giám sát trạng thái hoạt động của các API Keys và Models

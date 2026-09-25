@@ -9,7 +9,7 @@ function layCauHinhNineRouter() {
     };
 }
 
-async function goiNineRouter({ systemPrompt, userPrompt, lichSuChat = [], generationConfig = {} }) {
+async function goiNineRouter({ systemPrompt, userPrompt, lichSuChat = [], generationConfig = {}, onChunk }) {
     const { apiKey, baseUrl, model } = layCauHinhNineRouter();
     if (!apiKey) throw new Error('Chưa cấu hình NINE_ROUTER_API_KEY');
 
@@ -39,13 +39,43 @@ async function goiNineRouter({ systemPrompt, userPrompt, lichSuChat = [], genera
                 messages,
                 temperature: generationConfig.temperature ?? 0.7,
                 max_tokens: generationConfig.maxOutputTokens ?? 1024,
-                stream: false
+                stream: Boolean(onChunk)
             }),
             signal: controller.signal
         });
 
         if (!response.ok) {
             throw new Error(`9Router HTTP ${response.status}`);
+        }
+        if (onChunk) {
+            if (!response.body) throw new Error('9Router không hỗ trợ stream');
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let content = '';
+            try {
+                while (true) {
+                    const { value, done } = await reader.read();
+                    buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
+                    const events = buffer.split(/\r?\n\r?\n/);
+                    buffer = events.pop();
+                    for (const event of events) {
+                        const dataLine = event.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trim()).join('');
+                        if (!dataLine || dataLine === '[DONE]') continue;
+                        const chunk = JSON.parse(dataLine);
+                        const delta = chunk?.choices?.[0]?.delta?.content;
+                        if (typeof delta === 'string' && delta) {
+                            content += delta;
+                            onChunk(content);
+                        }
+                    }
+                    if (done) break;
+                }
+            } finally {
+                reader.releaseLock();
+            }
+            if (!content.trim()) throw new Error('9Router trả về nội dung rỗng');
+            return content;
         }
         const data = await response.json();
         const content = data?.choices?.[0]?.message?.content;

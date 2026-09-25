@@ -189,7 +189,25 @@ function taoGoiYTiepTheoMacDinh(tieuChi = {}) {
  * @param {Array}  [param.lichSuChat] - Lịch sử đoạn chat trước đó
  * @returns {Promise<Object>} Câu trả lời, danh sách sản phẩm đính kèm và câu hỏi gợi ý
  */
-async function xuLyTroLyChat({ tinNhan, lichSuChat = [] }) {
+// Chỉ hiện giá trị cau_tra_loi khi JSON đang sinh; không đưa JSON thô lên giao diện.
+function layCauTraLoiDangSinh(raw) {
+    const match = raw.match(/"cau_tra_loi"\s*:\s*"/);
+    if (!match) return '';
+    const start = match.index + match[0].length;
+    let escaped = false;
+    let end = start;
+    for (; end < raw.length; end++) {
+        const char = raw[end];
+        if (escaped) { escaped = false; continue; }
+        if (char === '\\') { escaped = true; continue; }
+        if (char === '"') break;
+    }
+    let value = raw.slice(start, end);
+    if (value.endsWith('\\')) value = value.slice(0, -1);
+    try { return JSON.parse(`"${value}"`); } catch { return ''; }
+}
+
+async function xuLyTroLyChat({ tinNhan, lichSuChat = [], onText }) {
     if (!tinNhan || !tinNhan.trim()) {
         throw new Error('Tin nhắn không được để trống.');
     }
@@ -261,7 +279,13 @@ QUY TẮC BẮT BUỘC:
         let batDauGoiAi = Date.now();
         if (layCauHinhNineRouter().apiKey) {
             try {
-                phanHoiText = await goiNineRouter(yeuCauAi);
+                phanHoiText = await goiNineRouter({
+                    ...yeuCauAi,
+                    onChunk: onText ? raw => {
+                        const text = layCauTraLoiDangSinh(raw);
+                        if (text) onText(text);
+                    } : undefined
+                });
                 if (!bocTachJsonTuAi(phanHoiText)?.cau_tra_loi) {
                     throw new Error('9Router trả về sai định dạng phản hồi chatbot');
                 }
