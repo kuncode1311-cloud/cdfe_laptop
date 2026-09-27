@@ -3,10 +3,14 @@ const DEFAULT_BASE_URL = 'https://api-trikun.up.railway.app/v1';
 const DEFAULT_MODEL = 'ag/gemini-3.7-flash-low';
 
 function layCauHinhNineRouter() {
+    let model = (process.env.NINE_ROUTER_MODEL || DEFAULT_MODEL).trim();
+    if (model.includes('3.8')) {
+        model = 'ag/gemini-3.7-flash-low';
+    }
     return {
         apiKey: (process.env.NINE_ROUTER_API_KEY || '').trim(),
         baseUrl: (process.env.NINE_ROUTER_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, ''),
-        model: (process.env.NINE_ROUTER_MODEL || DEFAULT_MODEL).trim()
+        model: model || DEFAULT_MODEL
     };
 }
 
