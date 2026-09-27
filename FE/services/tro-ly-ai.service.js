@@ -7,8 +7,8 @@ import { apiFetch, layApiBaseUrl } from './api-client';
 
 function inThongTinKetNoiConsole(thongTin) {
     if (!thongTin || typeof window === 'undefined') return;
-    const provider = thongTin.provider || '9Router';
-    const model = thongTin.model || 'ag/gemini-3.7-flash-low';
+    const provider = thongTin.provider || 'AI';
+    const model = thongTin.model || 'N/A';
     const keyMask = thongTin.key_mask || 'N/A';
     const timeAi = thongTin.thoi_gian_ai_ms || 0;
     const timeTotal = thongTin.thoi_gian_tong_ms || timeAi;

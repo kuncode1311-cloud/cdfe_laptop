@@ -1,22 +1,18 @@
 require('dotenv').config();
-const DEFAULT_BASE_URL = 'https://api-trikun.up.railway.app/v1';
-const DEFAULT_MODEL = 'ag/gemini-3.7-flash-low';
 
 function layCauHinhNineRouter() {
-    let model = (process.env.NINE_ROUTER_MODEL || DEFAULT_MODEL).trim();
-    if (model.includes('3.8')) {
-        model = 'ag/gemini-3.7-flash-low';
-    }
     return {
         apiKey: (process.env.NINE_ROUTER_API_KEY || '').trim(),
-        baseUrl: (process.env.NINE_ROUTER_BASE_URL || DEFAULT_BASE_URL).replace(/\/+$/, ''),
-        model: model || DEFAULT_MODEL
+        baseUrl: (process.env.NINE_ROUTER_BASE_URL || '').replace(/\/+$/, ''),
+        model: (process.env.NINE_ROUTER_MODEL || '').trim()
     };
 }
 
 async function goiNineRouter({ systemPrompt, userPrompt, lichSuChat = [], generationConfig = {}, onChunk }) {
     const { apiKey, baseUrl, model } = layCauHinhNineRouter();
     if (!apiKey) throw new Error('Chưa cấu hình NINE_ROUTER_API_KEY');
+    if (!baseUrl) throw new Error('Chưa cấu hình NINE_ROUTER_BASE_URL');
+    if (!model) throw new Error('Chưa cấu hình NINE_ROUTER_MODEL');
 
     const messages = [{ role: 'system', content: systemPrompt }];
     for (const item of Array.isArray(lichSuChat) ? lichSuChat.slice(-10) : []) {
