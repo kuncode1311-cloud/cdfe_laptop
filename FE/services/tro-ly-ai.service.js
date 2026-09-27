@@ -5,6 +5,34 @@
 
 import { apiFetch, layApiBaseUrl } from './api-client';
 
+function inThongTinKetNoiConsole(thongTin) {
+    if (!thongTin || typeof window === 'undefined') return;
+    const provider = thongTin.provider || '9Router';
+    const model = thongTin.model || 'ag/gemini-3.7-flash-low';
+    const keyMask = thongTin.key_mask || 'N/A';
+    const timeAi = thongTin.thoi_gian_ai_ms || 0;
+    const timeTotal = thongTin.thoi_gian_tong_ms || timeAi;
+
+    console.log(
+        `%c🤖 [Trợ lý AI TNTP] %c${provider}%c | Model: %c${model}%c | Key: %c${keyMask}%c | Thời gian: %c${timeAi}ms`,
+        'background: #1e1b4b; color: #38bdf8; font-weight: bold; padding: 4px 6px; border-radius: 4px 0 0 4px;',
+        'background: #0284c7; color: #ffffff; font-weight: bold; padding: 4px 6px;',
+        'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
+        'background: #0f172a; color: #a855f7; font-weight: bold; padding: 4px 6px;',
+        'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
+        'background: #0f172a; color: #f59e0b; font-weight: bold; padding: 4px 6px;',
+        'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
+        'background: #065f46; color: #34d399; font-weight: bold; padding: 4px 6px; border-radius: 0 4px 4px 0;'
+    );
+    console.table([{
+        'Nhà cung cấp': provider,
+        'Mô hình (Model)': model,
+        'API Key': keyMask,
+        'Thời gian AI': `${timeAi}ms`,
+        'Tổng thời gian': `${timeTotal}ms`
+    }]);
+}
+
 export const TroLyAiService = {
     async guiTinNhanStream(tinNhan, lichSuChat = [], onText = () => {}) {
         const controller = new AbortController();
@@ -30,7 +58,12 @@ export const TroLyAiService = {
                     if (!line.trim()) continue;
                     const event = JSON.parse(line);
                     if (event.type === 'text') onText(event.text);
-                    if (event.type === 'done') result = event.result;
+                    if (event.type === 'done') {
+                        result = event.result;
+                        if (result?.thong_tin_ket_noi) {
+                            inThongTinKetNoiConsole(result.thong_tin_ket_noi);
+                        }
+                    }
                     if (event.type === 'error') throw new Error(event.message);
                 }
                 if (done) break;
@@ -62,6 +95,9 @@ export const TroLyAiService = {
                 timeoutMs: 28000
             });
 
+            if (res?.thong_tin_ket_noi) {
+                inThongTinKetNoiConsole(res.thong_tin_ket_noi);
+            }
             return res;
         } catch (error) {
             console.error('❌ Lỗi khi gửi tin nhắn tới Trợ lý AI:', error);

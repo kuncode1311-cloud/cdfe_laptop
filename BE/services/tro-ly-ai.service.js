@@ -207,7 +207,15 @@ function layCauTraLoiDangSinh(raw) {
     try { return JSON.parse(`"${value}"`); } catch { return ''; }
 }
 
+function cheGiauApiKey(key) {
+    if (!key || typeof key !== 'string') return 'N/A';
+    const firstKey = key.split(',')[0].trim();
+    if (firstKey.length <= 10) return firstKey.slice(0, 3) + '***' + firstKey.slice(-2);
+    return firstKey.slice(0, 7) + '...' + firstKey.slice(-4);
+}
+
 async function xuLyTroLyChat({ tinNhan, lichSuChat = [], onText }) {
+    const batDauToanBo = Date.now();
     if (!tinNhan || !tinNhan.trim()) {
         throw new Error('Tin nhắn không được để trống.');
     }
@@ -262,6 +270,13 @@ QUY TẮC BẮT BUỘC:
     let cauTraLoiCuoiCung = '';
     let danhSachIdGoiY = [];
     let goiYTiepTheo = taoGoiYTiepTheoMacDinh(tieuChi);
+    let thongTinKetNoi = {
+        provider: 'Fallback',
+        model: 'HeThong',
+        key_mask: 'None',
+        thoi_gian_ai_ms: 0,
+        thoi_gian_tong_ms: 0
+    };
 
     try {
         const yeuCauAi = {
@@ -270,14 +285,19 @@ QUY TẮC BẮT BUỘC:
             lichSuChat,
             generationConfig: {
                 temperature: 0.7,
-                maxOutputTokens: 1024,
-                responseMimeType: 'application/json'
+                maxOutputTokens: 2048,
+                responseMimeType: 'application/json',
+                thinkingConfig: {
+                    thinkingBudget: 0
+                }
             }
         };
         let phanHoiText;
         let nhaCungCap = 'Gemini';
         let batDauGoiAi = Date.now();
-        if (layCauHinhNineRouter().apiKey) {
+        const cauHinh9R = layCauHinhNineRouter();
+
+        if (cauHinh9R.apiKey) {
             try {
                 phanHoiText = await goiNineRouter({
                     ...yeuCauAi,
@@ -290,15 +310,39 @@ QUY TẮC BẮT BUỘC:
                     throw new Error('9Router trả về sai định dạng phản hồi chatbot');
                 }
                 nhaCungCap = '9Router';
+                const thoiGianGoi = Date.now() - batDauGoiAi;
+                thongTinKetNoi = {
+                    provider: '9Router',
+                    model: cauHinh9R.model,
+                    key_mask: cheGiauApiKey(cauHinh9R.apiKey),
+                    thoi_gian_ai_ms: thoiGianGoi,
+                    thoi_gian_tong_ms: Date.now() - batDauToanBo
+                };
             } catch (loiRouter) {
                 console.warn(`[Trợ lý AI] 9Router lỗi sau ${Date.now() - batDauGoiAi}ms (${loiRouter.message}); thử Gemini.`);
                 batDauGoiAi = Date.now();
                 phanHoiText = await goiGeminiXoayKey(yeuCauAi);
+                const thoiGianGoi = Date.now() - batDauGoiAi;
+                thongTinKetNoi = {
+                    provider: 'Gemini (Dự phòng)',
+                    model: 'gemini-2.5-flash',
+                    key_mask: cheGiauApiKey(process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY),
+                    thoi_gian_ai_ms: thoiGianGoi,
+                    thoi_gian_tong_ms: Date.now() - batDauToanBo
+                };
             }
         } else {
             phanHoiText = await goiGeminiXoayKey(yeuCauAi);
+            const thoiGianGoi = Date.now() - batDauGoiAi;
+            thongTinKetNoi = {
+                provider: 'Gemini',
+                model: 'gemini-2.5-flash',
+                key_mask: cheGiauApiKey(process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY),
+                thoi_gian_ai_ms: thoiGianGoi,
+                thoi_gian_tong_ms: Date.now() - batDauToanBo
+            };
         }
-        console.info(`[Trợ lý AI] tra_cuu=${thoiGianTraCuu}ms ai=${Date.now() - batDauGoiAi}ms provider=${nhaCungCap}`);
+        console.info(`[Trợ lý AI] tra_cuu=${thoiGianTraCuu}ms ai=${thongTinKetNoi.thoi_gian_ai_ms}ms provider=${thongTinKetNoi.provider} model=${thongTinKetNoi.model}`);
 
         const duLieuJson = bocTachJsonTuAi(phanHoiText);
 
@@ -317,6 +361,14 @@ QUY TẮC BẮT BUỘC:
         console.error('❌ [Trợ lý AI Service] Lỗi gọi AI:', loiAi.message);
         cauTraLoiCuoiCung = taoCauPhanHoiFallback(tieuChi);
         danhSachIdGoiY = tieuChi.coNhuCauSanPham ? danhSachSanPhamThucTe.slice(0, 3).map(sp => sp.id || sp.slug) : [];
+        thongTinKetNoi = {
+            provider: 'HeThong (Offline Fallback)',
+            model: 'LuatQuyTac',
+            key_mask: 'None',
+            thoi_gian_ai_ms: 0,
+            thoi_gian_tong_ms: Date.now() - batDauToanBo,
+            loi: loiAi.message
+        };
     }
 
     // Kết nối lại dữ liệu sản phẩm đầy đủ để Frontend hiển thị Thẻ Sản Phẩm (Product Card)
@@ -363,7 +415,8 @@ QUY TẮC BẮT BUỘC:
     return {
         cau_tra_loi: cauTraLoiCuoiCung,
         san_pham_goi_y: sanPhamCards,
-        goi_y_tiep_theo: goiYTiepTheo
+        goi_y_tiep_theo: goiYTiepTheo,
+        thong_tin_ket_noi: thongTinKetNoi
     };
 }
 

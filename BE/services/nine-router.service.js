@@ -1,5 +1,6 @@
+require('dotenv').config();
 const DEFAULT_BASE_URL = 'https://api-trikun.up.railway.app/v1';
-const DEFAULT_MODEL = 'ag/gemini-3.8-flash';
+const DEFAULT_MODEL = 'ag/gemini-3.7-flash-low';
 
 function layCauHinhNineRouter() {
     return {
@@ -45,7 +46,8 @@ async function goiNineRouter({ systemPrompt, userPrompt, lichSuChat = [], genera
         });
 
         if (!response.ok) {
-            throw new Error(`9Router HTTP ${response.status}`);
+            const chiTietLoi = await response.text().catch(() => '');
+            throw new Error(`9Router HTTP ${response.status}: ${chiTietLoi}`);
         }
         if (onChunk) {
             if (!response.body) throw new Error('9Router không hỗ trợ stream');
@@ -77,8 +79,27 @@ async function goiNineRouter({ systemPrompt, userPrompt, lichSuChat = [], genera
             if (!content.trim()) throw new Error('9Router trả về nội dung rỗng');
             return content;
         }
-        const data = await response.json();
-        const content = data?.choices?.[0]?.message?.content;
+        const rawText = await response.text();
+        let content = '';
+        if (rawText.trim().startsWith('data:')) {
+            const lines = rawText.split(/\r?\n/);
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed.startsWith('data:')) continue;
+                const jsonStr = trimmed.slice(5).trim();
+                if (!jsonStr || jsonStr === '[DONE]') continue;
+                try {
+                    const chunk = JSON.parse(jsonStr);
+                    const delta = chunk?.choices?.[0]?.delta?.content || chunk?.choices?.[0]?.message?.content || '';
+                    content += delta;
+                } catch {}
+            }
+        } else {
+            try {
+                const data = JSON.parse(rawText);
+                content = data?.choices?.[0]?.message?.content || '';
+            } catch {}
+        }
         if (typeof content !== 'string' || !content.trim()) {
             throw new Error('9Router trả về nội dung rỗng');
         }
