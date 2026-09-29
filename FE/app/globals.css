@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
+    color-scheme: light;
     /* Nền Slate-100 chuẩn e-commerce công nghệ cao, làm nổi bật tuyệt đối các card màu trắng và đường viền */
     --bg-primary: #f1f5f9;
     --bg-surface: #ffffff;
@@ -20,6 +23,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --bg-primary: #070b14;
     --bg-surface: #0b1120;
     --bg-card: #0f172a;
