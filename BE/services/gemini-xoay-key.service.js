@@ -1,6 +1,5 @@
 /**
  * Chú thích file: Dịch vụ gọi Google Gemini AI Studio với cơ chế xoay API Key tự động.
- * Tham chiếu giải pháp từ C:\laragon\www\LeMinhTri_501240045:
  * - Tự động thử các cặp Model + API Key theo độ ưu tiên.
  * - Bắt lỗi 429 (hết quota/rate limit) -> Cooldown 5 phút và chuyển sang key kế tiếp ngay.
  * - Bắt lỗi 403 (key không hợp lệ) -> Cooldown 6 giờ.

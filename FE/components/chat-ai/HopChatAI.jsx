@@ -115,14 +115,15 @@ export default function HopChatAI() {
         }
     }, [danhSachTinNhan, dangTai, dangMo]);
 
-    // Tự động focus vào ô nhập liệu khi mở chat
+    // Tự động giữ focus liên tục vào ô nhập liệu khi mở chat hoặc khi AI trả lời xong
     useEffect(() => {
-        if (dangMo) {
-            setTimeout(() => {
+        if (dangMo && !dangTai) {
+            const timer = setTimeout(() => {
                 oNhapRef.current?.focus();
-            }, 200);
+            }, 80);
+            return () => clearTimeout(timer);
         }
-    }, [dangMo]);
+    }, [dangMo, dangTai]);
 
     // Xử lý gửi tin nhắn
     const xuLyGuiTinNhan = async (noiDungTuyChon) => {
@@ -130,6 +131,11 @@ export default function HopChatAI() {
         if (!textGui || dangTai) return;
 
         setTinNhanNhap('');
+        // Giữ con trỏ chuột trong ô input ngay khi vừa nhấn gửi
+        setTimeout(() => {
+            oNhapRef.current?.focus();
+        }, 10);
+
         idTinNhanRef.current += 1;
         const luotChat = idTinNhanRef.current;
 
@@ -192,6 +198,10 @@ export default function HopChatAI() {
             });
         } finally {
             setDangTai(false);
+            // Tự động focus lại ô chat ngay sau khi AI trả lời xong
+            setTimeout(() => {
+                oNhapRef.current?.focus();
+            }, 80);
         }
     };
 
@@ -372,9 +382,8 @@ export default function HopChatAI() {
                                 value={tinNhanNhap}
                                 onChange={(e) => setTinNhanNhap(e.target.value)}
                                 onKeyDown={xuLyNhanPhim}
-                                placeholder="Hỏi mua laptop, sạc, chuột, linh kiện..."
-                                disabled={dangTai}
-                                className="flex-1 bg-transparent text-xs sm:text-[13px] text-slate-950 placeholder:text-slate-500 font-medium focus:outline-none py-0.5 disabled:opacity-50"
+                                placeholder={dangTai ? "AI đang trả lời..." : "Hỏi mua laptop, sạc, chuột, linh kiện..."}
+                                className="flex-1 bg-transparent text-xs sm:text-[13px] text-slate-950 placeholder:text-slate-500 font-medium focus:outline-none py-0.5"
                             />
                             <button
                                 type="submit"

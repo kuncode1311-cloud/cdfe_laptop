@@ -3,13 +3,13 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Search, ShoppingCart, Phone, Menu, ArrowRight, User, LogOut, Sparkles, PackageCheck, LayoutDashboard, Ticket } from "lucide-react";
+import { Search, ShoppingCart, Phone, ArrowRight, User, LogOut, Sparkles, PackageCheck, LayoutDashboard, Ticket } from "lucide-react";
 import { useCart, useGioHang } from "@/contexts/CartContext";
 import { useAuth, useNguoiDung } from "@/contexts/AuthContext";
 import { SanPhamService } from "@/services/san-pham.service";
 import { formatCurrency, dinhDangTienVND } from "@/utils/formatCurrency";
 import { slugSanPham } from "@/utils/taoSlug";
-export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
+export default function ThanhDieuHuong() {
     const router = useRouter();
     const { gio_hang } = useGioHang();
     const { nguoiDung, daDangNhap, moModalDangNhap, dangXuat } = useNguoiDung();
@@ -63,10 +63,6 @@ export default function ThanhDieuHuong({ onMoMenuDiDong, }) {
       <div className={`max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4 transition-all duration-300 ${daCuon ? "py-1.5 sm:py-2" : "py-3"}`}>
         {/* Logo LaptopNew */}
         <div className="flex items-center gap-3">
-          {onMoMenuDiDong && (<button onClick={onMoMenuDiDong} className="lg:hidden p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white cursor-pointer transition-colors">
-              <Menu className="w-5 h-5"/>
-            </button>)}
-
           <Link href="/" className="flex items-center gap-2 group shrink-0" aria-label="TNTP LAPTOP - Trang chủ">
             {/* Biểu tượng logo thương hiệu TNTP LAPTOP */}
             <div className={`rounded-xl bg-white text-[#0052cc] flex items-center justify-center font-black shadow-md group-hover:scale-105 transition-all ${daCuon ? "w-8 h-8 sm:w-9 sm:h-9" : "w-9 h-9 sm:w-10 sm:h-10 px-1"}`}>
