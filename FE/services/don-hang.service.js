@@ -229,12 +229,14 @@ export const DonHangService = {
     /**
      * Tra cứu đơn hàng theo Mã Đơn Hàng hoặc Số Điện Thoại từ Server (Async)
      */
-    async traCuuDonHangAsync(maHoacSdt) {
+    async traCuuDonHangAsync(maHoacSdt, soDienThoai = '') {
         if (!maHoacSdt || !maHoacSdt.trim()) return [];
-        const key = maHoacSdt.trim();
+        const key = maHoacSdt.trim().replace(/^#/, '');
+        const sdt = String(soDienThoai || '').trim().replace(/\D/g, '');
+        const query = sdt ? `?sdt=${encodeURIComponent(sdt)}` : '';
 
         try {
-            const donHang = await apiFetch(`/don-hang/${encodeURIComponent(key)}`, { cache: 'no-store' });
+            const donHang = await apiFetch(`/don-hang/${encodeURIComponent(key)}${query}`, { cache: 'no-store' });
             if (donHang && donHang.ma_don_hang) {
                 return [donHang];
             }

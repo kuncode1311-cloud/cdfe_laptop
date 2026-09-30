@@ -8,6 +8,79 @@ const { guiThongBaoDonHangTelegram } = require('../services/telegram-bot.service
  * Controller xử lý nghiệp vụ cho Đơn hàng & Tồn kho
  */
 
+const chiGiuSo = (value = '') => String(value || '').replace(/\D/g, '');
+
+const cheTen = (value = '') => {
+    const words = String(value || '').trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return '';
+    return words.map((word, index) => {
+        if (index === 0 || index === words.length - 1) {
+            return `${word.charAt(0)}${'*'.repeat(Math.max(1, word.length - 1))}`;
+        }
+        return `${word.charAt(0)}***`;
+    }).join(' ');
+};
+
+const cheSoDienThoai = (value = '') => {
+    const phone = chiGiuSo(value);
+    if (phone.length <= 6) return phone ? `${phone.slice(0, 2)}****` : '';
+    return `${phone.slice(0, 3)}****${phone.slice(-3)}`;
+};
+
+const cheEmail = (value = '') => {
+    const email = String(value || '').trim();
+    const [name, domain] = email.split('@');
+    if (!name || !domain) return '';
+    return `${name.charAt(0)}***@${domain}`;
+};
+
+const anThongTinDonHangCongKhai = (donHangDoc) => {
+    const donHang = donHangDoc.toObject ? donHangDoc.toObject() : { ...donHangDoc };
+    const giaoHang = donHang.thong_tin_giao_hang || {};
+    const ten = giaoHang.ho_ten || giaoHang.ho_va_ten || '';
+
+    donHang.thong_tin_giao_hang = {
+        ho_ten: cheTen(ten),
+        ho_va_ten: cheTen(ten),
+        so_dien_thoai: cheSoDienThoai(giaoHang.so_dien_thoai),
+        email: cheEmail(giaoHang.email),
+        tinh_thanh: giaoHang.tinh_thanh || '',
+        quan_huyen: giaoHang.quan_huyen || '',
+        phuong_xa: '',
+        dia_chi_chi_tiet: '',
+        ghi_chu: ''
+    };
+
+    donHang.danh_sach_san_pham = (donHang.danh_sach_san_pham || []).map((item) => ({
+        id_muc: item.id_muc,
+        ten_san_pham: item.ten_san_pham || item.san_pham?.ten_san_pham || 'Sản phẩm LaptopNew',
+        hinh_anh: item.hinh_anh || item.san_pham?.hinh_anh_chinh || item.san_pham?.hinh_anh || '',
+        so_luong: item.so_luong || 1
+    }));
+
+    delete donHang.id_nguoi_dung;
+    delete donHang.email;
+    delete donHang.__v;
+    return donHang;
+};
+
+const laChuDonHang = (req, donHang) => {
+    if (!req.user || !donHang) return false;
+    if (req.user.vaiTro === 'admin') return true;
+
+    const userId = String(req.user.id || req.user._id || '');
+    const userMongoId = String(req.user._id || '');
+    const userEmail = String(req.user.email || '').trim().toLowerCase();
+    const userSdt = chiGiuSo(req.user.soDienThoai || req.user.so_dien_thoai || '');
+    const donSdt = chiGiuSo(donHang.thong_tin_giao_hang?.so_dien_thoai || '');
+    const donEmail = String(donHang.thong_tin_giao_hang?.email || '').trim().toLowerCase();
+
+    return String(donHang.id_nguoi_dung || '') === userId
+        || String(donHang.id_nguoi_dung || '') === userMongoId
+        || (!!userEmail && userEmail === donEmail)
+        || (!!userSdt && userSdt === donSdt);
+};
+
 /**
  * Hàm hỗ trợ xử lý tăng/giảm tồn kho và số lượng đã bán của sản phẩm khi đơn hàng thay đổi trạng thái
  * @param {Array} danhSachSanPham - Danh sách mặt hàng trong đơn
@@ -225,6 +298,7 @@ const layDonHangTheoIdHoacMa = async (req, res) => {
     try {
         const { id } = req.params;
         const cleanId = String(id || '').trim();
+        const sdtXacMinh = chiGiuSo(req.query.sdt || req.query.so_dien_thoai || '');
 
         const queryList = [
             { id: cleanId },
@@ -252,7 +326,28 @@ const layDonHangTheoIdHoacMa = async (req, res) => {
             return res.status(404).json({ thong_diep: `Không tìm thấy đơn hàng với mã/id: ${cleanId}` });
         }
 
-        return res.status(200).json(donHang);
+        if (laChuDonHang(req, donHang)) {
+            return res.status(200).json(donHang);
+        }
+
+        if (req.user) {
+            return res.status(403).json({
+                thong_diep: 'Bạn chỉ được xem đơn hàng thuộc tài khoản của mình.'
+            });
+        }
+
+        const maDonDuocNhap = String(donHang.ma_don_hang || '').toLowerCase() === cleanId.toLowerCase()
+            || String(donHang.id || '').toLowerCase() === cleanId.toLowerCase();
+        const sdtKhach = chiGiuSo(donHang.thong_tin_giao_hang?.so_dien_thoai || '');
+
+        if (!maDonDuocNhap || !sdtXacMinh || sdtXacMinh !== sdtKhach) {
+            return res.status(403).json({
+                thong_diep: 'Vui lòng nhập đúng mã đơn hàng và số điện thoại nhận hàng để tra cứu.',
+                yeu_cau_xac_minh_sdt: true
+            });
+        }
+
+        return res.status(200).json(anThongTinDonHangCongKhai(donHang));
     } catch (loi) {
         console.error('Lỗi tra cứu đơn hàng:', loi);
         return res.status(500).json({ thong_diep: 'Lỗi tra cứu đơn hàng', chi_tiet: loi.message });
@@ -386,4 +481,3 @@ module.exports = {
     capNhatTrangThaiDonHang,
     xoaDonHang
 };
-

@@ -7,17 +7,18 @@ import { DonHangService } from '@/services/don-hang.service';
 import { formatCurrency, dinhDangTienVND } from '@/utils/formatCurrency';
 export default function TrangTraCuuDonHang() {
     const [tuKhoaTraCuu, setTuKhoaTraCuu] = useState('');
+    const [soDienThoaiXacMinh, setSoDienThoaiXacMinh] = useState('');
     const [ketQuaTraCuu, setKetQuaTraCuu] = useState(null);
     const [daTimKiem, setDaTimKiem] = useState(false);
     const [dangTimKiem, setDangTimKiem] = useState(false);
 
     const xuLyTraCuu = async (e) => {
         e.preventDefault();
-        if (!tuKhoaTraCuu.trim())
+        if (!tuKhoaTraCuu.trim() || !soDienThoaiXacMinh.trim())
             return;
         setDangTimKiem(true);
         try {
-            const ketQua = await DonHangService.traCuuDonHangAsync(tuKhoaTraCuu.trim());
+            const ketQua = await DonHangService.traCuuDonHangAsync(tuKhoaTraCuu.trim(), soDienThoaiXacMinh.trim());
             setKetQuaTraCuu(ketQua);
         } catch (err) {
             console.error('Lỗi tra cứu:', err);
@@ -47,14 +48,17 @@ export default function TrangTraCuuDonHang() {
           TRA CỨU TIẾN ĐỘ ĐƠN HÀNG
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
-          Nhập Mã Đơn Hàng (ví dụ: <strong className="text-sky-500">LPN-83921</strong>) hoặc Số Điện Thoại nhận hàng để kiểm tra lịch trình vận chuyển thời gian thực.
+          Nhập Mã Đơn Hàng (ví dụ: <strong className="text-sky-500">LPN-83921</strong>) và Số Điện Thoại nhận hàng để kiểm tra lịch trình vận chuyển thời gian thực.
         </p>
 
         {/* Form Nhập Tra Cứu */}
-        <form onSubmit={xuLyTraCuu} className="max-w-md mx-auto flex gap-2 pt-2">
-          <div className="relative flex-1">
-            <input type="text" value={tuKhoaTraCuu} onChange={(e) => setTuKhoaTraCuu(e.target.value)} placeholder="Nhập mã đơn LPN-xxxxx hoặc SĐT..." className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"/>
+        <form onSubmit={xuLyTraCuu} className="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-[1fr_0.85fr_auto] gap-2 pt-2">
+          <div className="relative">
+            <input type="text" value={tuKhoaTraCuu} onChange={(e) => setTuKhoaTraCuu(e.target.value)} placeholder="Nhập mã đơn LPN-xxxxx" className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"/>
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"/>
+          </div>
+          <div className="relative">
+            <input type="tel" value={soDienThoaiXacMinh} onChange={(e) => setSoDienThoaiXacMinh(e.target.value)} placeholder="SĐT nhận hàng" className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 shadow-sm"/>
           </div>
           <button type="submit" disabled={dangTimKiem} className="px-6 py-3 rounded-2xl bg-sky-600 hover:bg-sky-700 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-white dark:text-slate-950 font-bold text-xs sm:text-sm transition-colors cursor-pointer shadow-md disabled:opacity-50">
             {dangTimKiem ? 'Đang Tra Cứu...' : 'Tra Cứu'}
@@ -163,7 +167,7 @@ export default function TrangTraCuuDonHang() {
                 Không tìm thấy đơn hàng với thông tin &quot;{tuKhoaTraCuu}&quot;
               </p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                Quý khách vui lòng kiểm tra lại chính xác Mã Đơn Hàng (dạng LPN-xxxxx) hoặc Số Điện Thoại lúc đặt hàng.
+                Quý khách vui lòng kiểm tra lại chính xác Mã Đơn Hàng (dạng LPN-xxxxx) và Số Điện Thoại lúc đặt hàng.
               </p>
             </div>)}
         </div>)}
