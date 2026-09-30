@@ -5868,25 +5868,22 @@ export default function TrangQuanTriCuaHang() {
                                     moTa={dangLocSanPham ? `Tìm thấy ${sanPhamHienThi.length} sản phẩm phù hợp` : "Hệ thống đang tải số lượng tồn kho, giá bán và cấu hình máy"}
                                 />
 
-                                <div className={`overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-[380px] transition-opacity duration-300 ${dangTai || dangLocSanPham ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                                <div className={`overflow-x-hidden overflow-y-auto max-h-[calc(100vh-280px)] min-h-[380px] transition-opacity duration-300 ${dangTai || dangLocSanPham ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
                                     <table className="w-full text-left text-xs border-collapse table-fixed">
                                         <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 shadow-xs">
                                             <tr className="text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
-                                                <th className="py-2.5 px-1 w-9 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
-                                                <th className="py-2.5 px-1 w-12 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">ẢNH</th>
-                                                <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TÊN SẢN PHẨM & CẤU HÌNH</th>
-                                                <th className="py-2.5 px-1 w-20 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">HÃNG</th>
-                                                <th className="py-2.5 px-1.5 w-24 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">GIÁ BÁN</th>
-                                                <th className="py-2.5 px-1 w-11 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHO</th>
-                                                <th className="py-2.5 px-1 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">FLASH SALE</th>
-                                                <th className="py-2.5 px-1 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
-                                                <th className="py-2.5 px-1 w-28 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
+                                                <th className="py-2.5 px-1 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700">#</th>
+                                                <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700">Sản phẩm & cấu hình</th>
+                                                <th className="py-2.5 px-2 w-[118px] text-right border-b-2 border-r border-slate-300 dark:border-slate-700">Giá bán</th>
+                                                <th className="py-2.5 px-1 w-14 text-center border-b-2 border-r border-slate-300 dark:border-slate-700">Kho</th>
+                                                <th className="py-2.5 px-1 w-[124px] text-center border-b-2 border-r border-slate-300 dark:border-slate-700">Trạng thái</th>
+                                                <th className="py-2.5 px-1 w-[104px] text-center border-b-2 border-slate-300 dark:border-slate-700">Thao tác</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {sanPhamHienThi.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={9} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                                    <td colSpan={6} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
                                                         <div className="flex flex-col items-center justify-center gap-2">
                                                             <Package className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                                                             <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy sản phẩm nào</div>
@@ -5914,125 +5911,122 @@ export default function TrangQuanTriCuaHang() {
                                                             <td className={`py-2 px-1 text-center font-bold border-b border-r whitespace-nowrap text-[11px] ${daAnSp ? 'border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 font-black' : 'border-slate-200 dark:border-slate-800 text-slate-400'}`}>
                                                                 #{idx + 1}
                                                             </td>
-                                                            <td className={`py-1.5 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <div
-                                                                    onClick={() => setModalXemAnh({
-                                                                        url: sp.hinh_anh_chinh,
-                                                                        ten: sp.ten_san_pham,
-                                                                        gia: sp.gia_khuyen_mai,
-                                                                        gia_goc: sp.gia_goc,
-                                                                        sku: sp.ma_san_pham,
-                                                                        hang: sp.hang_san_xuat,
-                                                                        variants: sp.tuy_chon_phien_ban || [],
-                                                                        activeVariantIndex: 0
-                                                                    })}
-                                                                    className="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 p-0.5 mx-auto relative border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs cursor-pointer group hover:border-blue-500 transition-all hover:scale-105"
-                                                                    title="Bấm để phóng to xem ảnh sắc nét"
-                                                                >
-                                                                    <Image src={sp.hinh_anh_chinh} alt={sp.ten_san_pham} fill className="object-contain p-0.5" />
-                                                                </div>
-                                                            </td>
                                                             <td className={`py-2 px-2.5 border-b border-r overflow-hidden ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <div className="flex items-center gap-1.5 min-w-0">
-                                                                    {daAnSp && (
-                                                                        <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-2xs shrink-0">
-                                                                            ĐÃ ẨN
-                                                                        </span>
-                                                                    )}
-                                                                    <div className={`font-extrabold text-xs truncate transition-colors ${daAnSp ? 'text-rose-950 dark:text-rose-100' : 'text-slate-900 dark:text-white hover:text-blue-600'}`} title={sp.ten_san_pham}>
-                                                                        {sp.ten_san_pham}
+                                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                                    <div
+                                                                        onClick={() => setModalXemAnh({
+                                                                            url: sp.hinh_anh_chinh,
+                                                                            ten: sp.ten_san_pham,
+                                                                            gia: sp.gia_khuyen_mai,
+                                                                            gia_goc: sp.gia_goc,
+                                                                            sku: sp.ma_san_pham,
+                                                                            hang: sp.hang_san_xuat,
+                                                                            variants: sp.tuy_chon_phien_ban || [],
+                                                                            activeVariantIndex: 0
+                                                                        })}
+                                                                        className="w-11 h-11 rounded-xl bg-white dark:bg-slate-800 relative border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs cursor-pointer hover:border-blue-500 transition-all hover:scale-105"
+                                                                        title="Bấm để phóng to xem ảnh sắc nét"
+                                                                    >
+                                                                        <Image src={sp.hinh_anh_chinh} alt={sp.ten_san_pham} fill className="object-contain p-1" />
+                                                                    </div>
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                                            {daAnSp && (
+                                                                                <span className="px-1.5 rounded text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white shrink-0">Đã ẩn</span>
+                                                                            )}
+                                                                            <div className={`font-extrabold text-xs truncate ${daAnSp ? 'text-rose-950 dark:text-rose-100' : 'text-slate-900 dark:text-white'}`} title={sp.ten_san_pham}>
+                                                                                {sp.ten_san_pham}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div className={`text-[11px] font-semibold truncate mt-0.5 ${daAnSp ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-500 dark:text-slate-400'}`} title={thongTin.text}>
+                                                                            {thongTin.icon} {thongTin.text}
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 mt-1 min-w-0">
+                                                                            <span className="px-1.5 py-px rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-black uppercase text-[10px] border border-indigo-100 dark:border-indigo-900 shrink-0">
+                                                                                {sp.hang_san_xuat}
+                                                                            </span>
+                                                                            {sp.ma_san_pham && (
+                                                                                <span className="text-[10px] font-mono font-semibold text-slate-400 truncate" title={`SKU: ${sp.ma_san_pham}`}>
+                                                                                    SKU: {sp.ma_san_pham}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                                <div className={`text-[11px] font-semibold truncate mt-0.5 flex items-center gap-1 min-w-0 ${daAnSp ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-500 dark:text-slate-400'}`} title={thongTin.text}>
-                                                                    <span className="shrink-0">{thongTin.icon}</span>
-                                                                    <span className="truncate">{thongTin.text}</span>
-                                                                </div>
                                                             </td>
-                                                            <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <span className="inline-block px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 font-black uppercase text-[10px] border border-indigo-100 dark:border-indigo-900 whitespace-nowrap">
-                                                                    {sp.hang_san_xuat}
-                                                                </span>
-                                                            </td>
-                                                            <td className={`py-2 px-2 border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <div className="flex flex-col leading-tight whitespace-nowrap">
-                                                                    <span className="font-black text-xs text-red-600 dark:text-red-400">
-                                                                        {dinhDangTienVND(sp.gia_khuyen_mai)}
-                                                                    </span>
-                                                                    {sp.gia_goc > sp.gia_khuyen_mai && (
-                                                                        <span className="text-[10px] text-slate-400 line-through font-semibold">
-                                                                            {dinhDangTienVND(sp.gia_goc)}
+                                                            <td className={`py-2 px-2 text-right border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                                <div className="font-black text-xs text-red-600 dark:text-red-400">{dinhDangTienVND(sp.gia_khuyen_mai)}</div>
+                                                                {sp.gia_goc > sp.gia_khuyen_mai && (
+                                                                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                                                                        <span className="text-[10px] text-slate-400 line-through font-semibold">{dinhDangTienVND(sp.gia_goc)}</span>
+                                                                        <span className="px-1 rounded bg-red-50 dark:bg-red-950/60 text-red-600 dark:text-red-300 text-[9px] font-black">
+                                                                            -{Math.round((1 - sp.gia_khuyen_mai / sp.gia_goc) * 100)}%
                                                                         </span>
-                                                                    )}
-                                                                </div>
+                                                                    </div>
+                                                                )}
                                                             </td>
                                                             <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <span className={`inline-block px-2 py-0.5 rounded-full text-[11px] font-black whitespace-nowrap ${sp.so_luong_ton_kho > 5 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : sp.so_luong_ton_kho > 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'}`}>
+                                                                <span className={`inline-block min-w-[28px] px-1.5 py-0.5 rounded-full text-[11px] font-black ${sp.so_luong_ton_kho > 5 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : sp.so_luong_ton_kho > 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'}`}>
                                                                     {sp.so_luong_ton_kho || 0}
                                                                 </span>
                                                             </td>
-                                                            <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => xuLyToggleFlashSale(sp)}
-                                                                    className={`px-2 py-0.5 rounded-full text-[11px] font-black inline-flex items-center justify-center gap-1 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
-                                                                        sp.la_flash_sale
-                                                                            ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-800 ring-1 ring-rose-500/20 hover:bg-rose-100'
-                                                                            : 'bg-slate-100 text-slate-500 hover:text-slate-700 dark:bg-slate-800 dark:text-slate-400 hover:bg-slate-200'
-                                                                    }`}
-                                                                    title={sp.la_flash_sale ? 'Đang bật Flash Sale - Bấm để tắt' : 'Bấm để bật Flash Sale'}
-                                                                >
-                                                                    <Flame className={`w-3 h-3 ${sp.la_flash_sale ? 'text-rose-600 fill-rose-600 animate-pulse' : 'text-slate-400'}`} />
-                                                                    <span className="whitespace-nowrap">{sp.la_flash_sale ? 'Bật Deal' : 'Tắt Deal'}</span>
-                                                                </button>
+                                                            <td className={`py-2 px-1.5 border-b border-r ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => xuLyToggleConHang(sp)}
+                                                                        className={`w-full px-2 py-0.5 rounded-full text-[10.5px] font-black inline-flex items-center justify-center gap-1 whitespace-nowrap transition-all cursor-pointer active:scale-95 border ${
+                                                                            sp.con_hang !== false
+                                                                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 hover:bg-emerald-100'
+                                                                                : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200 border-rose-300 dark:border-rose-800 hover:bg-rose-200'
+                                                                        }`}
+                                                                        title={sp.con_hang !== false ? 'Đang mở bán - Bấm để tạm ẩn' : 'Đang tạm ẩn - Bấm để mở bán'}
+                                                                    >
+                                                                        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sp.con_hang !== false ? 'bg-emerald-500' : 'bg-rose-600'}`} />
+                                                                        {sp.con_hang !== false ? 'Đang bán' : 'Tạm ẩn'}
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => xuLyToggleFlashSale(sp)}
+                                                                        className={`w-full px-2 py-0.5 rounded-full text-[10.5px] font-black inline-flex items-center justify-center gap-1 whitespace-nowrap transition-all cursor-pointer active:scale-95 border ${
+                                                                            sp.la_flash_sale
+                                                                                ? 'bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-300 border-orange-300 dark:border-orange-800 hover:bg-orange-100'
+                                                                                : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                                                                        }`}
+                                                                        title={sp.la_flash_sale ? 'Đang bật Flash Sale - Bấm để tắt' : 'Bấm để bật Flash Sale'}
+                                                                    >
+                                                                        <Flame className={`w-3 h-3 ${sp.la_flash_sale ? 'text-orange-500 fill-orange-500' : 'text-slate-400'}`} />
+                                                                        {sp.la_flash_sale ? 'Flash Sale' : 'Không Deal'}
+                                                                    </button>
+                                                                </div>
                                                             </td>
-                                                            <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => xuLyToggleConHang(sp)}
-                                                                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shadow-2xs active:scale-95 ${
-                                                                        sp.con_hang !== false
-                                                                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 ring-1 ring-emerald-500/20 hover:bg-emerald-100'
-                                                                            : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-800 hover:bg-rose-200'
-                                                                    }`}
-                                                                    title={sp.con_hang !== false ? 'Đang mở bán - Bấm để tạm ẩn' : 'Đang tạm ẩn - Bấm để mở bán'}
-                                                                >
-                                                                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sp.con_hang !== false ? 'bg-emerald-500 animate-pulse' : 'bg-rose-600'}`} />
-                                                                    <span className="whitespace-nowrap">{sp.con_hang !== false ? 'Đang mở bán' : 'Tạm ẩn'}</span>
-                                                                </button>
-                                                            </td>
-                                                            <td className={`py-2 px-1 text-center border-b whitespace-nowrap ${
-                                                                daAnSp
-                                                                    ? 'border-rose-200 dark:border-rose-900/60'
-                                                                    : 'border-slate-200 dark:border-slate-800'
-                                                            }`}>
-                                                                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                                                            <td className={`py-2 px-1 text-center border-b ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                                <div className="flex items-center justify-center gap-1">
                                                                     <Link
                                                                         href={`/san-pham/${sp.id || sp.slug || sp._id}`}
                                                                         target="_blank"
-                                                                        className="p-1 rounded-md bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 transition-all hover:scale-105 active:scale-95 inline-flex items-center justify-center shadow-2xs"
+                                                                        className="w-7 h-7 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-100 dark:bg-sky-950/40 dark:text-sky-400 border border-sky-200 dark:border-sky-800/60 transition-all hover:scale-105 active:scale-95 inline-flex items-center justify-center"
                                                                         title="Xem ngoài website khách hàng"
                                                                     >
-                                                                        <ExternalLink className="w-3 h-3" />
+                                                                        <ExternalLink className="w-3.5 h-3.5" />
                                                                     </Link>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => moModalSuaSp(sp)}
                                                                         disabled={dangXuLyChung}
-                                                                        className={`px-1.5 py-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] inline-flex items-center gap-0.5 shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                                        title="Chỉnh sửa sản phẩm"
+                                                                        className={`w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-600 text-white inline-flex items-center justify-center shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        title="Sửa sản phẩm"
                                                                     >
-                                                                        <Edit3 className="w-3 h-3" />
-                                                                        <span>Sửa</span>
+                                                                        <Edit3 className="w-3.5 h-3.5" />
                                                                     </button>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => xuLyXoaSanPham(idSp, sp.ten_san_pham)}
                                                                         disabled={dangXuLyChung}
-                                                                        className={`px-1.5 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] inline-flex items-center gap-0.5 shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        className={`w-7 h-7 rounded-lg bg-rose-600 hover:bg-rose-700 text-white inline-flex items-center justify-center shadow-xs transition-all hover:scale-105 active:scale-95 ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                                         title="Xóa vĩnh viễn sản phẩm"
                                                                     >
-                                                                        {dangXuLyItem ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
-                                                                        <span>Xóa</span>
+                                                                        {dangXuLyItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                                                                     </button>
                                                                 </div>
                                                             </td>
