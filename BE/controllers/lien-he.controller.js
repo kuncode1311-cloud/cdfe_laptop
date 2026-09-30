@@ -52,6 +52,16 @@ exports.guiYeuCauLienHe = async (req, res) => {
             });
         }
 
+        // Kiểm tra định dạng email nếu khách có điền (chống spam email rác)
+        const emailChuanHoa = (email || '').trim().toLowerCase();
+        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailChuanHoa && !regexEmail.test(emailChuanHoa)) {
+            return res.status(400).json({
+                thanh_cong: false,
+                thong_diep: 'Email không đúng định dạng, vui lòng kiểm tra lại'
+            });
+        }
+
         // 2. Tạo mã yêu cầu duy nhất
         let maYeuCau = taoMaYeuCauLienHe();
         let daTonTai = await LienHe.findOne({ ma_yeu_cau: maYeuCau });
@@ -65,7 +75,7 @@ exports.guiYeuCauLienHe = async (req, res) => {
             ma_yeu_cau: maYeuCau,
             ho_ten: ho_ten.trim(),
             so_dien_thoai: sdtChuanHoa,
-            email: (email || '').trim().toLowerCase(),
+            email: emailChuanHoa,
             chu_de: chu_de || 'Tư vấn mua Laptop Gaming & AI PC',
             noi_dung: noi_dung.trim(),
             trang_thai: 'chua_xu_ly',
