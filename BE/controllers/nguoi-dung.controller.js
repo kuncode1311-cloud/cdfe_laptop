@@ -1,4 +1,5 @@
 const NguoiDung = require('../models/nguoi-dung.model');
+const bcrypt = require('bcryptjs');
 
 /**
  * Controller xử lý Người dùng / Tài khoản
@@ -39,6 +40,12 @@ const taoNguoiDungMoi = async (req, res) => {
             return res.status(400).json({ thong_diep: 'Email này đã được đăng ký tài khoản!' });
         }
 
+        // Băm mật khẩu trước khi lưu, không bao giờ để lọt plain text vào DB
+        if (duLieu.matKhau) {
+            const salt = await bcrypt.genSalt(10);
+            duLieu.matKhau = await bcrypt.hash(duLieu.matKhau, salt);
+        }
+
         const nguoiDungMoi = new NguoiDung(duLieu);
         const ketQua = await nguoiDungMoi.save();
         return res.status(201).json(ketQua);
@@ -54,9 +61,12 @@ const capNhatNguoiDung = async (req, res) => {
         const { id } = req.params;
         const duLieuCapNhat = req.body;
 
-        // Tránh ghi đè mật khẩu plain nếu không thay đổi
+        // Tránh ghi đè mật khẩu plain nếu không thay đổi; nếu có đổi thì phải băm trước khi lưu
         if (!duLieuCapNhat.matKhau) {
             delete duLieuCapNhat.matKhau;
+        } else {
+            const salt = await bcrypt.genSalt(10);
+            duLieuCapNhat.matKhau = await bcrypt.hash(duLieuCapNhat.matKhau, salt);
         }
 
         let user = await NguoiDung.findOneAndUpdate(

@@ -340,64 +340,35 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 const dangNhapGoogle = async (req, res) => {
     try {
-        const { credential, email, hoTen, avatar, googleId } = req.body;
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({ thong_diep: 'Vui lòng cung cấp Google credential hợp lệ!' });
+        }
 
         let googleEmail, googleHoTen, googleAvatar, googleSub;
 
-        // ===== CÁCH 1: Verify ID Token chuẩn Google Sign-In (credential) =====
-        if (credential) {
-            try {
-                const ticket = await googleClient.verifyIdToken({
-                    idToken: credential,
-                    audience: GOOGLE_CLIENT_ID
-                });
-                const payload = ticket.getPayload();
+        // Bắt buộc xác minh chữ ký ID Token qua Google — không còn nhánh dự phòng
+        // giải mã payload không kiểm tra chữ ký hay nhận email trực tiếp từ client,
+        // để tránh giả mạo đăng nhập vào tài khoản bất kỳ chỉ bằng cách biết email.
+        try {
+            const ticket = await googleClient.verifyIdToken({
+                idToken: credential,
+                audience: GOOGLE_CLIENT_ID
+            });
+            const payload = ticket.getPayload();
 
-                googleEmail   = payload.email;
-                googleHoTen   = payload.name || payload.given_name || 'Google User';
-                googleAvatar  = payload.picture || '';
-                googleSub     = payload.sub; // Google unique user ID
+            googleEmail   = payload.email;
+            googleHoTen   = payload.name || payload.given_name || 'Google User';
+            googleAvatar  = payload.picture || '';
+            googleSub     = payload.sub; // Google unique user ID
 
-                console.log(`✅ Xác minh Google Token thành công: ${googleEmail}`);
-            } catch (verifyErr) {
-                console.warn('⚠️ Google verifyIdToken không thành công, thử giải mã payload token:', verifyErr.message);
-                try {
-                    const parts = credential.split('.');
-                    if (parts.length >= 2) {
-                        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-                        if (payload?.email) {
-                            googleEmail   = payload.email;
-                            googleHoTen   = payload.name || payload.given_name || 'Google User';
-                            googleAvatar  = payload.picture || '';
-                            googleSub     = payload.sub;
-                        } else {
-                            throw new Error('Không có email trong token payload');
-                        }
-                    } else {
-                        throw new Error('Định dạng token không hợp lệ');
-                    }
-                } catch {
-                    if (email) {
-                        googleEmail  = email.trim().toLowerCase();
-                        googleHoTen  = hoTen || 'Google User';
-                        googleAvatar = avatar || '';
-                        googleSub    = googleId || 'gg_' + Date.now();
-                    } else {
-                        return res.status(401).json({
-                            thong_diep: 'Google ID Token không hợp lệ hoặc đã hết hạn!'
-                        });
-                    }
-                }
-            }
-        }
-        // ===== CÁCH 2: Fallback – nhận trực tiếp từ FE (cho dev/test) =====
-        else if (email) {
-            googleEmail  = email.trim().toLowerCase();
-            googleHoTen  = hoTen || 'Google User';
-            googleAvatar = avatar || '';
-            googleSub    = googleId || 'gg_' + Date.now();
-        } else {
-            return res.status(400).json({ thong_diep: 'Vui lòng cung cấp Google credential hoặc email!' });
+            console.log(`✅ Xác minh Google Token thành công: ${googleEmail}`);
+        } catch (verifyErr) {
+            console.warn('⚠️ Google verifyIdToken thất bại:', verifyErr.message);
+            return res.status(401).json({
+                thong_diep: 'Google ID Token không hợp lệ hoặc đã hết hạn!'
+            });
         }
 
         const emailChuan = googleEmail.trim().toLowerCase();
