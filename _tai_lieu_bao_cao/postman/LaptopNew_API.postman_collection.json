@@ -1,0 +1,6282 @@
+{
+	"info": {
+		"_postman_id": "b6a3f1c2-5e4d-4c1a-9f7e-2a8d6c0e1f10",
+		"name": "LaptopNew Backend API (Express + MongoDB)",
+		"description": "Bộ request đầy đủ cho Back-End LaptopNew — 13 nhóm API + kịch bản lỗi + bộ kiểm thử Runner + bộ kiểm thử BẢO MẬT (thư mục 16).\n\nCÁCH DÙNG NHANH:\n1. Import file collection và file environment, chọn environment \"LaptopNew — Local\" ở góc phải.\n2. Chạy BE: `cd BE && npm run dev` (mặc định http://localhost:5000).\n3. Sửa biến `email`, `password` (tài khoản khách), `adminEmail`, `adminPassword` trong environment.\n4. Chạy \"Đăng nhập khách hàng\" và \"Đăng nhập Admin\" → token tự lưu vào {{token}} / {{adminToken}}.\n5. Các request khác dùng sẵn token, không cần copy tay.\n6. Chụp ảnh báo cáo: thư mục 00 (Runner) và 15 (kịch bản lỗi).\n\nRequest có tiền tố [Admin] dùng {{adminToken}}. Request tạo dữ liệu thử dùng id cố định (sp-postman-test, vc-postman, tin-postman...) và có request Xóa đi kèm để dọn dẹp.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "00. KIỂM THỬ TỰ ĐỘNG — chạy bằng Runner (40 ca, không ghi dữ liệu)",
+			"description": "Chạy bằng Collection Runner (1 iteration). Chỉ gồm thao tác đọc và thao tác bị từ chối — không làm thay đổi dữ liệu MongoDB.\n\nTC27–TC30 cần biến môi trường maDonHang, sdtNhanHang (SĐT nhận hàng của đơn đó) và token của chủ đơn → hãy chạy \"Đăng nhập khách hàng\" và \"Tạo đơn hàng\" ở thư mục 01, 04 trước.",
+			"item": [
+				{
+					"name": "TC01 — Health check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC02 — Thông tin server",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": []
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC03 — Sắp xếp giá tăng dần",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham?limit=2&sap_xep=gia_tang_dan",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "2"
+								},
+								{
+									"key": "sap_xep",
+									"value": "gia_tang_dan"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Giá tăng dần\", () => pm.expect(j[0].gia_khuyen_mai <= j[1].gia_khuyen_mai).to.be.true);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC04 — Lọc ASUS ≤ 30 triệu",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham?hang_san_xuat=asus&gia_max=30000000&limit=1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							],
+							"query": [
+								{
+									"key": "hang_san_xuat",
+									"value": "asus"
+								},
+								{
+									"key": "gia_max",
+									"value": "30000000"
+								},
+								{
+									"key": "limit",
+									"value": "1"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Đúng hãng & giá\", () => { pm.expect(j[0].hang_san_xuat).to.eql(\"asus\"); pm.expect(j[0].gia_khuyen_mai).to.be.at.most(30000000); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC05 — Sản phẩm không tồn tại",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham/khong-ton-tai-xyz",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham",
+								"khong-ton-tai-xyz"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 404\", () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC06 — Route không tồn tại",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/khong-co-route",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"khong-co-route"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 404\", () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC07 — Không có token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"toi"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC08 — Token giả",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"toi"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "abc.def.ghi",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC09 — Route admin không token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ten_san_pham\": \"x\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC10 — Sai email/mật khẩu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"khongtontai_test@example.com\",\n  \"matKhau\": \"sai123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC11 — Đăng nhập thiếu trường",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC12 — Đăng ký thiếu trường",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-ky",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-ky"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"hoTen\": \"A\",\n  \"email\": \"x\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC13 — Voucher không tồn tại",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/kiem-tra",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"kiem-tra"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_code\": \"KHONGCO999\",\n  \"tong_tien_tam_tinh\": 1000000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 404\", () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC14 — Voucher rỗng",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/kiem-tra",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"kiem-tra"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_code\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC15 — Danh sách voucher",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia?kich_hoat=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia"
+							],
+							"query": [
+								{
+									"key": "kich_hoat",
+									"value": "true"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC16 — Bảo hành từ khóa ngắn",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/bao-hanh/tra-cuu?tu_khoa=ab",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bao-hanh",
+								"tra-cuu"
+							],
+							"query": [
+								{
+									"key": "tu_khoa",
+									"value": "ab"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"hop_le = false\", () => pm.expect(j.hop_le).to.eql(false));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC17 — Bảo hành mã không có",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/bao-hanh/tra-cuu?tu_khoa=LPN-0000-0000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bao-hanh",
+								"tra-cuu"
+							],
+							"query": [
+								{
+									"key": "tu_khoa",
+									"value": "LPN-0000-0000"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"hop_le = false\", () => pm.expect(j.hop_le).to.eql(false));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC18 — Xem danh sách đơn khi chưa đăng nhập",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Bị yêu cầu đăng nhập, không lộ đơn hàng\", () => pm.expect(j).to.not.be.an(\"array\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC19 — Đặt hàng chưa đăng nhập",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"thong_tin_giao_hang\": {\n    \"so_dien_thoai\": \"0900000000\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC20 — Danh mục",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-muc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-muc"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC21 — Tin tức",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC22 — Showroom",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cai-dat/showroom",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cai-dat",
+								"showroom"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC23 — Webhook chữ ký sai",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/thanh-toan/webhook",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"thanh-toan",
+								"webhook"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"orderCode\": 1\n  },\n  \"signature\": \"sai\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC24 — Kiểm tra thanh toán",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/thanh-toan/kiem-tra/123",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"thanh-toan",
+								"kiem-tra",
+								"123"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC25 — AI tin nhắn rỗng",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tro-ly-ai/chat/stream",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tro-ly-ai",
+								"chat",
+								"stream"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tin_nhan\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC26 — Trạng thái AI",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tro-ly-ai/trang-thai",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tro-ly-ai",
+								"trang-thai"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC27 — Tra cứu đơn KHÔNG nhập SĐT (khách)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{maDonHang}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{maDonHang}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 403\", () => pm.expect(pm.response.code).to.be.oneOf([403]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Yêu cầu xác minh SĐT\", () => pm.expect(j.yeu_cau_xac_minh_sdt).to.eql(true));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC28 — Tra cứu đơn nhập SAI SĐT (khách)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{maDonHang}}?sdt=0999999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{maDonHang}}"
+							],
+							"query": [
+								{
+									"key": "sdt",
+									"value": "0999999999"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 403\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC29 — Tra cứu đơn đúng SĐT (khách) → dữ liệu bị che",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{maDonHang}}?sdt={{sdtNhanHang}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{maDonHang}}"
+							],
+							"query": [
+								{
+									"key": "sdt",
+									"value": "{{sdtNhanHang}}"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"SĐT đã được che ****\", () => pm.expect(j.thong_tin_giao_hang.so_dien_thoai).to.include(\"****\"));",
+									"pm.test(\"Không lộ địa chỉ chi tiết\", () => pm.expect(j.thong_tin_giao_hang.dia_chi_chi_tiet).to.eql(\"\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC30 — Tra cứu đơn bằng token chủ đơn → đầy đủ",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{maDonHang}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{maDonHang}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Có đầy đủ địa chỉ\", () => pm.expect(j.thong_tin_giao_hang.dia_chi_chi_tiet).to.not.eql(\"\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC31 — NoSQL Injection vào đăng nhập bị chặn",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@laptopnew.vn\",\n  \"matKhau\": { \"$ne\": null }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Không cấp token\", () => pm.expect(j.token).to.be.undefined);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC32 — Regex Injection / ReDoS vào tìm kiếm",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham?tu_khoa=(a%2B)%2B%24&limit=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							],
+							"query": [
+								{
+									"key": "tu_khoa",
+									"value": "(a%2B)%2B%24"
+								},
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"pm.test(\"Phản hồi nhanh dưới 3 giây (không treo server)\", () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC33 — Gửi JSON hỏng",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"email\": ",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Thông báo JSON không hợp lệ\", () => pm.expect(j.thong_diep).to.include(\"JSON\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC34 — Website lạ gọi API (CORS)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Origin",
+								"value": "https://website-la.com"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 403\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC35 — Có đủ HTTP Security Headers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"pm.test(\"X-Content-Type-Options: nosniff\", () => pm.response.to.have.header(\"X-Content-Type-Options\", \"nosniff\"));",
+									"pm.test(\"X-Frame-Options: DENY\", () => pm.response.to.have.header(\"X-Frame-Options\", \"DENY\"));",
+									"pm.test(\"Ẩn X-Powered-By (không lộ Express)\", () => pm.expect(pm.response.headers.has(\"X-Powered-By\")).to.eql(false));",
+									"pm.test(\"Có header RateLimit-Limit\", () => pm.expect(pm.response.headers.has(\"RateLimit-Limit\")).to.eql(true));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC36 — Đăng ký với mật khẩu yếu \"123456\"",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-ky",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-ky"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"hoTen\": \"Kiểm Thử Bảo Mật\",\n  \"email\": \"test.baomat@example.com\",\n  \"soDienThoai\": \"0901234567\",\n  \"matKhau\": \"123456\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Yêu cầu mật khẩu mạnh\", () => pm.expect(j.thong_diep).to.include(\"8\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC37 — Tạo thanh toán khi chưa đăng nhập",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/thanh-toan/tao-link",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"thanh-toan",
+								"tao-link"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_don_hang\": \"LPN-0000-0000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC38 — Xem danh sách người dùng khi chưa đăng nhập",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/nguoi-dung",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nguoi-dung"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC39 — Khách thêm bài viết tin tức (không token)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tieu_de\": \"Bài viết giả mạo\",\n  \"tom_tat\": \"test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "TC40 — Khách xin xem bản nháp tin tức (tat_ca=true)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc?tat_ca=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc"
+							],
+							"query": [
+								{
+									"key": "tat_ca",
+									"value": "true"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Chỉ thấy bài đã xuất bản\", () => (j.duLieu || []).forEach(t => pm.expect(t.xuat_ban).to.not.eql(false)));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "01. Xác thực & Tài khoản — /api/auth",
+			"description": "",
+			"item": [
+				{
+					"name": "Đăng ký tài khoản (gửi OTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-ky",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-ky"
+							]
+						},
+						"description": "Đổi biến `email` trong Environment thành Gmail THẬT của bạn để nhận mã OTP. 200 = đã gửi OTP; 400 = email đã có tài khoản; 502 = không gửi được email.",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"hoTen\": \"Nguyễn Văn Test\",\n  \"email\": \"{{email}}\",\n  \"soDienThoai\": \"0901234567\",\n  \"matKhau\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 400 / 502\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400, 502]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Kích hoạt tài khoản bằng OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/kich-hoat",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"kich-hoat"
+							]
+						},
+						"description": "Mở Gmail lấy mã 6 số → điền vào biến `otp` → Send. Thành công sẽ tự lưu token.",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"otp\": \"{{otp}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 400 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"if (j.token) { pm.environment.set(\"token\", j.token); console.log(\"Đã lưu token khách\"); }"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Gửi lại OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/gui-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"gui-otp"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Đăng nhập khách hàng (lưu token)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"matKhau\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Có token\", () => pm.expect(j.token).to.be.a(\"string\"));",
+									"if (j.token) pm.environment.set(\"token\", j.token);",
+									"if (j.nguoiDung) pm.environment.set(\"userId\", j.nguoiDung.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Đăng nhập Admin (lưu adminToken)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"matKhau\": \"{{adminPassword}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Là admin\", () => pm.expect(j.nguoiDung && j.nguoiDung.vaiTro).to.eql(\"admin\"));",
+									"if (j.token) pm.environment.set(\"adminToken\", j.token);",
+									"if (j.nguoiDung) pm.environment.set(\"adminId\", j.nguoiDung.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Xem hồ sơ của tôi",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"toi"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Cập nhật hồ sơ",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/cap-nhat-ho-so",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"cap-nhat-ho-so"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"hoTen\": \"Nguyễn Văn Test\",\n  \"soDienThoai\": \"0901234567\",\n  \"gioiTinh\": \"nam\",\n  \"ngaySinh\": \"01/01/2005\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Quên mật khẩu (gửi OTP)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/quen-mat-khau",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"quen-mat-khau"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Xác nhận OTP quên mật khẩu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/xac-nhan-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"xac-nhan-otp"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"otp\": \"{{otp}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 400\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Đặt lại mật khẩu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dat-lai-mat-khau",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dat-lai-mat-khau"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"otp\": \"{{otp}}\",\n  \"matKhauMoi\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 400\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Đổi mật khẩu — bước 1: gửi OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/doi-mat-khau/gui-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"doi-mat-khau",
+								"gui-otp"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"matKhauCu\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 400\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Đổi mật khẩu — bước 2: xác nhận",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/doi-mat-khau",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"doi-mat-khau"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"matKhauCu\": \"{{password}}\",\n  \"matKhauMoi\": \"{{password}}\",\n  \"otp\": \"{{otp}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 400\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Đăng nhập Google",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/google",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"google"
+							]
+						},
+						"description": "Cần ID Token thật do Google Sign-In cấp; thường test qua giao diện web.",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"credential\": \"<Google ID Token lấy từ Front-End>\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 401\", () => pm.expect(pm.response.code).to.be.oneOf([200, 401]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "02. Sản phẩm — /api/san-pham",
+			"description": "",
+			"item": [
+				{
+					"name": "Danh sách tất cả sản phẩm",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"if (Array.isArray(j) && j[0]) pm.environment.set(\"productId\", j[0].id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Tìm kiếm theo từ khóa",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham?tu_khoa=rtx&limit=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							],
+							"query": [
+								{
+									"key": "tu_khoa",
+									"value": "rtx"
+								},
+								{
+									"key": "limit",
+									"value": "5"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Lọc ASUS dưới 30 triệu, giá tăng dần",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham?hang_san_xuat=asus&gia_max=30000000&sap_xep=gia_tang_dan",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							],
+							"query": [
+								{
+									"key": "hang_san_xuat",
+									"value": "asus"
+								},
+								{
+									"key": "gia_max",
+									"value": "30000000"
+								},
+								{
+									"key": "sap_xep",
+									"value": "gia_tang_dan"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Lọc nhiều hãng + danh mục gaming",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham?hang_san_xuat=asus,msi,lenovo&danh_muc=gaming&sap_xep=gia_giam_dan",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							],
+							"query": [
+								{
+									"key": "hang_san_xuat",
+									"value": "asus,msi,lenovo"
+								},
+								{
+									"key": "danh_muc",
+									"value": "gaming"
+								},
+								{
+									"key": "sap_xep",
+									"value": "gia_giam_dan"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Sản phẩm bán chạy (top 8)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham?ban_chay=true&limit=8",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							],
+							"query": [
+								{
+									"key": "ban_chay",
+									"value": "true"
+								},
+								{
+									"key": "limit",
+									"value": "8"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Flash sale",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham?flash_sale=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							],
+							"query": [
+								{
+									"key": "flash_sale",
+									"value": "true"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Chi tiết sản phẩm",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham",
+								"{{productId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Thêm sản phẩm",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							]
+						},
+						"description": "Tạo sản phẩm thử có id cố định `sp-postman-test`; chạy request Xóa ở cuối để dọn dữ liệu.",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"sp-postman-test\",\n  \"ma_san_pham\": \"PM-TEST-001\",\n  \"ten_san_pham\": \"Laptop Postman Test 2026\",\n  \"hang_san_xuat\": \"asus\",\n  \"danh_muc\": [\n    \"van-phong-mong-nhe\"\n  ],\n  \"gia_goc\": 20000000,\n  \"gia_khuyen_mai\": 18500000,\n  \"hinh_anh_chinh\": \"/images/sp/asus_zenbook_oled.jpg\",\n  \"thong_so\": {\n    \"cpu\": \"Intel Core i5-13420H\",\n    \"ram\": \"16GB DDR5\",\n    \"o_cung\": \"512GB SSD\",\n    \"card_do_hoa\": \"Intel UHD\",\n    \"man_hinh\": \"15.6\\\" FHD\"\n  },\n  \"so_luong_ton_kho\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 201 / 409\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Cập nhật sản phẩm",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham/sp-postman-test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham",
+								"sp-postman-test"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"gia_khuyen_mai\": 17990000,\n  \"la_flash_sale\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Xóa sản phẩm",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham/sp-postman-test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham",
+								"sp-postman-test"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "03. Danh mục — /api/danh-muc",
+			"description": "",
+			"item": [
+				{
+					"name": "Danh sách danh mục",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-muc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-muc"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Lọc thương hiệu",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-muc?loai=thuong_hieu",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-muc"
+							],
+							"query": [
+								{
+									"key": "loai",
+									"value": "thuong_hieu"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Thêm danh mục",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-muc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-muc"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"dm-postman-test\",\n  \"ma_danh_muc\": \"postman-test\",\n  \"ten_danh_muc\": \"Danh mục Postman\",\n  \"loai\": \"nhu_cau\",\n  \"mo_ta\": \"Tạo bằng Postman\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 201 / 409\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Sửa danh mục",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-muc/dm-postman-test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-muc",
+								"dm-postman-test"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mo_ta\": \"Đã cập nhật\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Xóa danh mục",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-muc/dm-postman-test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-muc",
+								"dm-postman-test"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "04. Đơn hàng — /api/don-hang",
+			"description": "",
+			"item": [
+				{
+					"name": "Tạo đơn hàng (khách đã đăng nhập)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang"
+							]
+						},
+						"description": "Tự lưu `orderId` và `maDonHang`. Đơn thật sẽ gửi email và thông báo Telegram nếu server đã cấu hình.",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"thong_tin_giao_hang\": {\n    \"ho_ten\": \"Nguyễn Văn Test\",\n    \"so_dien_thoai\": \"0901234567\",\n    \"email\": \"{{email}}\",\n    \"dia_chi_chi_tiet\": \"12 Trịnh Đình Thảo\",\n    \"phuong_xa\": \"Hòa Thạnh\",\n    \"quan_huyen\": \"Tân Phú\",\n    \"tinh_thanh\": \"TP. Hồ Chí Minh\",\n    \"ghi_chu\": \"Đơn tạo từ Postman\"\n  },\n  \"danh_sach_san_pham\": [\n    {\n      \"san_pham_id\": \"{{productId}}\",\n      \"ten_san_pham\": \"Laptop test\",\n      \"so_luong\": 1,\n      \"gia\": 18500000,\n      \"tong_tien_muc\": 18500000\n    }\n  ],\n  \"tam_tinh\": 18500000,\n  \"tien_giam_gia\": 0,\n  \"phi_van_chuyen\": 0,\n  \"tong_tien_thanh_toan\": 18500000,\n  \"hinh_thuc_thanh_toan\": \"chuyen_khoan_vietqr\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 201\", () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"if (j.id) pm.environment.set(\"orderId\", j.id);",
+									"if (j.ma_don_hang) pm.environment.set(\"maDonHang\", j.ma_don_hang);",
+									"if (j && j.thong_tin_giao_hang) pm.environment.set(\"sdtNhanHang\", j.thong_tin_giao_hang.so_dien_thoai);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Lịch sử đơn của tôi",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Tất cả đơn hàng",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Lọc đơn chờ xác nhận",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang?trang_thai=cho_xac_nhan",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang"
+							],
+							"query": [
+								{
+									"key": "trang_thai",
+									"value": "cho_xac_nhan"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Tra cứu đơn theo mã",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{maDonHang}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{maDonHang}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Xác nhận đơn",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{orderId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"trang_thai\": \"da_xac_nhan\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Chuyển đang giao",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{orderId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"trang_thai\": \"dang_giao\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Đã giao (tự trừ kho)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{orderId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"trang_thai\": \"da_giao\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Đã trừ tồn kho\", () => pm.expect(j.da_tru_ton_kho).to.eql(true));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Khách hủy đơn (chỉ khi chờ xác nhận)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{orderId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"trang_thai\": \"da_huy\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 403\", () => pm.expect(pm.response.code).to.be.oneOf([200, 403]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Xóa đơn (hoàn kho nếu đã trừ)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{orderId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{orderId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "05. Thanh toán PayOS / VietQR — /api/thanh-toan",
+			"description": "",
+			"item": [
+				{
+					"name": "Tạo link / QR thanh toán",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/thanh-toan/tao-link",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"thanh-toan",
+								"tao-link"
+							]
+						},
+						"description": "Bắt buộc token của CHỦ ĐƠN. Số tiền luôn lấy từ đơn hàng trong Database, client không gửi số tiền.",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_don_hang\": \"{{maDonHang}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"if (j.orderCode) pm.environment.set(\"orderCode\", j.orderCode);",
+									"pm.test(\"Có ảnh QR\", () => pm.expect(j.qrImageUrl).to.include(\"vietqr\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Kiểm tra trạng thái thanh toán",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/thanh-toan/kiem-tra/{{orderCode}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"thanh-toan",
+								"kiem-tra",
+								"{{orderCode}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Webhook với chữ ký sai (phải bị từ chối)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/thanh-toan/webhook",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"thanh-toan",
+								"webhook"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": {\n    \"orderCode\": 123,\n    \"amount\": 1000\n  },\n  \"signature\": \"chu-ky-gia-mao\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "06. Mã giảm giá — /api/ma-giam-gia",
+			"description": "",
+			"item": [
+				{
+					"name": "Danh sách voucher đang bật",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia?kich_hoat=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia"
+							],
+							"query": [
+								{
+									"key": "kich_hoat",
+									"value": "true"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Kiểm tra mã hợp lệ (TNTP3TR, đơn 25tr)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/kiem-tra",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"kiem-tra"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_code\": \"TNTP3TR\",\n  \"tong_tien_tam_tinh\": 25000000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 400 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Kiểm tra mã chưa đủ đơn tối thiểu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/kiem-tra",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"kiem-tra"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_code\": \"TNTP3TR\",\n  \"tong_tien_tam_tinh\": 5000000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Kiểm tra mã không tồn tại",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/kiem-tra",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"kiem-tra"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_code\": \"KHONGCO999\",\n  \"tong_tien_tam_tinh\": 1000000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 404\", () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Lưu voucher vào ví",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/luu-ma",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"luu-ma"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ma_code\": \"TNTP3TR\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 400 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Ví voucher của tôi",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/vi-cua-toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"vi-cua-toi"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Thêm voucher",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"vc-postman\",\n  \"ma_code\": \"POSTMAN10\",\n  \"tieu_de\": \"Giảm 10% tối đa 500K\",\n  \"loai_giam\": \"phan_tram\",\n  \"gia_tri_giam\": 10,\n  \"giam_toi_da\": 500000,\n  \"don_hang_toi_thieu\": 3000000,\n  \"kich_hoat\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 201 / 400\", () => pm.expect(pm.response.code).to.be.oneOf([201, 400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Tắt voucher",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/vc-postman",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"vc-postman"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"kich_hoat\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Xóa voucher",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ma-giam-gia/vc-postman",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ma-giam-gia",
+								"vc-postman"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "07. Đánh giá — /api/danh-gia",
+			"description": "",
+			"item": [
+				{
+					"name": "Đánh giá của một sản phẩm",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-gia/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-gia",
+								"{{productId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Gửi đánh giá mới",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-gia",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-gia"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id_san_pham\": \"{{productId}}\",\n  \"ho_ten\": \"Nguyễn Văn Test\",\n  \"so_sao\": 5,\n  \"tieu_de\": \"Máy chạy mượt\",\n  \"noi_dung\": \"Test đánh giá từ Postman.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 201\", () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"if (j._id) pm.environment.set(\"reviewId\", j._id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Thích đánh giá",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/danh-gia/{{reviewId}}/thich",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"danh-gia",
+								"{{reviewId}}",
+								"thich"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "08. Người dùng — /api/nguoi-dung",
+			"description": "",
+			"item": [
+				{
+					"name": "[Admin] Danh sách người dùng",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/nguoi-dung",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nguoi-dung"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Tìm theo email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/nguoi-dung?email={{email}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nguoi-dung"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "{{email}}"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"const u = Array.isArray(j) ? j[0] : j; if (u && u.id) pm.environment.set(\"userId\", u.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Khóa tài khoản",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nguoi-dung/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nguoi-dung",
+								"{{userId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"biKhoa\": true,\n  \"lyDoKhoa\": \"Test khóa từ Postman\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Admin] Mở khóa tài khoản",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nguoi-dung/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nguoi-dung",
+								"{{userId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"biKhoa\": false,\n  \"trangThai\": \"hoat_dong\",\n  \"lyDoKhoa\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "09. Tin tức — /api/tin-tuc",
+			"description": "",
+			"item": [
+				{
+					"name": "Danh sách tin tức",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"const d = j.duLieu || []; if (d[0]) pm.environment.set(\"newsId\", d[0].id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Tìm tin tức",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc?q=laptop",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc"
+							],
+							"query": [
+								{
+									"key": "q",
+									"value": "laptop"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Chi tiết tin (tăng lượt xem)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc/{{newsId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc",
+								"{{newsId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Thêm bài viết",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": \"tin-postman\",\n  \"tieu_de\": \"Bài viết thử từ Postman\",\n  \"tom_tat\": \"Tóm tắt bài viết thử\",\n  \"noi_dung\": \"<p>Nội dung</p>\",\n  \"chuyen_muc\": \"Tư Vấn Mua Sắm\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 201\", () => pm.expect(pm.response.code).to.be.oneOf([201]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Sửa bài viết",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc/tin-postman",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc",
+								"tin-postman"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"la_tieu_diem\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Xóa bài viết",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tin-tuc/tin-postman",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tin-tuc",
+								"tin-postman"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "10. Bảo hành — /api/bao-hanh",
+			"description": "",
+			"item": [
+				{
+					"name": "Tra cứu theo mã đơn",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/bao-hanh/tra-cuu?tu_khoa={{maDonHang}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bao-hanh",
+								"tra-cuu"
+							],
+							"query": [
+								{
+									"key": "tu_khoa",
+									"value": "{{maDonHang}}"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Tra cứu theo SĐT",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/bao-hanh/tra-cuu?tu_khoa=0901234567",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bao-hanh",
+								"tra-cuu"
+							],
+							"query": [
+								{
+									"key": "tu_khoa",
+									"value": "0901234567"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Từ khóa quá ngắn",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/bao-hanh/tra-cuu?tu_khoa=ab",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"bao-hanh",
+								"tra-cuu"
+							],
+							"query": [
+								{
+									"key": "tu_khoa",
+									"value": "ab"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Bị từ chối\", () => pm.expect(j.hop_le).to.eql(false));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "11. Liên hệ CSKH — /api/lien-he",
+			"description": "",
+			"item": [
+				{
+					"name": "Gửi yêu cầu tư vấn",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/lien-he",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"lien-he"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ho_ten\": \"Nguyễn Văn Test\",\n  \"so_dien_thoai\": \"0901234567\",\n  \"email\": \"{{email}}\",\n  \"chu_de\": \"Tư vấn mua Laptop Gaming & AI PC\",\n  \"noi_dung\": \"Tôi cần tư vấn laptop lập trình dưới 25 triệu.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 201\", () => pm.expect(pm.response.code).to.be.oneOf([201]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"if (j.du_lieu) pm.environment.set(\"maYeuCau\", j.du_lieu.ma_yeu_cau);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Danh sách phiếu (phân trang, lưu _id phiếu mới nhất)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/lien-he?trang=1&gioi_han=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"lien-he"
+							],
+							"query": [
+								{
+									"key": "trang",
+									"value": "1"
+								},
+								{
+									"key": "gioi_han",
+									"value": "10"
+								}
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"const d = j.du_lieu || []; if (d[0]) pm.environment.set(\"contactId\", d[0]._id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Cập nhật trạng thái phiếu",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/lien-he/{{contactId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"lien-he",
+								"{{contactId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"trang_thai\": \"dang_xu_ly\",\n  \"ghi_chu_noi_bo\": \"Đã gọi lại khách\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Xóa phiếu",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/lien-he/{{contactId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"lien-he",
+								"{{contactId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 404\", () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "12. Cài đặt showroom — /api/cai-dat",
+			"description": "",
+			"item": [
+				{
+					"name": "Danh sách showroom",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cai-dat/showroom",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cai-dat",
+								"showroom"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Khôi phục mặc định (đã ngừng — 410)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cai-dat/showroom/khoi-phuc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"cai-dat",
+								"showroom",
+								"khoi-phuc"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 410\", () => pm.expect(pm.response.code).to.be.oneOf([410]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "13. Trợ lý AI — /api/tro-ly-ai",
+			"description": "",
+			"item": [
+				{
+					"name": "Trạng thái AI (9Router + Gemini keys)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/tro-ly-ai/trang-thai",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tro-ly-ai",
+								"trang-thai"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Chat (JSON một lần)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tro-ly-ai/chat",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tro-ly-ai",
+								"chat"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tin_nhan\": \"Tư vấn laptop đồ họa dưới 25 triệu\",\n  \"lich_su_chat\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200 / 500\", () => pm.expect(pm.response.code).to.be.oneOf([200, 500]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Chat stream (NDJSON)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/tro-ly-ai/chat/stream",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"tro-ly-ai",
+								"chat",
+								"stream"
+							]
+						},
+						"description": "Response là nhiều dòng JSON; xem ở tab Body → Raw.",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tin_nhan\": \"Laptop gaming RTX 4060 nào đáng mua?\",\n  \"lich_su_chat\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "14. Giám sát máy chủ",
+			"description": "",
+			"item": [
+				{
+					"name": "Thông tin server",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": []
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Health check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "15. Kịch bản lỗi (chụp cho Chương 5)",
+			"description": "",
+			"item": [
+				{
+					"name": "400 — Đăng ký thiếu trường",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-ky",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-ky"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"hoTen\": \"A\",\n  \"email\": \"x\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "400 — Đăng nhập thiếu mật khẩu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 — Không gửi token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"toi"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 — Token giả mạo",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"toi"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "abc.def.ghi",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 — Sai mật khẩu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"khongtontai_test@example.com\",\n  \"matKhau\": \"sai123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "401 — Đặt hàng khi chưa đăng nhập",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"thong_tin_giao_hang\": {\n    \"so_dien_thoai\": \"0900000000\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "403 — Khách gọi API của Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham"
+							]
+						},
+						"description": "Cần chạy \"Đăng nhập khách hàng\" trước để có {{token}}.",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"ten_san_pham\": \"Không được phép\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 403\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "404 — Sản phẩm không tồn tại",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/san-pham/khong-ton-tai-xyz",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"san-pham",
+								"khong-ton-tai-xyz"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 404\", () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "404 — Route không tồn tại",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/khong-co-route",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"khong-co-route"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 404\", () => pm.expect(pm.response.code).to.be.oneOf([404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "16. Kịch bản bảo mật nâng cao (chụp cho Chương 5)",
+			"description": "Các kịch bản chứng minh cơ chế bảo mật. CHẠY THEO ĐÚNG THỨ TỰ. Một số request có ghi dữ liệu (khóa/mở khóa tài khoản, đăng xuất) — chạy thủ công từng request, không chạy Runner cả thư mục.\n\nCần biến: token (khách), adminToken, userId, maDonHang, maDonNguoiKhac (mã đơn của tài khoản khác), emailTest (tài khoản thử khóa đăng nhập).",
+			"item": [
+				{
+					"name": "BM01 — Xem đơn của người khác bằng token của mình (IDOR)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{maDonNguoiKhac}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{maDonNguoiKhac}}"
+							]
+						},
+						"description": "Đặt biến maDonNguoiKhac = mã một đơn thuộc tài khoản khác. Kỳ vọng 403.",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 403\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM02 — Khách tự đánh dấu \"đã thanh toán\" cho đơn của mình",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{maDonHang}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{maDonHang}}"
+							]
+						},
+						"description": "Trạng thái thanh toán chỉ do Webhook PayOS hoặc Admin cập nhật. Kỳ vọng 403.",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"da_thanh_toan\": true,\n  \"trang_thai_thanh_toan\": \"da_thanh_toan\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 403\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM03 — Tự nâng quyền Admin qua cập nhật hồ sơ (Mass Assignment)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/cap-nhat-ho-so",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"cap-nhat-ho-so"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"hoTen\": \"Lê Minh Trí\",\n  \"vaiTro\": \"admin\",\n  \"email\": \"doi-email@hack.vn\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"vaiTro vẫn là khach_hang\", () => pm.expect(j.nguoiDung.vaiTro).to.eql(\"khach_hang\"));",
+									"pm.test(\"Email không bị đổi\", () => pm.expect(j.nguoiDung.email).to.not.eql(\"doi-email@hack.vn\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM04 — Hồ sơ không lộ OTP / mật khẩu băm",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"toi"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Không có matKhau\", () => pm.expect(j.nguoiDung).to.not.have.property(\"matKhau\"));",
+									"pm.test(\"Không có maOtp, hanOtp\", () => { pm.expect(j.nguoiDung).to.not.have.property(\"maOtp\"); pm.expect(j.nguoiDung).to.not.have.property(\"hanOtp\"); });",
+									"pm.test(\"Không có tokenVersion\", () => pm.expect(j.nguoiDung).to.not.have.property(\"tokenVersion\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM05 — Nhập sai mật khẩu (gửi 6 lần → lần 6 bị khóa 15 phút)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "Dùng một tài khoản THỬ (biến emailTest), KHÔNG dùng tài khoản admin. Bấm Send 6 lần hoặc Runner 6 iterations: 5 lần đầu 401, lần thứ 6 trả 429. Sau 15 phút tự mở.",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{emailTest}}\",\n  \"matKhau\": \"SaiMatKhau123\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401 / 429\", () => pm.expect(pm.response.code).to.be.oneOf([401, 429]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"if (pm.response.code === 429) pm.test(\"Tài khoản bị tạm khóa đăng nhập\", () => pm.expect(j.thong_diep).to.include(\"khóa\"));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM06 — Nhập sai OTP quên mật khẩu (5 lần → mã bị hủy)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/xac-nhan-otp",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"xac-nhan-otp"
+							]
+						},
+						"description": "Gọi \"Quên mật khẩu\" cho emailTest trước. Gửi OTP sai 5 lần: thông báo đếm ngược \"còn N lần thử\", lần thứ 5 mã bị hủy.",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{emailTest}}\",\n  \"otp\": \"000000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Báo số lần còn lại / mã bị hủy\", () => pm.expect(j.thong_diep).to.match(/còn|hủy|hết hạn/));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM07 — Tra cứu đơn vượt giới hạn (Runner 31 iterations → 429)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/don-hang/{{maDonHang}}?sdt=0999999999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"don-hang",
+								"{{maDonHang}}"
+							],
+							"query": [
+								{
+									"key": "sdt",
+									"value": "0999999999"
+								}
+							]
+						},
+						"description": "Chạy Runner riêng request này với 31 iterations. 30 lần đầu 403, lần 31 trả 429 Too Many Requests.",
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 403 / 429\", () => pm.expect(pm.response.code).to.be.oneOf([403, 429]));",
+									"if (pm.response.code === 429) pm.test(\"Có header Retry-After\", () => pm.expect(pm.response.headers.has(\"Retry-After\")).to.eql(true));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM08 — [Admin] Khóa tài khoản khách hàng",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nguoi-dung/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nguoi-dung",
+								"{{userId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"biKhoa\": true,\n  \"trangThai\": \"bi_khoa\",\n  \"lyDoKhoa\": \"Kiểm thử bảo mật\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Đã khóa\", () => pm.expect(j.biKhoa).to.eql(true));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM09 — Token của tài khoản bị khóa không dùng được nữa",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"toi"
+							]
+						},
+						"description": "Ngay sau khi Admin khóa, token cũ bị thu hồi (tokenVersion tăng) → 401/403.",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401 / 403\", () => pm.expect(pm.response.code).to.be.oneOf([401, 403]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM10 — Đăng nhập tài khoản bị khóa",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"matKhau\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 403\", () => pm.expect(pm.response.code).to.be.oneOf([403]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM11 — [Admin] Mở khóa tài khoản khách hàng",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nguoi-dung/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nguoi-dung",
+								"{{userId}}"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"biKhoa\": false,\n  \"trangThai\": \"hoat_dong\",\n  \"lyDoKhoa\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM12 — Admin không thể tự khóa chính mình",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/nguoi-dung/{{adminId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"nguoi-dung",
+								"{{adminId}}"
+							]
+						},
+						"description": "Biến adminId được lưu khi chạy \"Đăng nhập Admin\".",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"biKhoa\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 400\", () => pm.expect(pm.response.code).to.be.oneOf([400]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM13 — Đăng nhập lại khách hàng (lấy token mới)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-nhap",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-nhap"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"{{email}}\",\n  \"matKhau\": \"{{password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"if (j.token) pm.environment.set(\"token\", j.token);",
+									"if (j.token) pm.environment.set(\"tokenCu\", j.token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM14 — Đăng xuất (thu hồi phiên trên server)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/dang-xuat",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"dang-xuat"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 200\", () => pm.expect(pm.response.code).to.be.oneOf([200]));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "BM15 — Dùng lại token cũ sau khi đăng xuất",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/toi",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"toi"
+							]
+						},
+						"description": "",
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{tokenCu}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Mã trạng thái 401\", () => pm.expect(pm.response.code).to.be.oneOf([401]));",
+									"let j = {}; try { j = pm.response.json(); } catch (e) {}",
+									"pm.test(\"Phiên đã bị thu hồi\", () => pm.expect(j.thong_diep).to.include(\"thu hồi\"));"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000"
+		}
+	]
+}

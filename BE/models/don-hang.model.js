@@ -93,8 +93,7 @@ const DonHangSchema = new mongoose.Schema(
         },
         payos_order_code: {
             type: Number,
-            default: null,
-            index: true
+            default: null
         },
         noi_dung_chuyen_khoan: {
             type: String,
@@ -121,7 +120,6 @@ const DonHangSchema = new mongoose.Schema(
 
 // Đánh Index tăng tốc độ truy vấn kiểm tra thanh toán tức thì
 DonHangSchema.index({ payos_order_code: 1 });
-DonHangSchema.index({ ma_don_hang: 1 });
 DonHangSchema.index({ id_nguoi_dung: 1 });
 DonHangSchema.index({ da_thanh_toan: 1 });
 

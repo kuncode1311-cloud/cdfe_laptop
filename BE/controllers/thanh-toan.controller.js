@@ -3,15 +3,28 @@ const DonHang = require('../models/don-hang.model');
 const { guiMailXacNhanDonHang } = require('../services/email.service');
 const { guiThongBaoDonHangTelegram } = require('../services/telegram-bot.service');
 
-// Thông tin cấu hình PayOS & MBBank
-const PAYOS_CLIENT_ID = process.env.PAYOS_CLIENT_ID || '8bfb42f3-2194-4060-bd73-2a7324c5e8f2';
-const PAYOS_API_KEY = process.env.PAYOS_API_KEY || 'b1a6aa76-06c1-41a7-b845-286a0503f9e7';
-const PAYOS_CHECKSUM_KEY = process.env.PAYOS_CHECKSUM_KEY || '5dbb3c6a481e5300eaca7bc99ba73bb2a652759e9ae6de73dcc0f3f6b7cad860';
+// Thông tin cấu hình PayOS & tài khoản nhận tiền phải lấy từ biến môi trường
 const PAYOS_ENDPOINT = process.env.PAYOS_ENDPOINT || 'https://api-merchant.payos.vn';
 
-const PAYMENT_BANK_BIN = process.env.PAYMENT_BANK_BIN || '970452'; // KienlongBank BIN
-const PAYMENT_BANK_ACCOUNT_NO = process.env.PAYMENT_BANK_ACCOUNT_NO || '0345151438';
-const PAYMENT_BANK_ACCOUNT_NAME = process.env.PAYMENT_BANK_ACCOUNT_NAME || 'LE MINH TRI';
+const layBienBatBuoc = (tenBien) => {
+    const giaTri = process.env[tenBien];
+    if (!giaTri) {
+        throw new Error(`Thiếu biến môi trường ${tenBien}`);
+    }
+    return giaTri;
+};
+
+const layCauHinhPayOS = () => ({
+    clientId: layBienBatBuoc('PAYOS_CLIENT_ID'),
+    apiKey: layBienBatBuoc('PAYOS_API_KEY'),
+    checksumKey: layBienBatBuoc('PAYOS_CHECKSUM_KEY')
+});
+
+const layCauHinhNganHang = () => ({
+    bin: layBienBatBuoc('PAYMENT_BANK_BIN'),
+    soTaiKhoan: layBienBatBuoc('PAYMENT_BANK_ACCOUNT_NO'),
+    tenChuTaiKhoan: layBienBatBuoc('PAYMENT_BANK_ACCOUNT_NAME')
+});
 
 /**
  * Tạo chữ ký HMAC SHA256 cho dữ liệu PayOS
@@ -58,9 +71,10 @@ const taoChuKyPayOS = (data, checksumKey) => {
  * Sinh link ảnh VietQR có sẵn số tiền và nội dung chuyển khoản tức thời (0ms)
  */
 const taoUrlVietQR = (bin, stk, tenTk, soTien, noiDung) => {
-    const bankBin = bin || PAYMENT_BANK_BIN;
-    const accountNo = stk || PAYMENT_BANK_ACCOUNT_NO;
-    const accountName = tenTk || PAYMENT_BANK_ACCOUNT_NAME;
+    const cauHinhNganHang = (!bin || !stk || !tenTk) ? layCauHinhNganHang() : null;
+    const bankBin = bin || cauHinhNganHang.bin;
+    const accountNo = stk || cauHinhNganHang.soTaiKhoan;
+    const accountName = tenTk || cauHinhNganHang.tenChuTaiKhoan;
     const amount = Math.max(0, Math.round(Number(soTien) || 0));
     const addInfo = encodeURIComponent(String(noiDung || 'TRIKUN THANH TOAN').slice(0, 25));
     const accName = encodeURIComponent(String(accountName).toUpperCase());
@@ -73,14 +87,65 @@ const taoUrlVietQR = (bin, stk, tenTk, soTien, noiDung) => {
  */
 const taoYeuCauThanhToanPayOS = async (req, res) => {
     try {
-        const { ma_don_hang, id_don_hang, tong_tien, ten_khach_hang } = req.body;
+        const ma_don_hang = typeof req.body.ma_don_hang === 'string' ? req.body.ma_don_hang.trim().slice(0, 50) : '';
+        const id_don_hang = typeof req.body.id_don_hang === 'string' ? req.body.id_don_hang.trim().slice(0, 50) : '';
+        const cauHinhPayOS = layCauHinhPayOS();
+        const cauHinhNganHang = layCauHinhNganHang();
 
-        const tongTienSo = Math.max(1000, Math.round(Number(tong_tien) || 0));
+        if (!ma_don_hang && !id_don_hang) {
+            return res.status(400).json({
+                success: false,
+                message: 'Vui lòng cung cấp mã đơn hàng hoặc ID đơn hàng.'
+            });
+        }
+
+        const dieuKienTim = [];
+        if (id_don_hang) dieuKienTim.push({ id: id_don_hang });
+        if (ma_don_hang) dieuKienTim.push({ ma_don_hang: ma_don_hang });
+        const donHang = await DonHang.findOne({ $or: dieuKienTim });
+
+        if (!donHang) {
+            return res.status(404).json({
+                success: false,
+                message: 'Không tìm thấy đơn hàng cần thanh toán.'
+            });
+        }
+
+        const laAdmin = req.user?.vaiTro === 'admin';
+        const userId = String(req.user?.id || req.user?._id || '');
+        const idChuDon = String(donHang.id_nguoi_dung || '');
+        const laChuDon = idChuDon
+            ? (idChuDon === userId || idChuDon === String(req.user?._id || ''))
+            : (!!req.user?.email && req.user.email.toLowerCase() === String(donHang.thong_tin_giao_hang?.email || '').toLowerCase());
+
+        if (!laAdmin && !laChuDon) {
+            return res.status(403).json({
+                success: false,
+                message: 'Bạn chỉ được tạo thanh toán cho đơn hàng của chính tài khoản mình.'
+            });
+        }
+
+        // Không tạo thanh toán lại cho đơn đã thanh toán hoặc đã hủy
+        if (donHang.da_thanh_toan || donHang.trang_thai_thanh_toan === 'da_thanh_toan') {
+            return res.status(409).json({ success: false, message: 'Đơn hàng này đã được thanh toán.' });
+        }
+        if (donHang.trang_thai === 'da_huy') {
+            return res.status(400).json({ success: false, message: 'Đơn hàng đã hủy, không thể thanh toán.' });
+        }
+
+        // Số tiền LUÔN lấy từ đơn hàng trong Database, không tin số tiền client gửi lên
+        const tongTienSo = Math.round(Number(donHang.tong_tien_thanh_toan || donHang.tong_tien) || 0);
+        if (tongTienSo < 1000) {
+            return res.status(400).json({
+                success: false,
+                message: 'Đơn hàng không có số tiền thanh toán hợp lệ.'
+            });
+        }
         
         // Tạo orderCode dạng số nguyên dương duy nhất cho PayOS
         let numericCode = 0;
-        if (ma_don_hang) {
-            const digits = String(ma_don_hang).replace(/\D/g, '');
+        if (donHang.ma_don_hang) {
+            const digits = String(donHang.ma_don_hang).replace(/\D/g, '');
             if (digits.length >= 4) {
                 numericCode = Number(digits.slice(-9));
             }
@@ -90,13 +155,13 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
         }
 
         // Nội dung thanh toán ngắn gọn tối đa 25 ký tự theo quy định PayOS
-        const noiDungChuyenKhoan = (ma_don_hang ? `TRIKUN ${ma_don_hang.slice(-6)}` : `TRIKUN ${numericCode}`).slice(0, 25);
+        const noiDungChuyenKhoan = (donHang.ma_don_hang ? `TRIKUN ${donHang.ma_don_hang.slice(-6)}` : `TRIKUN ${numericCode}`).slice(0, 25);
 
         // Chuẩn bị sẵn link VietQR tức thời (0ms) đảm bảo luôn có QR ngay cả khi mạng PayOS trễ
         let qrImageUrl = taoUrlVietQR(
-            PAYMENT_BANK_BIN,
-            PAYMENT_BANK_ACCOUNT_NO,
-            PAYMENT_BANK_ACCOUNT_NAME,
+            cauHinhNganHang.bin,
+            cauHinhNganHang.soTaiKhoan,
+            cauHinhNganHang.tenChuTaiKhoan,
             tongTienSo,
             noiDungChuyenKhoan
         );
@@ -115,15 +180,15 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
             cancelUrl: `${clientUrl}/thanh-toan?status=CANCELLED&orderCode=${numericCode}`
         };
 
-        payloadPayOS.signature = taoChuKyPayOS(payloadPayOS, PAYOS_CHECKSUM_KEY);
+        payloadPayOS.signature = taoChuKyPayOS(payloadPayOS, cauHinhPayOS.checksumKey);
 
         // Gọi cổng PayOS với timeout 2.2 giây để không làm treo giao diện khách
         try {
             const phanHoi = await fetchWithTimeout(`${PAYOS_ENDPOINT}/v2/payment-requests`, {
                 method: 'POST',
                 headers: {
-                    'x-client-id': PAYOS_CLIENT_ID,
-                    'x-api-key': PAYOS_API_KEY,
+                    'x-client-id': cauHinhPayOS.clientId,
+                    'x-api-key': cauHinhPayOS.apiKey,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(payloadPayOS)
@@ -136,9 +201,9 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
                 qrCode = duLieu.data.qrCode || '';
                 
                 qrImageUrl = taoUrlVietQR(
-                    duLieu.data.bin || PAYMENT_BANK_BIN,
-                    duLieu.data.accountNumber || PAYMENT_BANK_ACCOUNT_NO,
-                    duLieu.data.accountName || PAYMENT_BANK_ACCOUNT_NAME,
+                    duLieu.data.bin || cauHinhNganHang.bin,
+                    duLieu.data.accountNumber || cauHinhNganHang.soTaiKhoan,
+                    duLieu.data.accountName || cauHinhNganHang.tenChuTaiKhoan,
                     duLieu.data.amount || tongTienSo,
                     duLieu.data.description || noiDungChuyenKhoan
                 );
@@ -148,18 +213,16 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
         }
 
         // Cập nhật orderCode vào đơn hàng song song (không chặn luồng phản hồi)
-        if (id_don_hang || ma_don_hang) {
-            DonHang.updateOne(
-                { $or: [{ id: id_don_hang }, { ma_don_hang: ma_don_hang }] },
-                { 
-                    $set: { 
-                        payos_order_code: numericCode,
-                        noi_dung_chuyen_khoan: noiDungChuyenKhoan,
-                        trang_thai_thanh_toan: 'cho_thanh_toan'
-                    } 
+        DonHang.updateOne(
+            { _id: donHang._id },
+            {
+                $set: {
+                    payos_order_code: numericCode,
+                    noi_dung_chuyen_khoan: noiDungChuyenKhoan,
+                    trang_thai_thanh_toan: 'cho_thanh_toan'
                 }
-            ).catch(err => console.warn('⚠️ Lỗi update payos_order_code:', err.message));
-        }
+            }
+        ).catch(err => console.warn('⚠️ Lỗi update payos_order_code:', err.message));
 
         return res.status(200).json({
             success: true,
@@ -171,9 +234,9 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
             qrCode: qrCode,
             thongTinNganHang: {
                 nganHang: 'KienlongBank (Ngân Hàng Kiên Long)',
-                bin: PAYMENT_BANK_BIN,
-                soTaiKhoan: PAYMENT_BANK_ACCOUNT_NO,
-                tenChuTaiKhoan: PAYMENT_BANK_ACCOUNT_NAME,
+                bin: cauHinhNganHang.bin,
+                soTaiKhoan: cauHinhNganHang.soTaiKhoan,
+                tenChuTaiKhoan: cauHinhNganHang.tenChuTaiKhoan,
                 soTien: tongTienSo,
                 noiDung: noiDungChuyenKhoan
             },
@@ -183,7 +246,7 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
         console.error('❌ [PayOS Controller] Lỗi tạo yêu cầu thanh toán:', error);
         return res.status(500).json({
             success: false,
-            message: 'Lỗi máy chủ khi tạo thông tin thanh toán: ' + error.message
+            message: 'Lỗi máy chủ khi tạo thông tin thanh toán.'
         });
     }
 };
@@ -193,7 +256,7 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
  */
 const kiemTraTrangThaiPayOS = async (req, res) => {
     try {
-        const { orderCode } = req.params;
+        const orderCode = String(req.params.orderCode || '').trim().slice(0, 30);
         if (!orderCode) {
             return res.status(400).json({ success: false, message: 'Thiếu mã orderCode' });
         }
@@ -210,11 +273,12 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
         }).select('da_thanh_toan trang_thai_thanh_toan ma_don_hang payos_order_code').lean();
 
         if (donHangDB && (donHangDB.da_thanh_toan || donHangDB.trang_thai_thanh_toan === 'da_thanh_toan')) {
+            // Endpoint công khai: chỉ trả trạng thái, không trả thông tin đơn hàng
             return res.status(200).json({
                 success: true,
                 da_thanh_toan: true,
                 status: 'PAID',
-                donHang: donHangDB
+                ma_don_hang: donHangDB.ma_don_hang
             });
         }
 
@@ -235,16 +299,26 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
         let daThanhToan = false;
         let payosStatus = 'PENDING';
         let amountPaid = 0;
+        let cauHinhPayOS = null;
+
+        try {
+            cauHinhPayOS = layCauHinhPayOS();
+        } catch (configErr) {
+            console.warn('⚠️ [PayOS] Thiếu cấu hình nên bỏ qua truy vấn trạng thái:', configErr.message);
+        }
 
         // 3. Truy vấn trực tiếp API PayOS với timeout 1.8 giây
         try {
+            if (!cauHinhPayOS) {
+                throw new Error('Thiếu cấu hình PayOS');
+            }
             const resPayOS = await fetchWithTimeout(
                 `${PAYOS_ENDPOINT}/v2/payment-requests/${encodeURIComponent(orderCode)}`,
                 {
                     method: 'GET',
                     headers: {
-                        'x-client-id': PAYOS_CLIENT_ID,
-                        'x-api-key': PAYOS_API_KEY,
+                        'x-client-id': cauHinhPayOS.clientId,
+                        'x-api-key': cauHinhPayOS.apiKey,
                         'Content-Type': 'application/json'
                     }
                 },
@@ -304,7 +378,7 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
         console.error('❌ [PayOS Controller] Lỗi kiểm tra thanh toán:', error);
         return res.status(500).json({
             success: false,
-            message: 'Lỗi kiểm tra trạng thái thanh toán: ' + error.message
+            message: 'Lỗi kiểm tra trạng thái thanh toán.'
         });
     }
 };
@@ -318,10 +392,14 @@ const xuLyWebhookPayOS = async (req, res) => {
         if (!payload || !payload.data || !payload.signature) {
             return res.status(400).json({ success: false, message: 'Thiếu dữ liệu Webhook' });
         }
+        const cauHinhPayOS = layCauHinhPayOS();
 
         // Xác minh chữ ký PayOS
-        const chuKyTinh = taoChuKyPayOS(payload.data, PAYOS_CHECKSUM_KEY);
-        if (chuKyTinh !== payload.signature) {
+        const chuKyTinh = taoChuKyPayOS(payload.data, cauHinhPayOS.checksumKey);
+        const chuKyNhan = String(payload.signature || '');
+        const chuKyHopLe = chuKyNhan.length === chuKyTinh.length
+            && crypto.timingSafeEqual(Buffer.from(chuKyTinh), Buffer.from(chuKyNhan));
+        if (!chuKyHopLe) {
             console.warn('⚠️ [PayOS Webhook] Chữ ký không hợp lệ!');
             return res.status(400).json({ success: false, message: 'Chữ ký không hợp lệ' });
         }
@@ -329,6 +407,25 @@ const xuLyWebhookPayOS = async (req, res) => {
         const data = payload.data;
         const orderCode = data.orderCode;
         const amount = Number(data.amount) || 0;
+
+        if (String(data.code || '').toUpperCase() !== '00' || !orderCode || amount <= 0) {
+            return res.status(400).json({ success: false, message: 'Giao dịch chưa thành công hoặc dữ liệu không hợp lệ' });
+        }
+
+        const orderNum = Number(orderCode) || 0;
+        const donHang = await DonHang.findOne({ payos_order_code: orderNum });
+        if (!donHang) {
+            return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng tương ứng' });
+        }
+        // Idempotent: PayOS có thể gửi lại webhook nhiều lần → đơn đã thanh toán thì không xử lý lại
+        if (donHang.da_thanh_toan && donHang.trang_thai_thanh_toan === 'da_thanh_toan') {
+            return res.status(200).json({ success: true, message: 'Đơn hàng đã được xác nhận thanh toán trước đó' });
+        }
+        const soTienPhaiThu = Math.round(Number(donHang.tong_tien_thanh_toan) || 0);
+        if (Math.round(amount) !== soTienPhaiThu) {
+            console.warn(`⚠️ [PayOS Webhook] Sai số tiền cho orderCode ${orderCode}`);
+            return res.status(400).json({ success: false, message: 'Số tiền thanh toán không khớp đơn hàng' });
+        }
 
         console.log(`🔔 [PayOS Webhook] Giao dịch thành công! Mã đơn: ${orderCode}, Số tiền: ${amount}`);
 
@@ -339,7 +436,6 @@ const xuLyWebhookPayOS = async (req, res) => {
         });
 
         // Cập nhật Cache và Database ngay lập tức
-        const orderNum = Number(orderCode) || 0;
         const cacheKey = String(orderCode);
         boNhoDemPayOS.set(cacheKey, {
             timestamp: Date.now(),
@@ -349,12 +445,7 @@ const xuLyWebhookPayOS = async (req, res) => {
         });
 
         DonHang.findOneAndUpdate(
-            {
-                $or: [
-                    { payos_order_code: orderNum },
-                    { ma_don_hang: String(orderCode) }
-                ]
-            },
+            { _id: donHang._id },
             {
                 $set: {
                     da_thanh_toan: true,
@@ -375,7 +466,7 @@ const xuLyWebhookPayOS = async (req, res) => {
 
     } catch (error) {
         console.error('❌ [PayOS Webhook] Lỗi xử lý webhook:', error);
-        return res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: 'Lỗi xử lý webhook.' });
     }
 };
 

@@ -78,7 +78,11 @@ const napDuLieu = async () => {
             );
 
             // Thêm tài khoản Admin chuẩn
-            const adminPassHash = await bcrypt.hash('admin123', salt);
+            const adminPassword = process.env.ADMIN_PASSWORD;
+            if (!adminPassword) {
+                throw new Error('Thiếu ADMIN_PASSWORD. Không nạp tài khoản admin với mật khẩu mặc định.');
+            }
+            const adminPassHash = await bcrypt.hash(adminPassword, salt);
             usersWithHash.push({
                 id: 'usr_admin_01',
                 hoTen: 'Quản Trị Viên Hệ Thống',

@@ -474,8 +474,8 @@ export default function ModalDangNhapDangKy() {
         e.preventDefault();
         setThongBaoLoi('');
         const otpClean = maOtp.replace(/\s+/g, '');
-        if (!matKhau || matKhau.length < 6) {
-            setThongBaoLoi('Mật khẩu mới phải có tối thiểu 6 ký tự!');
+        if (!matKhau || matKhau.length < 8 || !/[A-Za-zÀ-ỹ]/.test(matKhau) || !/\d/.test(matKhau)) {
+            setThongBaoLoi('Mật khẩu phải có tối thiểu 8 ký tự, gồm cả chữ và số!');
             return;
         }
         if (matKhau !== matKhauXacNhan) {
@@ -532,8 +532,8 @@ export default function ModalDangNhapDangKy() {
             return;
         }
 
-        if (mkClean.length < 6) {
-            setThongBaoLoi('Mật khẩu phải có tối thiểu 6 ký tự!');
+        if (mkClean.length < 8 || !/[A-Za-zÀ-ỹ]/.test(mkClean) || !/\d/.test(mkClean)) {
+            setThongBaoLoi('Mật khẩu phải có tối thiểu 8 ký tự, gồm cả chữ và số!');
             return;
         }
 
@@ -1052,7 +1052,7 @@ export default function ModalDangNhapDangKy() {
                                                         value={matKhau}
                                                         onChange={(e) => setMatKhau(e.target.value)}
                                                         required
-                                                        placeholder="≥ 6 ký tự..."
+                                                        placeholder="≥ 8 ký tự, có chữ và số..."
                                                         className={`w-full pl-3 pr-8 py-2.5 rounded-xl border text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none transition-all ${
                                                             validationDangKy.errors.matKhau
                                                                 ? 'border-rose-500 bg-rose-50/40 dark:bg-rose-950/20 focus:ring-2 focus:ring-rose-500/20'
@@ -1377,7 +1377,7 @@ export default function ModalDangNhapDangKy() {
                                                     value={matKhau}
                                                     onChange={(e) => setMatKhau(e.target.value)}
                                                     required
-                                                    placeholder="Tối thiểu 6 ký tự..."
+                                                    placeholder="Tối thiểu 8 ký tự, có chữ và số..."
                                                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
                                                 />
                                                 <button

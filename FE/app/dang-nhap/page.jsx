@@ -212,8 +212,8 @@ export default function TrangDangNhap() {
                     return;
                 }
 
-                if (mkClean.length < 6) {
-                    toast.error('Mật khẩu phải có tối thiểu 6 ký tự!');
+                if (mkClean.length < 8 || !/[A-Za-zÀ-ỹ]/.test(mkClean) || !/\d/.test(mkClean)) {
+                    toast.error('Mật khẩu phải có tối thiểu 8 ký tự, gồm cả chữ và số!');
                     setDangXuLy(false);
                     return;
                 }

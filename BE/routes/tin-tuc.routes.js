@@ -1,4 +1,5 @@
 const express = require('express');
+const router = express.Router();
 const {
     layDanhSachTinTuc,
     layTinTucTheoIdHoacSlug,
@@ -6,15 +7,13 @@ const {
     capNhatTinTuc,
     xoaTinTuc
 } = require('../controllers/tin-tuc.controller');
-const { xacThucToken, chiAdmin } = require('../middleware/xac-thuc.middleware');
+const { xacThucToken, chiAdmin, nhanDienNguoiDungMem } = require('../middleware/xac-thuc.middleware');
 
-const router = express.Router();
+// Công khai: khách chỉ thấy bài đã xuất bản; Admin (có token) thấy cả bản nháp
+router.get('/', nhanDienNguoiDungMem, layDanhSachTinTuc);
+router.get('/:id', nhanDienNguoiDungMem, layTinTucTheoIdHoacSlug);
 
-// Công khai: đọc tin tức
-router.get('/', layDanhSachTinTuc);
-router.get('/:id', layTinTucTheoIdHoacSlug);
-
-// Chỉ Admin: soạn, sửa, xóa bài viết
+// Chỉ Admin: thêm, sửa, xóa bài viết
 router.post('/', xacThucToken, chiAdmin, themTinTuc);
 router.put('/:id', xacThucToken, chiAdmin, capNhatTinTuc);
 router.delete('/:id', xacThucToken, chiAdmin, xoaTinTuc);

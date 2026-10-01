@@ -25,7 +25,8 @@ const layDanhSachMaGiamGia = async (req, res) => {
 // 2. Kiểm tra tính hợp lệ của mã giảm giá
 const kiemTraMaGiamGia = async (req, res) => {
     try {
-        const { ma_code, tong_tien_tam_tinh } = req.body;
+        const { tong_tien_tam_tinh } = req.body;
+        const ma_code = typeof req.body.ma_code === 'string' ? req.body.ma_code.slice(0, 50) : '';
 
         if (!ma_code || !ma_code.trim()) {
             return res.status(400).json({
@@ -156,7 +157,7 @@ const xoaMaGiamGia = async (req, res) => {
 // 6. Lưu mã voucher vào ví của người dùng (Yêu cầu Token Đăng Nhập)
 const luuMaVoucherVaoVi = async (req, res) => {
     try {
-        const { ma_code } = req.body;
+        const ma_code = typeof req.body.ma_code === 'string' ? req.body.ma_code.slice(0, 50) : '';
         if (!ma_code) {
             return res.status(400).json({
                 thanhCong: false,
@@ -213,20 +214,33 @@ const luuMaVoucherVaoVi = async (req, res) => {
             });
         }
 
-        user.viVoucher.push(maChuan);
-        // Tăng phần trăm đã dùng và giảm số lượng còn lại một cách trực quan
-        if (voucher.so_luong_con_lai > 0) {
-            voucher.so_luong_con_lai -= 1;
-            if (voucher.so_luong_phat_hanh > 0) {
-                voucher.phan_tram_da_dung = Math.min(
-                    99,
-                    Math.round(((voucher.so_luong_phat_hanh - voucher.so_luong_con_lai) / voucher.so_luong_phat_hanh) * 100)
-                );
+        // Voucher giới hạn số lượng: trừ lượt bằng thao tác nguyên tử ($inc kèm điều kiện còn > 0)
+        // → nhiều người bấm "săn mã" cùng lúc cũng không thể vượt quá số lượng phát hành.
+        let voucherSauKhiLuu = voucher;
+        if (Number(voucher.so_luong_phat_hanh) > 0) {
+            voucherSauKhiLuu = await MaGiamGia.findOneAndUpdate(
+                { _id: voucher._id, so_luong_con_lai: { $gt: 0 } },
+                { $inc: { so_luong_con_lai: -1 } },
+                { new: true }
+            );
+            if (!voucherSauKhiLuu) {
+                return res.status(409).json({
+                    thanhCong: false,
+                    thanh_cong: false,
+                    thongBao: 'Rất tiếc, mã này đã hết lượt lưu!',
+                    thong_diep: 'Rất tiếc, mã này đã hết lượt lưu!'
+                });
             }
-            await voucher.save();
+            voucherSauKhiLuu.phan_tram_da_dung = Math.min(
+                99,
+                Math.round(((voucherSauKhiLuu.so_luong_phat_hanh - voucherSauKhiLuu.so_luong_con_lai) / voucherSauKhiLuu.so_luong_phat_hanh) * 100)
+            );
+            await voucherSauKhiLuu.save();
         }
 
-        await user.save();
+        // $addToSet: không bao giờ lưu trùng mã trong ví
+        await NguoiDung.updateOne({ _id: user._id }, { $addToSet: { viVoucher: maChuan } });
+        user.viVoucher.push(maChuan);
 
         console.log(`🎟️ [Ví Voucher] Người dùng ${user.email} đã lưu thành công mã: ${maChuan}`);
 
@@ -238,7 +252,7 @@ const luuMaVoucherVaoVi = async (req, res) => {
             thong_diep: `🎉 Săn mã thành công! Đã lưu "${maChuan}" vào Ví Voucher.`,
             ma_code: maChuan,
             viVoucher: user.viVoucher,
-            voucher
+            voucher: voucherSauKhiLuu
         });
     } catch (loi) {
         console.error('Lỗi lưu mã voucher vào ví:', loi);

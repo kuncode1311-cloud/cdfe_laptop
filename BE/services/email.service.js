@@ -4,6 +4,12 @@ const emailUser = process.env.EMAIL_USER || 'kun.code.1311@gmail.com';
 const brevoApiKey = process.env.BREVO_API_KEY;
 const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || emailUser;
 
+// Escape HTML cho dữ liệu người dùng nhập (họ tên, địa chỉ...) trước khi chèn vào email
+// → chống HTML Injection / chèn link lừa đảo vào email gửi từ tên miền của cửa hàng.
+const escapeHtml = (giaTri = '') => String(giaTri ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 if (!brevoApiKey) {
     console.warn('⚠️ Thiếu BREVO_API_KEY; chức năng gửi email sẽ không hoạt động trên production.');
 }
@@ -57,6 +63,7 @@ async function guiMailBangTransporter(mailOptions) {
  * Gửi email mã OTP Quên Mật Khẩu
  */
 async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
+    hoTen = escapeHtml(hoTen);
     const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -131,6 +138,7 @@ async function guiMailOTPQuenMatKhau(emailNhan, hoTen, maOtp) {
  * Gửi email mã OTP Đổi Mật Khẩu
  */
 async function guiMailOTPDoiMatKhau(emailNhan, hoTen, maOtp) {
+    hoTen = escapeHtml(hoTen);
     const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -205,6 +213,7 @@ async function guiMailOTPDoiMatKhau(emailNhan, hoTen, maOtp) {
  * Gửi email kích hoạt tài khoản
  */
 async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
+    hoTen = escapeHtml(hoTen);
     const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -272,14 +281,17 @@ async function guiMailKichHoatTaiKhoan(emailNhan, hoTen, maOtp) {
 async function guiMailXacNhanDonHang(donHang) {
     const emailNhan = donHang?.thong_tin_giao_hang?.email || donHang?.email;
     if (!emailNhan || !String(emailNhan).includes('@')) return { thanhCong: false, lyDo: 'Không có email' };
-    const tenKhach = donHang?.thong_tin_giao_hang?.ho_ten || donHang?.thong_tin_giao_hang?.ho_va_ten || 'Quý khách';
-    const maDon = donHang?.ma_don_hang || donHang?.id || 'LPN-ORDER';
+    const tt = donHang?.thong_tin_giao_hang || {};
+    const tenKhach = escapeHtml(tt.ho_ten || tt.ho_va_ten || 'Quý khách');
+    const sdtKhach = escapeHtml(tt.so_dien_thoai || '');
+    const diaChiKhach = escapeHtml([tt.dia_chi_chi_tiet, tt.phuong_xa, tt.quan_huyen, tt.tinh_thanh].filter(Boolean).join(', '));
+    const maDon = escapeHtml(donHang?.ma_don_hang || donHang?.id || 'LPN-ORDER');
     const tongTien = Number(donHang?.tong_tien_thanh_toan || 0).toLocaleString('vi-VN') + ' đ';
     const hinhThucTT = donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? 'Chuyển khoản Ngân hàng (VietQR Pro)' : 'Thanh toán tiền mặt khi nhận hàng (COD)';
     const trangThaiTT = donHang?.da_thanh_toan ? 'ĐÃ THANH TOÁN THÀNH CÔNG' : (donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? 'Chờ chuyển khoản VietQR' : 'Thanh toán khi nhận hàng');
 
     const danhSachItemHtml = (donHang?.danh_sach_san_pham || []).map(sp => {
-        const ten = sp.ten_san_pham || 'Laptop';
+        const ten = escapeHtml(sp.ten_san_pham || 'Laptop');
         const sl = sp.so_luong || 1;
         const gia = Number(sp.gia_hien_tai || sp.gia_tai_thoi_diem_them || sp.gia || 0).toLocaleString('vi-VN') + ' đ';
         const tongMuc = Number(sp.tong_tien_muc || (sp.gia_hien_tai || 0) * sl).toLocaleString('vi-VN') + ' đ';
@@ -326,9 +338,9 @@ async function guiMailXacNhanDonHang(donHang) {
 
                 <div style="background: #f8fafc; padding: 14px; border-radius: 12px; margin-bottom: 16px; font-size: 12.5px; line-height: 1.6; border: 1px solid #e2e8f0;">
                     <div><strong>Mã đơn hàng:</strong> <span class="order-badge">${maDon}</span></div>
-                    <div><strong>Thời gian đặt:</strong> ${donHang?.ngay_tao || new Date().toLocaleString('vi-VN')}</div>
-                    <div><strong>Người nhận:</strong> ${tenKhach} (${donHang?.thong_tin_giao_hang?.so_dien_thoai || ''})</div>
-                    <div><strong>Địa chỉ:</strong> ${[donHang?.thong_tin_giao_hang?.dia_chi_chi_tiet, donHang?.thong_tin_giao_hang?.phuong_xa, donHang?.thong_tin_giao_hang?.quan_huyen, donHang?.thong_tin_giao_hang?.tinh_thanh].filter(Boolean).join(', ')}</div>
+                    <div><strong>Thời gian đặt:</strong> ${escapeHtml(donHang?.ngay_tao || new Date().toLocaleString('vi-VN'))}</div>
+                    <div><strong>Người nhận:</strong> ${tenKhach} (${sdtKhach})</div>
+                    <div><strong>Địa chỉ:</strong> ${diaChiKhach}</div>
                     <div><strong>Hình thức:</strong> ${hinhThucTT}</div>
                     <div><strong>Trạng thái thanh toán:</strong> <span style="font-weight: 800; color: #0052cc;">${trangThaiTT}</span></div>
                 </div>

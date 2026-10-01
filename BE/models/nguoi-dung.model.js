@@ -110,6 +110,24 @@ const NguoiDungSchema = new mongoose.Schema(
             type: String,
             default: ''
         },
+        tokenVersion: {
+            type: Number,
+            default: 0
+        },
+        // Chống dò OTP: đếm số lần nhập sai, quá 5 lần thì hủy mã
+        soLanNhapSaiOtp: {
+            type: Number,
+            default: 0
+        },
+        // Chống dò mật khẩu: sai 5 lần liên tiếp thì tạm khóa đăng nhập 15 phút
+        soLanDangNhapSai: {
+            type: Number,
+            default: 0
+        },
+        khoaDangNhapDen: {
+            type: Date,
+            default: null
+        },
         ngayTao: {
             type: String,
             default: () => {
@@ -126,14 +144,20 @@ const NguoiDungSchema = new mongoose.Schema(
 
 // Phương thức so sánh mật khẩu plain text với hash
 NguoiDungSchema.methods.soSanhMatKhau = async function (matKhauNhap) {
-    if (!this.matKhau) return false;
+    if (!this.matKhau || typeof matKhauNhap !== 'string') return false;
     return await bcrypt.compare(matKhauNhap, this.matKhau);
 };
 
-// Loại bỏ trường matKhau khi serialize JSON sang client
+// Danh sách trường nhạy cảm KHÔNG BAO GIỜ được trả về client
+const TRUONG_NHAY_CAM = [
+    'matKhau', 'tokenVersion', 'maOtp', 'hanOtp', 'loaiOtp',
+    'soLanNhapSaiOtp', 'soLanDangNhapSai', 'khoaDangNhapDen'
+];
+
+// Loại bỏ mật khẩu băm, OTP và các bộ đếm bảo mật khi serialize JSON sang client
 NguoiDungSchema.methods.toJSON = function () {
     const obj = this.toObject();
-    delete obj.matKhau;
+    TRUONG_NHAY_CAM.forEach(truong => delete obj[truong]);
     return obj;
 };
 

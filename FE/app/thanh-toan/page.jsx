@@ -198,14 +198,6 @@ function NoiDungTrangThanhToan() {
 
     // Khi chuyển khoản PayOS thành công từ Modal QR
     const xuLyThanhToanThanhCongTuQR = async (donHangDaCapNhat) => {
-        try {
-            await DonHangService.capNhatDonHang(donHangDaCapNhat.id || donHangDaCapNhat.ma_don_hang, {
-                da_thanh_toan: true,
-                trang_thai_thanh_toan: 'da_thanh_toan'
-            });
-        } catch (e) {
-            console.warn('Lỗi cập nhật trạng thái đơn:', e);
-        }
         xoaSachGioHang();
         setDuLieuQRModal(null);
         setDonHangThanhCong(donHangDaCapNhat);

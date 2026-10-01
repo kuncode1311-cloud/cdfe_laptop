@@ -2,9 +2,35 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const NguoiDung = require('../models/nguoi-dung.model');
+const { chuoiAnToan, taoMaOtp, bamOtp, soSanhOtp, kiemTraMatKhauManh, laUrlAnhHopLe } = require('../utils/bao-mat');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'TNTP_LAPTOP_SECURITY_KEY_2026';
+const SO_LAN_SAI_OTP_TOI_DA = 5;
+const SO_LAN_SAI_MAT_KHAU_TOI_DA = 5;
+const THOI_GIAN_KHOA_DANG_NHAP_MS = 15 * 60 * 1000;
+// Hash giả để vẫn chạy bcrypt khi email không tồn tại → thời gian phản hồi như nhau, không dò được email
+const HASH_GIA = '$2b$10$Gw5l.mAWUO.QOC8XxlGBauOYQgNg2xW1vSAurXo1nCxBrGMUrVuE2';
+
+// Ghi nhận một lần nhập sai OTP; quá 5 lần thì hủy mã để chống dò 1.000.000 tổ hợp
+const ghiNhanNhapSaiOtp = async (user) => {
+    user.soLanNhapSaiOtp = Number(user.soLanNhapSaiOtp || 0) + 1;
+    if (user.soLanNhapSaiOtp >= SO_LAN_SAI_OTP_TOI_DA) {
+        user.maOtp = null;
+        user.hanOtp = null;
+        user.loaiOtp = null;
+        user.soLanNhapSaiOtp = 0;
+        await user.save();
+        return 'Bạn đã nhập sai OTP quá 5 lần. Mã đã bị hủy, vui lòng yêu cầu mã mới!';
+    }
+    await user.save();
+    return `Mã OTP không chính xác! Bạn còn ${SO_LAN_SAI_OTP_TOI_DA - user.soLanNhapSaiOtp} lần thử.`;
+};
+
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+
+if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET chưa được cấu hình trong biến môi trường.');
+}
 
 /**
  * Hàm trợ giúp tạo JSON Web Token (JWT)
@@ -14,7 +40,8 @@ const taoToken = (nguoiDung) => {
         {
             userId: nguoiDung.id,
             email: nguoiDung.email,
-            vaiTro: nguoiDung.vaiTro
+            vaiTro: nguoiDung.vaiTro,
+            tokenVersion: Number(nguoiDung.tokenVersion || 0)
         },
         JWT_SECRET,
         {
@@ -30,10 +57,10 @@ const dangKy = async (req, res) => {
     try {
         const { hoTen, email, soDienThoai, matKhau } = req.body;
 
-        const hoTenClean = String(hoTen || '').trim();
-        const emailClean = String(email || '').trim().toLowerCase();
-        const sdtClean = String(soDienThoai || '').trim().replace(/\s+/g, '');
-        const mkClean = String(matKhau || '').trim();
+        const hoTenClean = chuoiAnToan(hoTen, 100);
+        const emailClean = chuoiAnToan(email, 254).toLowerCase();
+        const sdtClean = chuoiAnToan(soDienThoai, 20).replace(/\s+/g, '');
+        const mkClean = typeof matKhau === 'string' ? matKhau : '';
 
         // 1. Kiểm tra thông tin bắt buộc
         if (!hoTenClean || !emailClean || !sdtClean || !mkClean) {
@@ -65,11 +92,10 @@ const dangKy = async (req, res) => {
             });
         }
 
-        // 5. Validate Mật khẩu
-        if (mkClean.length < 6) {
-            return res.status(400).json({
-                thong_diep: 'Mật khẩu phải có độ dài tối thiểu 6 ký tự!'
-            });
+        // 5. Validate Mật khẩu theo chính sách mật khẩu mạnh (≥ 8 ký tự, có chữ và số)
+        const loiMatKhau = kiemTraMatKhauManh(mkClean);
+        if (loiMatKhau) {
+            return res.status(400).json({ thong_diep: loiMatKhau });
         }
 
         // 6. Kiểm tra email đã tồn tại chưa trong bảng người dùng chính thức
@@ -84,8 +110,8 @@ const dangKy = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const matKhauHash = await bcrypt.hash(mkClean, salt);
 
-        // Sinh mã OTP 6 số ngẫu nhiên
-        const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        // Sinh mã OTP 6 số bằng crypto.randomInt (an toàn mật mã)
+        const maOtp = taoMaOtp();
         const hanOtp = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
 
         // LƯU VÀO BẢNG TẠM: TUYỆT ĐỐI KHÔNG LƯU VÀO NguoiDung KHI CHƯA XÁC THỰC OTP
@@ -102,16 +128,17 @@ const dangKy = async (req, res) => {
                     email: emailClean,
                     soDienThoai: sdtClean,
                     matKhau: matKhauHash,
-                    maOtp,
+                    maOtp: bamOtp(maOtp),           // Chỉ lưu bản băm của OTP
                     hanOtp,
                     loaiOtp: 'kich_hoat',
+                    soLanNhapSaiOtp: 0,
                     updatedAt: new Date()
                 }
             },
             { upsert: true }
         );
 
-        console.log(`✉️ [Đăng Ký - Lưu Bảng Tạm & Gửi OTP] Email: ${emailClean} | OTP: ${maOtp}`);
+        console.log(`✉️ [Đăng Ký] Đã tạo yêu cầu gửi OTP cho ${emailClean}`);
         const ketQuaGuiMail = await guiMailKichHoatTaiKhoan(emailClean, hoTenClean, maOtp);
         if (!ketQuaGuiMail.thanhCong) {
             return res.status(502).json({
@@ -140,19 +167,25 @@ const dangKy = async (req, res) => {
 // 1.1. Kích hoạt tài khoản bằng mã OTP
 const kichHoatTaiKhoan = async (req, res) => {
     try {
-        const { email, otp } = req.body;
-        if (!email || !otp) {
+        const emailChuan = chuoiAnToan(req.body.email, 254).toLowerCase();
+        const otpClean = chuoiAnToan(req.body.otp, 10);
+        if (!emailChuan || !otpClean) {
             return res.status(400).json({ thong_diep: 'Vui lòng cung cấp Email và mã OTP!' });
         }
 
-        const emailChuan = email.trim().toLowerCase();
-        const otpClean = String(otp).trim();
-
         // 1. Kiểm tra trong bảng tạm dang_ky_tam trước
-        const tempUser = await mongoose.connection.collection('dang_ky_tam').findOne({ email: emailChuan });
+        const bangTam = mongoose.connection.collection('dang_ky_tam');
+        const tempUser = await bangTam.findOne({ email: emailChuan });
         if (tempUser) {
-            if (String(tempUser.maOtp).trim() !== otpClean) {
-                return res.status(400).json({ thong_diep: 'Mã OTP không chính xác, vui lòng kiểm tra lại email!' });
+            if (!soSanhOtp(tempUser.maOtp, otpClean)) {
+                // Đếm số lần sai; sai quá 5 lần thì xóa đăng ký tạm, buộc đăng ký lại
+                const soLanSai = Number(tempUser.soLanNhapSaiOtp || 0) + 1;
+                if (soLanSai >= SO_LAN_SAI_OTP_TOI_DA) {
+                    await bangTam.deleteMany({ email: emailChuan });
+                    return res.status(400).json({ thong_diep: 'Bạn đã nhập sai OTP quá 5 lần. Vui lòng đăng ký lại để nhận mã mới!' });
+                }
+                await bangTam.updateOne({ _id: tempUser._id }, { $set: { soLanNhapSaiOtp: soLanSai } });
+                return res.status(400).json({ thong_diep: `Mã OTP không chính xác! Bạn còn ${SO_LAN_SAI_OTP_TOI_DA - soLanSai} lần thử.` });
             }
 
             if (tempUser.hanOtp && new Date() > new Date(tempUser.hanOtp)) {
@@ -205,8 +238,8 @@ const kichHoatTaiKhoan = async (req, res) => {
             return res.status(400).json({ thong_diep: 'Tài khoản này đã được kích hoạt từ trước rồi!' });
         }
 
-        if (!user.maOtp || user.maOtp !== otpClean) {
-            return res.status(400).json({ thong_diep: 'Mã OTP không chính xác, vui lòng kiểm tra lại email!' });
+        if (user.loaiOtp !== 'kich_hoat' || !soSanhOtp(user.maOtp, otpClean)) {
+            return res.status(400).json({ thong_diep: await ghiNhanNhapSaiOtp(user) });
         }
 
         if (new Date() > new Date(user.hanOtp)) {
@@ -219,6 +252,8 @@ const kichHoatTaiKhoan = async (req, res) => {
         user.maOtp = null;
         user.hanOtp = null;
         user.loaiOtp = null;
+        user.soLanNhapSaiOtp = 0;
+        user.tokenVersion = Number(user.tokenVersion || 0) + 1;
         await user.save();
 
         console.log(`🎉 [Kích Hoạt Tài Khoản Thành Công] Email: ${emailChuan}`);
@@ -240,15 +275,15 @@ const kichHoatTaiKhoan = async (req, res) => {
 // 2. Đăng nhập tài khoản
 const dangNhap = async (req, res) => {
     try {
-        const { email, matKhau } = req.body;
+        // Ép kiểu chuỗi: chặn payload kiểu { "matKhau": { "$ne": null } }
+        const emailChuan = chuoiAnToan(req.body.email, 254).toLowerCase();
+        const matKhau = typeof req.body.matKhau === 'string' ? req.body.matKhau : '';
 
-        if (!email || !matKhau) {
+        if (!emailChuan || !matKhau) {
             return res.status(400).json({
                 thong_diep: 'Vui lòng nhập đầy đủ Email và Mật khẩu!'
             });
         }
-
-        const emailChuan = email.trim().toLowerCase();
 
         // Tìm người dùng theo email hoặc username 'admin'
         let nguoiDung = await NguoiDung.findOne({
@@ -258,32 +293,37 @@ const dangNhap = async (req, res) => {
             ]
         });
 
-        // Nếu người dùng đăng nhập bằng admin/admin123 mà CSDL chưa có thì tự động khởi tạo
-        if (!nguoiDung && (emailChuan === 'admin' || emailChuan === 'admin@laptopnew.vn')) {
-            const salt = await bcrypt.genSalt(10);
-            const matKhauHash = await bcrypt.hash('admin123', salt);
-            nguoiDung = new NguoiDung({
-                id: 'admin_root',
-                hoTen: 'Quản Trị Viên Hệ Thống',
-                email: 'admin@laptopnew.vn',
-                soDienThoai: '0988888888',
-                matKhau: matKhauHash,
-                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-                vaiTro: 'admin',
-                hangThanhVien: 'Kim Cương'
-            });
-            await nguoiDung.save();
-        }
-
         if (!nguoiDung) {
+            // Vẫn chạy bcrypt với hash giả để thời gian phản hồi giống trường hợp sai mật khẩu
+            await bcrypt.compare(matKhau, HASH_GIA);
             return res.status(401).json({
                 thong_diep: 'Tài khoản hoặc Mật khẩu không chính xác!'
             });
         }
 
-        // Kiểm tra mật khẩu băm với bcrypt
-        const matKhauDung = await nguoiDung.soSanhMatKhau(matKhau);
+        // Tài khoản đang bị tạm khóa do nhập sai mật khẩu nhiều lần
+        if (nguoiDung.khoaDangNhapDen && nguoiDung.khoaDangNhapDen > new Date()) {
+            const soPhut = Math.ceil((nguoiDung.khoaDangNhapDen - Date.now()) / 60000);
+            res.setHeader('Retry-After', soPhut * 60);
+            return res.status(429).json({
+                thong_diep: `Tài khoản tạm khóa đăng nhập do nhập sai mật khẩu nhiều lần. Vui lòng thử lại sau ${soPhut} phút.`
+            });
+        }
+
+        // Kiểm tra mật khẩu băm với bcrypt.
+        // Tài khoản Google cũ từng dùng mật khẩu dạng "GoogleOAuth_<sub>" (đoán được) → luôn từ chối dạng này.
+        const matKhauDung = !matKhau.startsWith('GoogleOAuth_') && await nguoiDung.soSanhMatKhau(matKhau);
         if (!matKhauDung) {
+            nguoiDung.soLanDangNhapSai = Number(nguoiDung.soLanDangNhapSai || 0) + 1;
+            if (nguoiDung.soLanDangNhapSai >= SO_LAN_SAI_MAT_KHAU_TOI_DA) {
+                nguoiDung.khoaDangNhapDen = new Date(Date.now() + THOI_GIAN_KHOA_DANG_NHAP_MS);
+                nguoiDung.soLanDangNhapSai = 0;
+                await nguoiDung.save();
+                return res.status(429).json({
+                    thong_diep: 'Bạn đã nhập sai mật khẩu 5 lần. Tài khoản tạm khóa đăng nhập 15 phút để bảo vệ.'
+                });
+            }
+            await nguoiDung.save();
             return res.status(401).json({
                 thong_diep: 'Tài khoản hoặc Mật khẩu không chính xác!'
             });
@@ -296,6 +336,19 @@ const dangNhap = async (req, res) => {
                     ? `Tài khoản của bạn đã bị tạm khóa! Lý do: ${nguoiDung.lyDoKhoa}. Vui lòng liên hệ CSKH để được hỗ trợ.`
                     : 'Tài khoản của bạn hiện đang bị tạm khóa. Vui lòng liên hệ quản trị viên để được mở khóa!'
             });
+        }
+
+        if (nguoiDung.daKichHoat === false) {
+            return res.status(403).json({
+                thong_diep: 'Tài khoản chưa được kích hoạt. Vui lòng xác thực email bằng mã OTP!'
+            });
+        }
+
+        // Đăng nhập đúng → xóa bộ đếm sai
+        if (nguoiDung.soLanDangNhapSai || nguoiDung.khoaDangNhapDen) {
+            nguoiDung.soLanDangNhapSai = 0;
+            nguoiDung.khoaDangNhapDen = null;
+            await nguoiDung.save();
         }
 
         // Tạo JWT Token
@@ -340,7 +393,7 @@ const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 const dangNhapGoogle = async (req, res) => {
     try {
-        const { credential } = req.body;
+        const credential = chuoiAnToan(req.body.credential, 4096);
 
         if (!credential) {
             return res.status(400).json({ thong_diep: 'Vui lòng cung cấp Google credential hợp lệ!' });
@@ -357,6 +410,11 @@ const dangNhapGoogle = async (req, res) => {
                 audience: GOOGLE_CLIENT_ID
             });
             const payload = ticket.getPayload();
+
+            // Chỉ chấp nhận email đã được Google xác minh
+            if (!payload.email || payload.email_verified === false) {
+                return res.status(401).json({ thong_diep: 'Email Google chưa được xác minh!' });
+            }
 
             googleEmail   = payload.email;
             googleHoTen   = payload.name || payload.given_name || 'Google User';
@@ -380,8 +438,9 @@ const dangNhapGoogle = async (req, res) => {
 
         if (!nguoiDung) {
             // Tạo tài khoản mới từ Google
+            // Mật khẩu ngẫu nhiên 32 byte (không đoán được) cho tài khoản tạo từ Google
             const salt = await bcrypt.genSalt(10);
-            const matKhauHash = await bcrypt.hash('GoogleOAuth_' + googleSub, salt);
+            const matKhauHash = await bcrypt.hash(require('crypto').randomBytes(32).toString('hex'), salt);
             nguoiDung = new NguoiDung({
                 id: 'usr_gg_' + Date.now(),
                 hoTen: googleHoTen,
@@ -448,24 +507,24 @@ const dangNhapGoogle = async (req, res) => {
 // 5. Yêu cầu Quên Mật Khẩu (Gửi OTP qua Email)
 const yeuCauQuenMatKhau = async (req, res) => {
     try {
-        const { email } = req.body;
-        if (!email) {
+        const emailChuan = chuoiAnToan(req.body.email, 254).toLowerCase();
+        if (!emailChuan) {
             return res.status(400).json({ thong_diep: 'Vui lòng nhập địa chỉ Email!' });
         }
-
-        const emailChuan = email.trim().toLowerCase();
         const user = await NguoiDung.findOne({ email: emailChuan });
 
         if (!user) {
-            return res.status(404).json({
-                thong_diep: 'Không tìm thấy tài khoản nào liên kết với Email này trong hệ thống!'
+            return res.status(200).json({
+                thong_diep: 'Nếu email tồn tại trong hệ thống, mã xác thực sẽ được gửi đến hộp thư.',
+                daGuiEmail: true
             });
         }
 
         if (user.daKichHoat === false) {
-            const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            const maOtp = taoMaOtp();
             const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
-            user.maOtp = maOtp;
+            user.maOtp = bamOtp(maOtp);
+            user.soLanNhapSaiOtp = 0;
             user.hanOtp = hanOtp;
             user.loaiOtp = 'kich_hoat';
             await user.save();
@@ -481,15 +540,16 @@ const yeuCauQuenMatKhau = async (req, res) => {
         }
 
         // Sinh mã OTP 6 số ngẫu nhiên
-        const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const maOtp = taoMaOtp();
         const hanOtp = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
 
-        user.maOtp = maOtp;
+        user.maOtp = bamOtp(maOtp);
+        user.soLanNhapSaiOtp = 0;
         user.hanOtp = hanOtp;
         user.loaiOtp = 'quen_mat_khau';
         await user.save();
 
-        console.log(`🔑 [OTP Quên Mật Khẩu] Email: ${emailChuan} | Mã OTP: ${maOtp} (Hết hạn lúc: ${hanOtp.toLocaleTimeString()})`);
+        console.log(`🔑 [Quên Mật Khẩu] Đã tạo yêu cầu gửi OTP cho ${emailChuan}`);
 
         const ketQuaGuiMail = await guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp);
         if (!ketQuaGuiMail.thanhCong) {
@@ -513,21 +573,19 @@ const yeuCauQuenMatKhau = async (req, res) => {
 // 5.1. Gửi lại mã OTP (Hỗ trợ cả kích hoạt tài khoản và quên mật khẩu)
 const guiLaiOtp = async (req, res) => {
     try {
-        const { email } = req.body;
-        if (!email) {
+        const emailChuan = chuoiAnToan(req.body.email, 254).toLowerCase();
+        if (!emailChuan) {
             return res.status(400).json({ thong_diep: 'Vui lòng cung cấp Email!' });
         }
-
-        const emailChuan = email.trim().toLowerCase();
 
         // 1. Kiểm tra trong bảng tạm dang_ky_tam trước (trường hợp khách đang đăng ký và bấm gửi lại OTP)
         const tempUser = await mongoose.connection.collection('dang_ky_tam').findOne({ email: emailChuan });
         if (tempUser) {
-            const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            const maOtp = taoMaOtp();
             const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
             await mongoose.connection.collection('dang_ky_tam').updateOne(
                 { _id: tempUser._id },
-                { $set: { maOtp, hanOtp, updatedAt: new Date() } }
+                { $set: { maOtp: bamOtp(maOtp), hanOtp, soLanNhapSaiOtp: 0, updatedAt: new Date() } }
             );
             guiMailKichHoatTaiKhoan(emailChuan, tempUser.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
             return res.status(200).json({
@@ -541,22 +599,24 @@ const guiLaiOtp = async (req, res) => {
         const user = await NguoiDung.findOne({ email: emailChuan });
 
         if (!user) {
-            return res.status(404).json({
-                thong_diep: 'Không tìm thấy tài khoản nào liên kết với Email này trong hệ thống!'
+            return res.status(200).json({
+                thong_diep: 'Nếu email tồn tại trong hệ thống, mã xác thực sẽ được gửi đến hộp thư.',
+                daGuiEmail: true
             });
         }
 
         // Sinh mã OTP 6 số ngẫu nhiên mới
-        const maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const maOtp = taoMaOtp();
         const hanOtp = new Date(Date.now() + 10 * 60 * 1000); // 10 phút
 
         if (user.daKichHoat === false) {
-            user.maOtp = maOtp;
+            user.maOtp = bamOtp(maOtp);
+            user.soLanNhapSaiOtp = 0;
             user.hanOtp = hanOtp;
             user.loaiOtp = 'kich_hoat';
             await user.save();
 
-            console.log(`✉️ [BE - Gửi Lại OTP Kích Hoạt] Email: ${emailChuan} | OTP: ${maOtp}`);
+            console.log(`✉️ [Gửi Lại OTP Kích Hoạt] Đã tạo yêu cầu cho ${emailChuan}`);
             guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
 
             return res.status(200).json({
@@ -566,12 +626,13 @@ const guiLaiOtp = async (req, res) => {
             });
         }
 
-        user.maOtp = maOtp;
+        user.maOtp = bamOtp(maOtp);
+        user.soLanNhapSaiOtp = 0;
         user.hanOtp = hanOtp;
         user.loaiOtp = 'quen_mat_khau';
         await user.save();
 
-        console.log(`🔑 [BE - Gửi Lại OTP Quên Pass] Email: ${emailChuan} | OTP: ${maOtp}`);
+        console.log(`🔑 [Gửi Lại OTP Quên Mật Khẩu] Đã tạo yêu cầu cho ${emailChuan}`);
         guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
 
         return res.status(200).json({
@@ -591,20 +652,21 @@ const guiLaiOtp = async (req, res) => {
 // 6. Xác nhận mã OTP
 const xacNhanOtp = async (req, res) => {
     try {
-        const { email, otp } = req.body;
-        if (!email || !otp) {
+        const emailChuan = chuoiAnToan(req.body.email, 254).toLowerCase();
+        const otp = chuoiAnToan(req.body.otp, 10);
+        if (!emailChuan || !otp) {
             return res.status(400).json({ thong_diep: 'Vui lòng cung cấp Email và mã OTP!' });
         }
 
-        const emailChuan = email.trim().toLowerCase();
         const user = await NguoiDung.findOne({ email: emailChuan });
 
-        if (!user) {
-            return res.status(404).json({ thong_diep: 'Tài khoản không tồn tại!' });
+        if (!user || user.loaiOtp !== 'quen_mat_khau' || !user.maOtp) {
+            return res.status(400).json({ thong_diep: 'Mã OTP không chính xác hoặc đã hết hạn!' });
         }
 
-        if (!user.maOtp || user.maOtp !== otp.trim()) {
-            return res.status(400).json({ thong_diep: 'Mã OTP không chính xác, vui lòng kiểm tra lại!' });
+        // OTP chỉ dùng đúng mục đích "quên mật khẩu"; sai thì đếm lần, quá 5 lần hủy mã
+        if (!soSanhOtp(user.maOtp, otp)) {
+            return res.status(400).json({ thong_diep: await ghiNhanNhapSaiOtp(user) });
         }
 
         if (new Date() > new Date(user.hanOtp)) {
@@ -624,24 +686,26 @@ const xacNhanOtp = async (req, res) => {
 // 7. Đặt lại mật khẩu mới với OTP
 const datLaiMatKhau = async (req, res) => {
     try {
-        const { email, otp, matKhauMoi } = req.body;
-        if (!email || !otp || !matKhauMoi) {
+        const emailChuan = chuoiAnToan(req.body.email, 254).toLowerCase();
+        const otp = chuoiAnToan(req.body.otp, 10);
+        const matKhauMoi = typeof req.body.matKhauMoi === 'string' ? req.body.matKhauMoi : '';
+        if (!emailChuan || !otp || !matKhauMoi) {
             return res.status(400).json({ thong_diep: 'Vui lòng cung cấp đầy đủ thông tin!' });
         }
 
-        if (matKhauMoi.length < 6) {
-            return res.status(400).json({ thong_diep: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' });
+        const loiMatKhau = kiemTraMatKhauManh(matKhauMoi);
+        if (loiMatKhau) {
+            return res.status(400).json({ thong_diep: loiMatKhau });
         }
 
-        const emailChuan = email.trim().toLowerCase();
         const user = await NguoiDung.findOne({ email: emailChuan });
 
-        if (!user) {
-            return res.status(404).json({ thong_diep: 'Tài khoản không tồn tại!' });
+        if (!user || user.loaiOtp !== 'quen_mat_khau' || !user.maOtp) {
+            return res.status(400).json({ thong_diep: 'Mã OTP không hợp lệ hoặc đã hết hạn!' });
         }
 
-        if (!user.maOtp || user.maOtp !== otp.trim()) {
-            return res.status(400).json({ thong_diep: 'Mã OTP không hợp lệ!' });
+        if (!soSanhOtp(user.maOtp, otp)) {
+            return res.status(400).json({ thong_diep: await ghiNhanNhapSaiOtp(user) });
         }
 
         if (new Date() > new Date(user.hanOtp)) {
@@ -654,6 +718,10 @@ const datLaiMatKhau = async (req, res) => {
         user.maOtp = null;
         user.hanOtp = null;
         user.loaiOtp = null;
+        user.soLanNhapSaiOtp = 0;
+        user.soLanDangNhapSai = 0;
+        user.khoaDangNhapDen = null;
+        user.tokenVersion = Number(user.tokenVersion || 0) + 1; // Thu hồi mọi phiên đăng nhập cũ
         await user.save();
 
         console.log(`✅ [Đổi Mật Khẩu Thành Công] User: ${emailChuan}`);
@@ -683,12 +751,41 @@ const capNhatHoSo = async (req, res) => {
             return res.status(404).json({ thong_diep: 'Không tìm thấy người dùng!' });
         }
 
-        if (duLieu.hoTen) user.hoTen = duLieu.hoTen.trim();
-        if (duLieu.soDienThoai !== undefined) user.soDienThoai = duLieu.soDienThoai.trim();
-        if (duLieu.avatar !== undefined) user.avatar = typeof duLieu.avatar === 'string' ? duLieu.avatar.trim() : '';
-        if (duLieu.gioiTinh) user.gioiTinh = duLieu.gioiTinh;
-        if (duLieu.ngaySinh !== undefined) user.ngaySinh = duLieu.ngaySinh;
-        if (Array.isArray(duLieu.danhSachDiaChi)) user.danhSachDiaChi = duLieu.danhSachDiaChi;
+        // Chỉ nhận đúng các trường hồ sơ cho phép (chống Mass Assignment: không thể tự đổi vaiTro, email...)
+        const hoTenMoi = chuoiAnToan(duLieu.hoTen, 100);
+        if (hoTenMoi) {
+            if (hoTenMoi.length < 2) return res.status(400).json({ thong_diep: 'Họ và tên phải có tối thiểu 2 ký tự!' });
+            user.hoTen = hoTenMoi;
+        }
+        if (duLieu.soDienThoai !== undefined) {
+            const sdtMoi = chuoiAnToan(duLieu.soDienThoai, 20).replace(/\s+/g, '');
+            if (sdtMoi && !/^(0|\+84)[0-9]{9}$/.test(sdtMoi)) {
+                return res.status(400).json({ thong_diep: 'Số điện thoại không hợp lệ!' });
+            }
+            user.soDienThoai = sdtMoi;
+        }
+        if (duLieu.avatar !== undefined) {
+            const avatarMoi = chuoiAnToan(duLieu.avatar, 500);
+            if (avatarMoi && !laUrlAnhHopLe(avatarMoi)) {
+                return res.status(400).json({ thong_diep: 'Đường dẫn ảnh đại diện không hợp lệ!' });
+            }
+            user.avatar = avatarMoi;
+        }
+        if (['nam', 'nu', 'khac'].includes(duLieu.gioiTinh)) user.gioiTinh = duLieu.gioiTinh;
+        if (duLieu.ngaySinh !== undefined) user.ngaySinh = chuoiAnToan(duLieu.ngaySinh, 20);
+        if (Array.isArray(duLieu.danhSachDiaChi)) {
+            user.danhSachDiaChi = duLieu.danhSachDiaChi.slice(0, 10).map((dc = {}) => ({
+                ...(dc.id ? { id: chuoiAnToan(dc.id, 50) } : {}),
+                hoTen: chuoiAnToan(dc.hoTen, 100),
+                soDienThoai: chuoiAnToan(dc.soDienThoai, 20),
+                diaChiChiTiet: chuoiAnToan(dc.diaChiChiTiet, 255),
+                tinhThanh: chuoiAnToan(dc.tinhThanh, 100),
+                quanHuyen: chuoiAnToan(dc.quanHuyen, 100),
+                phuongXa: chuoiAnToan(dc.phuongXa, 100),
+                macDinh: dc.macDinh === true,
+                loaiDiaChi: dc.loaiDiaChi === 'van_phong' ? 'van_phong' : 'nha_rieng'
+            }));
+        }
 
         await user.save();
 
@@ -715,7 +812,7 @@ const guiOtpDoiMatKhau = async (req, res) => {
         // Bắt buộc kiểm tra mật khẩu hiện tại nếu tài khoản có mật khẩu
         const { matKhauCu } = req.body || {};
         if (user.matKhau && user.authProvider !== 'google') {
-            if (!matKhauCu || !matKhauCu.trim()) {
+            if (typeof matKhauCu !== 'string' || !matKhauCu.trim()) {
                 return res.status(400).json({ thong_diep: 'Vui lòng nhập mật khẩu hiện tại đang dùng!' });
             }
             const hopLe = await bcrypt.compare(matKhauCu, user.matKhau);
@@ -724,12 +821,14 @@ const guiOtpDoiMatKhau = async (req, res) => {
             }
         }
 
-        user.maOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const maOtp = taoMaOtp();
+        user.maOtp = bamOtp(maOtp);
         user.hanOtp = new Date(Date.now() + 10 * 60 * 1000);
         user.loaiOtp = 'doi_mat_khau';
+        user.soLanNhapSaiOtp = 0;
         await user.save();
 
-        const ketQua = await guiMailOTPDoiMatKhau(user.email, user.hoTen, user.maOtp);
+        const ketQua = await guiMailOTPDoiMatKhau(user.email, user.hoTen, maOtp);
         if (!ketQua.thanhCong) {
             console.error('⚠️ [BE] Lỗi gửi email OTP:', ketQua.loi);
             return res.status(502).json({ thong_diep: 'Không thể gửi mã OTP qua email. Vui lòng thử lại sau.' });
@@ -747,8 +846,9 @@ const doiMatKhau = async (req, res) => {
         const userId = req.user.id || req.user.userId || req.user._id;
         const { matKhauMoi, otp, matKhauCu } = req.body || {};
 
-        if (!matKhauMoi || matKhauMoi.length < 6) {
-            return res.status(400).json({ thong_diep: 'Mật khẩu mới phải có tối thiểu 6 ký tự!' });
+        const loiMatKhau = kiemTraMatKhauManh(matKhauMoi);
+        if (loiMatKhau) {
+            return res.status(400).json({ thong_diep: loiMatKhau });
         }
 
         const dieuKienTimUser = [{ id: userId }, { email: req.user?.email }];
@@ -761,7 +861,7 @@ const doiMatKhau = async (req, res) => {
 
         // Bắt buộc kiểm tra mật khẩu cũ nếu tài khoản có mật khẩu
         if (user.matKhau && user.authProvider !== 'google') {
-            if (!matKhauCu || !matKhauCu.trim()) {
+            if (typeof matKhauCu !== 'string' || !matKhauCu.trim()) {
                 return res.status(400).json({ thong_diep: 'Vui lòng nhập mật khẩu hiện tại đang dùng!' });
             }
             const hopLe = await bcrypt.compare(matKhauCu, user.matKhau);
@@ -770,8 +870,11 @@ const doiMatKhau = async (req, res) => {
             }
         }
 
-        if (!otp || user.loaiOtp !== 'doi_mat_khau' || user.maOtp !== String(otp).trim() || !user.hanOtp || user.hanOtp < new Date()) {
+        if (!otp || user.loaiOtp !== 'doi_mat_khau' || !user.hanOtp || user.hanOtp < new Date()) {
             return res.status(400).json({ thong_diep: 'Mã xác thực không đúng hoặc đã hết hạn.' });
+        }
+        if (!soSanhOtp(user.maOtp, chuoiAnToan(otp, 10))) {
+            return res.status(400).json({ thong_diep: await ghiNhanNhapSaiOtp(user) });
         }
 
         // Băm mật khẩu mới với bcrypt
@@ -781,12 +884,17 @@ const doiMatKhau = async (req, res) => {
         user.maOtp = null;
         user.hanOtp = null;
         user.loaiOtp = null;
+        user.soLanNhapSaiOtp = 0;
+        user.tokenVersion = Number(user.tokenVersion || 0) + 1;
         await user.save();
 
         console.log(`🔒 [Thiết Lập / Đổi Mật Khẩu Thành Công] User: ${user.email}`);
 
+        const token = taoToken(user);
+
         return res.status(200).json({
             thanhCong: true,
+            token,
             thong_diep: 'Thiết lập mật khẩu thành công! Giờ đây bạn có thể dùng mật khẩu này để đăng nhập.'
         });
     } catch (loi) {
@@ -798,11 +906,10 @@ const doiMatKhau = async (req, res) => {
 // 10. Đăng xuất tài khoản và thu hồi phiên trên Database
 const dangXuat = async (req, res) => {
     try {
-        const authHeader = req.headers.authorization || '';
-        const token = authHeader.replace('Bearer ', '').trim();
-        if (token && token.length > 5) {
-            await mongoose.connection.collection('nguoi_dung').updateOne({ token }, { $unset: { token: "" } });
-        }
+        await NguoiDung.updateOne(
+            { _id: req.user._id },
+            { $inc: { tokenVersion: 1 } }
+        );
         return res.status(200).json({ thanh_cong: true, thong_diep: 'Đăng xuất và thu hồi phiên thành công!' });
     } catch (loi) {
         return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi đăng xuất', chi_tiet: loi.message });

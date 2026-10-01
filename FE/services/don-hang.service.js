@@ -126,10 +126,8 @@ export const DonHangService = {
                 donHangMoi = ketQuaServer;
             }
         } catch (err) {
-            if (err.status === 400 || err.status === 401 || err.status === 403) {
-                throw err;
-            }
-            console.warn('⚠️ Lỗi kết nối Express API khi tạo đơn hàng, lưu an toàn vào LocalStorage:', err.message);
+            console.warn('Không thể tạo đơn hàng trên máy chủ:', err.message);
+            throw err;
         }
 
         // 2. Lưu đồng thời vào LocalStorage để truy xuất tức thời

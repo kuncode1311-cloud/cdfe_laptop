@@ -46,8 +46,12 @@ const migrateUsers = async () => {
         // 3. Đảm bảo luôn có 1 tài khoản Admin chính thức
         const adminDaCo = await NguoiDung.findOne({ email: 'admin@laptopnew.vn' });
         if (!adminDaCo) {
+            const adminPassword = process.env.ADMIN_PASSWORD;
+            if (!adminPassword) {
+                throw new Error('Thiếu ADMIN_PASSWORD. Không tự khởi tạo tài khoản admin với mật khẩu mặc định.');
+            }
             const salt = await bcrypt.genSalt(10);
-            const adminPassHash = await bcrypt.hash('admin123', salt);
+            const adminPassHash = await bcrypt.hash(adminPassword, salt);
 
             const adminMoi = new NguoiDung({
                 id: 'usr_admin_01',
@@ -61,7 +65,7 @@ const migrateUsers = async () => {
             });
 
             await adminMoi.save();
-            console.log('  👑 Đã khởi tạo tài khoản Admin mặc định: admin@laptopnew.vn (Mật khẩu: admin123)');
+            console.log('  👑 Đã khởi tạo tài khoản Admin từ biến môi trường ADMIN_PASSWORD.');
         } else if (adminDaCo.vaiTro !== 'admin') {
             adminDaCo.vaiTro = 'admin';
             await adminDaCo.save();

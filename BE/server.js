@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const ketNoiCoSoDuLieu = require('./config/db');
+const { datHeaderBaoMat, chongNoSqlInjection } = require('./middleware/bao-mat.middleware');
+const { gioiHanRequest } = require('./middleware/gioi-han-request.middleware');
 
 // 1. Nạp biến môi trường từ .env
 // Reloaded: 2026-09-15 19:22
@@ -10,6 +12,12 @@ dotenv.config();
 // 2. Khởi tạo ứng dụng Express
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Railway/production đặt ứng dụng sau một reverse proxy; cấu hình này giúp req.ip
+// phản ánh đúng IP khách mà không tin tùy tiện toàn bộ chuỗi X-Forwarded-For.
+if (process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+}
 
 // 3. Kết nối Cơ sở dữ liệu MongoDB Atlas
 ketNoiCoSoDuLieu();
@@ -28,12 +36,33 @@ app.use(cors({
     },
     credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Bảo mật toàn cục: ẩn công nghệ server, thêm security headers, lọc NoSQL Injection
+app.disable('x-powered-by');
+app.use(datHeaderBaoMat);
+app.use(chongNoSqlInjection);
+// Giới hạn tần suất toàn cục: tối đa 300 request / phút / IP cho mọi API (chống spam, DoS mức ứng dụng)
+app.use('/api', gioiHanRequest({ windowMs: 60 * 1000, max: 300, message: 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.' }));
+
+// Không trả stack/thông báo lỗi từ database hoặc SDK ra ngoài ở production.
+app.use((req, res, next) => {
+    const jsonGoc = res.json.bind(res);
+    res.json = (payload) => {
+        if (process.env.NODE_ENV === 'production' && res.statusCode >= 400 && payload && typeof payload === 'object') {
+            const payloadAnToan = { ...payload };
+            delete payloadAnToan.chi_tiet;
+            return jsonGoc(payloadAnToan);
+        }
+        return jsonGoc(payload);
+    };
+    next();
+});
 
 // Log request đơn giản
 app.use((req, res, next) => {
-    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.originalUrl}`);
+    console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.path}`);
     next();
 });
 
@@ -101,11 +130,25 @@ app.use((req, res) => {
 
 // 10. Xử lý lỗi hệ thống tổng quát (500)
 app.use((err, req, res, next) => {
+    // Lỗi do client gửi sai: JSON hỏng, body quá lớn, origin không được phép → không phải lỗi 500
+    if (err.type === 'entity.parse.failed') {
+        return res.status(400).json({ thong_diep: 'Dữ liệu JSON gửi lên không hợp lệ!' });
+    }
+    if (err.type === 'entity.too.large') {
+        return res.status(413).json({ thong_diep: 'Dữ liệu gửi lên vượt quá giới hạn 1MB!' });
+    }
+    if (String(err.message || '').startsWith('CORS')) {
+        return res.status(403).json({ thong_diep: 'Origin không được phép truy cập API này.' });
+    }
+
     console.error('❌ Lỗi máy chủ chưa được bắt:', err.stack);
-    res.status(500).json({
-        thong_diep: 'Đã xảy ra lỗi nội bộ trên máy chủ!',
-        chi_tiet: err.message
-    });
+    const payload = {
+        thong_diep: 'Đã xảy ra lỗi nội bộ trên máy chủ!'
+    };
+    if (process.env.NODE_ENV !== 'production') {
+        payload.chi_tiet = err.message;
+    }
+    res.status(500).json(payload);
 });
 
 // 11. Khởi chạy Server

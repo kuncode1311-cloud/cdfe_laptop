@@ -1,5 +1,6 @@
 const SanPham = require('../models/san-pham.model');
 const taoSlug = require('../utils/tao-slug');
+const { escapeRegex, chuoiAnToan } = require('../utils/bao-mat');
 
 /**
  * Controller xử lý nghiệp vụ cho Sản phẩm Laptop
@@ -29,7 +30,8 @@ const layTatCaSanPham = async (req, res) => {
         const filter = {};
 
         // Tìm kiếm theo từ khóa
-        const keyword = tu_khoa || q;
+        // Escape từ khóa: người dùng gõ ký tự đặc biệt như '(a+)+$' không làm treo server (ReDoS)
+        const keyword = escapeRegex(chuoiAnToan(tu_khoa || q, 100));
         if (keyword) {
             filter.$or = [
                 { ten_san_pham: { $regex: keyword, $options: 'i' } },
@@ -42,21 +44,21 @@ const layTatCaSanPham = async (req, res) => {
 
         // Lọc theo hãng sản xuất
         if (hang_san_xuat) {
-            const brands = hang_san_xuat.split(',').map(b => b.trim().toLowerCase());
+            const brands = String(hang_san_xuat).split(',').slice(0, 20).map(b => b.trim().toLowerCase());
             filter.hang_san_xuat = { $in: brands };
         }
 
         // Lọc theo danh mục
         if (danh_muc) {
-            const cats = danh_muc.split(',').map(c => c.trim().toLowerCase());
+            const cats = String(danh_muc).split(',').slice(0, 20).map(c => c.trim().toLowerCase());
             filter.danh_muc = { $in: cats };
         }
 
         // Lọc theo khoảng giá
         if (gia_min !== undefined || gia_max !== undefined) {
             filter.gia_khuyen_mai = {};
-            if (gia_min !== undefined) filter.gia_khuyen_mai.$gte = Number(gia_min);
-            if (gia_max !== undefined) filter.gia_khuyen_mai.$lte = Number(gia_max);
+            if (gia_min !== undefined && Number.isFinite(Number(gia_min))) filter.gia_khuyen_mai.$gte = Number(gia_min);
+            if (gia_max !== undefined && Number.isFinite(Number(gia_max))) filter.gia_khuyen_mai.$lte = Number(gia_max);
         }
 
         // Lọc đặc biệt
@@ -83,8 +85,10 @@ const layTatCaSanPham = async (req, res) => {
         let query = SanPham.find(filter).sort(sortOption);
 
         // Giới hạn số lượng
-        if (limit) {
-            query = query.limit(Number(limit));
+        // Giới hạn tối đa 200 bản ghi mỗi lần gọi để tránh bị lấy dữ liệu hàng loạt
+        const soLuong = Math.floor(Number(limit));
+        if (soLuong > 0) {
+            query = query.limit(Math.min(soLuong, 200));
         }
 
         const danhSachSanPham = await query;
@@ -102,7 +106,8 @@ const laySanPhamTheoId = async (req, res) => {
 
     try {
         const { id } = req.params;
-        const decodedId = decodeURIComponent(id).trim();
+        let decodedId = String(id).slice(0, 200).trim();
+        try { decodedId = decodeURIComponent(decodedId).trim(); } catch (e) { /* giữ nguyên nếu URI hỏng */ }
         const slugId = decodedId
             .toLowerCase()
             .replace(/đ/g, 'd')
@@ -118,8 +123,7 @@ const laySanPhamTheoId = async (req, res) => {
                 { slug: slugId },
                 { id: decodedId },
                 { id: slugId },
-                { ma_san_pham: { $regex: `^${decodedId}$`, $options: 'i' } },
-                { ma_san_pham: { $regex: `^${id}$`, $options: 'i' } }
+                { ma_san_pham: { $regex: `^${escapeRegex(decodedId)}$`, $options: 'i' } }
             ]
         });
 
@@ -132,7 +136,7 @@ const laySanPhamTheoId = async (req, res) => {
         if (!sanPham) {
             const words = decodedId.split(/[\s-]+/).filter(w => w.length > 1);
             if (words.length >= 2) {
-                const regexPattern = words.map(w => `(?=.*${w})`).join('');
+                const regexPattern = words.slice(0, 8).map(w => `(?=.*${escapeRegex(w)})`).join('');
                 sanPham = await SanPham.findOne({
                     ten_san_pham: { $regex: regexPattern, $options: 'i' }
                 });

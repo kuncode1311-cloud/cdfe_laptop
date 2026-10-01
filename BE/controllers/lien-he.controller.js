@@ -1,3 +1,4 @@
+const { escapeRegex } = require('../utils/bao-mat');
 const LienHe = require('../models/lien-he.model');
 
 /**
@@ -82,7 +83,7 @@ exports.guiYeuCauLienHe = async (req, res) => {
             nguon_tiep_nhan: 'website_lien_he'
         });
 
-        console.log(`[LIÊN HỆ] Khách hàng ${lienHeMoi.ho_ten} (${lienHeMoi.so_dien_thoai}) đã gửi phiếu #${lienHeMoi.ma_yeu_cau}`);
+        console.log(`[LIÊN HỆ] Đã tiếp nhận phiếu #${lienHeMoi.ma_yeu_cau}`);
 
         // 4. Phản hồi thành công
         return res.status(201).json({
@@ -117,10 +118,11 @@ exports.layDanhSachLienHe = async (req, res) => {
             boLoc.trang_thai = trang_thai;
         }
         if (chu_de && chu_de !== 'tat_ca') {
-            boLoc.chu_de = new RegExp(chu_de, 'i');
+            boLoc.chu_de = new RegExp(escapeRegex(String(chu_de).slice(0, 100)), 'i');
         }
-        if (tu_khoa && tu_khoa.trim()) {
-            const regex = new RegExp(tu_khoa.trim(), 'i');
+        if (typeof tu_khoa === 'string' && tu_khoa.trim()) {
+            // Escape từ khóa → chống Regex Injection / ReDoS
+            const regex = new RegExp(escapeRegex(String(tu_khoa).trim().slice(0, 100)), 'i');
             boLoc.$or = [
                 { ma_yeu_cau: regex },
                 { ho_ten: regex },
@@ -130,8 +132,8 @@ exports.layDanhSachLienHe = async (req, res) => {
             ];
         }
 
-        const soTrang = Math.max(1, parseInt(trang, 10));
-        const soLuong = Math.max(1, parseInt(gioi_han, 10));
+        const soTrang = Math.max(1, parseInt(trang, 10) || 1);
+        const soLuong = Math.min(100, Math.max(1, parseInt(gioi_han, 10) || 50));
         const boQua = (soTrang - 1) * soLuong;
 
         const [danhSach, tongSo, demChuaXuLy, demDangXuLy, demDaHoanThanh] = await Promise.all([

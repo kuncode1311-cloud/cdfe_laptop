@@ -220,18 +220,19 @@ export default function DanhGiaSanPham({
             toast.success('Đã lưu đánh giá vào cơ sở dữ liệu MongoDB Atlas thành công!');
         } catch (err) {
             console.warn('Lỗi kết nối lưu đánh giá:', err);
-            setDanhSach(prev => [danhGiaMoi, ...prev]);
-            toast.success('Gửi đánh giá thành công!');
+            toast.error(err?.message || 'Không thể gửi đánh giá. Vui lòng đăng nhập và kiểm tra điều kiện mua hàng.');
+            return;
         } finally {
             setDangGui(false);
-            setMoForm(false);
-            setHoTen('');
-            setSoDienThoai('');
-            setTieuDe('');
-            setNoiDung('');
-            setTagsDaChon([]);
-            setDanhSachAnhDinhKem([]);
         }
+
+        setMoForm(false);
+        setHoTen('');
+        setSoDienThoai('');
+        setTieuDe('');
+        setNoiDung('');
+        setTagsDaChon([]);
+        setDanhSachAnhDinhKem([]);
     };
 
     // Toggle like review - Lưu cập nhật lên Backend

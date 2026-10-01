@@ -1,5 +1,7 @@
 const DanhGia = require('../models/danh-gia.model');
 const SanPham = require('../models/san-pham.model');
+const DonHang = require('../models/don-hang.model');
+const { laUrlAnhHopLe } = require('../utils/bao-mat');
 
 /**
  * Controller xử lý Đánh giá & Bình luận sản phẩm
@@ -9,7 +11,8 @@ const SanPham = require('../models/san-pham.model');
 const layDanhGiaTheoSanPham = async (req, res) => {
     try {
         const { productId } = req.params;
-        const idSp = productId || req.query.id_san_pham;
+        const idSpGoc = productId || req.query.id_san_pham;
+        const idSp = typeof idSpGoc === 'string' ? idSpGoc.slice(0, 200) : '';
 
         const filter = {};
         if (idSp) {
@@ -45,14 +48,84 @@ const layDanhGiaTheoSanPham = async (req, res) => {
 // 2. Thêm đánh giá mới và tự động cập nhật lại điểm trung bình của sản phẩm
 const themDanhGiaMoi = async (req, res) => {
     try {
-        const duLieuDanhGia = req.body;
+        const duLieuGuiLen = req.body || {};
+        const idSanPham = String(duLieuGuiLen.id_san_pham || '').trim();
+        const noiDung = String(duLieuGuiLen.noi_dung || '').trim();
+        const soSao = Math.round(Number(duLieuGuiLen.so_sao) || 5);
 
-        if (!duLieuDanhGia.id) {
-            duLieuDanhGia.id = `dg-${Date.now()}`;
+        if (!idSanPham || !noiDung) {
+            return res.status(400).json({
+                thong_diep: 'Vui lòng chọn sản phẩm và nhập nội dung đánh giá.'
+            });
         }
-        if (!duLieuDanhGia.ho_ten && duLieuDanhGia.ten_nguoi_dung) {
-            duLieuDanhGia.ho_ten = duLieuDanhGia.ten_nguoi_dung;
+
+        if (soSao < 1 || soSao > 5) {
+            return res.status(400).json({
+                thong_diep: 'Số sao đánh giá phải nằm trong khoảng từ 1 đến 5.'
+            });
         }
+
+        const userId = String(req.user?.id || req.user?._id || '');
+        const userEmail = String(req.user?.email || '').trim().toLowerCase();
+
+        // Chỉ xác định đơn của mình theo id tài khoản (email chỉ cho đơn cũ chưa gắn id).
+        // Không dùng SĐT vì SĐT hồ sơ do người dùng tự khai, không được xác minh.
+        const dieuKienChuDon = [{ id_nguoi_dung: userId }];
+        if (req.user?._id) dieuKienChuDon.push({ id_nguoi_dung: String(req.user._id) });
+        if (userEmail) {
+            dieuKienChuDon.push({
+                'thong_tin_giao_hang.email': userEmail,
+                id_nguoi_dung: { $in: [null, ''] }
+            });
+        }
+
+        const donHangDaMua = await DonHang.findOne({
+            trang_thai: 'da_giao',
+            $or: dieuKienChuDon,
+            'danh_sach_san_pham': {
+                $elemMatch: {
+                    $or: [
+                        { san_pham_id: idSanPham },
+                        { 'san_pham.id': idSanPham },
+                        { 'san_pham.ma_san_pham': idSanPham }
+                    ]
+                }
+            }
+        }).lean();
+
+        if (!donHangDaMua) {
+            return res.status(403).json({
+                thong_diep: 'Chỉ tài khoản đã mua và nhận sản phẩm này mới được gửi đánh giá.'
+            });
+        }
+
+        const daDanhGia = await DanhGia.findOne({
+            id_san_pham: idSanPham,
+            id_nguoi_dung: userId
+        }).lean();
+
+        if (daDanhGia) {
+            return res.status(409).json({
+                thong_diep: 'Bạn đã đánh giá sản phẩm này rồi.'
+            });
+        }
+
+        const duLieuDanhGia = {
+            id: `dg-${Date.now()}`,
+            id_san_pham: idSanPham,
+            id_nguoi_dung: userId,
+            ho_ten: req.user?.hoTen || req.user?.ho_ten || 'Khách hàng',
+            ten_nguoi_dung: req.user?.hoTen || req.user?.ho_ten || 'Khách hàng',
+            avatar: req.user?.avatar || '',
+            so_sao: soSao,
+            tieu_de: String(duLieuGuiLen.tieu_de || '').trim().slice(0, 120) || 'Khách hàng đánh giá sản phẩm',
+            noi_dung: noiDung.slice(0, 1000),
+            // Chỉ nhận URL ảnh http(s) hoặc đường dẫn nội bộ, chặn javascript:/data: (XSS)
+            hinh_anh_dinh_kem: Array.isArray(duLieuGuiLen.hinh_anh_dinh_kem) ? duLieuGuiLen.hinh_anh_dinh_kem.filter(laUrlAnhHopLe).slice(0, 5) : [],
+            da_mua_hang: true,
+            luot_thich: 0,
+            thoi_gian_dung: String(duLieuGuiLen.thoi_gian_dung || 'Khách vừa nhận hàng').slice(0, 80)
+        };
 
         const danhGiaMoi = new DanhGia(duLieuDanhGia);
         const ketQua = await danhGiaMoi.save();
@@ -86,7 +159,7 @@ const themDanhGiaMoi = async (req, res) => {
 // 3. Tăng lượt thích cho đánh giá
 const tangLuotThich = async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = String(req.params.id || '');
         const danhGia = await DanhGia.findOneAndUpdate(
             { $or: [{ id: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] },
             { $inc: { luot_thich: 1 } },

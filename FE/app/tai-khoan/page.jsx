@@ -1213,7 +1213,7 @@ function NoiDungTrangTaiKhoan() {
     // Đo độ mạnh mật khẩu chuẩn quốc tế
     const tieuChiMatKhau = useMemo(() => {
         return {
-            doDai: matKhauMoi.length >= 6,
+            doDai: matKhauMoi.length >= 8,
             chuHoaThuong: /[A-Z]/.test(matKhauMoi) && /[a-z]/.test(matKhauMoi),
             chuSoHoacKyTu: /[0-9]/.test(matKhauMoi) || /[^A-Za-z0-9]/.test(matKhauMoi)
         };
@@ -1238,8 +1238,8 @@ function NoiDungTrangTaiKhoan() {
             setLoiMatKhauCu('Vui lòng nhập mật khẩu hiện tại đang dùng!');
             return;
         }
-        if (matKhauMoi.length < 6) {
-            setLoiMatKhauMoi('Mật khẩu mới phải có tối thiểu 6 ký tự!');
+        if (matKhauMoi.length < 8 || !/[A-Za-zÀ-ỹ]/.test(matKhauMoi) || !/\d/.test(matKhauMoi)) {
+            setLoiMatKhauMoi('Mật khẩu phải có tối thiểu 8 ký tự, gồm cả chữ và số!');
             return;
         }
         if (matKhauMoi !== xacNhanMatKhauMoi) {
@@ -3074,7 +3074,7 @@ function NoiDungTrangTaiKhoan() {
                                                         required
                                                         value={matKhauMoi}
                                                         onChange={(e) => { setMatKhauMoi(e.target.value); setLoiMatKhauMoi(''); }}
-                                                        placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
+                                                        placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự, có chữ và số)..."
                                                         className={`w-full px-3.5 pr-11 py-2.5 rounded-xl border-2 hover:border-blue-400 bg-white text-slate-900 text-xs sm:text-sm font-bold focus:outline-none focus:ring-4 transition-all shadow-xs ${loiMatKhauMoi ? 'border-rose-500 focus:border-rose-600 focus:ring-rose-500/20' : 'border-blue-300 focus:border-blue-600 focus:ring-blue-500/20'}`}
                                                     />
                                                     <button
@@ -3231,7 +3231,7 @@ function NoiDungTrangTaiKhoan() {
                                             <div className="pt-2 space-y-2">
                                                 <button
                                                     type="submit"
-                                                    disabled={dangDoiPass || (daChamXacNhan && !!loiXacNhanMatKhau) || matKhauMoi.length < 6 || (daGuiOtpDoiMatKhau && otpDoiMatKhau.length !== 6)}
+                                                    disabled={dangDoiPass || (daChamXacNhan && !!loiXacNhanMatKhau) || matKhauMoi.length < 8 || (daGuiOtpDoiMatKhau && otpDoiMatKhau.length !== 6)}
                                                     className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-black text-xs sm:text-sm shadow-xl shadow-indigo-500/30 border-2 border-indigo-400/60 active:scale-[0.98] transition-all cursor-pointer disabled:from-indigo-400 disabled:via-blue-400 disabled:to-purple-400 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                                 >
                                                     {dangDoiPass ? (
@@ -3680,11 +3680,6 @@ function NoiDungTrangTaiKhoan() {
                     donHang={donHangThanhToanQR}
                     onThanhToanThanhCong={async () => {
                         try {
-                            const donId = donHangThanhToanQR.id || donHangThanhToanQR._id || donHangThanhToanQR.ma_don_hang;
-                            await DonHangService.capNhatDonHang(donId, {
-                                da_thanh_toan: true,
-                                trang_thai_thanh_toan: 'da_thanh_toan'
-                            });
                             toast.success(`🎉 Đã xác nhận thanh toán thành công đơn #${donHangThanhToanQR.ma_don_hang}!`);
                             setDonHangThanhToanQR(null);
                             // Cập nhật lại danh sách đơn hàng đúng tài khoản từ MongoDB

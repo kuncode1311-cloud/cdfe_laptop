@@ -76,10 +76,12 @@ async function runAllTests() {
         assert(guestDeleteRes.status === 401, '8. Khách không token xóa sản phẩm bị chặn (401 Unauthorized)');
 
         // 9. Đăng nhập tài khoản Admin và thực hiện thao tác quản trị
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        assert(Boolean(adminPassword), '9. Có ADMIN_PASSWORD để kiểm thử đăng nhập Admin');
         const adminLoginRes = await fetch(baseUrl + '/auth/dang-nhap', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'admin@laptopnew.vn', matKhau: 'admin123' })
+            body: JSON.stringify({ email: 'admin@laptopnew.vn', matKhau: adminPassword })
         });
         const adminLoginData = await adminLoginRes.json();
         assert(adminLoginRes.status === 200 && adminLoginData.nguoiDung.vaiTro === 'admin', '9a. Đăng nhập Admin thành công');

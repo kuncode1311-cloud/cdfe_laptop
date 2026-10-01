@@ -11,6 +11,7 @@ const SanPham = require('../models/san-pham.model');
 const traCuuBaoHanh = async (req, res) => {
     try {
         const tuKhoa = (req.query.tu_khoa || req.query.q || '').trim();
+        const maDonXacMinh = String(req.query.ma_don_hang || req.query.maDonHang || '').trim();
         
         // 1. Kiểm tra tính hợp lệ: Tối thiểu 3 ký tự
         if (!tuKhoa || tuKhoa.length < 3) {
@@ -22,19 +23,39 @@ const traCuuBaoHanh = async (req, res) => {
         }
 
         // Tạo biểu thức so khớp CHÍNH XÁC toàn bộ chuỗi (^...$), KHÔNG tìm theo chuỗi con (substring)
-        const escaped = tuKhoa.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const laSoDienThoai = /^(0|\+84)[0-9]{9}$/.test(tuKhoa.replace(/\s+/g, ''));
+        const tuKhoaChuanHoa = laSoDienThoai ? tuKhoa.replace(/\s+/g, '') : tuKhoa;
+        const escaped = tuKhoaChuanHoa.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const exactRegex = new RegExp(`^${escaped}$`, 'i');
+
+        if (laSoDienThoai && !maDonXacMinh) {
+            return res.status(403).json({
+                hop_le: false,
+                thong_diep: 'Để bảo vệ thông tin khách hàng, tra cứu bằng số điện thoại cần nhập kèm mã đơn hàng.',
+                yeu_cau_ma_don_hang: true,
+                danh_sach: []
+            });
+        }
+
+        const dieuKienTraCuu = [
+            { ma_don_hang: exactRegex },
+            { id: exactRegex },
+            { 'danh_sach_san_pham.so_serial': exactRegex },
+            { 'danh_sach_san_pham.san_pham.ma_san_pham': exactRegex }
+        ];
+
+        if (laSoDienThoai) {
+            const escapedMaDon = maDonXacMinh.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            dieuKienTraCuu.push({
+                'thong_tin_giao_hang.so_dien_thoai': exactRegex,
+                ma_don_hang: new RegExp(`^${escapedMaDon}$`, 'i')
+            });
+        }
 
         // 2. Tìm kiếm CHÍNH XÁC trong danh sách Đơn hàng thực tế trong DB
         // Chỉ khớp khi BẰNG ĐÚNG: Mã đơn hàng, ID đơn, Số điện thoại mua hàng, hoặc Serial/Mã SKU sản phẩm đã mua
         const donHangKhop = await DonHang.find({
-            $or: [
-                { ma_don_hang: exactRegex },
-                { id: exactRegex },
-                { 'thong_tin_giao_hang.so_dien_thoai': exactRegex },
-                { 'danh_sach_san_pham.so_serial': exactRegex },
-                { 'danh_sach_san_pham.san_pham.ma_san_pham': exactRegex }
-            ]
+            $or: dieuKienTraCuu
         }).sort({ createdAt: -1 });
 
         if (donHangKhop && donHangKhop.length > 0) {
