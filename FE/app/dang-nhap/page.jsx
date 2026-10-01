@@ -286,7 +286,8 @@ export default function TrangDangNhap() {
                                 email: userInfo.email,
                                 hoTen: userInfo.name || userInfo.given_name || 'Khách Hàng Google',
                                 avatar: userInfo.picture || '',
-                                googleId: userInfo.sub
+                                googleId: userInfo.sub,
+                                accessToken: tokenResponse.access_token // BE tự xác minh với Google, không tin email client gửi
                             });
                             toast.success('Đăng nhập với Google thành công! 🎉');
                             if (userGg?.vaiTro === 'admin') {

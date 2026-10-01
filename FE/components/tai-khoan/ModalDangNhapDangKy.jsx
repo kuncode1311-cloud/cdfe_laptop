@@ -363,7 +363,8 @@ export default function ModalDangNhapDangKy() {
                                 email: userInfo.email,
                                 hoTen: userInfo.name || userInfo.given_name || 'Khách Hàng Google',
                                 avatar: userInfo.picture || '',
-                                googleId: userInfo.sub
+                                googleId: userInfo.sub,
+                                accessToken: tokenResponse.access_token // BE tự xác minh với Google, không tin email client gửi
                             });
                             setTieuDeThanhCong('Đăng nhập Google thành công!');
                             setMoTaThanhCong('Chào mừng bạn đến với TNTP Laptop Store 🎉');
