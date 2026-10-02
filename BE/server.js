@@ -47,12 +47,14 @@ app.use('/api-docs', (req, res, next) => {
     res.setHeader('Content-Security-Policy',
         "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'");
     res.setHeader('X-Content-Type-Options', 'nosniff');
+    // Không cho Cloudflare/trình duyệt cache: sửa đặc tả là trang tài liệu cập nhật ngay
+    res.setHeader('Cache-Control', 'no-store');
     next();
 }, swaggerUi.serve, swaggerUi.setup(openapiSpec, {
     customSiteTitle: 'LaptopNew API Docs',
     swaggerOptions: { persistAuthorization: true, docExpansion: 'none', deepLinking: true, displayRequestDuration: true }
 }));
-app.get('/api-docs.json', (req, res) => res.json(openapiSpec));
+app.get('/api-docs.json', (req, res) => res.set('Cache-Control', 'no-store').json(openapiSpec));
 
 // Bảo mật toàn cục: ẩn công nghệ server, thêm security headers, lọc NoSQL Injection
 app.disable('x-powered-by');
