@@ -28,7 +28,7 @@ const layDanhSachTinTuc = async (req, res) => {
 const layTinTucTheoIdHoacSlug = async (req, res) => {
     try {
         const dieuKien = laAdmin(req) ? timTheoDinhDanh(req.params.id) : { ...timTheoDinhDanh(req.params.id), xuat_ban: true };
-        const tin = await TinTuc.findOneAndUpdate(dieuKien, { $inc: { luot_xem: 1 } }, { new: true });
+        const tin = await TinTuc.findOneAndUpdate(dieuKien, { $inc: { luot_xem: 1 } }, { returnDocument: 'after' });
         return tin ? res.json({ thanhCong: true, duLieu: tin }) : res.status(404).json({ thanhCong: false, thongBao: 'Không tìm thấy bài viết!' });
     } catch (err) {
         console.error('Lỗi tin tức:', err.message);
@@ -52,7 +52,7 @@ const capNhatTinTuc = async (req, res) => {
     try {
         const duLieu = { ...req.body };
         if (duLieu.tieu_de && !duLieu.slug) duLieu.slug = taoSlug(duLieu.tieu_de);
-        const tin = await TinTuc.findOneAndUpdate(timTheoDinhDanh(req.params.id), { $set: duLieu }, { new: true, runValidators: true });
+        const tin = await TinTuc.findOneAndUpdate(timTheoDinhDanh(req.params.id), { $set: duLieu }, { returnDocument: 'after', runValidators: true });
         return tin ? res.json({ thanhCong: true, thongBao: 'Cập nhật bài viết thành công!', duLieu: tin }) : res.status(404).json({ thanhCong: false, thongBao: 'Không tìm thấy bài viết!' });
     } catch (err) {
         console.error('Lỗi tin tức:', err.message);

@@ -18,7 +18,7 @@ exports.capNhatCaiDatShowroom = async (req, res) => {
         const caiDat = await CaiDat.findOneAndUpdate(
             { khoa: 'he_thong' },
             { $set: { danh_sach_showroom } },
-            { new: true, upsert: true, runValidators: true }
+            { returnDocument: 'after', upsert: true, runValidators: true }
         );
         return res.json({ thanh_cong: true, du_lieu: caiDat.danh_sach_showroom });
     } catch (loi) {

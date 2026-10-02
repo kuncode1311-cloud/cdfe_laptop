@@ -508,7 +508,7 @@ const capNhatTrangThaiDonHang = async (req, res) => {
             const donHang = await DonHang.findByIdAndUpdate(
                 donHangHienTai._id,
                 { $set: filteredUpdate },
-                { new: true, runValidators: true }
+                { returnDocument: 'after', runValidators: true }
             );
             return res.status(200).json(donHang);
         }
@@ -556,7 +556,7 @@ const capNhatTrangThaiDonHang = async (req, res) => {
         const donHang = await DonHang.findByIdAndUpdate(
             donHangHienTai._id,
             { $set: duLieuCapNhat },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
 
         return res.status(200).json(donHang);

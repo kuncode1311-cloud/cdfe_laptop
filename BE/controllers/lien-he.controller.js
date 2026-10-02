@@ -184,7 +184,7 @@ exports.capNhatLienHe = async (req, res) => {
         const lienHe = await LienHe.findByIdAndUpdate(
             id,
             { $set: updateFields },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         if (!lienHe) {

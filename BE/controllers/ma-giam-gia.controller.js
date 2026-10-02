@@ -112,11 +112,11 @@ const capNhatMaGiamGia = async (req, res) => {
         let voucher = await MaGiamGia.findOneAndUpdate(
             { $or: [{ id: id }, { ma_code: id }] },
             { $set: duLieuCapNhat },
-            { new: true }
+            { returnDocument: 'after' }
         );
 
         if (!voucher && id.match(/^[0-9a-fA-F]{24}$/)) {
-            voucher = await MaGiamGia.findByIdAndUpdate(id, { $set: duLieuCapNhat }, { new: true });
+            voucher = await MaGiamGia.findByIdAndUpdate(id, { $set: duLieuCapNhat }, { returnDocument: 'after' });
         }
 
         if (!voucher) {
@@ -221,7 +221,7 @@ const luuMaVoucherVaoVi = async (req, res) => {
             voucherSauKhiLuu = await MaGiamGia.findOneAndUpdate(
                 { _id: voucher._id, so_luong_con_lai: { $gt: 0 } },
                 { $inc: { so_luong_con_lai: -1 } },
-                { new: true }
+                { returnDocument: 'after' }
             );
             if (!voucherSauKhiLuu) {
                 return res.status(409).json({

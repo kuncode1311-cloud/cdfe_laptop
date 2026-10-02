@@ -163,7 +163,7 @@ const tangLuotThich = async (req, res) => {
         const danhGia = await DanhGia.findOneAndUpdate(
             { $or: [{ id: id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] },
             { $inc: { luot_thich: 1 } },
-            { new: true }
+            { returnDocument: 'after' }
         );
         if (!danhGia) {
             return res.status(404).json({ thong_diep: 'Không tìm thấy đánh giá' });

@@ -118,7 +118,7 @@ const capNhatNguoiDung = async (req, res) => {
         const capNhat = { $set: duLieuCapNhat };
         if (canThuHoiPhien) capNhat.$inc = { tokenVersion: 1 };
 
-        const ketQua = await NguoiDung.findByIdAndUpdate(user._id, capNhat, { new: true, runValidators: true });
+        const ketQua = await NguoiDung.findByIdAndUpdate(user._id, capNhat, { returnDocument: 'after', runValidators: true });
         return res.status(200).json(ketQua);
     } catch (loi) {
         console.error('Lỗi cập nhật người dùng:', loi);

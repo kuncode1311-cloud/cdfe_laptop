@@ -29,8 +29,8 @@ const capNhatDanhMuc = async (req, res) => {
         const { id } = req.params;
         const duLieu = { ...req.body };
         if (duLieu.ten_danh_muc && !duLieu.slug) duLieu.slug = taoSlug(duLieu.ten_danh_muc);
-        let dm = await DanhMuc.findOneAndUpdate({ $or: [{ slug: id }, { id }, { ma_danh_muc: id.toLowerCase() }] }, { $set: duLieu }, { new: true, runValidators: true });
-        if (!dm && /^[0-9a-fA-F]{24}$/.test(id)) dm = await DanhMuc.findByIdAndUpdate(id, { $set: duLieu }, { new: true, runValidators: true });
+        let dm = await DanhMuc.findOneAndUpdate({ $or: [{ slug: id }, { id }, { ma_danh_muc: id.toLowerCase() }] }, { $set: duLieu }, { returnDocument: 'after', runValidators: true });
+        if (!dm && /^[0-9a-fA-F]{24}$/.test(id)) dm = await DanhMuc.findByIdAndUpdate(id, { $set: duLieu }, { returnDocument: 'after', runValidators: true });
         return dm ? res.json(dm) : res.status(404).json({ thong_diep: 'Không tìm thấy danh mục' });
     } catch (loi) {
         return res.status(400).json({ thong_diep: 'Không thể cập nhật danh mục', chi_tiet: loi.message });

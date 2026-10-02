@@ -194,10 +194,10 @@ const capNhatSanPham = async (req, res) => {
         let sanPham = await SanPham.findOneAndUpdate(
             { $or: [{ slug: id }, { id }, { ma_san_pham: id }] },
             { $set: duLieuCapNhat },
-            { new: true, runValidators: true }
+            { returnDocument: 'after', runValidators: true }
         );
         if (!sanPham && id.match(/^[0-9a-fA-F]{24}$/)) {
-            sanPham = await SanPham.findByIdAndUpdate(id, { $set: duLieuCapNhat }, { new: true, runValidators: true });
+            sanPham = await SanPham.findByIdAndUpdate(id, { $set: duLieuCapNhat }, { returnDocument: 'after', runValidators: true });
         }
         if (!sanPham) return res.status(404).json({ thong_diep: 'Không tìm thấy sản phẩm' });
         return res.status(200).json(sanPham);

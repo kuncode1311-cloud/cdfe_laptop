@@ -456,7 +456,7 @@ const xuLyWebhookPayOS = async (req, res) => {
                     trang_thai: 'da_xac_nhan'
                 }
             },
-            { new: true }
+            { returnDocument: 'after' }
         ).then((donHangDaCapNhat) => {
             console.log(`✅ [PayOS Webhook] Đã lưu vào MongoDB đơn hàng #${orderCode}`);
             if (donHangDaCapNhat) {
