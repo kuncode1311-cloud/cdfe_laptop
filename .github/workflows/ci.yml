@@ -1,0 +1,115 @@
+# CI (Continuous Integration) — GitHub tự chạy mỗi khi push lên main hoặc mở Pull Request.
+#
+#   1. backend-test     : chạy toàn bộ kiểm thử Jest (unit + integration) của Back-End
+#                         với MongoDB chạy trong bộ nhớ → không cần database thật, không cần key bí mật.
+#   2. frontend-build   : kiểm tra lint và build production của Front-End Next.js.
+#   3. production-smoke : sau khi 2 job trên đạt, kiểm tra nhanh hệ thống đang chạy thật
+#                         tại https://api.trikun.site và https://trikun.site (chỉ chạy khi push lên main).
+#
+# Commit nào làm hỏng test sẽ hiện dấu ❌ trên GitHub, giúp phát hiện lỗi trước khi demo / bàn giao.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # cho phép bấm chạy tay trong tab Actions
+
+# Push liên tiếp thì hủy lần chạy cũ, chỉ giữ lần mới nhất
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-test:
+    name: Back-End · Jest (unit + integration)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BE
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: BE/package-lock.json
+
+      # Lưu cache bản MongoDB do mongodb-memory-server tải về, các lần sau chạy nhanh hơn
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-binaries-${{ runner.os }}
+
+      - name: Cài thư viện
+        run: npm ci
+
+      - name: Chạy kiểm thử và đo độ phủ
+        run: npm run test:coverage
+
+      - name: Lưu báo cáo độ phủ
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bao-cao-do-phu-backend
+          path: BE/coverage/lcov-report
+          retention-days: 14
+
+  frontend-build:
+    name: Front-End · Lint + Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: FE
+    env:
+      NEXT_PUBLIC_API_URL: https://api.trikun.site/api
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: FE/package-lock.json
+
+      - name: Cài thư viện
+        run: npm ci
+
+      - name: Kiểm tra lint (ESLint)
+        run: npm run lint
+
+      - name: Build production
+        run: npm run build
+
+  production-smoke:
+    name: Production · Smoke test
+    needs: [backend-test, frontend-build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Kiểm tra các điểm quan trọng: server sống, tài liệu API, API công khai,
+      # API được bảo vệ phải từ chối khi thiếu token, và website Front-End.
+      - name: Kiểm tra API và website đang chạy
+        run: |
+          kiem_tra() { # $1 = mô tả, $2 = mã HTTP mong đợi, $3 = URL, các tham số còn lại truyền cho curl
+            mo_ta="$1"; mong_doi="$2"; url="$3"; shift 3
+            ma=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 --retry-all-errors "$@" "$url")
+            if [ "$ma" = "$mong_doi" ]; then echo "✅ $mo_ta → $ma"; else echo "❌ $mo_ta → $ma (mong đợi $mong_doi)"; exit 1; fi
+          }
+          kiem_tra "Health check"                        200 https://api.trikun.site/api/health
+          kiem_tra "Đặc tả OpenAPI"                      200 https://api.trikun.site/api-docs.json
+          kiem_tra "Danh sách sản phẩm (công khai)"      200 "https://api.trikun.site/api/san-pham?limit=1"
+          kiem_tra "API cần đăng nhập, thiếu token"      401 https://api.trikun.site/api/auth/toi
+          kiem_tra "CORS chặn origin lạ"                 403 https://api.trikun.site/api/health -H "Origin: https://web-gia-mao.com"
+          kiem_tra "Website Front-End"                   200 https://trikun.site/
+
+      - name: Chạy bộ Postman giám sát bằng Newman
+        run: |
+          npx --yes newman@6 run _tai_lieu_bao_cao/postman/LaptopNew_API.postman_collection.json \
+            -e _tai_lieu_bao_cao/postman/LaptopNew_Cloudflare.postman_environment.json \
+            --folder "14. Giám sát máy chủ" --reporters cli
