@@ -416,7 +416,9 @@ const xuLyWebhookPayOS = async (req, res) => {
         const orderNum = Number(orderCode) || 0;
         const donHang = await DonHang.findOne({ payos_order_code: orderNum });
         if (!donHang) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng tương ứng' });
+            // Vẫn trả 200: webhook thử của PayOS (khi lưu URL) dùng mã đơn giả; trả lỗi sẽ khiến PayOS từ chối URL hoặc gửi lại liên tục.
+            console.warn(`⚠️ [PayOS Webhook] Không có đơn ứng với orderCode ${orderCode} (có thể là webhook thử).`);
+            return res.status(200).json({ success: true, message: 'Đã nhận webhook, không có đơn hàng tương ứng' });
         }
         // Idempotent: PayOS có thể gửi lại webhook nhiều lần → đơn đã thanh toán thì không xử lý lại
         if (donHang.da_thanh_toan && donHang.trang_thai_thanh_toan === 'da_thanh_toan') {

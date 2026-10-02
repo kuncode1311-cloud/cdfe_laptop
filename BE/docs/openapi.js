@@ -763,9 +763,9 @@ const paths = {
     '/api/thanh-toan/webhook': {
         post: op({
             tag: T.tt, summary: 'Webhook PayOS (máy chủ PayOS gọi)',
-            description: 'Endpoint dành cho **PayOS gọi vào**, không dùng từ giao diện. Chữ ký `signature` (HMAC-SHA256) được kiểm tra bằng `PAYOS_CHECKSUM_KEY`; sai chữ ký → `400`. Số tiền phải khớp đơn. Xử lý idempotent (gọi lặp không gây lỗi). Alias: `/api/thanh-toan/payos-webhook`.',
+            description: 'Endpoint dành cho **PayOS gọi vào**, không dùng từ giao diện. Chữ ký `signature` (HMAC-SHA256) được kiểm tra bằng `PAYOS_CHECKSUM_KEY`; sai chữ ký → `400`. Số tiền phải khớp đơn. Xử lý idempotent (gọi lặp không gây lỗi). Mã đơn không tồn tại (ví dụ webhook thử khi lưu URL trên PayOS) vẫn trả `200` để PayOS chấp nhận URL. Alias: `/api/thanh-toan/payos-webhook`.',
             requestBody: body(ref('PayosWebhook'), { code: '00', desc: 'success', success: true, data: { orderCode: 1759300123456, amount: 35990000, code: '00' }, signature: 'chu-ky-gia-se-bi-tu-choi' }),
-            responses: { 200: ok('Đã xử lý', { type: 'object', properties: { success: { type: 'boolean' }, message: { type: 'string' } } }, { success: true, message: 'Webhook processed successfully' }), 400: ok('Thiếu dữ liệu / chữ ký sai / giao dịch không thành công / sai số tiền', ref('LoiThanhToan'), { success: false, message: 'Chữ ký không hợp lệ' }), 404: ok('Không tìm thấy đơn tương ứng', ref('LoiThanhToan')), 500: ok('Lỗi xử lý', ref('LoiThanhToan')) }
+            responses: { 200: ok('Đã nhận / đã xử lý', { type: 'object', properties: { success: { type: 'boolean' }, message: { type: 'string' } } }, { success: true, message: 'Webhook processed successfully' }), 400: ok('Thiếu dữ liệu / chữ ký sai / giao dịch không thành công / sai số tiền', ref('LoiThanhToan'), { success: false, message: 'Chữ ký không hợp lệ' }), 500: ok('Lỗi xử lý', ref('LoiThanhToan')) }
         })
     },
 
