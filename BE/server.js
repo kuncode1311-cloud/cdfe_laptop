@@ -48,7 +48,11 @@ app.use('/api-docs', (req, res, next) => {
         "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'");
     res.setHeader('X-Content-Type-Options', 'nosniff');
     // Không cho Cloudflare/trình duyệt cache: sửa đặc tả là trang tài liệu cập nhật ngay
+    // (swaggerUi.serve dùng express.static tự ghi đè Cache-Control cho swagger-ui-init.js,
+    // nên chặn mọi lần ghi đè sau đó để file JS cũng không bị cache)
     res.setHeader('Cache-Control', 'no-store');
+    const setHeaderGoc = res.setHeader.bind(res);
+    res.setHeader = (ten, giaTri) => (String(ten).toLowerCase() === 'cache-control' ? res : setHeaderGoc(ten, giaTri));
     next();
 }, swaggerUi.serve, swaggerUi.setup(openapiSpec, {
     customSiteTitle: 'LaptopNew API Docs',
