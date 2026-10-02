@@ -1023,7 +1023,7 @@ module.exports = {
         ].join('\n'),
         contact: { name: 'Nhóm sinh viên LaptopNew – Chuyên đề Back-End' }
     },
-    servers: [{ url: '/', description: 'Máy chủ hiện tại (localhost hoặc Railway)' }],
+    servers: [{ url: '/', description: 'Máy chủ hiện tại — production: https://api.trikun.site (Railway + Cloudflare)' }],
     tags,
     paths,
     components: {

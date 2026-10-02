@@ -50,7 +50,7 @@ app.use('/api-docs', (req, res, next) => {
     next();
 }, swaggerUi.serve, swaggerUi.setup(openapiSpec, {
     customSiteTitle: 'LaptopNew API Docs',
-    swaggerOptions: { persistAuthorization: true, docExpansion: 'none', tagsSorter: 'alpha' }
+    swaggerOptions: { persistAuthorization: true, docExpansion: 'none', deepLinking: true, displayRequestDuration: true }
 }));
 app.get('/api-docs.json', (req, res) => res.json(openapiSpec));
 
