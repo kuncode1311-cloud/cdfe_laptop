@@ -71,8 +71,8 @@ export const DANH_SACH_63_TINH_THANH_CHUAN = [
     { code: 96, name: 'Tỉnh Cà Mau', codename: 'tinh_ca_mau' }
 ];
 
-// Danh mục 34 Tỉnh / Thành phố Việt Nam Chuẩn API v2 (Sau sáp nhập hành chính)
-// API endpoint nguồn chính thức: https://provinces.open-api.vn/api/v2/
+// Danh mục 34 Tỉnh / Thành phố Việt Nam Chuẩn API v2 (Sau sáp nhập hành chính 2025)
+// API endpoint nguồn chính thức: https://provinces.open-api.vn/api/v2/ — tên và phần sáp nhập đã đối chiếu với dữ liệu API
 export const DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP = [
     { code: 1, name: 'Thành phố Hà Nội', codename: 'ha_noi', division_type: 'thành phố trung ương' },
     { code: 4, name: 'Tỉnh Cao Bằng', codename: 'cao_bang', division_type: 'tỉnh' },
@@ -85,7 +85,7 @@ export const DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP = [
     { code: 20, name: 'Tỉnh Lạng Sơn', codename: 'lang_son', division_type: 'tỉnh' },
     { code: 22, name: 'Thành phố Quảng Ninh', codename: 'quang_ninh', division_type: 'thành phố trung ương' },
     { code: 24, name: 'Thành phố Bắc Ninh', codename: 'bac_ninh', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Bắc Giang cũ' },
-    { code: 25, name: 'Tỉnh Phú Thọ', codename: 'phu_tho', division_type: 'tỉnh', phuDe: 'Bao gồm Hòa Bình, Vĩnh Phúc cũ' },
+    { code: 25, name: 'Tỉnh Phú Thọ', codename: 'phu_tho', division_type: 'tỉnh', phuDe: 'Bao gồm Vĩnh Phúc, Hòa Bình cũ' },
     { code: 31, name: 'Thành phố Hải Phòng', codename: 'hai_phong', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Hải Dương cũ' },
     { code: 33, name: 'Tỉnh Hưng Yên', codename: 'hung_yen', division_type: 'tỉnh', phuDe: 'Bao gồm Thái Bình cũ' },
     { code: 37, name: 'Tỉnh Ninh Bình', codename: 'ninh_binh', division_type: 'tỉnh', phuDe: 'Bao gồm Hà Nam, Nam Định cũ' },
@@ -95,34 +95,52 @@ export const DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP = [
     { code: 44, name: 'Tỉnh Quảng Trị', codename: 'quang_tri', division_type: 'tỉnh', phuDe: 'Bao gồm Quảng Bình cũ' },
     { code: 46, name: 'Thành phố Huế', codename: 'hue', division_type: 'thành phố trung ương' },
     { code: 48, name: 'Thành phố Đà Nẵng', codename: 'da_nang', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Quảng Nam cũ' },
-    { code: 51, name: 'Tỉnh Quảng Ngãi', codename: 'quang_ngai', division_type: 'tỉnh', phuDe: 'Bao gồm Bình Định, Phú Yên cũ' },
-    { code: 52, name: 'Tỉnh Gia Lai', codename: 'gia_lai', division_type: 'tỉnh', phuDe: 'Bao gồm Kon Tum cũ' },
-    { code: 56, name: 'Tỉnh Khánh Hòa', codename: 'khanh_hoa', division_type: 'tỉnh', phuDe: 'Bao gồm Ninh Thuận, Bình Thuận cũ' },
-    { code: 66, name: 'Tỉnh Đắk Lắk', codename: 'dak_lak', division_type: 'tỉnh', phuDe: 'Bao gồm Đắk Nông cũ' },
-    { code: 68, name: 'Tỉnh Lâm Đồng', codename: 'lam_dong', division_type: 'tỉnh' },
-    { code: 75, name: 'Thành phố Đồng Nai', codename: 'dong_nai', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Bà Rịa - Vũng Tàu, Bình Phước cũ' },
-    { code: 79, name: 'Thành phố Hồ Chí Minh', codename: 'ho_chi_minh', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Bình Dương cũ' },
+    { code: 51, name: 'Tỉnh Quảng Ngãi', codename: 'quang_ngai', division_type: 'tỉnh', phuDe: 'Bao gồm Kon Tum cũ' },
+    { code: 52, name: 'Tỉnh Gia Lai', codename: 'gia_lai', division_type: 'tỉnh', phuDe: 'Bao gồm Bình Định cũ' },
+    { code: 56, name: 'Tỉnh Khánh Hòa', codename: 'khanh_hoa', division_type: 'tỉnh', phuDe: 'Bao gồm Ninh Thuận cũ' },
+    { code: 66, name: 'Tỉnh Đắk Lắk', codename: 'dak_lak', division_type: 'tỉnh', phuDe: 'Bao gồm Phú Yên cũ' },
+    { code: 68, name: 'Tỉnh Lâm Đồng', codename: 'lam_dong', division_type: 'tỉnh', phuDe: 'Bao gồm Đắk Nông, Bình Thuận cũ' },
+    { code: 75, name: 'Thành phố Đồng Nai', codename: 'dong_nai', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Bình Phước cũ' },
+    { code: 79, name: 'Thành phố Hồ Chí Minh', codename: 'ho_chi_minh', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Bình Dương, Bà Rịa - Vũng Tàu cũ' },
     { code: 80, name: 'Tỉnh Tây Ninh', codename: 'tay_ninh', division_type: 'tỉnh', phuDe: 'Bao gồm Long An cũ' },
     { code: 82, name: 'Tỉnh Đồng Tháp', codename: 'dong_thap', division_type: 'tỉnh', phuDe: 'Bao gồm Tiền Giang cũ' },
     { code: 86, name: 'Tỉnh Vĩnh Long', codename: 'vinh_long', division_type: 'tỉnh', phuDe: 'Bao gồm Bến Tre, Trà Vinh cũ' },
     { code: 91, name: 'Tỉnh An Giang', codename: 'an_giang', division_type: 'tỉnh', phuDe: 'Bao gồm Kiên Giang cũ' },
-    { code: 92, name: 'Thành phố Cần Thơ', codename: 'can_tho', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Hậu Giang cũ' },
-    { code: 96, name: 'Tỉnh Cà Mau', codename: 'ca_mau', division_type: 'tỉnh', phuDe: 'Bao gồm Sóc Trăng, Bạc Liêu cũ' }
+    { code: 92, name: 'Thành phố Cần Thơ', codename: 'can_tho', division_type: 'thành phố trung ương', phuDe: 'Bao gồm Sóc Trăng, Hậu Giang cũ' },
+    { code: 96, name: 'Tỉnh Cà Mau', codename: 'ca_mau', division_type: 'tỉnh', phuDe: 'Bao gồm Bạc Liêu cũ' }
 ];
 
-// Bản đồ tra cứu nhanh địa giới cũ sang tỉnh mới theo chuẩn API v2
+// Bản đồ tra cứu tỉnh cũ (trước sáp nhập) sang tỉnh mới theo chuẩn API v2
 export const TRA_CUU_SAP_NHAP_V2 = {
-    'ben_tre': { tenMoi: 'Tỉnh Vĩnh Long', codeMoi: 86, ghiChu: 'Bến Tre sáp nhập vào Tỉnh Vĩnh Long (gồm Phường Bến Tre, Xã Mỏ Cày, Xã Ba Tri...)' },
+    'ha_giang': { tenMoi: 'Tỉnh Tuyên Quang', codeMoi: 8, ghiChu: 'Hà Giang sáp nhập vào Tỉnh Tuyên Quang' },
+    'yen_bai': { tenMoi: 'Tỉnh Lào Cai', codeMoi: 15, ghiChu: 'Yên Bái sáp nhập vào Tỉnh Lào Cai' },
+    'bac_kan': { tenMoi: 'Tỉnh Thái Nguyên', codeMoi: 19, ghiChu: 'Bắc Kạn sáp nhập vào Tỉnh Thái Nguyên' },
+    'bac_giang': { tenMoi: 'Thành phố Bắc Ninh', codeMoi: 24, ghiChu: 'Bắc Giang sáp nhập vào Thành phố Bắc Ninh' },
+    'vinh_phuc': { tenMoi: 'Tỉnh Phú Thọ', codeMoi: 25, ghiChu: 'Vĩnh Phúc sáp nhập vào Tỉnh Phú Thọ' },
+    'hoa_binh': { tenMoi: 'Tỉnh Phú Thọ', codeMoi: 25, ghiChu: 'Hòa Bình sáp nhập vào Tỉnh Phú Thọ' },
+    'hai_duong': { tenMoi: 'Thành phố Hải Phòng', codeMoi: 31, ghiChu: 'Hải Dương sáp nhập vào Thành phố Hải Phòng' },
+    'thai_binh': { tenMoi: 'Tỉnh Hưng Yên', codeMoi: 33, ghiChu: 'Thái Bình sáp nhập vào Tỉnh Hưng Yên' },
+    'ha_nam': { tenMoi: 'Tỉnh Ninh Bình', codeMoi: 37, ghiChu: 'Hà Nam sáp nhập vào Tỉnh Ninh Bình' },
+    'nam_dinh': { tenMoi: 'Tỉnh Ninh Bình', codeMoi: 37, ghiChu: 'Nam Định sáp nhập vào Tỉnh Ninh Bình' },
+    'quang_binh': { tenMoi: 'Tỉnh Quảng Trị', codeMoi: 44, ghiChu: 'Quảng Bình sáp nhập vào Tỉnh Quảng Trị' },
+    'quang_nam': { tenMoi: 'Thành phố Đà Nẵng', codeMoi: 48, ghiChu: 'Quảng Nam sáp nhập vào Thành phố Đà Nẵng' },
+    'kon_tum': { tenMoi: 'Tỉnh Quảng Ngãi', codeMoi: 51, ghiChu: 'Kon Tum sáp nhập vào Tỉnh Quảng Ngãi' },
+    'binh_dinh': { tenMoi: 'Tỉnh Gia Lai', codeMoi: 52, ghiChu: 'Bình Định sáp nhập vào Tỉnh Gia Lai' },
+    'ninh_thuan': { tenMoi: 'Tỉnh Khánh Hòa', codeMoi: 56, ghiChu: 'Ninh Thuận sáp nhập vào Tỉnh Khánh Hòa' },
+    'phu_yen': { tenMoi: 'Tỉnh Đắk Lắk', codeMoi: 66, ghiChu: 'Phú Yên sáp nhập vào Tỉnh Đắk Lắk' },
+    'dak_nong': { tenMoi: 'Tỉnh Lâm Đồng', codeMoi: 68, ghiChu: 'Đắk Nông sáp nhập vào Tỉnh Lâm Đồng' },
+    'binh_thuan': { tenMoi: 'Tỉnh Lâm Đồng', codeMoi: 68, ghiChu: 'Bình Thuận sáp nhập vào Tỉnh Lâm Đồng' },
+    'binh_phuoc': { tenMoi: 'Thành phố Đồng Nai', codeMoi: 75, ghiChu: 'Bình Phước sáp nhập vào Thành phố Đồng Nai' },
+    'binh_duong': { tenMoi: 'Thành phố Hồ Chí Minh', codeMoi: 79, ghiChu: 'Bình Dương sáp nhập vào Thành phố Hồ Chí Minh' },
+    'ba_ria_vung_tau': { tenMoi: 'Thành phố Hồ Chí Minh', codeMoi: 79, ghiChu: 'Bà Rịa - Vũng Tàu sáp nhập vào Thành phố Hồ Chí Minh' },
+    'long_an': { tenMoi: 'Tỉnh Tây Ninh', codeMoi: 80, ghiChu: 'Long An sáp nhập vào Tỉnh Tây Ninh' },
+    'tien_giang': { tenMoi: 'Tỉnh Đồng Tháp', codeMoi: 82, ghiChu: 'Tiền Giang sáp nhập vào Tỉnh Đồng Tháp' },
+    'ben_tre': { tenMoi: 'Tỉnh Vĩnh Long', codeMoi: 86, ghiChu: 'Bến Tre sáp nhập vào Tỉnh Vĩnh Long' },
     'tra_vinh': { tenMoi: 'Tỉnh Vĩnh Long', codeMoi: 86, ghiChu: 'Trà Vinh sáp nhập vào Tỉnh Vĩnh Long' },
-    'tien_giang': { tenMoi: 'Tỉnh Đồng Tháp', codeMoi: 82, ghiChu: 'Tiền Giang sáp nhập vào Tỉnh Đồng Tháp (gồm Phường Mỹ Tho, Gò Công...)' },
-    'long_an': { tenMoi: 'Tỉnh Tây Ninh', codeMoi: 80, ghiChu: 'Long An sáp nhập vào Tỉnh Tây Ninh (gồm Phường Tân An, Xã Bến Lức...)' },
-    'binh_duong': { tenMoi: 'Thành phố Hồ Chí Minh', codeMoi: 79, ghiChu: 'Bình Dương sáp nhập vào TP. Hồ Chí Minh (gồm Phường Thủ Dầu Một...)' },
-    'ba_ria_vung_tau': { tenMoi: 'Thành phố Đồng Nai', codeMoi: 75, ghiChu: 'Bà Rịa - Vũng Tàu sáp nhập vào TP. Đồng Nai' },
-    'binh_phuoc': { tenMoi: 'Thành phố Đồng Nai', codeMoi: 75, ghiChu: 'Bình Phước sáp nhập vào TP. Đồng Nai' },
-    'soc_trang': { tenMoi: 'Tỉnh Cà Mau', codeMoi: 96, ghiChu: 'Sóc Trăng sáp nhập vào Tỉnh Cà Mau' },
-    'bac_lieu': { tenMoi: 'Tỉnh Cà Mau', codeMoi: 96, ghiChu: 'Bạc Liêu sáp nhập vào Tỉnh Cà Mau' },
-    'hau_giang': { tenMoi: 'Thành phố Cần Thơ', codeMoi: 92, ghiChu: 'Hậu Giang sáp nhập vào TP. Cần Thơ' },
-    'kien_giang': { tenMoi: 'Tỉnh An Giang', codeMoi: 91, ghiChu: 'Kiên Giang sáp nhập vào Tỉnh An Giang' }
+    'kien_giang': { tenMoi: 'Tỉnh An Giang', codeMoi: 91, ghiChu: 'Kiên Giang sáp nhập vào Tỉnh An Giang' },
+    'soc_trang': { tenMoi: 'Thành phố Cần Thơ', codeMoi: 92, ghiChu: 'Sóc Trăng sáp nhập vào Thành phố Cần Thơ' },
+    'hau_giang': { tenMoi: 'Thành phố Cần Thơ', codeMoi: 92, ghiChu: 'Hậu Giang sáp nhập vào Thành phố Cần Thơ' },
+    'bac_lieu': { tenMoi: 'Tỉnh Cà Mau', codeMoi: 96, ghiChu: 'Bạc Liêu sáp nhập vào Tỉnh Cà Mau' }
 };
 
 // Helper xóa dấu tiếng Việt chuẩn quốc tế
@@ -134,6 +152,19 @@ export const xoaDauTiengViet = (str = '') => {
         .replace(/Đ/g, 'D')
         .toLowerCase()
         .trim();
+};
+
+// Tìm tỉnh/thành theo chuẩn API v2 (34 tỉnh) từ tên đã lưu — hỗ trợ cả tên tỉnh cũ trước sáp nhập
+// Ví dụ: "Tỉnh Bến Tre" → Tỉnh Vĩnh Long, "Tỉnh Bình Dương" → Thành phố Hồ Chí Minh
+const boTienToHanhChinh = (ten = '') => xoaDauTiengViet(ten).replace(/^(tinh|thanh pho)\s+/, '').trim();
+
+export const timTinhV2TheoTen = (tenTinh = '', danhSach = DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP) => {
+    const ten = boTienToHanhChinh(tenTinh);
+    if (!ten) return null;
+    const theoTen = danhSach.find(t => boTienToHanhChinh(t.name) === ten);
+    if (theoTen) return theoTen;
+    const sapNhap = TRA_CUU_SAP_NHAP_V2[ten.replace(/[\s-]+/g, '_')];
+    return sapNhap ? (danhSach.find(t => t.code === sapNhap.codeMoi) || null) : null;
 };
 
 // Từ khóa viết tắt địa danh phổ biến của người dùng Việt

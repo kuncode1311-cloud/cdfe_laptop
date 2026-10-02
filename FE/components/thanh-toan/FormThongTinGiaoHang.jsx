@@ -14,16 +14,15 @@ import {
     FileText, 
     Sparkles, 
     Check, 
-    Navigation, 
-    Compass, 
-    ChevronDown 
+    Navigation,
+    ChevronDown
 } from 'lucide-react';
 import { AuthContext, locDiaChiHopLe } from '@/contexts/AuthContext';
-import { 
-    DiaGioiHanhChinhService, 
-    khopTuKhoaDiaChi, 
-    DANH_SACH_63_TINH_THANH_CHUAN,
-    DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP 
+import {
+    DiaGioiHanhChinhService,
+    khopTuKhoaDiaChi,
+    timTinhV2TheoTen,
+    DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP
 } from '@/services/dia-gioi-hanh-chinh.service';
 
 // Helper chuẩn hóa tiếng Việt không dấu để tìm kiếm gõ nhanh
@@ -225,15 +224,14 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
     const [daCham, setDaCham] = useState({});
     const [luuDiaChiMoi, setLuuDiaChiMoi] = useState(true);
 
-    // Dữ liệu API Địa giới hành chính Chuẩn Quốc Gia (63 Tỉnh/TP - 3 Cấp)
-    const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_63_TINH_THANH_CHUAN);
-    const [danhSachQuan, setDanhSachQuan] = useState([]);
+    // Dữ liệu địa giới hành chính sau sáp nhập 2025 (API v2: 34 Tỉnh/TP - 2 cấp Tỉnh → Phường/Xã)
+    const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP);
     const [danhSachXa, setDanhSachXa] = useState([]);
 
     // 1. Đồng bộ dữ liệu Tỉnh Thành từ DiaGioiHanhChinhService
     useEffect(() => {
         let isMounted = true;
-        DiaGioiHanhChinhService.layDanhSachTinhThanhAsync().then(res => {
+        DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async().then(res => {
             if (isMounted && Array.isArray(res) && res.length > 0) {
                 setDanhSachTinh(res);
             }
@@ -258,7 +256,7 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
         }
     }, [nguoiDung]);
 
-    // 3. Xử lý khi chọn Tỉnh / Thành Phố -> tự động map và tải danh sách Quận / Huyện
+    // 3. Xử lý khi chọn Tỉnh / Thành Phố -> tải thẳng danh sách Phường / Xã của tỉnh (mô hình 2 cấp, không còn Quận / Huyện)
     const chonTinhThanh = async (tinh) => {
         setDaCham(prev => ({ ...prev, tinh_thanh: true }));
         onThayDoi({
@@ -267,32 +265,15 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
             quan_huyen: '',
             phuong_xa: ''
         });
-        setDanhSachQuan([]);
         setDanhSachXa([]);
 
         if (tinh.code) {
-            const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(tinh.code);
-            setDanhSachQuan(dsQuan || []);
-        }
-    };
-
-    // 4. Xử lý khi chọn Quận / Huyện -> tự động map và tải danh sách Phường / Xã
-    const chonQuanHuyen = async (quan) => {
-        setDaCham(prev => ({ ...prev, quan_huyen: true }));
-        onThayDoi({
-            ...thongTin,
-            quan_huyen: quan.name || '',
-            phuong_xa: ''
-        });
-        setDanhSachXa([]);
-
-        if (quan.code) {
-            const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(quan.code);
+            const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(tinh.code);
             setDanhSachXa(dsXa || []);
         }
     };
 
-    // 5. Xử lý khi chọn Phường / Xã
+    // 4. Xử lý khi chọn Phường / Xã
     const chonPhuongXa = (xa) => {
         setDaCham(prev => ({ ...prev, phuong_xa: true }));
         onThayDoi({
@@ -313,11 +294,6 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(thongTin.email.trim())
         ),
         tinh_thanh: Boolean(thongTin.tinh_thanh && thongTin.tinh_thanh.trim().length >= 2),
-        quan_huyen: Boolean(
-            thongTin.quan_huyen 
-                ? thongTin.quan_huyen.trim().length >= 2 
-                : Boolean(thongTin.tinh_thanh && thongTin.phuong_xa)
-        ),
         phuong_xa: Boolean(thongTin.phuong_xa && thongTin.phuong_xa.trim().length >= 2),
         dia_chi_chi_tiet: Boolean(thongTin.dia_chi_chi_tiet && thongTin.dia_chi_chi_tiet.trim().length >= 3)
     };
@@ -357,26 +333,12 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
             dia_chi_chi_tiet: true
         });
 
-        // Tự động map và nạp danh sách Quận/Huyện, Phường/Xã từ API tương ứng với địa chỉ đã lưu
+        // Nạp danh sách Phường/Xã của tỉnh tương ứng (địa chỉ lưu theo tỉnh cũ được quy đổi sang tỉnh mới sau sáp nhập)
         if (dc.tinhThanh) {
-            const listTinh = danhSachTinh.length > 0 ? danhSachTinh : await DiaGioiHanhChinhService.layDanhSachTinhThanhAsync();
-            const foundTinh = listTinh.find(t => 
-                xoaDauTiengViet(t.name).includes(xoaDauTiengViet(dc.tinhThanh)) ||
-                xoaDauTiengViet(dc.tinhThanh).includes(xoaDauTiengViet(t.name))
-            );
+            const foundTinh = timTinhV2TheoTen(dc.tinhThanh, danhSachTinh);
             if (foundTinh) {
-                const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(foundTinh.code);
-                setDanhSachQuan(dsQuan || []);
-                if (dc.quanHuyen) {
-                    const foundQuan = (dsQuan || []).find(q => 
-                        xoaDauTiengViet(q.name).includes(xoaDauTiengViet(dc.quanHuyen)) ||
-                        xoaDauTiengViet(dc.quanHuyen).includes(xoaDauTiengViet(q.name))
-                    );
-                    if (foundQuan) {
-                        const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(foundQuan.code);
-                        setDanhSachXa(dsXa || []);
-                    }
-                }
+                const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(foundTinh.code);
+                setDanhSachXa(dsXa || []);
             }
         }
     };
@@ -462,7 +424,6 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
                             phuong_xa: '',
                             dia_chi_chi_tiet: ''
                         });
-                        setDanhSachQuan([]);
                         setDanhSachXa([]);
                     }}
                     className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 cursor-pointer ${
@@ -666,8 +627,8 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
                         )}
                     </div>
 
-                    {/* 4, 5, 6: BỘ 3 Ô CHỌN TỈNH / THÀNH, QUẬN / HUYỆN, PHƯỜNG / XÃ (ĐỒNG ĐỀU TRÊN 3 CỘT, TIÊU ĐỀ 1 DÒNG KHÔNG LỆCH) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:col-span-2 items-start">
+                    {/* 4, 5: Ô CHỌN TỈNH / THÀNH VÀ PHƯỜNG / XÃ — địa giới sau sáp nhập 2025 (2 cấp, không còn Quận / Huyện) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:col-span-2 items-start">
                         {/* 4. Tỉnh / Thành Phố */}
                         <OChonDiaGioi
                             label="Tỉnh / Thành phố"
@@ -681,21 +642,7 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
                             loi="Vui lòng chọn Tỉnh/TP"
                         />
 
-                        {/* 5. Quận / Huyện */}
-                        <OChonDiaGioi
-                            label="Quận / Huyện"
-                            icon={Compass}
-                            iconColor="bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-950/70 dark:text-indigo-400 dark:border-indigo-800"
-                            danhSach={danhSachQuan}
-                            giaTri={thongTin.quan_huyen}
-                            onChon={chonQuanHuyen}
-                            placeholder={thongTin.tinh_thanh ? "Chọn Quận / Huyện..." : "Chọn Tỉnh trước"}
-                            disabled={!thongTin.tinh_thanh}
-                            daCham={daCham.quan_huyen}
-                            loi="Vui lòng chọn Quận/Huyện"
-                        />
-
-                        {/* 6. Phường / Xã */}
+                        {/* 5. Phường / Xã (tải theo tỉnh) */}
                         <OChonDiaGioi
                             label="Phường / Xã"
                             icon={Building2}
@@ -703,10 +650,10 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
                             danhSach={danhSachXa}
                             giaTri={thongTin.phuong_xa || ''}
                             onChon={chonPhuongXa}
-                            placeholder={thongTin.quan_huyen ? "Chọn Phường / Xã..." : "Chọn Huyện trước"}
-                            disabled={!thongTin.quan_huyen}
-                            batBuoc={false}
+                            placeholder={thongTin.tinh_thanh ? `Chọn Phường / Xã (${danhSachXa.length})...` : "Chọn Tỉnh / TP trước"}
+                            disabled={!thongTin.tinh_thanh}
                             daCham={daCham.phuong_xa}
+                            loi="Vui lòng chọn Phường/Xã"
                         />
                     </div>
 

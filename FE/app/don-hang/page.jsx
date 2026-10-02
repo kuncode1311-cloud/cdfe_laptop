@@ -148,7 +148,7 @@ export default function TrangTraCuuDonHang() {
                       <strong>{dh.thong_tin_giao_hang.ho_va_ten}</strong> - {dh.thong_tin_giao_hang.so_dien_thoai}
                     </div>
                     <div className="text-slate-500 dark:text-slate-400">
-                      {dh.thong_tin_giao_hang.dia_chi_chi_tiet}, {dh.thong_tin_giao_hang.quan_huyen}, {dh.thong_tin_giao_hang.tinh_thanh}
+                      {[dh.thong_tin_giao_hang.dia_chi_chi_tiet, dh.thong_tin_giao_hang.phuong_xa, dh.thong_tin_giao_hang.quan_huyen, dh.thong_tin_giao_hang.tinh_thanh].filter(Boolean).join(', ')}
                     </div>
                   </div>
 

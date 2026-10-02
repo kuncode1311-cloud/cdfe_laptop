@@ -70,6 +70,7 @@ export function taoHtmlHoaDon(dh, danhSachSanPham = []) {
     const soDienThoai = thongTinGiao.so_dien_thoai || '—';
     const diaChi = [
         thongTinGiao.dia_chi_chi_tiet,
+        thongTinGiao.phuong_xa,
         thongTinGiao.quan_huyen,
         thongTinGiao.tinh_thanh
     ].filter(Boolean).join(', ') || 'Showroom TNTP Laptop';

@@ -50,7 +50,6 @@ import {
     ChevronDown,
     ChevronUp,
     Building2,
-    Compass,
     Home,
     FileText,
     Crown,
@@ -67,8 +66,9 @@ import { DonHangService } from '@/services/don-hang.service';
 import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 import { 
     DiaGioiHanhChinhService, 
-    khopTuKhoaDiaChi, 
-    DANH_SACH_63_TINH_THANH_CHUAN
+    khopTuKhoaDiaChi,
+    timTinhV2TheoTen,
+    DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP
 } from '@/services/dia-gioi-hanh-chinh.service';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import ModalThanhToanQR from '@/components/thanh-toan/ModalThanhToanQR';
@@ -978,14 +978,13 @@ function NoiDungTrangTaiKhoan() {
         return '';
     }, [formDiaChi.diaChiChiTiet, daChamDiaChi.diaChiChiTiet]);
 
-    const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_63_TINH_THANH_CHUAN);
-    const [danhSachQuan, setDanhSachQuan] = useState([]);
+    const [danhSachTinh, setDanhSachTinh] = useState(DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP);
     const [danhSachXa, setDanhSachXa] = useState([]);
 
-    // Tải danh sách 63 tỉnh thành chuẩn quốc gia
+    // Tải danh sách 34 tỉnh thành sau sáp nhập 2025 (API v2: Tỉnh → Phường/Xã)
     useEffect(() => {
         let isMounted = true;
-        DiaGioiHanhChinhService.layDanhSachTinhThanhAsync().then(res => {
+        DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async().then(res => {
             if (isMounted && Array.isArray(res) && res.length > 0) {
                 setDanhSachTinh(res);
             }
@@ -1007,21 +1006,12 @@ function NoiDungTrangTaiKhoan() {
         }
     }, [nguoiDung]);
 
+    // Chọn tỉnh → tải thẳng Phường/Xã của tỉnh (mô hình 2 cấp sau sáp nhập, không còn Quận/Huyện)
     const chonTinhThanh = async (tinh) => {
         setFormDiaChi(prev => ({ ...prev, tinhThanh: tinh.name, quanHuyen: '', phuongXa: '' }));
-        setDanhSachQuan([]);
         setDanhSachXa([]);
         if (tinh.code) {
-            const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(tinh.code);
-            setDanhSachQuan(dsQuan || []);
-        }
-    };
-
-    const chonQuanHuyen = async (quan) => {
-        setFormDiaChi(prev => ({ ...prev, quanHuyen: quan.name, phuongXa: '' }));
-        setDanhSachXa([]);
-        if (quan.code) {
-            const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(quan.code);
+            const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(tinh.code);
             setDanhSachXa(dsXa || []);
         }
     };
@@ -1043,7 +1033,6 @@ function NoiDungTrangTaiKhoan() {
             macDinh: danhSachDiaChi.length === 0,
             loaiDiaChi: 'nha_rieng'
         });
-        setDanhSachQuan([]);
         setDanhSachXa([]);
         setDangMoFormDiaChi(true);
     };
@@ -1063,20 +1052,14 @@ function NoiDungTrangTaiKhoan() {
         });
         setDangMoFormDiaChi(true);
 
-        const listTinh = await DiaGioiHanhChinhService.layDanhSachTinhThanhAsync();
+        const listTinh = await DiaGioiHanhChinhService.layDanhSachTinhThanhV2Async();
         setDanhSachTinh(listTinh);
         if (dc.tinhThanh) {
-            const foundTinh = listTinh.find(t => khopTuKhoaDiaChi(t, dc.tinhThanh));
+            // Địa chỉ cũ lưu theo 63 tỉnh được quy đổi sang tỉnh mới để nạp đúng danh sách Phường/Xã
+            const foundTinh = timTinhV2TheoTen(dc.tinhThanh, listTinh);
             if (foundTinh) {
-                const dsQuan = await DiaGioiHanhChinhService.layDanhSachQuanHuyenAsync(foundTinh.code);
-                setDanhSachQuan(dsQuan || []);
-                if (dc.quanHuyen) {
-                    const foundQuan = (dsQuan || []).find(q => khopTuKhoaDiaChi(q, dc.quanHuyen));
-                    if (foundQuan) {
-                        const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaAsync(foundQuan.code);
-                        setDanhSachXa(dsXa || []);
-                    }
-                }
+                const dsXa = await DiaGioiHanhChinhService.layDanhSachPhuongXaTheoTinhAsync(foundTinh.code);
+                setDanhSachXa(dsXa || []);
             }
         }
     };
@@ -1098,11 +1081,6 @@ function NoiDungTrangTaiKhoan() {
 
         if (!formDiaChi.tinhThanh) {
             setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Tỉnh / Thành phố!' });
-            return;
-        }
-
-        if (!formDiaChi.quanHuyen) {
-            setThongBao({ loai: 'loi', noiDung: 'Vui lòng chọn Quận / Huyện!' });
             return;
         }
 
@@ -2714,8 +2692,8 @@ function NoiDungTrangTaiKhoan() {
                                         </div>
                                     </div>
 
-                                    {/* Hàng 2: Tỉnh/Thành phố, Quận/Huyện, Phường/Xã - Chia 3 cột ngay ngắn trên desktop, 1 cột trên mobile */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                    {/* Hàng 2: Tỉnh/Thành phố, Phường/Xã — địa giới sau sáp nhập 2025 (2 cấp), 2 cột trên desktop, 1 cột trên mobile */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                                         <BoChonDiaGioi
                                             label="Tỉnh / Thành phố *"
                                             icon={Building2}
@@ -2726,23 +2704,13 @@ function NoiDungTrangTaiKhoan() {
                                         />
 
                                         <BoChonDiaGioi
-                                            label="Quận / Huyện *"
-                                            icon={Compass}
-                                            danhSach={danhSachQuan}
-                                            giaTri={formDiaChi.quanHuyen}
-                                            onChon={chonQuanHuyen}
-                                            placeholder={formDiaChi.tinhThanh ? `Chọn Quận / Huyện (${danhSachQuan.length})...` : "Chọn Tỉnh / TP trước"}
-                                            disabled={!formDiaChi.tinhThanh}
-                                        />
-
-                                        <BoChonDiaGioi
                                             label="Phường / Xã *"
                                             icon={Home}
                                             danhSach={danhSachXa}
                                             giaTri={formDiaChi.phuongXa}
                                             onChon={chonPhuongXa}
-                                            placeholder={formDiaChi.quanHuyen ? `Chọn Phường / Xã (${danhSachXa.length})...` : "Chọn Quận / Huyện trước"}
-                                            disabled={!formDiaChi.quanHuyen}
+                                            placeholder={formDiaChi.tinhThanh ? `Chọn Phường / Xã (${danhSachXa.length})...` : "Chọn Tỉnh / TP trước"}
+                                            disabled={!formDiaChi.tinhThanh}
                                         />
                                     </div>
 
