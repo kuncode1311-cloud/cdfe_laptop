@@ -1,5 +1,4 @@
-require('dotenv').config();
-
+// Biến môi trường đã được nạp một lần duy nhất tại server.js
 function layCauHinhNineRouter() {
     return {
         apiKey: (process.env.NINE_ROUTER_API_KEY || '').trim(),

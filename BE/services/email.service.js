@@ -1,5 +1,4 @@
-require('dotenv').config();
-
+// Biến môi trường đã được nạp một lần duy nhất tại server.js
 const emailUser = process.env.EMAIL_USER || 'kun.code.1311@gmail.com';
 const brevoApiKey = process.env.BREVO_API_KEY;
 const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || emailUser;
@@ -10,7 +9,7 @@ const escapeHtml = (giaTri = '') => String(giaTri ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-if (!brevoApiKey) {
+if (!brevoApiKey && process.env.NODE_ENV !== 'test') {
     console.warn('⚠️ Thiếu BREVO_API_KEY; chức năng gửi email sẽ không hoạt động trên production.');
 }
 

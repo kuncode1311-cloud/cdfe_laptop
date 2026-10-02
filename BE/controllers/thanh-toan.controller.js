@@ -477,5 +477,6 @@ module.exports = {
     taoYeuCauThanhToanPayOS,
     kiemTraTrangThaiPayOS,
     xuLyWebhookPayOS,
-    taoUrlVietQR
+    taoUrlVietQR,
+    taoChuKyPayOS
 };

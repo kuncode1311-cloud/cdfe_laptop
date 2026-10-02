@@ -1,9 +1,8 @@
 /**
  * Chú thích file: Cấu hình dịch vụ Gemini AI Studio và danh sách mô hình ưu tiên.
  * Hỗ trợ xoay vòng nhiều API Key tự động khi gặp giới hạn hạn ngạch (429/403).
+ * Biến môi trường đã được nạp một lần duy nhất tại server.js.
  */
-const dotenv = require('dotenv');
-dotenv.config();
 
 // Đọc danh sách API key từ biến môi trường (phân cách bởi dấu phẩy)
 const rawKeys = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';

@@ -1,5 +1,7 @@
 # 💻 LAPTOP NEW - HỆ THỐNG THƯƠNG MẠI ĐIỆN TỬ BÁN LAPTOP
 
+[![CI](https://github.com/kuncode1311-cloud/cdfe_laptop/actions/workflows/ci.yml/badge.svg)](https://github.com/kuncode1311-cloud/cdfe_laptop/actions/workflows/ci.yml)
+
 Dự án website bán laptop trực tuyến full-stack, được xây dựng với **Next.js** (Frontend) và **Express.js + MongoDB Atlas** (Backend).
 
 ---
@@ -120,6 +122,32 @@ npm run dev
 ```
 
 - **URL Frontend:** **[http://localhost:3000](http://localhost:3000)**
+
+---
+
+## 🧪 Kiểm thử tự động & CI
+
+Back-End có bộ kiểm thử **Jest + Supertest** trong `BE/tests/`:
+
+| Thư mục | Loại | Nội dung |
+|---|---|---|
+| `tests/unit/` | Unit test | Hàm bảo mật (OTP, mật khẩu, regex), tạo slug, chữ ký PayOS, middleware (NoSQL Injection, rate limit, phân quyền) |
+| `tests/integration/` | Integration test | Gọi API thật qua Supertest: đăng nhập / JWT / thu hồi phiên, sản phẩm + phân quyền Admin, webhook PayOS, CORS, 404 |
+
+Integration test dùng **mongodb-memory-server** (MongoDB chạy trong RAM) nên không cần database thật hay key bí mật.
+
+```bash
+cd BE
+npm test               # chạy toàn bộ kiểm thử
+npm run test:unit      # chỉ unit test
+npm run test:coverage  # kèm báo cáo độ phủ (BE/coverage/)
+```
+
+**GitHub Actions** (`.github/workflows/ci.yml`) tự chạy mỗi lần push / Pull Request vào `main`:
+
+1. **Back-End:** `npm ci` → `npm run test:coverage`
+2. **Front-End:** `npm ci` → `npm run lint` → `npm run build`
+3. **Production smoke test** (chỉ khi push `main`): kiểm tra `api.trikun.site` và `trikun.site` đang chạy đúng, kèm Newman.
 
 ---
 
