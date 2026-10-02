@@ -28,13 +28,23 @@ const corsOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
     .map(url => url.trim())
     .filter(Boolean);
 
-app.use(cors({
-    origin(origin, callback) {
-        // Cho phép Postman/server-to-server (không có Origin) và frontend đã khai báo.
-        if (!origin || corsOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error(`CORS không cho phép origin: ${origin}`));
-    },
-    credentials: true
+// Request cùng tên miền với API (vd: nút "Try it out" của Swagger tại api.trikun.site/api-docs):
+// trình duyệt vẫn gửi header Origin cho POST/PUT/DELETE nên phải cho phép riêng trường hợp này.
+const laCungTenMien = (origin, req) => {
+    try {
+        return new URL(origin).host === req.get('host');
+    } catch {
+        return false;
+    }
+};
+
+app.use(cors((req, callback) => {
+    const origin = req.get('origin');
+    // Cho phép Postman/server-to-server (không có Origin), frontend đã khai báo và chính trang Swagger.
+    if (!origin || corsOrigins.includes(origin) || laCungTenMien(origin, req)) {
+        return callback(null, { origin: true, credentials: true });
+    }
+    return callback(new Error(`CORS không cho phép origin: ${origin}`));
 }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));

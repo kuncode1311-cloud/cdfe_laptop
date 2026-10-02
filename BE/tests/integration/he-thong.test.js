@@ -46,6 +46,16 @@ describe('CORS', () => {
         expect(res.headers['access-control-allow-origin']).toBe('https://trikun.site');
     });
 
+    test('trang Swagger cùng tên miền với API gọi POST được (không bị chặn CORS)', async () => {
+        const res = await request(app)
+            .post('/api/auth/dang-nhap')
+            .set('Host', 'api.trikun.site')
+            .set('Origin', 'https://api.trikun.site')
+            .send({});
+
+        expect(res.status).toBe(400); // tới được controller (thiếu dữ liệu) chứ không phải 403 CORS
+    });
+
     test('origin lạ bị chặn 403', async () => {
         const res = await request(app).get('/api/health').set('Origin', 'https://web-gia-mao.com');
 
