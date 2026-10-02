@@ -455,7 +455,7 @@ async function xuLyNutBamTelegram(callbackQuery) {
             }
             await traLoiCallback(idCallback, `Đang tra cứu #${maDonHang}...`);
             const noiDungChiTiet = taoMauTinNhanDonHang(donHang, '🔎 <b>THÔNG TIN CHI TIẾT ĐƠN HÀNG</b>') +
-                `\n🌐 <b>Mở quản trị Web:</b> http://localhost:3000/admin?tab=don_hang`;
+                `\n🌐 <b>Mở quản trị Web:</b> ${(process.env.CLIENT_URL || 'http://localhost:3000').split(',')[0].trim().replace(/\/$/, '')}/admin?tab=don_hang`;
             await guiTinNhanAdmin(noiDungChiTiet, taoBanPhimThaoTacDonHang(maDonHang, donHang.trang_thai));
             return;
         }

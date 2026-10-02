@@ -171,7 +171,8 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
         let qrCode = '';
 
         // Chuẩn bị payload gửi PayOS
-        const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+        // CLIENT_URL có thể là danh sách nhiều origin (cách nhau dấu phẩy) → lấy origin đầu tiên làm trang chính
+        const clientUrl = (process.env.CLIENT_URL || 'http://localhost:3000').split(',')[0].trim().replace(/\/$/, '');
         const payloadPayOS = {
             orderCode: numericCode,
             amount: tongTienSo,
