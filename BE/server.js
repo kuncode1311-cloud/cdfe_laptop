@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const swaggerUi = require('swagger-ui-express');
+const openapiSpec = require('./docs/openapi');
 const ketNoiCoSoDuLieu = require('./config/db');
 const { datHeaderBaoMat, chongNoSqlInjection } = require('./middleware/bao-mat.middleware');
 const { gioiHanRequest } = require('./middleware/gioi-han-request.middleware');
@@ -38,6 +40,19 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Tài liệu API (Swagger UI) tại /api-docs. Gắn TRƯỚC datHeaderBaoMat vì CSP toàn cục
+// (default-src 'none') sẽ chặn giao diện Swagger; trang này dùng CSP nới lỏng riêng.
+app.use('/api-docs', (req, res, next) => {
+    res.setHeader('Content-Security-Policy',
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    next();
+}, swaggerUi.serve, swaggerUi.setup(openapiSpec, {
+    customSiteTitle: 'LaptopNew API Docs',
+    swaggerOptions: { persistAuthorization: true, docExpansion: 'none', tagsSorter: 'alpha' }
+}));
+app.get('/api-docs.json', (req, res) => res.json(openapiSpec));
 
 // Bảo mật toàn cục: ẩn công nghệ server, thêm security headers, lọc NoSQL Injection
 app.disable('x-powered-by');
@@ -156,7 +171,7 @@ app.listen(PORT, () => {
     console.log(`=============================================`);
     console.log(`🚀 Backend Express Server đang chạy tại:`);
     console.log(`👉 http://localhost:${PORT}`);
-    console.log(`👉 API Docs: http://localhost:${PORT}/`);
+    console.log(`👉 API Docs (Swagger): http://localhost:${PORT}/api-docs`);
     console.log(`=============================================`);
 
     // Khởi động dịch vụ Telegram Bot quản lý đơn hàng
