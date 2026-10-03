@@ -78,19 +78,35 @@ describe('Sản phẩm tạm ẩn (con_hang = false)', () => {
         expect(res.body.map((sp) => sp.id)).toEqual(['asus-zenbook-14-test']);
     });
 
-    test('sản phẩm BÁN HẾT (tồn kho 0, con_hang = false) vẫn hiện cho khách, khác với sản phẩm Admin chủ động ẩn', async () => {
+    test('sản phẩm HẾT HÀNG (tồn kho 0) tự ẩn khỏi khách: danh sách không có, chi tiết 404', async () => {
+        await taoSanPham();
         await taoSanPham({
             id: 'het-hang',
             slug: 'het-hang',
             ma_san_pham: 'HET-01',
-            so_luong_ton_kho: 0,
-            con_hang: false
+            ten_san_pham: 'Laptop Hết Hàng',
+            so_luong_ton_kho: 0
         });
-        await taoSanPhamAn();
         const ds = await request(app).get('/api/san-pham');
         const ct = await request(app).get('/api/san-pham/het-hang');
 
-        expect(ds.body.map((sp) => sp.id)).toEqual(['het-hang']);
+        expect(ds.body.map((sp) => sp.id)).toEqual(['asus-zenbook-14-test']);
+        expect(ct.status).toBe(404);
+    });
+
+    test('Admin vẫn thấy sản phẩm hết hàng để nhập thêm hàng', async () => {
+        const admin = await taoNguoiDung({ vaiTro: 'admin' });
+        await taoSanPham({
+            id: 'het-hang',
+            slug: 'het-hang',
+            ma_san_pham: 'HET-01',
+            ten_san_pham: 'Laptop Hết Hàng',
+            so_luong_ton_kho: 0
+        });
+        const ct = await request(app)
+            .get('/api/san-pham/het-hang')
+            .set('Authorization', `Bearer ${taoTokenCho(admin)}`);
+
         expect(ct.status).toBe(200);
     });
 

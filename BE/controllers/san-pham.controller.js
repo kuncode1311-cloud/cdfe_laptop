@@ -6,13 +6,12 @@ const { escapeRegex, chuoiAnToan } = require('../utils/bao-mat');
  * Controller xử lý nghiệp vụ cho Sản phẩm Laptop
  */
 
-// Sản phẩm "tạm ẩn" chỉ Admin nhìn thấy; khách chỉ thấy sản phẩm đang mở bán.
-// Phân biệt hai trường hợp cùng có con_hang = false:
-//  - Admin chủ động ẩn: con_hang = false nhưng VẪN CÒN tồn kho  → ẩn khỏi khách.
-//  - Bán hết hàng: hệ thống tự đặt con_hang = false khi tồn kho về 0 → vẫn hiện (khách biết món đã hết),
-//    việc mua bị chặn ở giỏ hàng và lúc tạo đơn.
+// Khách chỉ thấy sản phẩm đang bán được. Sản phẩm bị ẨN khỏi khách khi:
+//  - Admin chủ động tạm ẩn (con_hang = false), hoặc
+//  - đã HẾT HÀNG (tồn kho <= 0; khi tồn về 0 hệ thống cũng tự đặt con_hang = false).
+// Nhờ vậy khách không bấm nhầm vào món không mua được; Admin vẫn thấy tất cả để nhập thêm hàng / mở bán lại.
 const laAdmin = (req) => req.user?.vaiTro === 'admin';
-const daBiAn = (sanPham) => sanPham.con_hang === false && Number(sanPham.so_luong_ton_kho) > 0;
+const daBiAn = (sanPham) => sanPham.con_hang === false || Number(sanPham.so_luong_ton_kho) <= 0;
 
 // Phản hồi dành cho Admin (có thể chứa sản phẩm ẩn) không được cache dùng chung;
 // phản hồi công khai cache ngắn để giảm tải cho server.
@@ -44,8 +43,8 @@ const layTatCaSanPham = async (req, res) => {
         // Xây dựng câu truy vấn MongoDB
         const filter = {};
 
-        // Khách không thấy sản phẩm đã bị Admin tạm ẩn
-        if (!laAdmin(req)) filter.$nor = [{ con_hang: false, so_luong_ton_kho: { $gt: 0 } }];
+        // Khách không thấy sản phẩm đã bị ẩn hoặc hết hàng
+        if (!laAdmin(req)) filter.$nor = [{ con_hang: false }, { so_luong_ton_kho: { $lte: 0 } }];
 
         // Tìm kiếm theo từ khóa
         // Escape từ khóa: người dùng gõ ký tự đặc biệt như '(a+)+$' không làm treo server (ReDoS)
