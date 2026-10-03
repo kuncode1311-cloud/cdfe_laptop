@@ -6,10 +6,20 @@ const { escapeRegex, chuoiAnToan } = require('../utils/bao-mat');
  * Controller xử lý nghiệp vụ cho Sản phẩm Laptop
  */
 
+// Sản phẩm "tạm ẩn" (con_hang = false) chỉ Admin nhìn thấy; khách chỉ thấy sản phẩm đang mở bán.
+const laAdmin = (req) => req.user?.vaiTro === 'admin';
+
+// Phản hồi dành cho Admin (có thể chứa sản phẩm ẩn) không được cache dùng chung;
+// phản hồi công khai cache ngắn để giảm tải cho server.
+const datCacheTheoVaiTro = (req, res, cachePublic) => {
+    res.vary('Authorization');
+    res.set('Cache-Control', laAdmin(req) ? 'private, no-store' : cachePublic);
+};
+
 // 1. Lấy tất cả sản phẩm (kèm tìm kiếm, lọc đa tiêu chí và sắp xếp)
 const layTatCaSanPham = async (req, res) => {
-    // Thiết lập HTTP Caching tối ưu cho Server Railway & Trình duyệt khách (cache 60s)
-    res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
+    // HTTP Caching cho khách (60s); Admin luôn lấy dữ liệu mới nhất
+    datCacheTheoVaiTro(req, res, 'public, max-age=60, stale-while-revalidate=120');
 
     try {
         const {
@@ -28,6 +38,9 @@ const layTatCaSanPham = async (req, res) => {
 
         // Xây dựng câu truy vấn MongoDB
         const filter = {};
+
+        // Khách không thấy sản phẩm đã bị Admin tạm ẩn
+        if (!laAdmin(req)) filter.con_hang = { $ne: false };
 
         // Tìm kiếm theo từ khóa
         // Escape từ khóa: người dùng gõ ký tự đặc biệt như '(a+)+$' không làm treo server (ReDoS)
@@ -107,8 +120,8 @@ const layTatCaSanPham = async (req, res) => {
 
 // 2. Lấy thông tin chi tiết một sản phẩm theo ID hoặc Mã SKU
 const laySanPhamTheoId = async (req, res) => {
-    // Cache chi tiết sản phẩm 120s
-    res.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
+    // Cache chi tiết sản phẩm 120s cho khách; Admin luôn lấy dữ liệu mới nhất
+    datCacheTheoVaiTro(req, res, 'public, max-age=120, stale-while-revalidate=300');
 
     try {
         const { id } = req.params;
@@ -156,7 +169,8 @@ const laySanPhamTheoId = async (req, res) => {
             }
         }
 
-        if (!sanPham) {
+        // Sản phẩm đã tạm ẩn thì khách nhận 404 như thể không tồn tại (không lộ việc có sản phẩm ẩn)
+        if (!sanPham || (sanPham.con_hang === false && !laAdmin(req))) {
             return res.status(404).json({ thong_diep: `Không tìm thấy sản phẩm với mã/id: ${id}` });
         }
 

@@ -7,11 +7,12 @@ const {
     capNhatSanPham,
     xoaSanPham
 } = require('../controllers/san-pham.controller');
-const { xacThucToken, chiAdmin } = require('../middleware/xac-thuc.middleware');
+const { xacThucToken, chiAdmin, nhanDienNguoiDungMem } = require('../middleware/xac-thuc.middleware');
 
-// Tuyến đường Công khai (Public): Khách xem sản phẩm
-router.get('/', layTatCaSanPham);
-router.get('/:id', laySanPhamTheoId);
+// Tuyến đường Công khai (Public): Khách xem sản phẩm.
+// nhanDienNguoiDungMem: có token Admin thì thấy cả sản phẩm tạm ẩn; khách / token lỗi chỉ thấy sản phẩm đang mở bán.
+router.get('/', nhanDienNguoiDungMem, layTatCaSanPham);
+router.get('/:id', nhanDienNguoiDungMem, laySanPhamTheoId);
 
 // Tuyến đường Bảo vệ (Chỉ Admin): Thêm, Sửa, Xóa sản phẩm
 router.post('/', xacThucToken, chiAdmin, themSanPham);

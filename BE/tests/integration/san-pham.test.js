@@ -60,6 +60,56 @@ describe('Xem sản phẩm (công khai)', () => {
     });
 });
 
+describe('Sản phẩm tạm ẩn (con_hang = false)', () => {
+    const taoSanPhamAn = () =>
+        taoSanPham({
+            id: 'an-di',
+            slug: 'an-di',
+            ma_san_pham: 'AN-01',
+            ten_san_pham: 'Laptop Tạm Ẩn',
+            con_hang: false
+        });
+
+    test('khách không thấy sản phẩm ẩn trong danh sách', async () => {
+        await taoSanPham();
+        await taoSanPhamAn();
+        const res = await request(app).get('/api/san-pham');
+
+        expect(res.body.map((sp) => sp.id)).toEqual(['asus-zenbook-14-test']);
+    });
+
+    test('khách mở chi tiết sản phẩm ẩn → 404', async () => {
+        await taoSanPhamAn();
+        const res = await request(app).get('/api/san-pham/an-di');
+
+        expect(res.status).toBe(404);
+    });
+
+    test('Admin vẫn thấy sản phẩm ẩn (danh sách và chi tiết), phản hồi không cache dùng chung', async () => {
+        const admin = await taoNguoiDung({ vaiTro: 'admin' });
+        await taoSanPham();
+        await taoSanPhamAn();
+        const auth = { Authorization: `Bearer ${taoTokenCho(admin)}` };
+
+        const ds = await request(app).get('/api/san-pham').set(auth);
+        const ct = await request(app).get('/api/san-pham/an-di').set(auth);
+
+        expect(ds.body).toHaveLength(2);
+        expect(ct.status).toBe(200);
+        expect(ds.headers['cache-control']).toContain('no-store');
+    });
+
+    test('token khách hàng thường không xem được sản phẩm ẩn', async () => {
+        const khach = await taoNguoiDung();
+        await taoSanPhamAn();
+        const res = await request(app)
+            .get('/api/san-pham/an-di')
+            .set('Authorization', `Bearer ${taoTokenCho(khach)}`);
+
+        expect(res.status).toBe(404);
+    });
+});
+
 describe('Quản lý sản phẩm (chỉ Admin)', () => {
     const sanPhamMoi = {
         ma_san_pham: 'NEW-01',

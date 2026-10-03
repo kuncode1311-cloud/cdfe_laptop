@@ -638,7 +638,7 @@ const paths = {
     '/api/san-pham': {
         get: op({
             tag: T.sp, summary: 'Danh sách / tìm kiếm / lọc sản phẩm',
-            description: 'Công khai, có `Cache-Control` 60 giây. Trả về **mảng** sản phẩm (tối đa 200 bản ghi mỗi lần). Từ khóa tìm kiếm được escape để chống ReDoS.',
+            description: 'Công khai, có `Cache-Control` 60 giây. Trả về **mảng** sản phẩm (tối đa 200 bản ghi mỗi lần). Từ khóa tìm kiếm được escape để chống ReDoS. Sản phẩm **tạm ẩn** (`con_hang = false`) chỉ hiện khi gửi kèm token Admin; khách không thấy.',
             params: [
                 query('tu_khoa', 'Tìm theo tên, mã, hãng, CPU, card đồ họa (hỗ trợ cả `q`)', { type: 'string' }, 'rtx'),
                 query('hang_san_xuat', 'Lọc theo hãng, nhiều hãng cách nhau dấu phẩy', { type: 'string' }, 'asus,msi'),
