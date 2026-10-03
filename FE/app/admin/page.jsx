@@ -107,7 +107,9 @@ import {
     Barcode,
     Building2,
     CircleDollarSign,
-    Shield
+    Shield,
+    Globe,
+    Smile
 } from 'lucide-react';
 import { useAuth, useNguoiDung } from '@/contexts/AuthContext';
 import { useTheme, useGiaoDien } from '@/contexts/ThemeContext';
@@ -1144,6 +1146,88 @@ export default function TrangQuanTriCuaHang() {
             }
         };
         reader.readAsDataURL(file);
+        e.target.value = '';
+    };
+
+    // Xử lý tải ảnh bài viết tin tức trực tiếp từ máy tính
+    const xuLyUploadAnhTinTuc = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            canhBao({
+                tieuDe: 'Định Dạng Tệp Không Hợp Lệ',
+                noiDung: 'Vui lòng chọn đúng file hình ảnh hợp lệ (JPG, PNG, WebP...).',
+                loai: 'warning'
+            });
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            if (ev.target?.result) {
+                setFormTinTuc(prev => ({ ...prev, hinh_anh: ev.target.result }));
+                hienThongBao('Đã tải hình ảnh bài viết từ máy tính lên thành công!');
+            }
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    };
+
+    // Xử lý tải logo thương hiệu trực tiếp từ máy tính
+    const xuLyUploadLogoDanhMuc = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            canhBao({
+                tieuDe: 'Định Dạng Tệp Không Hợp Lệ',
+                noiDung: 'Vui lòng chọn file hình ảnh hợp lệ (PNG, JPG, SVG, WebP...).',
+                loai: 'warning'
+            });
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            if (ev.target?.result) {
+                setFormDm(prev => ({ ...prev, logo: ev.target.result }));
+                hienThongBao('Đã tải logo thương hiệu từ máy tính lên thành công!');
+            }
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    };
+
+    // Xử lý thêm nhiều ảnh vào thư viện Gallery sản phẩm
+    const xuLyUploadAnhGallerySp = (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+        const validFiles = files.filter(f => f.type.startsWith('image/'));
+        if (validFiles.length === 0) {
+            canhBao({
+                tieuDe: 'Định Dạng Tệp Không Hợp Lệ',
+                noiDung: 'Vui lòng chọn đúng tệp hình ảnh hợp lệ (JPG, PNG, WebP...).',
+                loai: 'warning'
+            });
+            return;
+        }
+
+        let daDoc = 0;
+        const ketQua = [];
+        validFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                if (ev.target?.result) {
+                    ketQua.push(ev.target.result);
+                }
+                daDoc++;
+                if (daDoc === validFiles.length) {
+                    setFormSp(prev => ({
+                        ...prev,
+                        thu_vien_hinh_anh: [...(prev.thu_vien_hinh_anh || []), ...ketQua]
+                    }));
+                    hienThongBao(`Đã thêm thành công ${ketQua.length} ảnh vào thư viện sản phẩm!`);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
         e.target.value = '';
     };
 
@@ -2802,6 +2886,27 @@ export default function TrangQuanTriCuaHang() {
 
     const xuLyLuuSanPham = async (e) => {
         e.preventDefault();
+        // Kiểm tra hợp lệ giá bán (không được để trống, 0đ, hoặc < 1.000 đ)
+        const giaBanSo = Number(formSp.gia_khuyen_mai);
+        if (formSp.gia_khuyen_mai === undefined || formSp.gia_khuyen_mai === null || formSp.gia_khuyen_mai === '' || isNaN(giaBanSo) || giaBanSo < 1000) {
+            canhBao({
+                tieuDe: 'Giá Bán Không Hợp Lệ',
+                noiDung: 'Giá khuyến mãi (giá bán thực tế) không được để trống hoặc bằng 0 đ, và phải từ 1.000 đ trở lên để đáp ứng quy định thanh toán!',
+                loai: 'danger'
+            });
+            return;
+        }
+
+        const giaGocSo = Number(formSp.gia_goc);
+        if (giaGocSo > 0 && giaGocSo < giaBanSo) {
+            canhBao({
+                tieuDe: 'Giá Niêm Yết Không Hợp Lệ',
+                noiDung: `Giá niêm yết gốc (${giaGocSo.toLocaleString('vi-VN')} đ) phải lớn hơn hoặc bằng giá khuyến mãi (${giaBanSo.toLocaleString('vi-VN')} đ). Hãy để 0 nếu không có giá niêm yết cũ!`,
+                loai: 'danger'
+            });
+            return;
+        }
+
         setDangLuuSp(true);
         try {
             // Bảo toàn tuyệt đối mọi thông số kỹ thuật gốc có trong DB (không bị ghi đè mất các trường sâu)
@@ -3210,6 +3315,7 @@ export default function TrangQuanTriCuaHang() {
         try {
             const daLuu = CaiDatService.luuCaiDatKhuyenMai(formCaiDatKm);
             setCaiDatKm(daLuu);
+            setFormCaiDatKm(daLuu);
             hienThongBao('Đã lưu và áp dụng cấu hình Banner Khuyến Mãi thành công!');
         } catch (err) {
             canhBao({
@@ -6230,16 +6336,16 @@ export default function TrangQuanTriCuaHang() {
                     {/* TAB 5: KHÁCH HÀNG (CRM DOANH THU & TIỀM NĂNG) */}
                     {/* ========================================= */}
                     {tabHienTai === 'khach_hang' && (
-                        <div className="space-y-3 animate-in fade-in duration-200">
+                        <div className="space-y-4 animate-in fade-in duration-200">
                             {/* Insight Cards (Thống Kê Nhanh Tinh Gọn) */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                <div className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center justify-between">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                <div className="px-4 py-3 rounded-2xl bg-white dark:bg-[#0d1527] border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400 flex items-center justify-center text-sm shrink-0">
+                                        <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 flex items-center justify-center text-sm shrink-0 border border-blue-200 dark:border-blue-800">
                                             👥
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Tổng Khách Hàng</div>
+                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Tổng Khách Hàng</div>
                                             <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
                                                 {danhSachNguoiDung.length} <span className="text-xs font-bold text-slate-400">Thành Viên</span>
                                             </div>
@@ -6247,13 +6353,13 @@ export default function TrangQuanTriCuaHang() {
                                     </div>
                                 </div>
 
-                                <div className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center justify-between">
+                                <div className="px-4 py-3 rounded-2xl bg-white dark:bg-[#0d1527] border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400 flex items-center justify-center text-sm shrink-0">
+                                        <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 flex items-center justify-center text-sm shrink-0 border border-rose-200 dark:border-rose-800">
                                             🔥
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Khách Tiềm Năng</div>
+                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Khách Tiềm Năng</div>
                                             <div className="text-sm sm:text-base font-black text-rose-600 dark:text-rose-400 leading-tight">
                                                 {danhSachKhachHangKemDoanhThu.filter(u => u.laTiemNang).length} <span className="text-xs font-bold text-rose-400/80">Khách Tiềm Năng</span>
                                             </div>
@@ -6261,13 +6367,13 @@ export default function TrangQuanTriCuaHang() {
                                     </div>
                                 </div>
 
-                                <div className="px-3.5 py-2.5 rounded-2xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-2xs flex items-center justify-between">
+                                <div className="px-4 py-3 rounded-2xl bg-white dark:bg-[#0d1527] border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 flex items-center justify-between">
                                     <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 flex items-center justify-center text-sm shrink-0">
+                                        <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center justify-center text-sm shrink-0 border border-emerald-200 dark:border-emerald-800">
                                             💰
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Doanh Thu Từ Khách</div>
+                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Doanh Thu Từ Khách</div>
                                             <div className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 leading-tight">
                                                 {dinhDangTienVND(danhSachKhachHangKemDoanhThu.reduce((s, u) => s + (u.tongChiTieu || 0), 0))}
                                             </div>
@@ -6277,7 +6383,7 @@ export default function TrangQuanTriCuaHang() {
                             </div>
 
                             {/* Toolbar & Filter (Mỏng Nhẹ - Tiết Kiệm Không Gian) */}
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-[#0d1527] px-3.5 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-[#0d1527] px-4 py-3 rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5">
                                 <div className="flex flex-wrap items-center gap-2 flex-1">
                                     <div className="relative flex-1 sm:max-w-xs min-w-[200px]">
                                         <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -6286,14 +6392,14 @@ export default function TrangQuanTriCuaHang() {
                                             value={tuKhoaKhachHang}
                                             onChange={(e) => setTuKhoaKhachHang(e.target.value)}
                                             placeholder="Tìm theo tên, email, sđt..."
-                                            className="w-full pl-8.5 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
+                                            className="w-full pl-8.5 pr-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 transition-colors"
                                         />
                                     </div>
 
                                     <select
                                         value={locKhachHang}
                                         onChange={(e) => setLocKhachHang(e.target.value)}
-                                        className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                                        className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 cursor-pointer"
                                     >
                                         <option value="tat_ca">Tất cả khách hàng</option>
                                         <option value="hoat_dong">🟢 Đang Hoạt Động</option>
@@ -6308,7 +6414,7 @@ export default function TrangQuanTriCuaHang() {
                                     <select
                                         value={sapXepKhachHang}
                                         onChange={(e) => setSapXepKhachHang(e.target.value)}
-                                        className="px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                                        className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 cursor-pointer"
                                     >
                                         <option value="ngay_tao_moi">📅 Mới đăng ký gần đây</option>
                                         <option value="doanh_thu_giam">💰 Doanh thu cao → thấp</option>
@@ -6319,7 +6425,7 @@ export default function TrangQuanTriCuaHang() {
 
                                 <button
                                     onClick={moModalThemUser}
-                                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 !text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-xs shadow-emerald-500/25 cursor-pointer whitespace-nowrap transition-all"
+                                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 !text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-700/25 cursor-pointer whitespace-nowrap transition-all border border-emerald-800"
                                 >
                                     <UserPlus className="w-3.5 h-3.5 !text-white" />
                                     <span className="!text-white">+ Thêm Tài Khoản</span>
@@ -6327,9 +6433,9 @@ export default function TrangQuanTriCuaHang() {
                             </div>
 
                             {/* Bảng Khách Hàng Tinh Gọn - Trực Quan - Fit 1 Màn Hình */}
-                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden flex flex-col">
+                            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-400 dark:border-slate-600 shadow-lg shadow-slate-900/10 overflow-hidden flex flex-col">
                                 {/* Banner Tiêu Đề Bảng */}
-                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-3.5 py-2 flex items-center justify-between gap-2 shadow-xs shrink-0">
+                                <div className="bg-gradient-to-r from-blue-800 via-indigo-800 to-blue-900 text-white px-4 py-2.5 flex items-center justify-between gap-2 shadow-sm shrink-0">
                                     <div className="flex items-center gap-2">
                                         <Users className="w-4 h-4 text-blue-200" />
                                         <h3 className="font-black text-xs uppercase tracking-wider text-white">
@@ -6354,15 +6460,15 @@ export default function TrangQuanTriCuaHang() {
                                 {/* Container Cuộn Nội Bộ Mượt Mà (Fit Trong 1 Màn Hình, Header Cố Định) */}
                                 <div className={`overflow-x-auto overflow-y-auto max-h-[calc(100vh-275px)] min-h-[350px] transition-opacity duration-300 ${dangTai || dangLocKhachHang ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
                                     <table className="w-full min-w-[1050px] text-left text-xs border-collapse">
-                                        <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 shadow-xs">
+                                        <thead className="sticky top-0 z-10 bg-slate-200 dark:bg-slate-800 shadow-sm">
                                             <tr className="text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
-                                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
-                                                <th className="py-2.5 px-3 min-w-[220px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">KHÁCH HÀNG & LIÊN HỆ</th>
-                                                <th className="py-2.5 px-3 w-40 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">NGÀY TẠO (GIỜ & NGÀY)</th>
-                                                <th className="py-2.5 px-3 w-44 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">DOANH THU & ĐƠN HÀNG</th>
-                                                <th className="py-2.5 px-2.5 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
-                                                <th className="py-2.5 px-2.5 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">PHÂN QUYỀN</th>
-                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
+                                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-400 dark:border-slate-600 whitespace-nowrap">#</th>
+                                                <th className="py-2.5 px-3 min-w-[220px] border-b-2 border-r border-slate-400 dark:border-slate-600 whitespace-nowrap">KHÁCH HÀNG & LIÊN HỆ</th>
+                                                <th className="py-2.5 px-3 w-40 text-center border-b-2 border-r border-slate-400 dark:border-slate-600 whitespace-nowrap">NGÀY TẠO (GIỜ & NGÀY)</th>
+                                                <th className="py-2.5 px-3 w-44 border-b-2 border-r border-slate-400 dark:border-slate-600 whitespace-nowrap">DOANH THU & ĐƠN HÀNG</th>
+                                                <th className="py-2.5 px-2.5 w-28 text-center border-b-2 border-r border-slate-400 dark:border-slate-600 whitespace-nowrap">TRẠNG THÁI</th>
+                                                <th className="py-2.5 px-2.5 w-28 text-center border-b-2 border-r border-slate-400 dark:border-slate-600 whitespace-nowrap">PHÂN QUYỀN</th>
+                                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-slate-400 dark:border-slate-600 whitespace-nowrap">THAO TÁC</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -6390,19 +6496,19 @@ export default function TrangQuanTriCuaHang() {
                                                                 daBiKhoa
                                                                     ? '!bg-rose-100/90 dark:!bg-rose-950/60 hover:!bg-rose-200/90 dark:hover:!bg-rose-900/70 border-l-4 border-l-rose-600 shadow-xs'
                                                                     : chuaKichHoat
-                                                                    ? 'bg-amber-50/60 dark:bg-amber-950/30 hover:!bg-amber-100/60 dark:hover:!bg-amber-950/50'
-                                                                    : 'odd:bg-white even:bg-slate-50/60 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/40'
+                                                                    ? 'bg-amber-100/70 dark:bg-amber-950/35 hover:!bg-amber-200/70 dark:hover:!bg-amber-950/55'
+                                                                    : 'odd:bg-white even:bg-slate-100/80 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-100/80 dark:hover:!bg-blue-950/45'
                                                             }`}
                                                         >
                                                             {/* Cột 1: STT */}
                                                             <td className={`py-2 px-2 text-center font-bold border-b border-r whitespace-nowrap ${
-                                                                daBiKhoa ? 'border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 font-black' : chuaKichHoat ? 'border-slate-200 dark:border-slate-800 text-amber-600 dark:text-amber-400 font-black' : 'border-slate-200 dark:border-slate-800 text-slate-400'
+                                                                daBiKhoa ? 'border-rose-300 dark:border-rose-800/70 text-rose-700 dark:text-rose-300 font-black' : chuaKichHoat ? 'border-slate-300 dark:border-slate-700 text-amber-700 dark:text-amber-300 font-black' : 'border-slate-300 dark:border-slate-700 text-slate-500'
                                                             }`}>
                                                                 #{idx + 1}
                                                             </td>
 
                                                             {/* Cột 2: KHÁCH HÀNG & LIÊN HỆ (Gom Tên + Email + SĐT) */}
-                                                            <td className={`py-2 px-3 border-b border-r ${daBiKhoa ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                            <td className={`py-2 px-3 border-b border-r ${daBiKhoa ? 'border-rose-300 dark:border-rose-800/70' : 'border-slate-300 dark:border-slate-700'}`}>
                                                                 <div className="flex items-center gap-2.5 min-w-[210px]">
                                                                     <div className={`w-8 h-8 rounded-xl text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs ${
                                                                         daBiKhoa ? 'bg-gradient-to-tr from-rose-600 to-red-500' : chuaKichHoat ? 'bg-gradient-to-tr from-amber-500 to-orange-400' : 'bg-gradient-to-tr from-emerald-600 to-teal-500'
@@ -6436,7 +6542,7 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 3: NGÀY TẠO (GIỜ & NGÀY CHUẨN VIỆT NAM) */}
-                                                            <td className="py-2 px-3 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                            <td className="py-2 px-3 text-center border-b border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">
                                                                 <div className="flex flex-col items-center justify-center gap-0.5 font-mono" title={`Thời gian tạo: ${thoiGian.full}`}>
                                                                     <div className="flex items-center gap-1 text-xs font-black text-blue-600 dark:text-blue-400">
                                                                         <Clock className="w-3 h-3 text-blue-500 shrink-0" />
@@ -6450,7 +6556,7 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 4: DOANH THU & ĐƠN HÀNG (SẠCH SẼ - KHÔNG HẠNG THÀNH VIÊN) */}
-                                                            <td className="py-2 px-3 border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                            <td className="py-2 px-3 border-b border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">
                                                                 <div>
                                                                     <div className="font-black text-xs text-red-600 dark:text-red-400">
                                                                         {dinhDangTienVND(user.tongChiTieu || 0)}
@@ -6462,10 +6568,10 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 5: TRẠNG THÁI */}
-                                                            <td className="py-2 px-2.5 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                            <td className="py-2 px-2.5 text-center border-b border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">
                                                                 {chuaKichHoat ? (
                                                                     <span
-                                                                        className="px-2 py-0.5 rounded-full text-[11px] font-black inline-flex items-center justify-center gap-1 whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/60 shadow-2xs"
+                                                                        className="px-2 py-0.5 rounded-full text-[11px] font-black inline-flex items-center justify-center gap-1 whitespace-nowrap bg-amber-200 text-amber-900 dark:bg-amber-950 dark:text-amber-200 border border-amber-400 shadow-2xs"
                                                                         title="Tài khoản chưa hoàn tất xác thực OTP"
                                                                     >
                                                                         <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -6479,8 +6585,8 @@ export default function TrangQuanTriCuaHang() {
                                                                             dangXuLy ? 'opacity-50 cursor-not-allowed' : ''
                                                                         } ${
                                                                             daBiKhoa
-                                                                                ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-950 dark:text-red-300'
-                                                                                : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
+                                                                                ? 'bg-red-200 text-red-800 hover:bg-red-300 dark:bg-red-950 dark:text-red-200 border border-red-300 dark:border-red-800'
+                                                                                : 'bg-emerald-200 text-emerald-900 hover:bg-emerald-300 dark:bg-emerald-950 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-800'
                                                                         }`}
                                                                         title={daBiKhoa ? 'Tài khoản đang bị khóa tạm thời. Bấm để mở khóa!' : 'Tài khoản đang hoạt động bình thường. Bấm để tạm khóa!'}
                                                                     >
@@ -6498,18 +6604,18 @@ export default function TrangQuanTriCuaHang() {
                                                                     </button>
                                                                 )}
                                                             </td>
-                                                            <td className="py-2 px-2.5 text-center border-b border-r border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                            <td className="py-2 px-2.5 text-center border-b border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">
                                                                 <button
                                                                     onClick={() => xuLyDoiVaiTroNguoiDung(user)}
                                                                     disabled={dangXuLy}
-                                                                    className={`px-2 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${user.vaiTro === 'admin' ? 'bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-950 dark:text-purple-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'}`}
+                                                                    className={`px-2 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all border ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${user.vaiTro === 'admin' ? 'bg-purple-200 text-purple-900 hover:bg-purple-300 border-purple-300 dark:bg-purple-950 dark:text-purple-200 dark:border-purple-800' : 'bg-slate-200 text-slate-800 hover:bg-slate-300 border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600'}`}
                                                                     title="Bấm để đổi quyền quản trị"
                                                                 >
                                                                     {dangXuLy && <Loader2 className="w-3 h-3 animate-spin shrink-0" />}
                                                                     <span className="whitespace-nowrap">{user.vaiTro === 'admin' ? '👑 Quản Trị' : 'Khách Hàng'}</span>
                                                                 </button>
                                                             </td>
-                                                            <td className="py-2 px-1.5 text-center border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
+                                                            <td className="py-2 px-1.5 text-center border-b border-slate-300 dark:border-slate-700 whitespace-nowrap">
                                                                 <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                                                                     {/* Nút Khóa / Mở Khóa Nhanh */}
                                                                     <button
@@ -6517,8 +6623,8 @@ export default function TrangQuanTriCuaHang() {
                                                                         disabled={dangXuLy}
                                                                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                                                                             daBiKhoa
-                                                                                ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400'
-                                                                                : 'bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400'
+                                                                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800'
+                                                                                : 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800'
                                                                         }`}
                                                                         title={daBiKhoa ? 'Mở khóa tài khoản' : 'Khóa tài khoản tạm thời'}
                                                                     >
@@ -6531,7 +6637,7 @@ export default function TrangQuanTriCuaHang() {
                                                                     <button
                                                                         onClick={() => moModalSuaUser(user)}
                                                                         disabled={dangXuLy}
-                                                                        className={`p-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        className={`p-1.5 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-300 dark:bg-blue-950/70 dark:text-blue-300 dark:border-blue-800 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                                         title="Sửa tài khoản"
                                                                     >
                                                                         <Edit3 className="w-3.5 h-3.5" />
@@ -6539,7 +6645,7 @@ export default function TrangQuanTriCuaHang() {
                                                                     <button
                                                                         onClick={() => xuLyXoaUser(user)}
                                                                         disabled={dangXuLy}
-                                                                        className={`p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                                        className={`p-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 border border-red-300 dark:bg-red-950/70 dark:text-red-300 dark:border-red-800 transition-colors ${dangXuLy ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                                                                         title="Xóa tài khoản"
                                                                     >
                                                                         {dangXuLy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -7175,7 +7281,7 @@ export default function TrangQuanTriCuaHang() {
                             {/* Layout 2 Cột: Bên Trái là Form Cấu Hình Tối Giản - Bên Phải là 2 Demo Giao Diện Thật 100% */}
                             <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
                                 {/* CỘT TRÁI (5/12): FORM THAO TÁC TỐI GIẢN, GỌN GÀNG, KHÔNG DƯ THỪA CHỮ */}
-                                <form onSubmit={xuLyLuuCaiDatKm} className="xl:col-span-5 space-y-4">
+                                <form onSubmit={xuLyLuuCaiDatKm} noValidate className="xl:col-span-5 space-y-4">
                                     <div className="bg-white dark:bg-[#0d1527] p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
                                         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                                             <div className="flex items-center gap-2">
@@ -7192,11 +7298,11 @@ export default function TrangQuanTriCuaHang() {
                                         {/* Tiêu đề chính */}
                                         <div className="space-y-1.5">
                                             <label className="font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
-                                                Tiêu đề chiến dịch *
+                                                Tiêu đề chiến dịch (Tùy chọn)
                                             </label>
                                             <input
                                                 type="text"
-                                                required
+
                                                 value={formCaiDatKm.tieu_de_chinh || ''}
                                                 onChange={(e) => setFormCaiDatKm({ ...formCaiDatKm, tieu_de_chinh: e.target.value })}
                                                 placeholder="VD: ĐẠI TIỆC LAPTOP GAMING & AI PC 2026..."
@@ -7254,7 +7360,7 @@ export default function TrangQuanTriCuaHang() {
                                             <div className="flex items-center justify-between">
                                                 <label className="font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-sm flex items-center gap-1.5">
                                                     <Clock className="w-4 h-4 text-amber-500" />
-                                                    <span>Hạn kết thúc đếm ngược *</span>
+                                                    <span>Hạn kết thúc đếm ngược</span>
                                                 </label>
                                                 {conLaiKm.hetHan ? (
                                                     <span className="text-[11px] font-bold text-red-600 bg-red-50 dark:bg-red-950/50 px-2 py-0.5 rounded-lg border border-red-200 dark:border-red-800">
@@ -7269,7 +7375,7 @@ export default function TrangQuanTriCuaHang() {
 
                                             <input
                                                 type="datetime-local"
-                                                required
+
                                                 value={typeof formCaiDatKm?.thoi_gian_ket_thuc === 'string' ? formCaiDatKm.thoi_gian_ket_thuc.substring(0, 16) : '2026-09-30T23:59'}
                                                 onChange={(e) => setFormCaiDatKm({ ...formCaiDatKm, thoi_gian_ket_thuc: e.target.value })}
                                                 className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-black text-sm sm:text-base font-mono text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none cursor-pointer"
@@ -7950,122 +8056,190 @@ export default function TrangQuanTriCuaHang() {
                                 
                                 {/* TAB 1: THÔNG TIN CƠ BẢN & GIÁ BÁN */}
                                 {tabModalSp === 'thong_tin' && (
-                                    <div className="space-y-5 animate-in fade-in duration-150">
-                                        {/* KHỐI 1: ĐỊNH DANH & PHÂN LOẠI (Theme: Xanh Dương / Royal Blue) */}
-                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-200 dark:border-blue-900/60 shadow-xs overflow-hidden">
-                                            {/* Header Khối 1 có dải gradient xanh sang trọng */}
-                                            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border-b border-blue-100 dark:border-blue-900/50 flex items-center justify-between">
-                                                <div className="font-black text-xs uppercase tracking-wider text-blue-950 dark:text-blue-200 flex items-center gap-2.5">
-                                                    <span className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
-                                                        <Tag className="w-4 h-4" />
+                                    <div className="space-y-4 animate-in fade-in duration-150">
+                                        {/* KHỐI 1: ĐỊNH DANH & ẢNH ĐẠI DIỆN SẢN PHẨM */}
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+                                            {/* Header Khối 1 */}
+                                            <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                                <div className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                                    <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shadow-xs">
+                                                        <Tag className="w-3.5 h-3.5" />
                                                     </span>
-                                                    <span>1. Định Danh & Phân Loại Sản Phẩm</span>
+                                                    <span>1. Định Danh & Ảnh Đại Diện Sản Phẩm</span>
                                                 </div>
-                                                <span className="text-[10px] font-black text-blue-700 bg-blue-100 dark:bg-blue-950 dark:text-blue-300 px-3 py-1 rounded-full border border-blue-300 dark:border-blue-800 uppercase tracking-wider">
+                                                <span className="text-[10px] font-bold text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                                                     Bắt buộc
                                                 </span>
                                             </div>
 
-                                            <div className="p-4 sm:p-5 space-y-4">
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                                                    {/* Mã SKU */}
-                                                    <div className="space-y-1.5">
-                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
-                                                            <Barcode className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                                                            <span>Mã SKU / Định Danh *</span>
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={formSp.ma_san_pham}
-                                                            onChange={(e) => setFormSp({ ...formSp, ma_san_pham: e.target.value })}
-                                                            placeholder="VD: G834JYR-R9054W..."
-                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-blue-50/25 dark:bg-slate-800/70 text-slate-900 dark:text-white font-mono font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
-                                                        />
+                                            <div className="p-4 space-y-3.5">
+                                                {/* Hàng 1: Khung Ảnh Thumbnail + Thông Tin Phân Loại SKU/Hãng/Ngành hàng */}
+                                                <div className="flex flex-col sm:flex-row gap-4 items-start">
+                                                    {/* KHUNG ẢNH ĐẠI DIỆN TRỰC QUAN CÓ UPLOAD FILE TỪ MÁY */}
+                                                    <div className="w-full sm:w-auto shrink-0 flex sm:flex-col items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80">
+                                                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center relative overflow-hidden group shadow-2xs">
+                                                            {(formSp.hinh_anh_chinh || formSp.hinh_anh) ? (
+                                                                <img
+                                                                    src={formSp.hinh_anh_chinh || formSp.hinh_anh}
+                                                                    alt=""
+                                                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                                                                    onError={(e) => { e.currentTarget.src = '/images/sp/asus_rog_scar18.jpg'; }}
+                                                                />
+                                                            ) : (
+                                                                <div className="text-center p-1 text-slate-400">
+                                                                    <ImageIcon className="w-6 h-6 mx-auto mb-0.5 opacity-60" />
+                                                                    <span className="text-[10px] block font-medium">Chưa có ảnh</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 sm:w-24 flex flex-col gap-1.5">
+                                                            {/* Nút upload ảnh từ máy */}
+                                                            <label className="w-full px-2 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 cursor-pointer shadow-2xs transition-all active:scale-95 text-center">
+                                                                <Upload className="w-3 h-3 shrink-0" />
+                                                                <span className="truncate">Tải ảnh máy</span>
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    className="hidden"
+                                                                    onChange={xuLyUploadAnhChinh}
+                                                                />
+                                                            </label>
+                                                            {/* Nút dán link */}
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setHienOUrlAnhChinh(!hienOUrlAnhChinh)}
+                                                                className="w-full px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium text-[10px] flex items-center justify-center gap-1 transition-all cursor-pointer"
+                                                            >
+                                                                <Link2 className="w-2.5 h-2.5" />
+                                                                <span>{hienOUrlAnhChinh ? 'Ẩn link' : 'Dán link'}</span>
+                                                            </button>
+                                                        </div>
                                                     </div>
 
-                                                    {/* Hãng Sản Xuất */}
-                                                    <div className="space-y-1.5">
-                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
-                                                            <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                                                            <span>Hãng Sản Xuất *</span>
-                                                        </label>
-                                                        <select
-                                                            value={formSp.hang_san_xuat}
-                                                            onChange={(e) => setFormSp({ ...formSp, hang_san_xuat: e.target.value })}
-                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-blue-50/25 dark:bg-slate-800/70 text-slate-900 dark:text-white font-bold capitalize text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer"
-                                                        >
-                                                            {danhSachHangThucTe.map(h => (
-                                                                <option key={h.ma} value={h.ma}>{h.ten}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
+                                                    {/* Lưới 3 trường SKU, Hãng, Ngành Hàng */}
+                                                    <div className="flex-1 w-full space-y-3">
+                                                        {hienOUrlAnhChinh && (
+                                                            <div className="space-y-1">
+                                                                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                                                                    <Link2 className="w-3 h-3 text-blue-500" />
+                                                                    <span>Đường dẫn link ảnh online:</span>
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="https://... hoặc /images/sp/..."
+                                                                    value={formSp.hinh_anh_chinh || formSp.hinh_anh || ''}
+                                                                    onChange={(e) => {
+                                                                        setFormSp({ ...formSp, hinh_anh_chinh: e.target.value, hinh_anh: e.target.value });
+                                                                    }}
+                                                                    className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
+                                                                />
+                                                            </div>
+                                                        )}
 
-                                                    {/* Nhóm Ngành Hàng */}
-                                                    <div className="space-y-1.5">
-                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
-                                                            <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                                                            <span>Nhóm Ngành Hàng *</span>
-                                                        </label>
-                                                        <select
-                                                            value={loaiFormSanPham}
-                                                            onChange={(e) => setLoaiFormSanPham(e.target.value)}
-                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-blue-50/25 dark:bg-slate-800/70 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer"
-                                                        >
-                                                            <option value="laptop">💻 Laptop Gaming & Văn Phòng</option>
-                                                            <option value="ban_phim">⌨️ Bàn Phím Cơ Custom</option>
-                                                            <option value="chuot">🖱️ Chuột Gaming Siêu Nhẹ</option>
-                                                            <option value="balo">🎒 Balo & Túi Chống Sốc</option>
-                                                            <option value="tai_nghe">🎧 Tai Nghe & Loa Âm Thanh</option>
-                                                            <option value="sac_hub">⚡ Củ Sạc GaN & Hub Đa Năng</option>
-                                                            <option value="linh_kien">💾 Linh Kiện RAM / SSD</option>
-                                                        </select>
-                                                    </div>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                            {/* Mã SKU */}
+                                                            <div className="space-y-1">
+                                                                <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between text-xs">
+                                                                    <span className="flex items-center gap-1">
+                                                                        <Barcode className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                                        <span>Mã SKU / Mã SP *</span>
+                                                                    </span>
+                                                                    <NhanDaSua fieldName="ma_san_pham" />
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    required
+                                                                    value={formSp.ma_san_pham}
+                                                                    onChange={(e) => setFormSp({ ...formSp, ma_san_pham: e.target.value })}
+                                                                    placeholder="VD: G834JYR-R9054W"
+                                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all"
+                                                                />
+                                                            </div>
 
-                                                    {/* Tên Đầy Đủ Của Sản Phẩm */}
-                                                    <div className="sm:col-span-3 space-y-1.5">
-                                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between text-xs">
-                                                            <span className="flex items-center gap-1.5">
-                                                                <Laptop className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                                                                <span>Tên Đầy Đủ Của Sản Phẩm *</span>
-                                                            </span>
-                                                            <NhanDaSua fieldName="ten_san_pham" />
-                                                        </label>
-                                                        <input
-                                                            type="text"
-                                                            required
-                                                            value={formSp.ten_san_pham}
-                                                            onChange={(e) => setFormSp({ ...formSp, ten_san_pham: e.target.value })}
-                                                            placeholder="Nhập tên sản phẩm đầy đủ và chi tiết..."
-                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 dark:border-slate-700 bg-blue-50/15 dark:bg-slate-800/70 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
-                                                        />
+                                                            {/* Hãng Sản Xuất */}
+                                                            <div className="space-y-1">
+                                                                <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-xs">
+                                                                    <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                                    <span>Hãng Sản Xuất *</span>
+                                                                </label>
+                                                                <select
+                                                                    value={formSp.hang_san_xuat}
+                                                                    onChange={(e) => setFormSp({ ...formSp, hang_san_xuat: e.target.value })}
+                                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold capitalize text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                                                                >
+                                                                    {danhSachHangThucTe.map(h => (
+                                                                        <option key={h.ma} value={h.ma}>{h.ten}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+
+                                                            {/* Nhóm Ngành Hàng */}
+                                                            <div className="space-y-1">
+                                                                <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1 text-xs">
+                                                                    <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                                    <span>Nhóm Ngành Hàng *</span>
+                                                                </label>
+                                                                <select
+                                                                    value={loaiFormSanPham}
+                                                                    onChange={(e) => setLoaiFormSanPham(e.target.value)}
+                                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                                                                >
+                                                                    <option value="laptop">💻 Laptop Gaming & Văn Phòng</option>
+                                                                    <option value="ban_phim">⌨️ Bàn Phím Cơ Custom</option>
+                                                                    <option value="chuot">🖱️ Chuột Gaming Siêu Nhẹ</option>
+                                                                    <option value="balo">🎒 Balo & Túi Chống Sốc</option>
+                                                                    <option value="tai_nghe">🎧 Tai Nghe & Loa Âm Thanh</option>
+                                                                    <option value="sac_hub">⚡ Củ Sạc GaN & Hub Đa Năng</option>
+                                                                    <option value="linh_kien">💾 Linh Kiện RAM / SSD</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Tên Đầy Đủ Của Sản Phẩm */}
+                                                        <div className="space-y-1">
+                                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between text-xs">
+                                                                <span className="flex items-center gap-1">
+                                                                    <Laptop className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                                    <span>Tên Đầy Đủ Của Sản Phẩm *</span>
+                                                                </span>
+                                                                <NhanDaSua fieldName="ten_san_pham" />
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                required
+                                                                value={formSp.ten_san_pham}
+                                                                onChange={(e) => setFormSp({ ...formSp, ten_san_pham: e.target.value })}
+                                                                placeholder="Nhập tên sản phẩm đầy đủ và chi tiết..."
+                                                                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* KHỐI 2: THIẾT LẬP GIÁ BÁN & TỒN KHO THỰC TẾ (Theme: Tài Chính - Emerald & Rose & Slate) */}
-                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-300 dark:border-emerald-900/60 shadow-xs overflow-hidden">
-                                            {/* Header Khối 2 có dải gradient Emerald */}
-                                            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-emerald-500/10 via-rose-500/5 to-transparent border-b border-emerald-100 dark:border-emerald-900/50 flex items-center justify-between">
-                                                <div className="font-black text-xs uppercase tracking-wider text-emerald-950 dark:text-emerald-200 flex items-center gap-2.5">
-                                                    <span className="w-7 h-7 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                                                        <DollarSign className="w-4 h-4" />
+                                        {/* KHỐI 2: THIẾT LẬP GIÁ BÁN & TỒN KHO THỰC TẾ (Sạch sẽ, Tinh Tế, Gọn Gàng) */}
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+                                            {/* Header Khối 2 */}
+                                            <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                                <div className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                                    <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
+                                                        <DollarSign className="w-3.5 h-3.5" />
                                                     </span>
                                                     <span>2. Thiết Lập Giá Bán & Tồn Kho Thực Tế</span>
                                                 </div>
-                                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-3 py-1 rounded-full border border-emerald-300 dark:border-emerald-800 uppercase tracking-wider">
+                                                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                                                     Tiền tệ: VNĐ
                                                 </span>
                                             </div>
 
-                                            <div className="p-4 sm:p-5">
-                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                                    {/* CỘT 1: GIÁ NIÊM YẾT GỐC (Theme Slate Cool) */}
-                                                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2.5">
+                                            <div className="p-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                                    {/* CỘT 1: GIÁ NIÊM YẾT GỐC */}
+                                                    <div className="p-3 rounded-xl bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
                                                         <label className="font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between text-xs">
-                                                            <span className="flex items-center gap-1.5">
-                                                                <CircleDollarSign className="w-3.5 h-3.5 text-slate-500" />
+                                                            <span className="flex items-center gap-1">
+                                                                <DollarSign className="w-3.5 h-3.5 text-slate-500" />
                                                                 <span>Giá Niêm Yết Gốc</span>
                                                             </span>
                                                             <NhanDaSua fieldName="gia_goc" />
@@ -8074,21 +8248,21 @@ export default function TrangQuanTriCuaHang() {
                                                             type="number"
                                                             value={formSp.gia_goc}
                                                             onChange={(e) => setFormSp({ ...formSp, gia_goc: e.target.value })}
-                                                            placeholder="VD: 125000000"
-                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 font-bold text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-slate-400 focus:outline-none"
+                                                            placeholder="VD: 120000000"
+                                                            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-200 text-xs focus:border-blue-500 focus:outline-none"
                                                         />
-                                                        <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-bold text-[11px] border border-slate-200 dark:border-slate-700 flex items-center justify-between shadow-2xs">
-                                                            <span>Hiển thị:</span>
-                                                            <span className="font-black text-slate-900 dark:text-white">{dinhDangTienVND(formSp.gia_goc)}</span>
+                                                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-bold flex items-center justify-between px-1">
+                                                            <span>Gốc:</span>
+                                                            <span className="text-slate-700 dark:text-slate-300">{dinhDangTienVND(formSp.gia_goc)}</span>
                                                         </div>
                                                     </div>
 
-                                                    {/* CỘT 2: GIÁ KHUYẾN MÃI THỰC THU (Theme Rose Sôi Động) */}
-                                                    <div className="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-800 space-y-2.5">
+                                                    {/* CỘT 2: GIÁ KHUYẾN MÃI THỰC THU (Tone Rose Điểm Nhấn) */}
+                                                    <div className="p-3 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 space-y-1.5">
                                                         <label className="font-bold text-rose-800 dark:text-rose-300 flex items-center justify-between text-xs">
-                                                            <span className="flex items-center gap-1.5">
+                                                            <span className="flex items-center gap-1">
                                                                 <Flame className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-                                                                <span>Giá Khuyến Mãi (Thực Thu) *</span>
+                                                                <span>Giá Bán (Thực Thu) *</span>
                                                             </span>
                                                             <NhanDaSua fieldName="gia_khuyen_mai" />
                                                         </label>
@@ -8098,25 +8272,22 @@ export default function TrangQuanTriCuaHang() {
                                                             value={formSp.gia_khuyen_mai}
                                                             onChange={(e) => setFormSp({ ...formSp, gia_khuyen_mai: e.target.value })}
                                                             placeholder="VD: 109990000"
-                                                            className="w-full px-3.5 py-2.5 rounded-xl border-2 border-rose-400 dark:border-rose-700 bg-white dark:bg-slate-900 font-black text-rose-600 dark:text-rose-400 text-sm focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                                                            className="w-full px-3 py-2 rounded-lg border border-rose-300 dark:border-rose-800 bg-white dark:bg-slate-900 font-black text-rose-600 dark:text-rose-400 text-xs focus:border-rose-500 focus:outline-none"
                                                         />
-                                                        <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-300 font-bold text-[11px] border border-rose-200 dark:border-rose-800 flex items-center justify-between shadow-2xs">
-                                                            <span className="flex items-center gap-1">
-                                                                <span>Thực thu:</span>
-                                                                <b className="text-rose-600 dark:text-rose-400 font-black">{dinhDangTienVND(formSp.gia_khuyen_mai)}</b>
-                                                            </span>
+                                                        <div className="text-[11px] font-bold flex items-center justify-between px-1">
+                                                            <span className="text-rose-600 dark:text-rose-400 font-black">{dinhDangTienVND(formSp.gia_khuyen_mai)}</span>
                                                             {Number(formSp.gia_goc) > Number(formSp.gia_khuyen_mai) && (
-                                                                <span className="px-2 py-0.5 rounded-md bg-rose-600 text-white font-black text-[10.5px] shadow-xs">
+                                                                <span className="px-1.5 py-0.5 rounded bg-rose-600 text-white font-black text-[10px]">
                                                                     -{Math.round(((Number(formSp.gia_goc) - Number(formSp.gia_khuyen_mai)) / Number(formSp.gia_goc)) * 100)}%
                                                                 </span>
                                                             )}
                                                         </div>
                                                     </div>
 
-                                                    {/* CỘT 3: TỒN KHO THỰC TẾ (Theme Emerald) */}
-                                                    <div className="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/30 border-2 border-emerald-300 dark:border-emerald-800 space-y-2.5">
+                                                    {/* CỘT 3: TỒN KHO THỰC TẾ (Tone Emerald Điểm Nhấn) */}
+                                                    <div className="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 space-y-1.5">
                                                         <label className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-between text-xs">
-                                                            <span className="flex items-center gap-1.5">
+                                                            <span className="flex items-center gap-1">
                                                                 <Boxes className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                                                                 <span>Số Lượng Tồn Kho</span>
                                                             </span>
@@ -8127,35 +8298,35 @@ export default function TrangQuanTriCuaHang() {
                                                             value={formSp.so_luong_ton_kho}
                                                             onChange={(e) => setFormSp({ ...formSp, so_luong_ton_kho: e.target.value })}
                                                             placeholder="VD: 7"
-                                                            className="w-full px-3.5 py-2.5 rounded-xl border-2 border-emerald-400 dark:border-emerald-700 bg-white dark:bg-slate-900 font-black text-emerald-700 dark:text-emerald-300 text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                                                            className="w-full px-3 py-2 rounded-lg border border-emerald-300 dark:border-emerald-800 bg-white dark:bg-slate-900 font-black text-emerald-700 dark:text-emerald-300 text-xs focus:border-emerald-500 focus:outline-none"
                                                         />
-                                                        <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-300 font-bold text-[11px] border border-emerald-200 dark:border-emerald-800 flex items-center justify-between shadow-2xs">
-                                                            <span className="flex items-center gap-1.5">
+                                                        <div className="text-[11px] text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-between px-1">
+                                                            <span className="flex items-center gap-1">
                                                                 <span className={`w-2 h-2 rounded-full ${Number(formSp.so_luong_ton_kho) > 5 ? 'bg-emerald-500' : Number(formSp.so_luong_ton_kho) > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
                                                                 <span>{Number(formSp.so_luong_ton_kho) > 5 ? 'Sẵn sàng giao' : Number(formSp.so_luong_ton_kho) > 0 ? 'Sắp hết hàng' : 'Hết hàng'}</span>
                                                             </span>
-                                                            <span className="font-black text-emerald-700 dark:text-emerald-300">{formSp.so_luong_ton_kho || 0} máy</span>
+                                                            <span className="font-black">{formSp.so_luong_ton_kho || 0} máy</span>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* KHỐI 3: BẢO HÀNH & TRẠNG THÁI HIỂN THỊ (Theme: Indigo & Amber) */}
-                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-200 dark:border-indigo-900/60 shadow-xs overflow-hidden">
-                                            {/* Header Khối 3 có dải gradient Indigo */}
-                                            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-transparent border-b border-indigo-100 dark:border-indigo-900/50 flex items-center justify-between">
-                                                <div className="font-black text-xs uppercase tracking-wider text-indigo-950 dark:text-indigo-200 flex items-center gap-2.5">
-                                                    <span className="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                                                        <ShieldCheck className="w-4 h-4" />
+                                        {/* KHỐI 3: BẢO HÀNH & TRẠNG THÁI KINH DOANH */}
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+                                            {/* Header Khối 3 */}
+                                            <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                                <div className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                                    <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs">
+                                                        <ShieldCheck className="w-3.5 h-3.5" />
                                                     </span>
                                                     <span>3. Bảo Hành & Trạng Thái Kinh Doanh</span>
                                                 </div>
                                                 <NhanDaSua fieldName="che_do_bao_hanh" />
                                             </div>
 
-                                            <div className="p-4 sm:p-5">
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                                            <div className="p-4">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                                                     {/* Chính Sách Bảo Hành */}
                                                     <div className="space-y-1.5">
                                                         <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
@@ -8167,7 +8338,7 @@ export default function TrangQuanTriCuaHang() {
                                                             placeholder="Ví dụ: 24 tháng chính hãng tại TNTP Laptop..."
                                                             value={formSp.che_do_bao_hanh}
                                                             onChange={(e) => setFormSp({ ...formSp, che_do_bao_hanh: e.target.value })}
-                                                            className="w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-slate-700 bg-indigo-50/20 dark:bg-slate-800/70 text-slate-900 dark:text-white font-medium text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-all"
+                                                            className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:outline-none transition-all"
                                                         />
                                                     </div>
 
@@ -8182,9 +8353,9 @@ export default function TrangQuanTriCuaHang() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormSp({ ...formSp, la_flash_sale: !formSp.la_flash_sale })}
-                                                                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+                                                                className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 border transition-all cursor-pointer ${
                                                                     formSp.la_flash_sale
-                                                                        ? 'bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-500/30'
+                                                                        ? 'bg-rose-500 text-white border-rose-600 shadow-xs'
                                                                         : 'bg-rose-50 dark:bg-slate-800 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/50 hover:bg-rose-100'
                                                                 }`}
                                                             >
@@ -8196,9 +8367,9 @@ export default function TrangQuanTriCuaHang() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormSp({ ...formSp, la_ban_chay: !formSp.la_ban_chay })}
-                                                                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+                                                                className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 border transition-all cursor-pointer ${
                                                                     formSp.la_ban_chay
-                                                                        ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/30'
+                                                                        ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
                                                                         : 'bg-amber-50 dark:bg-slate-800 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900/50 hover:bg-amber-100'
                                                                 }`}
                                                             >
@@ -8210,9 +8381,9 @@ export default function TrangQuanTriCuaHang() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormSp({ ...formSp, con_hang: !formSp.con_hang })}
-                                                                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+                                                                className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 border transition-all cursor-pointer ${
                                                                     formSp.con_hang
-                                                                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-md shadow-emerald-500/30'
+                                                                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
                                                                         : 'bg-emerald-50 dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100'
                                                                 }`}
                                                             >
@@ -8230,7 +8401,7 @@ export default function TrangQuanTriCuaHang() {
                                 {/* TAB 2: CẤU HÌNH & THÔNG SỐ KỸ THUẬT (CHUYÊN BIỆT CHO MẶT HÀNG ĐANG CHỌN) */}
                                 {tabModalSp === 'thong_so' && (
                                     <div className="space-y-4 animate-in fade-in duration-150">
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-600 shadow-md shadow-indigo-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                             <div className="flex items-center gap-3">
                                                 <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm shadow-xs shrink-0">
                                                     <SlidersHorizontal className="w-4 h-4" />
@@ -8268,7 +8439,7 @@ export default function TrangQuanTriCuaHang() {
                                         {loaiFormSanPham === 'laptop' && (
                                             <div className="space-y-4">
                                                 {/* Nhóm 1: Vi Xử Lý & Hiệu Năng (CPU) */}
-                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-400 dark:border-blue-600 shadow-md shadow-blue-500/5 space-y-3.5">
+                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
                                                     <ThanhTieuDeNhom
                                                         icon={Cpu}
                                                         value={formSp.tieu_de_nhom_cpu}
@@ -8362,7 +8533,7 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 {/* Nhóm 2: Đồ Họa & Xử Lý Hình Ảnh (GPU) */}
-                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-400 dark:border-purple-600 shadow-md shadow-purple-500/5 space-y-3.5">
+                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
                                                     <ThanhTieuDeNhom
                                                         icon={Zap}
                                                         value={formSp.tieu_de_nhom_gpu}
@@ -8740,7 +8911,7 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 {/* Nhóm 6: Cổng Kết Nối & Hệ Điều Hành */}
-                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-600 shadow-md shadow-indigo-500/5 space-y-3.5">
+                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
                                                     <ThanhTieuDeNhom
                                                         icon={Radio}
                                                         value={formSp.tieu_de_nhom_thiet_ke}
@@ -8826,7 +8997,7 @@ export default function TrangQuanTriCuaHang() {
                                         {/* 2. BÀN PHÍM CƠ */}
                                         {loaiFormSanPham === 'ban_phim' && (
                                             <div className="space-y-4">
-                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-600 shadow-md shadow-indigo-500/5 space-y-3.5">
+                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
                                                     <ThanhTieuDeNhom
                                                         icon={Keyboard}
                                                         value={formSp.tieu_de_nhom_phim_switch}
@@ -8893,7 +9064,7 @@ export default function TrangQuanTriCuaHang() {
                                                     </div>
                                                 </div>
 
-                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-400 dark:border-purple-600 shadow-md shadow-purple-500/5 space-y-3.5">
+                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
                                                     <ThanhTieuDeNhom
                                                         icon={Layers}
                                                         value={formSp.tieu_de_nhom_phim_layout}
@@ -9724,7 +9895,7 @@ export default function TrangQuanTriCuaHang() {
                                                     </div>
                                                 </div>
 
-                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-400 dark:border-blue-600 shadow-md shadow-blue-500/5 space-y-3.5">
+                                                <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
                                                     <ThanhTieuDeNhom
                                                         icon={Usb}
                                                         value={formSp.tieu_de_nhom_sac_cong_ket_noi}
@@ -10043,7 +10214,7 @@ export default function TrangQuanTriCuaHang() {
                                         </div>
 
                                         {/* Thông số tùy chỉnh động */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-400 dark:border-indigo-600 shadow-md shadow-indigo-500/5 space-y-3.5">
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
                                             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 gap-2">
                                                 <div>
                                                     <span className="font-black text-xs uppercase tracking-wider text-indigo-900 dark:text-indigo-300 flex items-center gap-2">
@@ -10118,7 +10289,7 @@ export default function TrangQuanTriCuaHang() {
                                 {/* TAB 3: MÀU SẮC & CÁC SẢN PHẨM PHỤ / BIẾN THỂ */}
                                 {tabModalSp === 'bien_the' && (
                                     <div className="space-y-4 animate-in fade-in duration-150">
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-purple-400 dark:border-purple-600 shadow-md shadow-purple-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                             <div className="flex items-center gap-3">
                                                 <span className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm shadow-xs shrink-0">
                                                     <Palette className="w-5 h-5" />
@@ -10381,10 +10552,10 @@ export default function TrangQuanTriCuaHang() {
                                 {/* TAB 4: HÌNH ẢNH & MÔ TẢ CHI TIẾT */}
                                 {tabModalSp === 'hinh_anh' && (
                                     <div className="space-y-4 animate-in fade-in duration-150">
-                                        {/* Ảnh đại diện chính */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400/90 dark:border-emerald-600 shadow-md shadow-emerald-500/5 space-y-4">
-                                            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800">
-                                                <div className="font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
+                                        {/* KHỐI 1: ẢNH ĐẠI DIỆN CHÍNH */}
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
+                                            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
+                                                <div className="font-black text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                                     <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
                                                         <ImageIcon className="w-3.5 h-3.5" />
                                                     </span>
@@ -10401,7 +10572,7 @@ export default function TrangQuanTriCuaHang() {
                                                             hang: formSp.hang_san_xuat,
                                                             variants: formSp.tuy_chon_phien_ban
                                                         })}
-                                                        className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border-2 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-black text-xs flex items-center gap-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors cursor-pointer shadow-xs"
+                                                        className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-bold text-xs flex items-center gap-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition-colors cursor-pointer shadow-2xs"
                                                     >
                                                         <Maximize2 className="w-3.5 h-3.5" />
                                                         <span>Phóng to xem thử</span>
@@ -10420,7 +10591,7 @@ export default function TrangQuanTriCuaHang() {
                                                         hang: formSp.hang_san_xuat,
                                                         variants: formSp.tuy_chon_phien_ban
                                                     })}
-                                                    className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl border-2 border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-slate-800 p-2 flex items-center justify-center shrink-0 cursor-zoom-in relative group overflow-hidden shadow-xs"
+                                                    className="w-32 h-32 sm:w-36 sm:h-36 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-2 flex items-center justify-center shrink-0 cursor-zoom-in relative group overflow-hidden shadow-xs"
                                                 >
                                                     {(formSp.hinh_anh_chinh || formSp.hinh_anh) ? (
                                                         <>
@@ -10430,7 +10601,7 @@ export default function TrangQuanTriCuaHang() {
                                                                 className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                                                                 onError={(e) => { e.currentTarget.src = '/images/sp/asus_rog_scar18.jpg'; }}
                                                             />
-                                                            <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity font-black text-xs gap-1.5">
+                                                            <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity font-bold text-xs gap-1.5">
                                                                 <ZoomIn className="w-4 h-4" />
                                                                 <span>Xem To</span>
                                                             </div>
@@ -10443,20 +10614,20 @@ export default function TrangQuanTriCuaHang() {
                                                     )}
                                                 </div>
 
-                                                {/* Upload Action Center - Tối giản, trực quan, không rườm rà */}
+                                                {/* Upload Action Center */}
                                                 <div className="flex-1 w-full space-y-3">
                                                     <div>
-                                                        <span className="font-extrabold text-slate-900 dark:text-white text-xs block">
-                                                            Ảnh đại diện sản phẩm
+                                                        <span className="font-bold text-slate-900 dark:text-white text-xs block">
+                                                            Tải ảnh đại diện từ máy tính hoặc chọn mẫu nhanh:
                                                         </span>
                                                         <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                                                            Bấm nút bên dưới để chọn ảnh trực tiếp từ máy tính của bạn (hỗ trợ JPG, PNG, WebP).
+                                                            Chọn tệp ảnh từ máy (JPG, PNG, WebP) - tự động nén tối ưu hiển thị siêu nét.
                                                         </p>
                                                     </div>
 
                                                     <div className="flex flex-wrap items-center gap-2.5">
                                                         {/* Nút chính: Tải file trực tiếp từ máy tính */}
-                                                        <label className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-2 shadow-md shadow-emerald-500/25 cursor-pointer transition-all active:scale-95">
+                                                        <label className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs cursor-pointer transition-all active:scale-95">
                                                             <Upload className="w-4 h-4" />
                                                             <span>Tải ảnh từ máy tính</span>
                                                             <input
@@ -10471,7 +10642,7 @@ export default function TrangQuanTriCuaHang() {
                                                         <button
                                                             type="button"
                                                             onClick={() => setHienOUrlAnhChinh(!hienOUrlAnhChinh)}
-                                                            className="px-3.5 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                                                            className="px-3.5 py-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-bold text-xs flex items-center gap-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
                                                         >
                                                             <Link2 className="w-3.5 h-3.5" />
                                                             <span>{hienOUrlAnhChinh ? 'Ẩn ô dán link' : 'Hoặc dán link URL'}</span>
@@ -10493,7 +10664,7 @@ export default function TrangQuanTriCuaHang() {
                                                                     setFormSp({ ...formSp, hinh_anh_chinh: '', hinh_anh: '' });
                                                                     hienThongBao('Đã xóa ảnh đại diện!');
                                                                 }}
-                                                                className="px-3 py-2.5 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
+                                                                className="px-3 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-bold text-xs flex items-center gap-1 transition-all cursor-pointer"
                                                             >
                                                                 <Trash2 className="w-3.5 h-3.5" />
                                                                 <span>Xóa ảnh</span>
@@ -10511,17 +10682,98 @@ export default function TrangQuanTriCuaHang() {
                                                                 onChange={(e) => {
                                                                     setFormSp({ ...formSp, hinh_anh_chinh: e.target.value, hinh_anh: e.target.value });
                                                                 }}
-                                                                className="w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-xs font-semibold focus:bg-white focus:border-emerald-500 focus:outline-none transition-all"
+                                                                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-xs font-semibold focus:bg-white focus:border-emerald-500 focus:outline-none transition-all"
                                                             />
                                                         </div>
                                                     )}
+
+                                                    {/* Chọn nhanh ảnh mẫu laptop chuẩn */}
+                                                    <div className="pt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+                                                        <span className="text-slate-400 font-bold">Mẫu nhanh:</span>
+                                                        {[
+                                                            { ten: '🎮 ROG Strix', src: '/images/sp/asus_rog_scar18.jpg' },
+                                                            { ten: '🍎 MacBook Pro', src: '/images/sp/macbook_pro_m3.jpg' },
+                                                            { ten: '⚡ Legion Pro', src: '/images/sp/lenovo_legion_pro7.jpg' },
+                                                            { ten: '💼 Dell XPS', src: '/images/sp/dell_xps_16.jpg' }
+                                                        ].map(m => (
+                                                            <button
+                                                                key={m.src}
+                                                                type="button"
+                                                                onClick={() => setFormSp({ ...formSp, hinh_anh_chinh: m.src, hinh_anh: m.src })}
+                                                                className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold cursor-pointer transition-colors"
+                                                            >
+                                                                {m.ten}
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Mô tả ngắn & Mô tả chi tiết trong card riêng */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-400/90 dark:border-blue-600 shadow-md shadow-blue-500/5 space-y-4">
-                                            <div className="flex items-center gap-2 font-black text-xs uppercase tracking-wider text-blue-900 dark:text-blue-300 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800">
+                                        {/* KHỐI 2: THƯ VIỆN GALLERY SẢN PHẨM (UPLOAD NHIỀU ẢNH TỪ MÁY) */}
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 gap-2">
+                                                <div>
+                                                    <div className="font-black text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                                        <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shadow-xs">
+                                                            <ImageIcon className="w-3.5 h-3.5" />
+                                                        </span>
+                                                        <span>Thư Viện Ảnh Gallery (Nhiều Góc Chụp)</span>
+                                                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-black">
+                                                            {(formSp.thu_vien_hinh_anh || []).length} ảnh
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                                                        Tải lên nhiều ảnh từ máy tính (góc nghiêng, bàn phím, tản nhiệt, mặt lưng) để khách xem ngoài web.
+                                                    </p>
+                                                </div>
+
+                                                <label className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0 self-start sm:self-auto">
+                                                    <Upload className="w-3.5 h-3.5" />
+                                                    <span>Tải nhiều ảnh từ máy</span>
+                                                    <input
+                                                        type="file"
+                                                        multiple
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={xuLyUploadAnhGallerySp}
+                                                    />
+                                                </label>
+                                            </div>
+
+                                            {/* Grid hiển thị danh sách ảnh Gallery đã tải lên */}
+                                            {(!formSp.thu_vien_hinh_anh || formSp.thu_vien_hinh_anh.length === 0) ? (
+                                                <div className="text-center py-6 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+                                                    <ImageIcon className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                                                        Chưa có ảnh trong thư viện Gallery. Bấm nút "Tải nhiều ảnh từ máy" phía trên để bổ sung.
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                                                    {formSp.thu_vien_hinh_anh.map((imgUrl, idx) => (
+                                                        <div key={idx} className="relative group aspect-square rounded-xl border border-slate-200 dark:border-slate-700 p-1.5 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden shadow-2xs">
+                                                            <img src={imgUrl} alt="" className="w-full h-full object-contain" />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const updated = formSp.thu_vien_hinh_anh.filter((_, i) => i !== idx);
+                                                                    setFormSp({ ...formSp, thu_vien_hinh_anh: updated });
+                                                                }}
+                                                                className="absolute top-1 right-1 w-6 h-6 rounded-full bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center shadow-md cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
+                                                                title="Gỡ ảnh này khỏi Gallery"
+                                                            >
+                                                                <X className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* KHỐI 3: MÔ TẢ NGẮN & MÔ TẢ CHI TIẾT */}
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
+                                            <div className="flex items-center gap-2 font-black text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80">
                                                 <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shadow-xs">
                                                     <FileText className="w-3.5 h-3.5" />
                                                 </span>
@@ -10544,36 +10796,38 @@ export default function TrangQuanTriCuaHang() {
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs flex items-center justify-between">
-                                                        <span>Bài Viết Đánh Giá Chi Tiết (Nội dung bài viết trang sản phẩm)</span>
+                                                    <div className="flex items-center justify-between">
+                                                        <label className="font-extrabold text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5">
+                                                            <span>Bài Viết Giới Thiệu Chuyên Sâu (Hỗ trợ định dạng văn bản chi tiết)</span>
+                                                        </label>
                                                         <NhanDaSua fieldName="mo_ta_chi_tiet" />
-                                                    </label>
+                                                    </div>
                                                     <textarea
-                                                        rows={6}
-                                                        placeholder="Nhập nội dung bài đánh giá, điểm nổi bật, thiết kế, màn hình, hiệu năng tản nhiệt..."
+                                                        rows="5"
+                                                        placeholder="Viết bài đánh giá chi tiết về thiết kế, màn hình, tản nhiệt, trải nghiệm thực tế..."
                                                         value={formSp.mo_ta_chi_tiet}
                                                         onChange={(e) => setFormSp({ ...formSp, mo_ta_chi_tiet: e.target.value })}
-                                                        className={layClassInput('mo_ta_chi_tiet', 'leading-relaxed font-normal')}
+                                                        className={layClassInput('mo_ta_chi_tiet')}
                                                     />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Khung 3: ĐẶC ĐIỂM NỔI BẬT ĐÁNG CHÚ Ý (DƯỚI ẢNH NGOÀI WEB) */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-cyan-400/90 dark:border-cyan-600 shadow-md shadow-cyan-500/5 space-y-4">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 gap-2">
+                                        {/* KHỐI 4: ĐẶC ĐIỂM NỔI BẬT ĐÁNG CHÚ Ý */}
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 gap-2">
                                                 <div>
-                                                    <span className="font-black text-xs uppercase tracking-wider text-cyan-900 dark:text-cyan-300 flex items-center gap-2">
+                                                    <span className="font-black text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                                         <span className="w-6 h-6 rounded-lg bg-cyan-600 text-white flex items-center justify-center text-xs shadow-xs">
                                                             <Sparkles className="w-3.5 h-3.5" />
                                                         </span>
                                                         <span>Đặc Điểm Nổi Bật Đáng Chú Ý</span>
-                                                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-cyan-200/70 dark:bg-cyan-900 text-cyan-800 dark:text-cyan-200 font-black">
-                                                            {(formSp.dac_diem_noi_bat || []).length} mục
+                                                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 font-black">
+                                                            {formSp.dac_diem_noi_bat?.length || 0} điểm
                                                         </span>
                                                     </span>
-                                                    <p className="text-[11px] text-cyan-800/80 dark:text-cyan-300/80 mt-0.5 font-medium">
-                                                        💡 Hiển thị thành các gạch đầu dòng công nghệ ấn tượng ngay dưới ảnh sản phẩm ở trang chi tiết.
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
+                                                        💡 Các dòng gạch đầu dòng nổi bật hiển thị ngay cạnh ảnh sản phẩm ở trang chi tiết.
                                                     </p>
                                                 </div>
                                                 <button
@@ -10590,27 +10844,11 @@ export default function TrangQuanTriCuaHang() {
                                             </div>
 
                                             {(!formSp.dac_diem_noi_bat || formSp.dac_diem_noi_bat.length === 0) ? (
-                                                <div className="text-center py-6 px-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+                                                <div className="text-center py-6 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
                                                     <Sparkles className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
                                                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                                        Chưa có gạch đầu dòng đặc điểm nổi bật nào.
+                                                        Chưa thiết lập đặc điểm nổi bật. Bấm nút phía trên để thêm mới.
                                                     </p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setFormSp({
-                                                                ...formSp,
-                                                                dac_diem_noi_bat: [
-                                                                    'Bộ đôi vi xử lý thế hệ mới cực mạnh kết hợp card đồ họa kiến trúc tân tiến',
-                                                                    'Màn hình chuẩn màu đồ họa tần số quét cao siêu mượt, độ phân giải sắc nét',
-                                                                    'Hệ thống tản nhiệt thông minh tối ưu luồng gió mát lạnh êm ái'
-                                                                ]
-                                                            });
-                                                        }}
-                                                        className="px-3.5 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-300 border border-cyan-300 dark:border-cyan-700 text-xs font-bold hover:bg-cyan-100 transition-colors cursor-pointer"
-                                                    >
-                                                        + Thêm mẫu mặc định
-                                                    </button>
                                                 </div>
                                             ) : (
                                                 <div className="space-y-2.5">
@@ -10628,7 +10866,7 @@ export default function TrangQuanTriCuaHang() {
                                                                     updated[idx] = e.target.value;
                                                                     setFormSp({ ...formSp, dac_diem_noi_bat: updated });
                                                                 }}
-                                                                className="flex-1 px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 focus:outline-none transition-all"
+                                                                className="flex-1 px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-medium focus:border-cyan-500 focus:outline-none transition-all"
                                                             />
                                                             <button
                                                                 type="button"
@@ -10655,20 +10893,20 @@ export default function TrangQuanTriCuaHang() {
                                             )}
                                         </div>
 
-                                        {/* Khung 4: ĐẶC QUYỀN QUÀ TẶNG TNTP (HỘP QUÀ MUA HÀNG NGOÀI WEB) */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-400/90 dark:border-amber-600 shadow-md shadow-amber-500/5 space-y-4">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 gap-2">
+                                        {/* KHỐI 5: ĐẶC QUYỀN QUÀ TẶNG TNTP */}
+                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 gap-2">
                                                 <div>
-                                                    <span className="font-black text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center gap-2">
+                                                    <span className="font-black text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                                         <span className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
                                                             <Gift className="w-3.5 h-3.5" />
                                                         </span>
                                                         <span>Đặc Quyền Quà Tặng TNTP Kèm Theo</span>
-                                                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-200/70 dark:bg-amber-900 text-amber-900 dark:text-amber-200 font-black">
+                                                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-black">
                                                             Tổng: {dinhDangTienVND((formSp.qua_tang || []).reduce((t, q) => t + (Number(q.gia_tri) || 0), 0))}
                                                         </span>
                                                     </span>
-                                                    <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80 mt-0.5 font-medium">
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
                                                         💡 Hiển thị trong khung viền cam đặc quyền quà tặng bên phải nút Mua Ngay ở trang chi tiết sản phẩm.
                                                     </p>
                                                 </div>
@@ -10686,82 +10924,63 @@ export default function TrangQuanTriCuaHang() {
                                             </div>
 
                                             {(!formSp.qua_tang || formSp.qua_tang.length === 0) ? (
-                                                <div className="text-center py-6 px-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+                                                <div className="text-center py-6 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
                                                     <Gift className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
                                                     <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                                                         Chưa thiết lập quà tặng kèm cho sản phẩm này.
                                                     </p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setFormSp({
-                                                                ...formSp,
-                                                                qua_tang: [
-                                                                    { ten_qua_tang: 'Balo ROG Ranger BP2701 Gaming trị giá 2.500.000đ', gia_tri: 2500000 },
-                                                                    { ten_qua_tang: 'Chuột ROG Gladius III Wireless AimPoint trị giá 2.190.000đ', gia_tri: 2190000 },
-                                                                    { ten_qua_tang: 'Tai nghe ROG Fusion II 500 7.1 Surround trị giá 3.990.000đ', gia_tri: 3990000 },
-                                                                    { ten_qua_tang: 'Gói bảo hành vàng ASUS ROG Premium Care tận nhà 2 năm', gia_tri: 4500000 }
-                                                                ]
-                                                            });
-                                                        }}
-                                                        className="px-3.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 text-xs font-bold hover:bg-amber-100 transition-colors cursor-pointer"
-                                                    >
-                                                        + Thêm bộ quà ROG mặc định
-                                                    </button>
                                                 </div>
                                             ) : (
-                                                <div className="space-y-2.5">
-                                                    {formSp.qua_tang.map((q, idx) => (
-                                                        <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-2.5 rounded-xl bg-amber-50/40 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/60">
-                                                            <div className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs font-black shrink-0 self-center">
-                                                                🎁
-                                                            </div>
-                                                            <input
-                                                                type="text"
-                                                                placeholder="Tên quà tặng (vd: Balo Gaming cao cấp trị giá 2.500.000đ)..."
-                                                                value={q.ten_qua_tang || ''}
-                                                                onChange={(e) => {
-                                                                    const updated = [...formSp.qua_tang];
-                                                                    updated[idx] = { ...updated[idx], ten_qua_tang: e.target.value };
-                                                                    setFormSp({ ...formSp, qua_tang: updated });
-                                                                }}
-                                                                className="flex-1 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none"
-                                                            />
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="relative w-36">
-                                                                    <input
-                                                                        type="number"
-                                                                        placeholder="Trị giá (VNĐ)"
-                                                                        value={q.gia_tri !== undefined ? q.gia_tri : ''}
-                                                                        onChange={(e) => {
-                                                                            const updated = [...formSp.qua_tang];
-                                                                            updated[idx] = { ...updated[idx], gia_tri: Number(e.target.value) || 0 };
-                                                                            setFormSp({ ...formSp, qua_tang: updated });
-                                                                        }}
-                                                                        className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-mono font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none pr-7"
-                                                                    />
-                                                                    <span className="absolute right-2.5 top-2 text-[11px] text-slate-400 font-bold">đ</span>
-                                                                </div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={async () => {
-                                                                        const dongY = await xacNhan({
-                                                                            tieuDe: 'Xóa Quà Tặng Này?',
-                                                                            noiDung: `Bạn có chắc chắn muốn gỡ quà tặng "${q.ten_qua_tang || `Món quà #${idx + 1}`}" không?`,
-                                                                            loai: 'danger',
-                                                                            nutXacNhan: 'Xóa Quà',
-                                                                            nutHuy: 'Hủy Bỏ'
-                                                                        });
-                                                                        if (!dongY) return;
-                                                                        const updated = formSp.qua_tang.filter((_, i) => i !== idx);
+                                                <div className="space-y-3">
+                                                    {formSp.qua_tang.map((item, idx) => (
+                                                        <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80">
+                                                            <div className="flex-1 space-y-1">
+                                                                <span className="text-[10.5px] font-bold text-slate-500">Tên quà tặng #{idx + 1}</span>
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Balo laptop cao cấp chống sốc..."
+                                                                    value={item.ten_qua_tang}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...formSp.qua_tang];
+                                                                        updated[idx] = { ...updated[idx], ten_qua_tang: e.target.value };
                                                                         setFormSp({ ...formSp, qua_tang: updated });
                                                                     }}
-                                                                    className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-lg cursor-pointer transition-colors shrink-0"
-                                                                    title="Xóa quà này"
-                                                                >
-                                                                    <MinusCircle className="w-5 h-5" />
-                                                                </button>
+                                                                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-500 focus:outline-none"
+                                                                />
                                                             </div>
+                                                            <div className="w-full sm:w-44 space-y-1">
+                                                                <span className="text-[10.5px] font-bold text-slate-500">Trị giá quà (VNĐ)</span>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="500000"
+                                                                    value={item.gia_tri}
+                                                                    onChange={(e) => {
+                                                                        const updated = [...formSp.qua_tang];
+                                                                        updated[idx] = { ...updated[idx], gia_tri: Number(e.target.value) || 0 };
+                                                                        setFormSp({ ...formSp, qua_tang: updated });
+                                                                    }}
+                                                                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono font-bold focus:border-amber-500 focus:outline-none text-right"
+                                                                />
+                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                onClick={async () => {
+                                                                    const dongY = await xacNhan({
+                                                                        tieuDe: 'Xóa Quà Tặng Này?',
+                                                                        noiDung: `Bạn có chắc chắn muốn xóa phần quà "${item.ten_qua_tang || `#${idx + 1}`}" không?`,
+                                                                        loai: 'danger',
+                                                                        nutXacNhan: 'Xóa Quà',
+                                                                        nutHuy: 'Hủy Bỏ'
+                                                                    });
+                                                                    if (!dongY) return;
+                                                                    const updated = formSp.qua_tang.filter((_, i) => i !== idx);
+                                                                    setFormSp({ ...formSp, qua_tang: updated });
+                                                                }}
+                                                                className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl cursor-pointer transition-colors self-end sm:self-center shrink-0"
+                                                                title="Xóa phần quà này"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
                                                         </div>
                                                     ))}
                                                 </div>
@@ -11387,126 +11606,177 @@ export default function TrangQuanTriCuaHang() {
             {/* MODAL 2: TẠO / SỬA ĐƠN HÀNG */}
             {/* ========================================================================= */}
             {dangMoModalDonHang && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
-                        <div className="shrink-0 bg-gradient-to-r from-orange-600 to-amber-600 text-white p-6 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-base font-black !text-white">{donHangDangSua ? 'Cập Nhật Đơn Hàng' : 'Tạo Đơn Hàng Mới'}</h3>
-                                <p className="text-xs text-orange-100 font-semibold">Nhập thông tin khách hàng và chọn sản phẩm</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg border border-orange-200/80 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95">
+                        {/* Header Cam Ấm Áp & Hiện Đại */}
+                        <div className="shrink-0 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 text-white p-5 sm:p-6 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shadow-inner border border-white/30">
+                                    📦
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30">
+                                            {donHangDangSua ? 'Cập Nhật' : 'Tạo Đơn'}
+                                        </span>
+                                        {donHangDangSua && (
+                                            <span className="text-[11px] text-orange-100 font-mono font-bold">
+                                                {donHangDangSua.ma_don_hang}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h3 className="text-base sm:text-lg font-black !text-white leading-snug">
+                                        {donHangDangSua ? 'Cập Nhật Đơn Hàng' : 'Tạo Đơn Hàng Mới'}
+                                    </h3>
+                                    <p className="text-xs text-orange-100 font-medium">Nhập thông tin giao nhận và sản phẩm xuất kho</p>
+                                </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => !dangLuuDonHang && setDangMoModalDonHang(false)}
-                                className="p-2 rounded-full bg-white/20 hover:bg-white/30 text-white cursor-pointer transition-colors"
+                                className="p-2 rounded-full bg-white/15 hover:bg-white/30 text-white cursor-pointer transition-colors"
+                                title="Đóng cửa sổ"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={xuLyLuuDonHang} className="flex flex-col flex-1 min-h-0">
-                            <div className="flex-1 overflow-y-auto p-6 space-y-3.5 text-xs">
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Khách Hàng *</label>
+                        <form onSubmit={xuLyLuuDonHang} className="flex flex-col flex-1 min-h-0 bg-slate-50/60 dark:bg-slate-950/70">
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+                                
+                                {/* KHỐI 1: THÔNG TIN KHÁCH HÀNG */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <User className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                                                <span>Khách Hàng / Người Nhận *</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="Nguyễn Văn An..."
+                                                value={formDonHang.ho_ten}
+                                                onChange={(e) => setFormDonHang({ ...formDonHang, ho_ten: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-orange-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Phone className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                                                <span>Số Điện Thoại Nhận Hàng *</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="0912345678"
+                                                value={formDonHang.so_dien_thoai}
+                                                onChange={(e) => setFormDonHang({ ...formDonHang, so_dien_thoai: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold font-mono text-xs focus:bg-white focus:border-orange-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <MapPin className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                                            <span>Địa Chỉ Nhận Hàng Chi Tiết *</span>
+                                        </label>
                                         <input
                                             type="text"
                                             required
-                                            value={formDonHang.ho_ten}
-                                            onChange={(e) => setFormDonHang({ ...formDonHang, ho_ten: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Số Điện Thoại *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formDonHang.so_dien_thoai}
-                                            onChange={(e) => setFormDonHang({ ...formDonHang, so_dien_thoai: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold font-mono"
+                                            placeholder="Số nhà, đường phố, phường/xã, quận/huyện..."
+                                            value={formDonHang.dia_chi_chi_tiet}
+                                            onChange={(e) => setFormDonHang({ ...formDonHang, dia_chi_chi_tiet: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-orange-500 focus:outline-none transition-all"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Địa Chỉ Nhận Hàng *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formDonHang.dia_chi_chi_tiet}
-                                        onChange={(e) => setFormDonHang({ ...formDonHang, dia_chi_chi_tiet: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
-                                    />
-                                </div>
+                                {/* KHỐI 2: CHỌN SẢN PHẨM & THANH TOÁN */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                        <div className="sm:col-span-2 space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Package className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                                                <span>Sản Phẩm Đặt Mua *</span>
+                                            </label>
+                                            <select
+                                                value={formDonHang.san_pham_id}
+                                                onChange={(e) => setFormDonHang({ ...formDonHang, san_pham_id: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-orange-500 focus:outline-none transition-all cursor-pointer"
+                                            >
+                                                {danhSachSanPham.map(sp => (
+                                                    <option key={sp.id || sp._id} value={sp.id || sp._id}>
+                                                        {sp.ten_san_pham} ({dinhDangTienVND(sp.gia_khuyen_mai)})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Layers className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                                                <span>Số Lượng *</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={formDonHang.so_luong}
+                                                onChange={(e) => setFormDonHang({ ...formDonHang, so_luong: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-black text-center text-xs focus:bg-white focus:border-orange-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
 
-                                <div className="grid grid-cols-3 gap-3.5 pt-1">
-                                    <div className="col-span-2 space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Chọn Sản Phẩm *</label>
-                                        <select
-                                            value={formDonHang.san_pham_id}
-                                            onChange={(e) => setFormDonHang({ ...formDonHang, san_pham_id: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
-                                        >
-                                            {danhSachSanPham.map(sp => (
-                                                <option key={sp.id || sp._id} value={sp.id || sp._id}>
-                                                    {sp.ten_san_pham} ({dinhDangTienVND(sp.gia_khuyen_mai)})
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Số Lượng</label>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={formDonHang.so_luong}
-                                            onChange={(e) => setFormDonHang({ ...formDonHang, so_luong: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-black text-center"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Thanh Toán</label>
-                                        <select
-                                            value={formDonHang.hinh_thuc_thanh_toan}
-                                            onChange={(e) => setFormDonHang({ ...formDonHang, hinh_thuc_thanh_toan: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
-                                        >
-                                            <option value="chuyen_khoan_vietqr">VietQR Chuyển Khoản</option>
-                                            <option value="thanh_toan_khi_nhan_hang_cod">COD (Khi nhận hàng)</option>
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Mã Voucher</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Mã giảm giá..."
-                                            value={formDonHang.ma_giam_gia}
-                                            onChange={(e) => setFormDonHang({ ...formDonHang, ma_giam_gia: e.target.value.toUpperCase() })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-black"
-                                        />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <CreditCard className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                                                <span>Hình Thức Thanh Toán</span>
+                                            </label>
+                                            <select
+                                                value={formDonHang.hinh_thuc_thanh_toan}
+                                                onChange={(e) => setFormDonHang({ ...formDonHang, hinh_thuc_thanh_toan: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-orange-500 focus:outline-none transition-all cursor-pointer"
+                                            >
+                                                <option value="chuyen_khoan_vietqr">VietQR Chuyển Khoản Ngân Hàng</option>
+                                                <option value="thanh_toan_khi_nhan_hang_cod">COD (Thanh toán khi nhận hàng)</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Ticket className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                                                <span>Mã Voucher Giảm Giá</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="VD: SALE2026 / TRIKUN500K..."
+                                                value={formDonHang.ma_giam_gia}
+                                                onChange={(e) => setFormDonHang({ ...formDonHang, ma_giam_gia: e.target.value.toUpperCase() })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-orange-600 dark:text-orange-400 font-mono font-black text-xs uppercase focus:bg-white focus:border-orange-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Pinned Footer */}
-                            <div className="shrink-0 p-4 px-6 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                            <div className="shrink-0 p-4 px-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3 shadow-md">
                                 <button
                                     type="button"
                                     disabled={dangLuuDonHang}
                                     onClick={() => setDangMoModalDonHang(false)}
-                                    className={`px-5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuDonHang ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                    className={`px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuDonHang ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                 >
-                                    Hủy
+                                    Hủy Bỏ
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={dangLuuDonHang}
-                                    className={`px-6 py-2.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-bold flex items-center gap-2 shadow-md shadow-orange-500/25 transition-all ${dangLuuDonHang ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    className={`px-6 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold flex items-center gap-2 shadow-md shadow-orange-500/25 transition-all ${dangLuuDonHang ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
                                 >
                                     {dangLuuDonHang ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    <span>{dangLuuDonHang ? 'Đang lưu đơn hàng...' : 'Lưu Đơn Hàng'}</span>
+                                    <span>{dangLuuDonHang ? 'Đang lưu đơn hàng...' : (donHangDangSua ? 'Lưu Thay Đổi' : 'Tạo Đơn Hàng')}</span>
                                 </button>
                             </div>
                         </form>
@@ -11515,101 +11785,181 @@ export default function TrangQuanTriCuaHang() {
             )}
 
             {/* ========================================================================= */}
-            {/* MODAL 3: THÊM / SỬA THƯƠNG HIỆU */}
+            {/* MODAL 3: THÊM / SỬA THƯƠNG HIỆU (VỚI QUICK EMOJI PICKER & TẢI LOGO TỪ MÁY) */}
             {/* ========================================================================= */}
             {dangMoModalDanhMuc && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
-                        <div className="shrink-0 bg-gradient-to-r from-purple-700 to-pink-700 text-white p-6 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-base font-black !text-white">{dmDangSua ? 'Chỉnh Sửa Thương Hiệu' : 'Thêm Thương Hiệu Mới'}</h3>
-                                <p className="text-xs text-purple-100 font-medium">Cấu hình thông tin hãng sản xuất trên hệ thống</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md border border-purple-200/80 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95">
+                        {/* Header Tím Neon Sang Trọng */}
+                        <div className="shrink-0 bg-gradient-to-r from-purple-700 via-fuchsia-700 to-pink-700 text-white p-5 sm:p-6 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shadow-inner border border-white/30">
+                                    {formDm.logo && formDm.logo.startsWith('data:image') ? (
+                                        <img src={formDm.logo} alt="Logo" className="w-7 h-7 object-contain rounded" />
+                                    ) : (
+                                        <span>{formDm.logo || '💻'}</span>
+                                    )}
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30">
+                                            {dmDangSua ? 'Cập Nhật' : 'Thêm Mới'}
+                                        </span>
+                                        <span className="text-[11px] text-purple-100 font-mono font-bold">
+                                            {formDm.ma_danh_muc || 'brand-code'}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-base sm:text-lg font-black !text-white leading-snug">
+                                        {dmDangSua ? 'Chỉnh Sửa Thương Hiệu' : 'Thêm Thương Hiệu Mới'}
+                                    </h3>
+                                    <p className="text-xs text-purple-100 font-medium">Cấu hình hãng sản xuất và phân khúc máy</p>
+                                </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => !dangLuuDanhMuc && setDangMoModalDanhMuc(false)}
-                                className="p-2 rounded-full bg-white/20 hover:bg-white/30 cursor-pointer transition-colors"
+                                className="p-2 rounded-full bg-white/15 hover:bg-white/30 cursor-pointer transition-colors text-white"
+                                title="Đóng cửa sổ"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={xuLyLuuDanhMuc} className="flex flex-col flex-1 min-h-0">
-                            <div className="flex-1 overflow-y-auto p-6 space-y-3.5 text-xs">
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Tên Thương Hiệu *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Ví dụ: ASUS, Dell, Lenovo, Apple, MSI..."
-                                        value={formDm.ten_danh_muc}
-                                        onChange={(e) => setFormDm({ ...formDm, ten_danh_muc: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Mã Slug / Code *</label>
+                        <form onSubmit={xuLyLuuDanhMuc} className="flex flex-col flex-1 min-h-0 bg-slate-50/60 dark:bg-slate-950/70">
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+                                
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-purple-200/80 dark:border-slate-800 shadow-xs space-y-3.5">
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <Building2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                            <span>Tên Thương Hiệu / Hãng *</span>
+                                        </label>
                                         <input
                                             type="text"
                                             required
-                                            placeholder="asus"
-                                            value={formDm.ma_danh_muc}
-                                            onChange={(e) => setFormDm({ ...formDm, ma_danh_muc: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs"
+                                            placeholder="Ví dụ: ASUS, Dell, Lenovo, Apple, MSI, Razer..."
+                                            value={formDm.ten_danh_muc}
+                                            onChange={(e) => setFormDm({ ...formDm, ten_danh_muc: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Biểu Tượng (Icon / Emoji)</label>
+
+                                    <div className="grid grid-cols-2 gap-3.5">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Hash className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                                <span>Mã Slug / Code *</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="asus / dell / lenovo"
+                                                value={formDm.ma_danh_muc}
+                                                onChange={(e) => setFormDm({ ...formDm, ma_danh_muc: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-purple-600 dark:text-purple-400 font-mono font-bold text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between text-xs">
+                                                <span className="flex items-center gap-1.5">
+                                                    <Smile className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                                    <span>Biểu Tượng</span>
+                                                </span>
+                                                {/* Nút Upload Logo File */}
+                                                <label className="text-[10px] text-purple-600 hover:text-purple-700 font-bold cursor-pointer flex items-center gap-1">
+                                                    <Upload className="w-3 h-3" />
+                                                    <span>Tải logo file</span>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={xuLyUploadLogoDanhMuc}
+                                                    />
+                                                </label>
+                                            </label>
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="💻 / 🎮 / ⚡"
+                                                    value={formDm.logo || '💻'}
+                                                    onChange={(e) => setFormDm({ ...formDm, logo: e.target.value })}
+                                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-center text-sm focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* THANH CHỌN NHANH EMOJI CHO THƯƠNG HIỆU */}
+                                    <div className="p-2.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/70 dark:border-purple-900/50 space-y-1.5">
+                                        <div className="text-[10.5px] font-bold text-purple-900 dark:text-purple-300 flex items-center gap-1">
+                                            <Sparkles className="w-3 h-3 text-purple-600" />
+                                            <span>Chọn nhanh biểu tượng phù hợp:</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {['💻', '🖥️', '📱', '🎧', '⌨️', '🖱️', '🎮', '⚡', '🍎', '🌟', '🔥', '⚙️'].map((emo) => (
+                                                <button
+                                                    key={emo}
+                                                    type="button"
+                                                    onClick={() => setFormDm({ ...formDm, logo: emo })}
+                                                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm cursor-pointer transition-all border ${
+                                                        formDm.logo === emo
+                                                            ? 'bg-purple-600 text-white border-purple-700 shadow-sm scale-105'
+                                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-purple-100 hover:scale-105'
+                                                    }`}
+                                                >
+                                                    {emo}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <Globe className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                            <span>Xuất Xứ / Ghi Chú Hãng</span>
+                                        </label>
                                         <input
                                             type="text"
-                                            placeholder="💻 / 🎮 / ⚡"
-                                            value={formDm.logo || '💻'}
-                                            onChange={(e) => setFormDm({ ...formDm, logo: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-center text-sm"
+                                            placeholder="Đài Loan, Mỹ, Nhật Bản, Chính Hãng Quốc Tế..."
+                                            value={formDm.xuat_xu}
+                                            onChange={(e) => setFormDm({ ...formDm, xuat_xu: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
                                         />
                                     </div>
-                                </div>
 
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Xuất Xứ / Ghi Chú</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Mỹ, Đài Loan, Chính Hãng..."
-                                        value={formDm.xuat_xu}
-                                        onChange={(e) => setFormDm({ ...formDm, xuat_xu: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                    />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Mô Tả Giới Thiệu</label>
-                                    <textarea
-                                        rows="2"
-                                        value={formDm.mo_ta}
-                                        onChange={(e) => setFormDm({ ...formDm, mo_ta: e.target.value })}
-                                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs"
-                                    />
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                            <span>Mô Tả Giới Thiệu Thương Hiệu</span>
+                                        </label>
+                                        <textarea
+                                            rows="2"
+                                            value={formDm.mo_ta}
+                                            onChange={(e) => setFormDm({ ...formDm, mo_ta: e.target.value })}
+                                            placeholder="Hãng sản xuất laptop gaming hàng đầu thế giới với dòng ROG và Zenbook..."
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Pinned Footer */}
-                            <div className="shrink-0 p-4 px-6 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                            <div className="shrink-0 p-4 px-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3 shadow-md">
                                 <button
                                     type="button"
                                     disabled={dangLuuDanhMuc}
                                     onClick={() => setDangMoModalDanhMuc(false)}
-                                    className={`px-5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuDanhMuc ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                    className={`px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuDanhMuc ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                 >
-                                    Hủy
+                                    Hủy Bỏ
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={dangLuuDanhMuc}
-                                    className={`px-6 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center gap-2 shadow-md shadow-purple-500/25 transition-all ${dangLuuDanhMuc ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    className={`px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center gap-2 shadow-md shadow-purple-500/25 transition-all ${dangLuuDanhMuc ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
                                 >
                                     {dangLuuDanhMuc ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    <span>{dangLuuDanhMuc ? 'Đang lưu...' : (dmDangSua ? 'Lưu Thay Đổi' : 'Thêm Mới')}</span>
+                                    <span>{dangLuuDanhMuc ? 'Đang lưu...' : (dmDangSua ? 'Lưu Thay Đổi' : 'Thêm Thương Hiệu')}</span>
                                 </button>
                             </div>
                         </form>
@@ -11618,124 +11968,197 @@ export default function TrangQuanTriCuaHang() {
             )}
 
             {/* ========================================================================= */}
-            {/* MODAL 4: THÊM / SỬA KHÁCH HÀNG */}
+            {/* MODAL 4: THÊM / SỬA KHÁCH HÀNG (VỚI AVATAR PREVIEW & PHÂN QUYỀN SANG TRỌNG) */}
             {/* ========================================================================= */}
             {dangMoModalUser && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
-                        <div className="shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 text-white p-6 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-base font-black !text-white">{userDangSua ? 'Cập Nhật Tài Khoản' : 'Thêm Tài Khoản Mới'}</h3>
-                                <p className="text-xs text-emerald-100 font-medium">Thiết lập thông tin thành viên và phân quyền hệ thống</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md border border-emerald-200/80 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95">
+                        {/* Header Xanh Emerald Thanh Lịch */}
+                        <div className="shrink-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white p-5 sm:p-6 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shadow-inner border border-white/30">
+                                    👤
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30">
+                                            {userDangSua ? 'Cập Nhật' : 'Thêm Mới'}
+                                        </span>
+                                        <span className="text-[11px] text-emerald-100 font-mono font-bold">
+                                            {formUser.vaiTro === 'admin' ? '👑 Admin' : 'Khách hàng'}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-base sm:text-lg font-black !text-white leading-snug">
+                                        {userDangSua ? 'Cập Nhật Tài Khoản' : 'Thêm Thành Viên Mới'}
+                                    </h3>
+                                    <p className="text-xs text-emerald-100 font-medium">Thiết lập thông tin người dùng và phân quyền hệ thống</p>
+                                </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => !dangLuuUser && setDangMoModalUser(false)}
-                                className="p-2 rounded-full bg-white/20 hover:bg-white/30 cursor-pointer transition-colors"
+                                className="p-2 rounded-full bg-white/15 hover:bg-white/30 cursor-pointer transition-colors text-white"
+                                title="Đóng cửa sổ"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={xuLyLuuUser} className="flex flex-col flex-1 min-h-0">
-                            <div className="flex-1 overflow-y-auto p-6 space-y-3.5 text-xs">
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Họ Và Tên *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={formUser.hoTen}
-                                        onChange={(e) => setFormUser({ ...formUser, hoTen: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold"
-                                    />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Email *</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        value={formUser.email}
-                                        onChange={(e) => setFormUser({ ...formUser, email: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold"
-                                    />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Số Điện Thoại</label>
-                                    <input
-                                        type="text"
-                                        value={formUser.soDienThoai}
-                                        onChange={(e) => setFormUser({ ...formUser, soDienThoai: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold font-mono"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Phân Quyền Vai Trò</label>
-                                        <select
-                                            value={formUser.vaiTro}
-                                            onChange={(e) => setFormUser({ ...formUser, vaiTro: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-black"
-                                        >
-                                            <option value="khach_hang">Khách Hàng</option>
-                                            <option value="admin">👑 Quản Trị Viên</option>
-                                        </select>
+                        <form onSubmit={xuLyLuuUser} className="flex flex-col flex-1 min-h-0 bg-slate-50/60 dark:bg-slate-950/70">
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+                                
+                                {/* AVATAR & THÔNG TIN TÓM TẮT TRỰC QUAN */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-emerald-200/80 dark:border-slate-800 shadow-xs flex items-center gap-3.5">
+                                    <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-lg font-black shrink-0 shadow-md">
+                                        {(formUser.hoTen || 'U').charAt(0).toUpperCase()}
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Trạng Thái Tài Khoản</label>
-                                        <select
-                                            value={formUser.trangThai || (formUser.biKhoa ? 'bi_khoa' : 'hoat_dong')}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setFormUser({
-                                                    ...formUser,
-                                                    trangThai: val,
-                                                    biKhoa: val === 'bi_khoa',
-                                                    lyDoKhoa: val === 'bi_khoa' ? (formUser.lyDoKhoa || 'Quản trị viên tạm khóa tài khoản') : ''
-                                                });
-                                            }}
-                                            className={`w-full px-3.5 py-2.5 rounded-xl border font-bold ${
+                                    <div className="min-w-0 flex-1">
+                                        <div className="font-black text-slate-900 dark:text-white text-sm truncate">
+                                            {formUser.hoTen || 'Người dùng mới'}
+                                        </div>
+                                        <div className="text-slate-500 dark:text-slate-400 font-mono text-[11px] truncate">
+                                            {formUser.email || 'user@example.com'}
+                                        </div>
+                                        <div className="mt-1 flex items-center gap-1.5">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                formUser.vaiTro === 'admin'
+                                                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300'
+                                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                            }`}>
+                                                {formUser.vaiTro === 'admin' ? '👑 Quản Trị Viên' : '👤 Khách Hàng'}
+                                            </span>
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                                 (formUser.trangThai === 'bi_khoa' || formUser.biKhoa)
-                                                    ? 'border-red-400 bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-300'
-                                                    : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white'
-                                            }`}
-                                        >
-                                            <option value="hoat_dong">🟢 Đang Hoạt Động</option>
-                                            <option value="bi_khoa">🔒 Tạm Khóa</option>
-                                            <option value="cho_kich_hoat">⏳ Chờ Kích Hoạt OTP</option>
-                                        </select>
+                                                    ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300'
+                                                    : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                            }`}>
+                                                {(formUser.trangThai === 'bi_khoa' || formUser.biKhoa) ? '🔒 Tạm khóa' : '🟢 Hoạt động'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {(formUser.trangThai === 'bi_khoa' || formUser.biKhoa) && (
-                                    <div className="space-y-1 animate-in fade-in">
-                                        <label className="font-bold text-red-600 dark:text-red-400">Lý Do Khóa Tài Khoản</label>
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <User className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                            <span>Họ Và Tên *</span>
+                                        </label>
                                         <input
                                             type="text"
-                                            value={formUser.lyDoKhoa || ''}
-                                            onChange={(e) => setFormUser({ ...formUser, lyDoKhoa: e.target.value })}
-                                            placeholder="Ví dụ: Vi phạm chính sách / Nghi ngờ spam..."
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-950/20 text-red-900 dark:text-red-200 font-medium"
+                                            required
+                                            placeholder="Nguyễn Văn An..."
+                                            value={formUser.hoTen}
+                                            onChange={(e) => setFormUser({ ...formUser, hoTen: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-emerald-500 focus:outline-none transition-all"
                                         />
                                     </div>
-                                )}
+
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <Mail className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                            <span>Địa Chỉ Email *</span>
+                                        </label>
+                                        <input
+                                            type="email"
+                                            required
+                                            placeholder="user@example.com"
+                                            value={formUser.email}
+                                            onChange={(e) => setFormUser({ ...formUser, email: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs focus:bg-white focus:border-emerald-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                            <span>Số Điện Thoại</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="0912345678"
+                                            value={formUser.soDienThoai}
+                                            onChange={(e) => setFormUser({ ...formUser, soDienThoai: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold font-mono text-xs focus:bg-white focus:border-emerald-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                                <span>Phân Quyền Vai Trò</span>
+                                            </label>
+                                            <select
+                                                value={formUser.vaiTro}
+                                                onChange={(e) => setFormUser({ ...formUser, vaiTro: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-black text-xs focus:bg-white focus:border-emerald-500 focus:outline-none transition-all cursor-pointer"
+                                            >
+                                                <option value="khach_hang">👤 Khách Hàng</option>
+                                                <option value="admin">👑 Quản Trị Viên (Admin)</option>
+                                            </select>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Activity className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                                <span>Trạng Thái Tài Khoản</span>
+                                            </label>
+                                            <select
+                                                value={formUser.trangThai || (formUser.biKhoa ? 'bi_khoa' : 'hoat_dong')}
+                                                onChange={(e) => {
+                                                    const val = e.target.value;
+                                                    setFormUser({
+                                                        ...formUser,
+                                                        trangThai: val,
+                                                        biKhoa: val === 'bi_khoa',
+                                                        lyDoKhoa: val === 'bi_khoa' ? (formUser.lyDoKhoa || 'Quản trị viên tạm khóa tài khoản') : ''
+                                                    });
+                                                }}
+                                                className={`w-full px-3.5 py-2.5 rounded-xl border font-bold text-xs focus:outline-none transition-all cursor-pointer ${
+                                                    (formUser.trangThai === 'bi_khoa' || formUser.biKhoa)
+                                                        ? 'border-red-400 bg-red-50/60 dark:bg-red-950/30 text-red-700 dark:text-red-300'
+                                                        : 'border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white focus:bg-white focus:border-emerald-500'
+                                                }`}
+                                            >
+                                                <option value="hoat_dong">🟢 Đang Hoạt Động</option>
+                                                <option value="bi_khoa">🔒 Tạm Khóa</option>
+                                                <option value="cho_kich_hoat">⏳ Chờ Kích Hoạt OTP</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {(formUser.trangThai === 'bi_khoa' || formUser.biKhoa) && (
+                                        <div className="space-y-1.5 animate-in fade-in pt-1">
+                                            <label className="font-bold text-rose-600 dark:text-rose-400 flex items-center gap-1.5 text-xs">
+                                                <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+                                                <span>Lý Do Khóa Tài Khoản</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formUser.lyDoKhoa || ''}
+                                                onChange={(e) => setFormUser({ ...formUser, lyDoKhoa: e.target.value })}
+                                                placeholder="Ví dụ: Vi phạm chính sách / Nghi ngờ spam..."
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-rose-300 dark:border-rose-700 bg-rose-50/30 dark:bg-red-950/20 text-rose-900 dark:text-rose-200 font-medium text-xs focus:outline-none"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Pinned Footer */}
-                            <div className="shrink-0 p-4 px-6 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                            <div className="shrink-0 p-4 px-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3 shadow-md">
                                 <button
                                     type="button"
                                     disabled={dangLuuUser}
                                     onClick={() => setDangMoModalUser(false)}
-                                    className={`px-5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuUser ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                    className={`px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuUser ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                 >
-                                    Hủy
+                                    Hủy Bỏ
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={dangLuuUser}
-                                    className={`px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2 shadow-md shadow-emerald-500/25 transition-all ${dangLuuUser ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    className={`px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-2 shadow-md shadow-emerald-500/25 transition-all ${dangLuuUser ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
                                 >
                                     {dangLuuUser ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                                     <span>{dangLuuUser ? 'Đang lưu tài khoản...' : (userDangSua ? 'Lưu Thay Đổi' : 'Thêm Tài Khoản')}</span>
@@ -11747,184 +12170,259 @@ export default function TrangQuanTriCuaHang() {
             )}
 
             {/* ========================================================================= */}
-            {/* MODAL 5: THÊM / SỬA VOUCHER */}
+            {/* MODAL 5: THÊM / SỬA VOUCHER (2 KHỐI SECTION TÁCH NỀN RÕ RÀNG & ICONS ĐẦY ĐỦ) */}
             {/* ========================================================================= */}
             {dangMoModalVoucher && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
-                        <div className="shrink-0 bg-gradient-to-r from-rose-600 to-red-600 text-white p-6 flex items-center justify-between">
-                            <div>
-                                <h3 className="text-base font-black !text-white">{voucherDangSua ? 'Sửa Mã Khuyến Mãi' : 'Tạo Voucher Khuyến Mãi Mới'}</h3>
-                                <p className="text-xs text-rose-100 font-semibold">Thiết lập mã giảm giá, giới hạn số lượng và thời hạn áp dụng</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-lg border border-rose-200/80 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95">
+                        {/* Header Đỏ Rose Sang Trọng */}
+                        <div className="shrink-0 bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 text-white p-5 sm:p-6 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shadow-inner border border-white/30">
+                                    🎟️
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30">
+                                            {voucherDangSua ? 'Cập Nhật' : 'Tạo Mới'}
+                                        </span>
+                                        <span className="text-[11px] text-rose-100 font-mono font-bold uppercase">
+                                            {formVoucher.ma_code || 'VOUCHER-CODE'}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-base sm:text-lg font-black !text-white leading-snug">
+                                        {voucherDangSua ? 'Sửa Mã Khuyến Mãi' : 'Tạo Voucher Khuyến Mãi Mới'}
+                                    </h3>
+                                    <p className="text-xs text-rose-100 font-medium">Thiết lập mức giảm giá, giới hạn số lượng và thời hạn</p>
+                                </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => !dangLuuVoucher && setDangMoModalVoucher(false)}
-                                className="p-2 rounded-full bg-white/20 hover:bg-white/30 cursor-pointer transition-colors"
+                                className="p-2 rounded-full bg-white/15 hover:bg-white/30 cursor-pointer transition-colors text-white"
+                                title="Đóng cửa sổ"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={xuLyLuuVoucher} className="flex flex-col flex-1 min-h-0">
-                            <div className="flex-1 overflow-y-auto p-6 space-y-3.5 text-xs">
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Mã CODE Khuyến Mãi *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="SALE2026 / TRIKUN500K..."
-                                            value={formVoucher.ma_code}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, ma_code: e.target.value.toUpperCase() })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono font-black text-rose-600 uppercase text-xs"
-                                        />
+                        <form onSubmit={xuLyLuuVoucher} className="flex flex-col flex-1 min-h-0 bg-slate-50/60 dark:bg-slate-950/70">
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+                                
+                                {/* KHỐI 1: THÔNG TIN MÃ & MỨC GIẢM GIÁ */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-900/60 shadow-xs space-y-3.5">
+                                    <div className="flex items-center justify-between pb-2 border-b border-rose-100 dark:border-rose-950">
+                                        <span className="font-black text-rose-900 dark:text-rose-300 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                                            <Ticket className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                                            <span>1. Mã Voucher & Mức Giảm</span>
+                                        </span>
+                                        <span className="text-[10px] font-bold text-rose-700 bg-rose-100 dark:bg-rose-950 dark:text-rose-300 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                                            Bắt buộc
+                                        </span>
                                     </div>
 
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Hình Thức Giảm Giá</label>
-                                        <select
-                                            value={formVoucher.loai_giam}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, loai_giam: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                        >
-                                            <option value="tien_mat">💵 Giảm tiền mặt (VNĐ)</option>
-                                            <option value="phan_tram">📊 Giảm theo phần trăm (%)</option>
-                                            <option value="freeship">🚚 Freeship (Miễn phí ship)</option>
-                                        </select>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Ticket className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                                                <span>Mã CODE Khuyến Mãi *</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                placeholder="SALE2026 / TRIKUN500K..."
+                                                value={formVoucher.ma_code}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, ma_code: e.target.value.toUpperCase() })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 font-mono font-black text-rose-600 uppercase text-xs focus:bg-white focus:border-rose-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <BadgePercent className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                                                <span>Hình Thức Giảm Giá *</span>
+                                            </label>
+                                            <select
+                                                value={formVoucher.loai_giam}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, loai_giam: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-rose-500 focus:outline-none transition-all cursor-pointer"
+                                            >
+                                                <option value="tien_mat">💵 Giảm Tiền Mặt (VNĐ)</option>
+                                                <option value="phan_tram">📊 Giảm Theo Phần Trăm (%)</option>
+                                                <option value="freeship">🚚 Miễn Phí Vận Chuyển</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Tên / Tiêu Đề Voucher *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Ưu đãi sinh viên / Tri ân khách hàng..."
-                                        value={formVoucher.tieu_de}
-                                        onChange={(e) => setFormVoucher({ ...formVoucher, tieu_de: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">
-                                            {formVoucher.loai_giam === 'phan_tram' ? 'Phần Trăm Giảm (%) *' : 'Số Tiền Giảm (VNĐ) *'}
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <Gift className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                                            <span>Tên / Tiêu Đề Voucher *</span>
                                         </label>
                                         <input
-                                            type="number"
-                                            required
-                                            value={formVoucher.gia_tri_giam}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, gia_tri_giam: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-black text-red-600 text-xs"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Đơn Hàng Tối Thiểu (VNĐ)</label>
-                                        <input
-                                            type="number"
-                                            value={formVoucher.don_hang_toi_thieu}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, don_hang_toi_thieu: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Số Lượng Phát Hành</label>
-                                        <input
-                                            type="number"
-                                            value={formVoucher.so_luong_phat_hanh || 20}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, so_luong_phat_hanh: Number(e.target.value) })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 font-black text-emerald-600 text-xs"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Ngày Hết Hạn</label>
-                                        <input
-                                            type="date"
-                                            value={formVoucher.ngay_het_han || '2026-12-31'}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, ngay_het_han: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Chuyên Mục Áp Dụng</label>
-                                        <select
-                                            value={formVoucher.chuyen_muc || 'toan_san'}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, chuyen_muc: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                        >
-                                            <option value="toan_san">🌐 Toàn Sàn</option>
-                                            <option value="laptop">💻 Laptop Thường</option>
-                                            <option value="gaming">🎮 Laptop Gaming</option>
-                                            <option value="sinh_vien">🎓 Sinh Viên / VP</option>
-                                            <option value="phu_kien">🎧 Phụ Kiện / Gear</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Tone Màu Thẻ</label>
-                                        <select
-                                            value={formVoucher.mau_sac || 'rose'}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, mau_sac: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                        >
-                                            <option value="rose">🔴 Đỏ Thắm (Rose)</option>
-                                            <option value="blue">🔵 Xanh Dương (Blue)</option>
-                                            <option value="orange">🟠 Cam Cháy (Orange)</option>
-                                            <option value="purple">🟣 Tím Neon (Purple)</option>
-                                            <option value="emerald">🟢 Xanh Lục (Emerald)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Nhãn Badge Nổi Bật</label>
-                                        <input
                                             type="text"
-                                            placeholder="HOT DEAL / GIẢM SỐC..."
-                                            value={formVoucher.badge || ''}
-                                            onChange={(e) => setFormVoucher({ ...formVoucher, badge: e.target.value.toUpperCase() })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs uppercase"
+                                            required
+                                            placeholder="Ưu đãi sinh viên / Tri ân khách hàng thân thiết..."
+                                            value={formVoucher.tieu_de}
+                                            onChange={(e) => setFormVoucher({ ...formVoucher, tieu_de: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-rose-500 focus:outline-none transition-all"
                                         />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <CircleDollarSign className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                                                <span>{formVoucher.loai_giam === 'phan_tram' ? 'Phần Trăm Giảm (%) *' : 'Số Tiền Giảm (VNĐ) *'}</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                required
+                                                placeholder={formVoucher.loai_giam === 'phan_tram' ? 'VD: 15' : 'VD: 500000'}
+                                                value={formVoucher.gia_tri_giam}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, gia_tri_giam: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-rose-300 dark:border-rose-800 bg-rose-50/40 dark:bg-rose-950/20 font-black text-rose-600 dark:text-rose-400 text-xs focus:bg-white focus:border-rose-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <ShoppingBag className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+                                                <span>Đơn Hàng Tối Thiểu (VNĐ)</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                placeholder="VD: 10000000"
+                                                value={formVoucher.don_hang_toi_thieu}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, don_hang_toi_thieu: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-rose-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Mô Tả Chi Tiết Điều Kiện Áp Dụng</label>
-                                    <textarea
-                                        rows="2"
-                                        value={formVoucher.mo_ta}
-                                        onChange={(e) => setFormVoucher({ ...formVoucher, mo_ta: e.target.value })}
-                                        placeholder="Áp dụng cho khách hàng mua laptop..."
-                                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs"
-                                    />
+                                {/* KHỐI 2: ĐIỀU KIỆN ÁP DỤNG & GIAO DIỆN THẺ */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
+                                    <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                                        <span className="font-black text-slate-800 dark:text-slate-200 text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                                            <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                            <span>2. Điều Kiện & Giao Diện Thẻ</span>
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Layers className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                                                <span>Số Lượng Phát Hành</span>
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={formVoucher.so_luong_phat_hanh || 20}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, so_luong_phat_hanh: Number(e.target.value) })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 font-black text-emerald-600 dark:text-emerald-400 text-xs focus:bg-white focus:border-emerald-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                <span>Ngày Hết Hạn Voucher</span>
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={formVoucher.ngay_het_han || '2026-12-31'}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, ngay_het_han: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Tag className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                                <span>Chuyên Mục Áp Dụng</span>
+                                            </label>
+                                            <select
+                                                value={formVoucher.chuyen_muc || 'toan_san'}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, chuyen_muc: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all cursor-pointer"
+                                            >
+                                                <option value="toan_san">🌐 Toàn Sàn</option>
+                                                <option value="laptop">💻 Laptop Thường</option>
+                                                <option value="gaming">🎮 Laptop Gaming</option>
+                                                <option value="sinh_vien">🎓 Sinh Viên / VP</option>
+                                                <option value="phu_kien">🎧 Phụ Kiện / Gear</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Palette className="w-3.5 h-3.5 text-amber-500" />
+                                                <span>Tone Màu Thẻ</span>
+                                            </label>
+                                            <select
+                                                value={formVoucher.mau_sac || 'rose'}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, mau_sac: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-amber-500 focus:outline-none transition-all cursor-pointer"
+                                            >
+                                                <option value="rose">🔴 Đỏ Thắm (Rose)</option>
+                                                <option value="blue">🔵 Xanh Dương (Blue)</option>
+                                                <option value="orange">🟠 Cam Cháy (Orange)</option>
+                                                <option value="purple">🟣 Tím Neon (Purple)</option>
+                                                <option value="emerald">🟢 Xanh Lục (Emerald)</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Flame className="w-3.5 h-3.5 text-rose-500" />
+                                                <span>Nhãn Badge Nổi Bật</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="HOT DEAL / GIẢM SỐC..."
+                                                value={formVoucher.badge || ''}
+                                                onChange={(e) => setFormVoucher({ ...formVoucher, badge: e.target.value.toUpperCase() })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs uppercase focus:bg-white focus:border-rose-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <FileText className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+                                            <span>Mô Tả Chi Tiết Điều Kiện Áp Dụng</span>
+                                        </label>
+                                        <textarea
+                                            rows="2"
+                                            value={formVoucher.mo_ta}
+                                            onChange={(e) => setFormVoucher({ ...formVoucher, mo_ta: e.target.value })}
+                                            placeholder="Áp dụng cho khách hàng mua laptop gaming hoặc phụ kiện trên 20 triệu..."
+                                            className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs focus:bg-white focus:border-rose-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Pinned Footer */}
-                            <div className="shrink-0 p-4 px-6 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                            <div className="shrink-0 p-4 px-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3 shadow-md">
                                 <button
                                     type="button"
                                     disabled={dangLuuVoucher}
                                     onClick={() => setDangMoModalVoucher(false)}
-                                    className={`px-5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuVoucher ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                    className={`px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuVoucher ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                 >
-                                    Hủy
+                                    Hủy Bỏ
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={dangLuuVoucher}
-                                    className={`px-6 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold flex items-center gap-2 shadow-md shadow-rose-500/25 transition-all ${dangLuuVoucher ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    className={`px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold flex items-center gap-2 shadow-md shadow-rose-500/25 transition-all ${dangLuuVoucher ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
                                 >
                                     {dangLuuVoucher ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    <span>{dangLuuVoucher ? 'Đang lưu voucher...' : (voucherDangSua ? 'Lưu Thay Đổi' : 'Lưu Voucher')}</span>
+                                    <span>{dangLuuVoucher ? 'Đang lưu voucher...' : (voucherDangSua ? 'Lưu Thay Đổi' : 'Tạo Voucher')}</span>
                                 </button>
                             </div>
                         </form>
@@ -12420,177 +12918,320 @@ export default function TrangQuanTriCuaHang() {
             )}
 
             {/* ========================================================================= */}
-            {/* MODAL 7: THÊM / SỬA BÀI VIẾT TIN TỨC (TOÀN DIỆN) */}
+            {/* MODAL 7: THÊM / SỬA BÀI VIẾT TIN TỨC (TOÀN DIỆN VỚI TẢI ẢNH & CHỌN MẪU NHANH) */}
             {/* ========================================================================= */}
             {dangMoModalTinTuc && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95">
-                        <div className="shrink-0 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white p-6 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center text-xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl border border-teal-200/80 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95">
+                        {/* Header Xanh Teal Đậm Đà, Sang Trọng */}
+                        <div className="shrink-0 bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white p-5 sm:p-6 flex items-center justify-between shadow-sm">
+                            <div className="flex items-center gap-3.5">
+                                <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shadow-inner border border-white/30">
                                     📰
                                 </div>
                                 <div>
-                                    <h3 className="text-base font-black !text-white">
-                                        {tinTucDangSua ? 'Chỉnh Sửa Bài Viết Tin Tức' : 'Tạo Bài Viết Mới'}
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 text-white border border-white/30">
+                                            {tinTucDangSua ? 'Cập Nhật' : 'Tạo Mới'}
+                                        </span>
+                                        <span className="text-[11px] text-teal-100 font-mono font-bold">
+                                            {formTinTuc.id || 'NEWS-ID'}
+                                        </span>
+                                    </div>
+                                    <h3 className="text-base sm:text-lg font-black !text-white leading-snug">
+                                        {tinTucDangSua ? 'Chỉnh Sửa Bài Viết Tin Tức' : 'Soạn Thảo Bài Viết Mới'}
                                     </h3>
-                                    <p className="text-xs text-teal-100 font-semibold">Soạn thảo bài viết đánh giá công nghệ và cẩm nang người dùng</p>
+                                    <p className="text-xs text-teal-100 font-medium hidden sm:block">Đánh giá công nghệ, tư vấn chọn mua laptop và cẩm nang thủ thuật</p>
                                 </div>
                             </div>
                             <button
+                                type="button"
                                 onClick={() => !dangLuuTinTuc && setDangMoModalTinTuc(false)}
-                                className="p-2 rounded-full bg-white/20 hover:bg-white/30 cursor-pointer transition-colors"
+                                className="p-2 rounded-full bg-white/15 hover:bg-white/30 cursor-pointer transition-colors text-white"
+                                title="Đóng cửa sổ"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <form onSubmit={xuLyLuuTinTuc} className="flex flex-col flex-1 min-h-0">
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Tiêu Đề Bài Viết *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="Top 5 Laptop Gaming RTX 40 Series..."
-                                        value={formTinTuc.tieu_de}
-                                        onChange={(e) => setFormTinTuc({ ...formTinTuc, tieu_de: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Chuyên Mục Bài Viết *</label>
-                                        <select
-                                            value={formTinTuc.chuyen_muc}
-                                            onChange={(e) => setFormTinTuc({ ...formTinTuc, chuyen_muc: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                        >
-                                            <option value="Tư Vấn Mua Sắm">Tư Vấn Mua Sắm</option>
-                                            <option value="Xu Hướng Công Nghệ">Xu Hướng Công Nghệ</option>
-                                            <option value="Đánh Giá & So Sánh">Đánh Giá & So Sánh</option>
-                                            <option value="Tin Tức Công Nghệ">Tin Tức Công Nghệ</option>
-                                            <option value="Chia Sẻ Kinh Nghiệm">Chia Sẻ Kinh Nghiệm</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Mã Slug / ID</label>
-                                        <input
-                                            type="text"
-                                            placeholder="tin-1 / top-5-laptop-2026"
-                                            value={formTinTuc.id}
-                                            onChange={(e) => setFormTinTuc({ ...formTinTuc, id: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs text-blue-600"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Ảnh Thumbnail & Live Preview */}
-                                <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                                    <div className="w-20 h-14 rounded-2xl bg-slate-950 overflow-hidden relative shrink-0 border border-slate-300 dark:border-slate-700">
-                                        <Image src={formTinTuc.hinh_anh || 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=800&q=80'} alt="Preview" fill className="object-cover" />
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Đường Dẫn Hình Ảnh Bìa *</label>
+                        <form onSubmit={xuLyLuuTinTuc} className="flex flex-col flex-1 min-h-0 bg-slate-50/60 dark:bg-slate-950/70">
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+                                
+                                {/* KHỐI 1: TIÊU ĐỀ & ĐỊNH DANH */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <FileText className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                            <span>Tiêu Đề Bài Viết *</span>
+                                        </label>
                                         <input
                                             type="text"
                                             required
-                                            value={formTinTuc.hinh_anh}
-                                            onChange={(e) => setFormTinTuc({ ...formTinTuc, hinh_anh: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-xs"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Tác Giả *</label>
-                                        <input
-                                            type="text"
-                                            value={formTinTuc.tac_gia}
-                                            onChange={(e) => setFormTinTuc({ ...formTinTuc, tac_gia: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
+                                            placeholder="Top 5 Laptop Gaming RTX 40 Series Đáng Mua Nhất..."
+                                            value={formTinTuc.tieu_de}
+                                            onChange={(e) => setFormTinTuc({ ...formTinTuc, tieu_de: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all"
                                         />
                                     </div>
 
-                                    <div className="space-y-1">
-                                        <label className="font-bold text-slate-700 dark:text-slate-300">Thời Gian Đọc Ước Tính</label>
-                                        <input
-                                            type="text"
-                                            placeholder="5 phút đọc..."
-                                            value={formTinTuc.thoi_gian_doc}
-                                            onChange={(e) => setFormTinTuc({ ...formTinTuc, thoi_gian_doc: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs"
-                                        />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <FolderPlus className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                                <span>Chuyên Mục Bài Viết *</span>
+                                            </label>
+                                            <select
+                                                value={formTinTuc.chuyen_muc}
+                                                onChange={(e) => setFormTinTuc({ ...formTinTuc, chuyen_muc: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-teal-500 focus:outline-none transition-all cursor-pointer"
+                                            >
+                                                <option value="Tư Vấn Mua Sắm">🛒 Tư Vấn Mua Sắm</option>
+                                                <option value="Xu Hướng Công Nghệ">🚀 Xu Hướng Công Nghệ</option>
+                                                <option value="Đánh Giá & So Sánh">⚖️ Đánh Giá & So Sánh</option>
+                                                <option value="Tin Tức Công Nghệ">⚡ Tin Tức Công Nghệ</option>
+                                                <option value="Chia Sẻ Kinh Nghiệm">💡 Chia Sẻ Kinh Nghiệm</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Hash className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                                <span>Mã Slug / ID Bài Viết</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="tin-1 / top-5-laptop-2026"
+                                                value={formTinTuc.id}
+                                                onChange={(e) => setFormTinTuc({ ...formTinTuc, id: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-blue-600 dark:text-blue-400 font-mono font-bold text-xs focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300">Tóm Tắt Ngắn (Hiển thị ngoài danh sách) *</label>
-                                    <textarea
-                                        rows="2"
-                                        required
-                                        value={formTinTuc.tom_tat}
-                                        onChange={(e) => setFormTinTuc({ ...formTinTuc, tom_tat: e.target.value })}
-                                        placeholder="Đoạn văn ngắn tóm tắt bài viết..."
-                                        className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs leading-relaxed"
-                                    />
+                                {/* KHỐI 2: HÌNH ẢNH BÌA - CÓ TẢI FILE TỪ MÁY & CHỌN MẪU NHANH */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-teal-200 dark:border-teal-900/60 shadow-xs space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <ImageIcon className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                            <span>Hình Ảnh Bìa Bài Viết *</span>
+                                        </label>
+                                        <span className="text-[11px] text-teal-700 dark:text-teal-400 font-semibold">Tải từ máy hoặc chọn mẫu</span>
+                                    </div>
+
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        {/* Ảnh Xem Trước Trực Quan Tỷ Lệ 16:9 */}
+                                        <div className="w-full sm:w-44 h-28 rounded-2xl bg-slate-950 overflow-hidden relative shrink-0 border-2 border-teal-300 dark:border-teal-800 shadow-sm group">
+                                            <Image
+                                                src={formTinTuc.hinh_anh || 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=800&q=80'}
+                                                alt="Preview"
+                                                fill
+                                                className="object-cover group-hover:scale-105 transition-transform duration-200"
+                                            />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-[11px] font-bold transition-opacity">
+                                                <span>Ảnh bìa</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Trung Tâm Thao Tác Tải Ảnh */}
+                                        <div className="flex-1 w-full space-y-2.5">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {/* Nút Upload trực tiếp từ máy tính */}
+                                                <label className="px-4 py-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-black text-xs flex items-center gap-2 shadow-md shadow-teal-500/25 cursor-pointer transition-all active:scale-95 shrink-0">
+                                                    <Upload className="w-3.5 h-3.5" />
+                                                    <span>Tải ảnh từ máy tính</span>
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        className="hidden"
+                                                        onChange={xuLyUploadAnhTinTuc}
+                                                    />
+                                                </label>
+
+                                                {/* Nút xóa ảnh đưa về mặc định */}
+                                                {formTinTuc.hinh_anh && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormTinTuc({ ...formTinTuc, hinh_anh: '/images/tin_gaming_rtx40.jpg' })}
+                                                        className="px-3 py-2 rounded-xl text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-bold transition-colors cursor-pointer"
+                                                        title="Đưa về ảnh mặc định"
+                                                    >
+                                                        Mặc định
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Ô nhập đường dẫn link URL trực tiếp */}
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                                    <Link2 className="w-3.5 h-3.5" />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    placeholder="Hoặc dán URL ảnh (https://... hoặc /images/...)"
+                                                    value={formTinTuc.hinh_anh}
+                                                    onChange={(e) => setFormTinTuc({ ...formTinTuc, hinh_anh: e.target.value })}
+                                                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-[11px] focus:bg-white focus:border-teal-500 focus:outline-none transition-all truncate"
+                                                />
+                                            </div>
+
+                                            {/* Bộ Ảnh Mẫu Công Nghệ Chọn Nhanh 1-Click */}
+                                            <div className="pt-1">
+                                                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1">
+                                                    <Sparkles className="w-3 h-3 text-amber-500" />
+                                                    <span>Ảnh mẫu công nghệ chọn nhanh:</span>
+                                                </div>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormTinTuc({ ...formTinTuc, hinh_anh: '/images/tin_gaming_rtx40.jpg' })}
+                                                        className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-[10.5px] font-bold cursor-pointer transition-colors"
+                                                    >
+                                                        🎮 Laptop Gaming RTX
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormTinTuc({ ...formTinTuc, hinh_anh: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80' })}
+                                                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[10.5px] font-bold cursor-pointer transition-colors"
+                                                    >
+                                                        🍎 MacBook & VP
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormTinTuc({ ...formTinTuc, hinh_anh: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=800&q=80' })}
+                                                        className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[10.5px] font-bold cursor-pointer transition-colors"
+                                                    >
+                                                        ⚡ Chip AI Mới
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormTinTuc({ ...formTinTuc, hinh_anh: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80' })}
+                                                        className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[10.5px] font-bold cursor-pointer transition-colors"
+                                                    >
+                                                        ⌨️ Phím Cơ & Gear
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="space-y-1">
-                                    <label className="font-bold text-slate-700 dark:text-slate-300 flex items-center justify-between">
-                                        <span>Nội Dung Chi Tiết Bài Viết (Hỗ trợ đề mục ###, đoạn văn, lời khuyên...)</span>
-                                        <span className="text-[10px] text-teal-600 font-normal">Sử dụng ### cho tiêu đề con</span>
-                                    </label>
-                                    <textarea
-                                        rows="6"
-                                        value={formTinTuc.noi_dung}
-                                        onChange={(e) => setFormTinTuc({ ...formTinTuc, noi_dung: e.target.value })}
-                                        placeholder="Soạn thảo nội dung..."
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs leading-relaxed"
-                                    />
+                                {/* KHỐI 3: TÁC GIẢ & THỜI LƯỢNG ĐỌC */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <User className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                                <span>Tác Giả Viết Bài *</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                required
+                                                value={formTinTuc.tac_gia}
+                                                onChange={(e) => setFormTinTuc({ ...formTinTuc, tac_gia: e.target.value })}
+                                                placeholder="Chuyên Gia Công Nghệ TNTP Laptop"
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-teal-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                                <Clock className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                                <span>Thời Gian Đọc Ước Tính</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="5 phút đọc..."
+                                                value={formTinTuc.thoi_gian_doc}
+                                                onChange={(e) => setFormTinTuc({ ...formTinTuc, thoi_gian_doc: e.target.value })}
+                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-teal-500 focus:outline-none transition-all"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {/* Checkbox Options */}
-                                <div className="flex flex-wrap items-center gap-3 pt-1">
-                                    <button
-                                        type="button"
-                                        onClick={() => setFormTinTuc({ ...formTinTuc, la_tieu_diem: !formTinTuc.la_tieu_diem })}
-                                        className={`px-4 py-2 rounded-2xl font-bold flex items-center gap-2 border transition-all cursor-pointer ${formTinTuc.la_tieu_diem ? 'bg-red-600 text-white border-red-700 shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}
-                                    >
-                                        <Flame className="w-4 h-4" />
-                                        <span>🔥 Đặt làm bài viết Tiêu Điểm</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setFormTinTuc({ ...formTinTuc, xuat_ban: !formTinTuc.xuat_ban })}
-                                        className={`px-4 py-2 rounded-2xl font-bold flex items-center gap-2 border transition-all cursor-pointer ${formTinTuc.xuat_ban ? 'bg-emerald-600 text-white border-emerald-700 shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'}`}
-                                    >
-                                        <CheckCircle2 className="w-4 h-4" />
-                                        <span>🟢 Xuất bản ngay</span>
-                                    </button>
+                                {/* KHỐI 4: TÓM TẮT & NỘI DUNG CHI TIẾT */}
+                                <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
+                                            <BookOpen className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                            <span>Tóm Tắt Ngắn (Hiển thị thẻ bài viết ngoài trang chủ) *</span>
+                                        </label>
+                                        <textarea
+                                            rows="2"
+                                            required
+                                            value={formTinTuc.tom_tat}
+                                            onChange={(e) => setFormTinTuc({ ...formTinTuc, tom_tat: e.target.value })}
+                                            placeholder="Đoạn văn ngắn 1-2 câu tóm lược nội dung bài viết..."
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white font-medium text-xs leading-relaxed focus:bg-white focus:border-teal-500 focus:outline-none transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between text-xs">
+                                            <span className="flex items-center gap-1.5">
+                                                <Edit3 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                                                <span>Nội Dung Chi Tiết Bài Viết</span>
+                                            </span>
+                                            <span className="text-[11px] text-teal-600 dark:text-teal-400 font-semibold">Dùng ### cho tiêu đề mục</span>
+                                        </label>
+                                        <textarea
+                                            rows="7"
+                                            value={formTinTuc.noi_dung}
+                                            onChange={(e) => setFormTinTuc({ ...formTinTuc, noi_dung: e.target.value })}
+                                            placeholder="Soạn thảo nội dung chi tiết bài viết..."
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800/80 text-slate-900 dark:text-white font-medium text-xs leading-relaxed focus:bg-white focus:border-teal-500 focus:outline-none transition-all font-mono"
+                                        />
+                                    </div>
+
+                                    {/* Cài đặt trạng thái xuất bản & tiêu điểm */}
+                                    <div className="flex flex-wrap items-center gap-3 pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormTinTuc({ ...formTinTuc, la_tieu_diem: !formTinTuc.la_tieu_diem })}
+                                            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 border transition-all cursor-pointer ${
+                                                formTinTuc.la_tieu_diem
+                                                    ? 'bg-rose-600 text-white border-rose-700 shadow-md shadow-rose-500/25'
+                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            <Flame className="w-4 h-4 fill-current" />
+                                            <span>🔥 Bài Viết Tiêu Điểm Hot</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormTinTuc({ ...formTinTuc, xuat_ban: !formTinTuc.xuat_ban })}
+                                            className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 border transition-all cursor-pointer ${
+                                                formTinTuc.xuat_ban
+                                                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-md shadow-emerald-500/25'
+                                                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200'
+                                            }`}
+                                        >
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            <span>🟢 Xuất Bản Ngay (Công Khai)</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Pinned Footer */}
-                            <div className="shrink-0 p-4 px-6 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
+                            <div className="shrink-0 p-4 px-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3 shadow-md">
                                 <button
                                     type="button"
                                     disabled={dangLuuTinTuc}
                                     onClick={() => setDangMoModalTinTuc(false)}
-                                    className={`px-5 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuTinTuc ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                    className={`px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold transition-all ${dangLuuTinTuc ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                                 >
-                                    Hủy
+                                    Hủy Bỏ
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={dangLuuTinTuc}
-                                    className={`px-6 py-2.5 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-bold flex items-center gap-2 shadow-md shadow-teal-500/25 transition-all ${dangLuuTinTuc ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                                    className={`px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold flex items-center gap-2 shadow-md shadow-teal-500/25 transition-all ${dangLuuTinTuc ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
                                 >
                                     {dangLuuTinTuc ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    <span>{dangLuuTinTuc ? 'Đang lưu bài viết...' : (tinTucDangSua ? 'Lưu Thay Đổi' : 'Lưu Bài Viết')}</span>
+                                    <span>{dangLuuTinTuc ? 'Đang lưu bài viết...' : (tinTucDangSua ? 'Lưu Thay Đổi' : 'Lưu & Xuất Bản')}</span>
                                 </button>
                             </div>
                         </form>

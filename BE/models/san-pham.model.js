@@ -47,7 +47,8 @@ const SanPhamSchema = new mongoose.Schema(
         },
         gia_khuyen_mai: {
             type: Number,
-            required: true
+            required: true,
+            min: [1000, 'Giá khuyến mãi tối thiểu phải từ 1.000 đ']
         },
         phan_tram_giam_gia: {
             type: Number,

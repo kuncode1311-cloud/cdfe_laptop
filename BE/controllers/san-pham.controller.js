@@ -198,6 +198,9 @@ const kiemTraVaTinhGia = (duLieu, hienTai = {}) => {
     if (!Number.isFinite(giaGoc) || !Number.isFinite(giaBan) || giaGoc < 0 || giaBan < 0) {
         return { loi: 'Giá sản phẩm không hợp lệ.' };
     }
+    if (giaBan < 1000) {
+        return { loi: 'Giá khuyến mãi (giá bán thực tế) không được bằng 0 và phải từ 1.000 đ trở lên để đáp ứng quy định thanh toán.' };
+    }
     if (giaGoc > 0 && giaGoc < giaBan) {
         return {
             loi:

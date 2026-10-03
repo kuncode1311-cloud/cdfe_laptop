@@ -13,6 +13,11 @@ export default function TomTatThanhToan() {
     const { gio_hang } = useGioHang();
     const { nguoiDung, moModalDangNhap } = useNguoiDung();
 
+    const tongTietKiemGiaGoc = (gio_hang.danh_sach_muc || []).reduce((tong, muc) => {
+        const giaGocDonVi = Number(muc.san_pham?.gia_goc || 0) + Number(muc.tuy_chon_chon?.chenh_lech_gia || 0);
+        return tong + (giaGocDonVi > muc.gia_hien_tai ? (giaGocDonVi - muc.gia_hien_tai) * muc.so_luong : 0);
+    }, 0);
+
     const xuLyTienHanhThanhToan = (e) => {
         e.preventDefault();
         if (!nguoiDung) {
@@ -56,6 +61,19 @@ export default function TomTatThanhToan() {
                             {dinhDangTienVND(gio_hang.tam_tinh)}
                         </span>
                     </div>
+
+                    {/* Dòng hiển thị số tiền tiết kiệm được từ giá niêm yết gốc */}
+                    {tongTietKiemGiaGoc > 0 && (
+                        <div className="flex items-center justify-between text-rose-700 dark:text-rose-300 font-bold bg-rose-50/80 dark:bg-rose-950/40 p-2.5 rounded-xl border border-rose-200 dark:border-rose-900/60 text-xs">
+                            <span className="flex items-center gap-1.5">
+                                <Award className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                                <span>Tiết kiệm giá niêm yết:</span>
+                            </span>
+                            <span className="font-mono font-black text-sm text-rose-600 dark:text-rose-400">
+                                -{dinhDangTienVND(tongTietKiemGiaGoc)}
+                            </span>
+                        </div>
+                    )}
 
                     {/* Voucher giảm giá nếu đã kích hoạt */}
                     {gio_hang.tien_giam_gia > 0 && (

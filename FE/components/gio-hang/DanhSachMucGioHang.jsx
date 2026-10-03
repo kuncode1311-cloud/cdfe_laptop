@@ -15,6 +15,9 @@ export default function DanhSachMucGioHang() {
             {gio_hang.danh_sach_muc.map((muc) => {
                 const cauHinh = muc.tuy_chon_chon?.ten_tuy_chon || muc.tuy_chon_chon?.ram || muc.san_pham?.ram;
                 const coQuaTang = muc.san_pham?.qua_tang && muc.san_pham.qua_tang.length > 0;
+                const giaGocDonVi = Number(muc.san_pham?.gia_goc || 0) + Number(muc.tuy_chon_chon?.chenh_lech_gia || 0);
+                const coGiamGia = giaGocDonVi > muc.gia_hien_tai;
+                const phanTramGiam = muc.san_pham?.phan_tram_giam_gia || (coGiamGia ? Math.round(((giaGocDonVi - muc.gia_hien_tai) / giaGocDonVi) * 100) : 0);
 
                 return (
                     <div
@@ -39,6 +42,11 @@ export default function DanhSachMucGioHang() {
                                         unoptimized
                                         className="object-contain p-1 group-hover:scale-110 transition-transform duration-300"
                                     />
+                                    {coGiamGia && phanTramGiam > 0 && (
+                                        <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#E50914] to-[#B81D24] text-white font-black text-[10px] leading-none shadow-xs z-10">
+                                            -{phanTramGiam}%
+                                        </span>
+                                    )}
                                 </Link>
 
                                 {/* Chi tiết thông tin cấu hình & tên */}
@@ -92,6 +100,16 @@ export default function DanhSachMucGioHang() {
                                     <div className="text-base sm:text-xl font-black text-red-600 dark:text-rose-400 tracking-tight font-mono">
                                         {dinhDangTienVND(muc.tong_tien_muc)}
                                     </div>
+                                    {coGiamGia && (
+                                        <div className="flex items-center justify-start sm:justify-end gap-1.5 mt-0.5">
+                                            <span className="text-xs text-slate-400 dark:text-slate-500 line-through font-mono">
+                                                {dinhDangTienVND(giaGocDonVi * muc.so_luong)}
+                                            </span>
+                                            <span className="px-1.5 py-0.5 rounded-md bg-gradient-to-r from-[#E50914] to-[#B81D24] text-white font-black text-[10px] leading-none shadow-xs">
+                                                -{phanTramGiam}%
+                                            </span>
+                                        </div>
+                                    )}
                                     <div className="text-[11px] text-slate-500 dark:text-slate-400 font-bold mt-0.5">
                                         Đơn giá: {dinhDangTienVND(muc.gia_hien_tai)}
                                     </div>
