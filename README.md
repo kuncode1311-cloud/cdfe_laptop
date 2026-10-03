@@ -132,9 +132,9 @@ Back-End có bộ kiểm thử **Jest + Supertest** trong `BE/tests/`:
 | Thư mục | Loại | Nội dung |
 |---|---|---|
 | `tests/unit/` | Unit test | Hàm bảo mật (OTP, mật khẩu, regex), tạo slug, chữ ký PayOS, middleware (NoSQL Injection, rate limit, phân quyền) |
-| `tests/integration/` | Integration test | Gọi API thật qua Supertest: đăng nhập / JWT / thu hồi phiên, sản phẩm + phân quyền Admin, webhook PayOS, CORS, 404 |
+| `tests/integration/` | Integration test | Gọi API thật qua Supertest: đăng nhập / JWT / thu hồi phiên, sản phẩm (ẩn / hết hàng, giá) + phân quyền Admin, giỏ hàng theo tài khoản, API đồng bộ `/api/dong-bo`, cấu hình khuyến mãi, webhook PayOS, CORS, 404 |
 
-Integration test dùng **mongodb-memory-server** (MongoDB chạy trong RAM) nên không cần database thật hay key bí mật.
+Hiện có **103 ca kiểm thử** (11 tệp). Integration test dùng **mongodb-memory-server** (MongoDB chạy trong RAM) nên không cần database thật hay key bí mật.
 
 ```bash
 cd BE
