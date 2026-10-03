@@ -3105,7 +3105,7 @@ export default function TrangQuanTriCuaHang() {
             setSpDangSua(null);
             taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi: ${err.message}`);
+            canhBao({ tieuDe: 'Không Thể Lưu Sản Phẩm', noiDung: err.message, loai: 'danger' });
         } finally {
             setDangLuuSp(false);
         }
@@ -3352,7 +3352,7 @@ export default function TrangQuanTriCuaHang() {
             setDonHangDangSua(null);
             taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi lưu đơn hàng: ${err.message}`);
+            canhBao({ tieuDe: 'Không Thể Lưu Đơn Hàng', noiDung: err.message, loai: 'danger' });
         } finally {
             setDangLuuDonHang(false);
         }
@@ -3374,7 +3374,7 @@ export default function TrangQuanTriCuaHang() {
             hienThongBao(thongBaoText, kieuThongBao, 'Kho & Đơn Hàng');
             taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi: ${err.message}`);
+            canhBao({ tieuDe: 'Không Thể Đổi Trạng Thái Đơn Hàng', noiDung: err.message, loai: 'danger' });
         } finally {
             setDangXuLyDonHangId(null);
         }
@@ -3400,7 +3400,7 @@ export default function TrangQuanTriCuaHang() {
             hienThongBao(thongBaoText, daThanhToanMoi ? 'success' : 'warning', 'Thanh Toán');
             taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi cập nhật thanh toán: ${err.message}`);
+            canhBao({ tieuDe: 'Không Thể Cập Nhật Thanh Toán', noiDung: err.message, loai: 'danger' });
         } finally {
             setDangXuLyDonHangId(null);
         }
@@ -3488,7 +3488,7 @@ export default function TrangQuanTriCuaHang() {
             setDmDangSua(null);
             taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi lưu danh mục: ${err.message}`);
+            canhBao({ tieuDe: 'Không Thể Lưu Danh Mục', noiDung: err.message, loai: 'danger' });
         } finally {
             setDangLuuDanhMuc(false);
         }
@@ -3705,7 +3705,7 @@ export default function TrangQuanTriCuaHang() {
             setDangMoModalUser(false);
             setUserDangSua(null);
         } catch (err) {
-            alert(`Lỗi lưu người dùng: ${err.message}`);
+            canhBao({ tieuDe: 'Không Thể Lưu Người Dùng', noiDung: err.message, loai: 'danger' });
         } finally {
             setDangLuuUser(false);
         }
@@ -3915,7 +3915,7 @@ export default function TrangQuanTriCuaHang() {
             setVoucherDangSua(null);
             taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi: ${err.message}`);
+            canhBao({ tieuDe: 'Không Thể Lưu Mã Giảm Giá', noiDung: err.message, loai: 'danger' });
         } finally {
             setDangLuuVoucher(false);
         }
@@ -4042,7 +4042,7 @@ export default function TrangQuanTriCuaHang() {
             setTinTucDangSua(null);
             taiDuLieuToanBo();
         } catch (err) {
-            alert(`Lỗi: ${err.message}`);
+            canhBao({ tieuDe: 'Không Thể Lưu Bài Viết', noiDung: err.message, loai: 'danger' });
         } finally {
             setDangLuuTinTuc(false);
         }
