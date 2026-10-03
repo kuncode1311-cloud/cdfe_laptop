@@ -150,14 +150,20 @@ NguoiDungSchema.methods.soSanhMatKhau = async function (matKhauNhap) {
 
 // Danh sách trường nhạy cảm KHÔNG BAO GIỜ được trả về client
 const TRUONG_NHAY_CAM = [
-    'matKhau', 'tokenVersion', 'maOtp', 'hanOtp', 'loaiOtp',
-    'soLanNhapSaiOtp', 'soLanDangNhapSai', 'khoaDangNhapDen'
+    'matKhau',
+    'tokenVersion',
+    'maOtp',
+    'hanOtp',
+    'loaiOtp',
+    'soLanNhapSaiOtp',
+    'soLanDangNhapSai',
+    'khoaDangNhapDen'
 ];
 
 // Loại bỏ mật khẩu băm, OTP và các bộ đếm bảo mật khi serialize JSON sang client
 NguoiDungSchema.methods.toJSON = function () {
     const obj = this.toObject();
-    TRUONG_NHAY_CAM.forEach(truong => delete obj[truong]);
+    TRUONG_NHAY_CAM.forEach((truong) => delete obj[truong]);
     return obj;
 };
 

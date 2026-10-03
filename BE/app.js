@@ -25,7 +25,7 @@ if (process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production') {
 // 2. Middlewares
 const corsOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
     .split(',')
-    .map(url => url.trim())
+    .map((url) => url.trim())
     .filter(Boolean);
 
 // Request cùng tên miền với API (vd: nút "Try it out" của Swagger tại api.trikun.site/api-docs):
@@ -38,34 +38,49 @@ const laCungTenMien = (origin, req) => {
     }
 };
 
-app.use(cors((req, callback) => {
-    const origin = req.get('origin');
-    // Cho phép Postman/server-to-server (không có Origin), frontend đã khai báo và chính trang Swagger.
-    if (!origin || corsOrigins.includes(origin) || laCungTenMien(origin, req)) {
-        return callback(null, { origin: true, credentials: true });
-    }
-    return callback(new Error(`CORS không cho phép origin: ${origin}`));
-}));
+app.use(
+    cors((req, callback) => {
+        const origin = req.get('origin');
+        // Cho phép Postman/server-to-server (không có Origin), frontend đã khai báo và chính trang Swagger.
+        if (!origin || corsOrigins.includes(origin) || laCungTenMien(origin, req)) {
+            return callback(null, { origin: true, credentials: true });
+        }
+        return callback(new Error(`CORS không cho phép origin: ${origin}`));
+    })
+);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Tài liệu API (Swagger UI) tại /api-docs. Gắn TRƯỚC datHeaderBaoMat vì CSP toàn cục
 // (default-src 'none') sẽ chặn giao diện Swagger; trang này dùng CSP nới lỏng riêng.
-app.use('/api-docs', (req, res, next) => {
-    res.setHeader('Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'");
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    // Không cho Cloudflare/trình duyệt cache: sửa đặc tả là trang tài liệu cập nhật ngay
-    // (swaggerUi.serve dùng express.static tự ghi đè Cache-Control cho swagger-ui-init.js,
-    // nên chặn mọi lần ghi đè sau đó để file JS cũng không bị cache)
-    res.setHeader('Cache-Control', 'no-store');
-    const setHeaderGoc = res.setHeader.bind(res);
-    res.setHeader = (ten, giaTri) => (String(ten).toLowerCase() === 'cache-control' ? res : setHeaderGoc(ten, giaTri));
-    next();
-}, swaggerUi.serve, swaggerUi.setup(openapiSpec, {
-    customSiteTitle: 'LaptopNew API Docs',
-    swaggerOptions: { persistAuthorization: true, docExpansion: 'none', deepLinking: true, displayRequestDuration: true }
-}));
+app.use(
+    '/api-docs',
+    (req, res, next) => {
+        res.setHeader(
+            'Content-Security-Policy',
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+        );
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        // Không cho Cloudflare/trình duyệt cache: sửa đặc tả là trang tài liệu cập nhật ngay
+        // (swaggerUi.serve dùng express.static tự ghi đè Cache-Control cho swagger-ui-init.js,
+        // nên chặn mọi lần ghi đè sau đó để file JS cũng không bị cache)
+        res.setHeader('Cache-Control', 'no-store');
+        const setHeaderGoc = res.setHeader.bind(res);
+        res.setHeader = (ten, giaTri) =>
+            String(ten).toLowerCase() === 'cache-control' ? res : setHeaderGoc(ten, giaTri);
+        next();
+    },
+    swaggerUi.serve,
+    swaggerUi.setup(openapiSpec, {
+        customSiteTitle: 'LaptopNew API Docs',
+        swaggerOptions: {
+            persistAuthorization: true,
+            docExpansion: 'none',
+            deepLinking: true,
+            displayRequestDuration: true
+        }
+    })
+);
 app.get('/api-docs.json', (req, res) => res.set('Cache-Control', 'no-store').json(openapiSpec));
 
 // Bảo mật toàn cục: ẩn công nghệ server, thêm security headers, lọc NoSQL Injection
@@ -73,7 +88,14 @@ app.disable('x-powered-by');
 app.use(datHeaderBaoMat);
 app.use(chongNoSqlInjection);
 // Giới hạn tần suất toàn cục: tối đa 300 request / phút / IP cho mọi API (chống spam, DoS mức ứng dụng)
-app.use('/api', gioiHanRequest({ windowMs: 60 * 1000, max: 300, message: 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.' }));
+app.use(
+    '/api',
+    gioiHanRequest({
+        windowMs: 60 * 1000,
+        max: 300,
+        message: 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.'
+    })
+);
 
 // Không trả stack/thông báo lỗi từ database hoặc SDK ra ngoài ở production.
 app.use((req, res, next) => {

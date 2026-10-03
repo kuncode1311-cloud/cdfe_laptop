@@ -18,8 +18,16 @@ const {
 const { xacThucToken } = require('../middleware/xac-thuc.middleware');
 const { gioiHanRequest } = require('../middleware/gioi-han-request.middleware');
 
-const gioiHanAuth = gioiHanRequest({ windowMs: 15 * 60 * 1000, max: 30, message: 'Bạn thao tác xác thực quá nhanh. Vui lòng thử lại sau.' });
-const gioiHanOtp = gioiHanRequest({ windowMs: 15 * 60 * 1000, max: 6, message: 'Bạn yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 15 phút.' });
+const gioiHanAuth = gioiHanRequest({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    message: 'Bạn thao tác xác thực quá nhanh. Vui lòng thử lại sau.'
+});
+const gioiHanOtp = gioiHanRequest({
+    windowMs: 15 * 60 * 1000,
+    max: 6,
+    message: 'Bạn yêu cầu OTP quá nhiều lần. Vui lòng thử lại sau 15 phút.'
+});
 
 // Tuyến đường Đăng ký & Đăng nhập (Công khai)
 router.post('/dang-ky', gioiHanAuth, dangKy);

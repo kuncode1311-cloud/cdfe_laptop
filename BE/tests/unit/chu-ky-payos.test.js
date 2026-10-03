@@ -11,7 +11,8 @@ describe('taoChuKyPayOS', () => {
     test('ký trên chuỗi key=value đã sắp xếp theo bảng chữ cái', () => {
         const data = { orderCode: 123, amount: 1000, description: 'TRIKUN 123' };
         // Thứ tự đúng: amount → description → orderCode
-        const kyVong = crypto.createHmac('sha256', KHOA)
+        const kyVong = crypto
+            .createHmac('sha256', KHOA)
             .update('amount=1000&description=TRIKUN 123&orderCode=123')
             .digest('hex');
         expect(taoChuKyPayOS(data, KHOA)).toBe(kyVong);

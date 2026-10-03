@@ -4,7 +4,11 @@ const lienHeController = require('../controllers/lien-he.controller');
 const { xacThucToken, chiAdmin } = require('../middleware/xac-thuc.middleware');
 const { gioiHanRequest } = require('../middleware/gioi-han-request.middleware');
 
-const gioiHanGuiLienHe = gioiHanRequest({ windowMs: 60 * 60 * 1000, max: 5, message: 'Bạn gửi yêu cầu liên hệ quá nhiều lần. Vui lòng thử lại sau.' });
+const gioiHanGuiLienHe = gioiHanRequest({
+    windowMs: 60 * 60 * 1000,
+    max: 5,
+    message: 'Bạn gửi yêu cầu liên hệ quá nhiều lần. Vui lòng thử lại sau.'
+});
 
 // 1. Tuyến đường gửi yêu cầu tư vấn & liên hệ từ khách hàng (Public)
 router.post('/', gioiHanGuiLienHe, lienHeController.guiYeuCauLienHe);

@@ -8,7 +8,11 @@ const {
 const { xacThucToken } = require('../middleware/xac-thuc.middleware');
 const { gioiHanRequest } = require('../middleware/gioi-han-request.middleware');
 
-const gioiHanTaoThanhToan = gioiHanRequest({ windowMs: 15 * 60 * 1000, max: 20, message: 'Bạn tạo yêu cầu thanh toán quá nhiều lần. Vui lòng thử lại sau.' });
+const gioiHanTaoThanhToan = gioiHanRequest({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    message: 'Bạn tạo yêu cầu thanh toán quá nhiều lần. Vui lòng thử lại sau.'
+});
 const gioiHanKiemTraThanhToan = gioiHanRequest({ windowMs: 60 * 1000, max: 60 });
 
 // 1. Tạo liên kết / QR thanh toán PayOS

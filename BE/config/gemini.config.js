@@ -8,8 +8,8 @@
 const rawKeys = process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || '';
 const danhSachApiKeys = rawKeys
     .split(',')
-    .map(k => k.trim())
-    .filter(k => k.length > 0);
+    .map((k) => k.trim())
+    .filter((k) => k.length > 0);
 
 module.exports = {
     // Danh sách API key được chuẩn hóa
@@ -17,15 +17,15 @@ module.exports = {
 
     // Thứ tự ưu tiên mô hình AI (Model chốt chuẩn và ổn định của Google AI Studio)
     danhSachModelUuTien: [
-        'gemini-2.5-flash',       // Tốc độ cao, suy luận logic tốt nhất
-        'gemini-2.5-flash-lite',  // Mô hình dự phòng nhẹ và siêu nhanh
-        'gemini-flash-latest'     // Mô hình cập nhật mới nhất
+        'gemini-2.5-flash', // Tốc độ cao, suy luận logic tốt nhất
+        'gemini-2.5-flash-lite', // Mô hình dự phòng nhẹ và siêu nhanh
+        'gemini-flash-latest' // Mô hình cập nhật mới nhất
     ],
 
     // Cấu hình sinh nội dung mặc định
     cauHinhMacDinh: {
-        temperature: 0.35,          // Độ sáng tạo vừa phải, đảm bảo tính chuẩn xác
-        maxOutputTokens: 2048,      // Độ dài tối đa phản hồi không lo bị ngắt quãng
+        temperature: 0.35, // Độ sáng tạo vừa phải, đảm bảo tính chuẩn xác
+        maxOutputTokens: 2048, // Độ dài tối đa phản hồi không lo bị ngắt quãng
         topP: 0.95,
         topK: 40
     }

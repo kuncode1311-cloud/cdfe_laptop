@@ -88,7 +88,8 @@ const dangKy = async (req, res) => {
         const regexSdt = /^(0|\+84)[0-9]{9}$/;
         if (!regexSdt.test(sdtClean)) {
             return res.status(400).json({
-                thong_diep: 'Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số (VD: 0912345678).'
+                thong_diep:
+                    'Số điện thoại không hợp lệ! Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số (VD: 0912345678).'
             });
         }
 
@@ -116,9 +117,15 @@ const dangKy = async (req, res) => {
 
         // LƯU VÀO BẢNG TẠM: TUYỆT ĐỐI KHÔNG LƯU VÀO NguoiDung KHI CHƯA XÁC THỰC OTP
         // 1. Tự động dọn dẹp các bản ghi tạm hết hạn (> 10 phút) để tránh phình rác Database
-        await mongoose.connection.collection('dang_ky_tam').deleteMany({ hanOtp: { $lt: new Date() } }).catch(() => {});
+        await mongoose.connection
+            .collection('dang_ky_tam')
+            .deleteMany({ hanOtp: { $lt: new Date() } })
+            .catch(() => {});
         // 2. Thiết lập TTL Index trên MongoDB để tự động tiêu hủy document khi tới hạn hanOtp
-        mongoose.connection.collection('dang_ky_tam').createIndex({ hanOtp: 1 }, { expireAfterSeconds: 0 }).catch(() => {});
+        mongoose.connection
+            .collection('dang_ky_tam')
+            .createIndex({ hanOtp: 1 }, { expireAfterSeconds: 0 })
+            .catch(() => {});
 
         await mongoose.connection.collection('dang_ky_tam').updateOne(
             { email: emailClean },
@@ -128,7 +135,7 @@ const dangKy = async (req, res) => {
                     email: emailClean,
                     soDienThoai: sdtClean,
                     matKhau: matKhauHash,
-                    maOtp: bamOtp(maOtp),           // Chỉ lưu bản băm của OTP
+                    maOtp: bamOtp(maOtp), // Chỉ lưu bản băm của OTP
                     hanOtp,
                     loaiOtp: 'kich_hoat',
                     soLanNhapSaiOtp: 0,
@@ -182,10 +189,14 @@ const kichHoatTaiKhoan = async (req, res) => {
                 const soLanSai = Number(tempUser.soLanNhapSaiOtp || 0) + 1;
                 if (soLanSai >= SO_LAN_SAI_OTP_TOI_DA) {
                     await bangTam.deleteMany({ email: emailChuan });
-                    return res.status(400).json({ thong_diep: 'Bạn đã nhập sai OTP quá 5 lần. Vui lòng đăng ký lại để nhận mã mới!' });
+                    return res
+                        .status(400)
+                        .json({ thong_diep: 'Bạn đã nhập sai OTP quá 5 lần. Vui lòng đăng ký lại để nhận mã mới!' });
                 }
                 await bangTam.updateOne({ _id: tempUser._id }, { $set: { soLanNhapSaiOtp: soLanSai } });
-                return res.status(400).json({ thong_diep: `Mã OTP không chính xác! Bạn còn ${SO_LAN_SAI_OTP_TOI_DA - soLanSai} lần thử.` });
+                return res.status(400).json({
+                    thong_diep: `Mã OTP không chính xác! Bạn còn ${SO_LAN_SAI_OTP_TOI_DA - soLanSai} lần thử.`
+                });
             }
 
             if (tempUser.hanOtp && new Date() > new Date(tempUser.hanOtp)) {
@@ -196,7 +207,9 @@ const kichHoatTaiKhoan = async (req, res) => {
             const daCo = await NguoiDung.findOne({ email: emailChuan });
             if (daCo && daCo.daKichHoat !== false) {
                 await mongoose.connection.collection('dang_ky_tam').deleteMany({ email: emailChuan });
-                return res.status(400).json({ thong_diep: 'Tài khoản này đã được kích hoạt từ trước rồi! Vui lòng đăng nhập.' });
+                return res
+                    .status(400)
+                    .json({ thong_diep: 'Tài khoản này đã được kích hoạt từ trước rồi! Vui lòng đăng nhập.' });
             }
 
             // Tạo tài khoản chính thức trong NguoiDung
@@ -231,7 +244,9 @@ const kichHoatTaiKhoan = async (req, res) => {
         // Fallback: Kiểm tra trong NguoiDung nếu có tài khoản cũ chưa kích hoạt
         const user = await NguoiDung.findOne({ email: emailChuan });
         if (!user) {
-            return res.status(404).json({ thong_diep: 'Không tìm thấy thông tin đăng ký cho Email này! Vui lòng đăng ký lại.' });
+            return res
+                .status(404)
+                .json({ thong_diep: 'Không tìm thấy thông tin đăng ký cho Email này! Vui lòng đăng ký lại.' });
         }
 
         if (user.daKichHoat) {
@@ -286,11 +301,8 @@ const dangNhap = async (req, res) => {
         }
 
         // Tìm người dùng theo email hoặc username 'admin'
-        let nguoiDung = await NguoiDung.findOne({
-            $or: [
-                { email: emailChuan },
-                ...(emailChuan === 'admin' ? [{ email: 'admin@laptopnew.vn' }] : [])
-            ]
+        const nguoiDung = await NguoiDung.findOne({
+            $or: [{ email: emailChuan }, ...(emailChuan === 'admin' ? [{ email: 'admin@laptopnew.vn' }] : [])]
         });
 
         if (!nguoiDung) {
@@ -312,7 +324,7 @@ const dangNhap = async (req, res) => {
 
         // Kiểm tra mật khẩu băm với bcrypt.
         // Tài khoản Google cũ từng dùng mật khẩu dạng "GoogleOAuth_<sub>" (đoán được) → luôn từ chối dạng này.
-        const matKhauDung = !matKhau.startsWith('GoogleOAuth_') && await nguoiDung.soSanhMatKhau(matKhau);
+        const matKhauDung = !matKhau.startsWith('GoogleOAuth_') && (await nguoiDung.soSanhMatKhau(matKhau));
         if (!matKhauDung) {
             nguoiDung.soLanDangNhapSai = Number(nguoiDung.soLanDangNhapSai || 0) + 1;
             if (nguoiDung.soLanDangNhapSai >= SO_LAN_SAI_MAT_KHAU_TOI_DA) {
@@ -372,7 +384,7 @@ const dangNhap = async (req, res) => {
 const layThongTinCaNhan = async (req, res) => {
     try {
         // req.user đã được gán bởi middleware xacThucToken
-        const userMoiNhat = await NguoiDung.findOne({ id: req.user.id || req.user.userId }) || req.user;
+        const userMoiNhat = (await NguoiDung.findOne({ id: req.user.id || req.user.userId })) || req.user;
         return res.status(200).json({
             thong_diep: 'Lấy thông tin tài khoản thành công',
             nguoiDung: userMoiNhat
@@ -418,10 +430,10 @@ const dangNhapGoogle = async (req, res) => {
                     return res.status(401).json({ thong_diep: 'Email Google chưa được xác minh!' });
                 }
 
-                googleEmail   = payload.email;
-                googleHoTen   = payload.name || payload.given_name || 'Google User';
-                googleAvatar  = payload.picture || '';
-                googleSub     = payload.sub; // Google unique user ID
+                googleEmail = payload.email;
+                googleHoTen = payload.name || payload.given_name || 'Google User';
+                googleAvatar = payload.picture || '';
+                googleSub = payload.sub; // Google unique user ID
             } else {
                 // Access Token: kiểm tra token được cấp cho ĐÚNG ứng dụng này (chống dùng token của app khác)
                 const thongTinToken = await googleClient.getTokenInfo(accessToken);
@@ -439,10 +451,10 @@ const dangNhapGoogle = async (req, res) => {
                     return res.status(401).json({ thong_diep: 'Email Google chưa được xác minh!' });
                 }
 
-                googleEmail   = thongTin.email;
-                googleHoTen   = thongTin.name || thongTin.given_name || 'Google User';
-                googleAvatar  = thongTin.picture || '';
-                googleSub     = thongTin.sub;
+                googleEmail = thongTin.email;
+                googleHoTen = thongTin.name || thongTin.given_name || 'Google User';
+                googleAvatar = thongTin.picture || '';
+                googleSub = thongTin.sub;
             }
 
             console.log(`✅ Xác minh Google thành công: ${googleEmail}`);
@@ -554,7 +566,9 @@ const yeuCauQuenMatKhau = async (req, res) => {
             await user.save();
             const ketQuaGuiMail = await guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp);
             if (!ketQuaGuiMail.thanhCong) {
-                return res.status(502).json({ thong_diep: 'Không thể gửi email OTP. Vui lòng thử lại.', daGuiEmail: false });
+                return res
+                    .status(502)
+                    .json({ thong_diep: 'Không thể gửi email OTP. Vui lòng thử lại.', daGuiEmail: false });
             }
             return res.status(200).json({
                 thong_diep: `Tài khoản chưa được kích hoạt! Đã gửi lại mã OTP kích hoạt mới tới email ${emailChuan}.`,
@@ -577,7 +591,9 @@ const yeuCauQuenMatKhau = async (req, res) => {
 
         const ketQuaGuiMail = await guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp);
         if (!ketQuaGuiMail.thanhCong) {
-            return res.status(502).json({ thong_diep: 'Không thể gửi email OTP. Vui lòng thử lại.', daGuiEmail: false });
+            return res
+                .status(502)
+                .json({ thong_diep: 'Không thể gửi email OTP. Vui lòng thử lại.', daGuiEmail: false });
         }
 
         return res.status(200).json({
@@ -607,11 +623,15 @@ const guiLaiOtp = async (req, res) => {
         if (tempUser) {
             const maOtp = taoMaOtp();
             const hanOtp = new Date(Date.now() + 10 * 60 * 1000);
-            await mongoose.connection.collection('dang_ky_tam').updateOne(
-                { _id: tempUser._id },
-                { $set: { maOtp: bamOtp(maOtp), hanOtp, soLanNhapSaiOtp: 0, updatedAt: new Date() } }
+            await mongoose.connection
+                .collection('dang_ky_tam')
+                .updateOne(
+                    { _id: tempUser._id },
+                    { $set: { maOtp: bamOtp(maOtp), hanOtp, soLanNhapSaiOtp: 0, updatedAt: new Date() } }
+                );
+            guiMailKichHoatTaiKhoan(emailChuan, tempUser.hoTen, maOtp).catch((e) =>
+                console.warn('Lỗi gửi mail:', e.message)
             );
-            guiMailKichHoatTaiKhoan(emailChuan, tempUser.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
             return res.status(200).json({
                 thong_diep: `Mã OTP kích hoạt mới đã được gửi tới email ${emailChuan}! Vui lòng kiểm tra hộp thư.`,
                 email: emailChuan,
@@ -641,7 +661,9 @@ const guiLaiOtp = async (req, res) => {
             await user.save();
 
             console.log(`✉️ [Gửi Lại OTP Kích Hoạt] Đã tạo yêu cầu cho ${emailChuan}`);
-            guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
+            guiMailKichHoatTaiKhoan(emailChuan, user.hoTen, maOtp).catch((e) =>
+                console.warn('Lỗi gửi mail:', e.message)
+            );
 
             return res.status(200).json({
                 thong_diep: `Mã OTP kích hoạt mới đã được gửi tới email ${emailChuan}! Vui lòng kiểm tra hộp thư.`,
@@ -657,7 +679,7 @@ const guiLaiOtp = async (req, res) => {
         await user.save();
 
         console.log(`🔑 [Gửi Lại OTP Quên Mật Khẩu] Đã tạo yêu cầu cho ${emailChuan}`);
-        guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp).catch(e => console.warn('Lỗi gửi mail:', e.message));
+        guiMailOTPQuenMatKhau(emailChuan, user.hoTen, maOtp).catch((e) => console.warn('Lỗi gửi mail:', e.message));
 
         return res.status(200).json({
             thong_diep: `Mã OTP xác thực mới đã được gửi tới email ${emailChuan}! Vui lòng kiểm tra hộp thư.`,
@@ -778,7 +800,8 @@ const capNhatHoSo = async (req, res) => {
         // Chỉ nhận đúng các trường hồ sơ cho phép (chống Mass Assignment: không thể tự đổi vaiTro, email...)
         const hoTenMoi = chuoiAnToan(duLieu.hoTen, 100);
         if (hoTenMoi) {
-            if (hoTenMoi.length < 2) return res.status(400).json({ thong_diep: 'Họ và tên phải có tối thiểu 2 ký tự!' });
+            if (hoTenMoi.length < 2)
+                return res.status(400).json({ thong_diep: 'Họ và tên phải có tối thiểu 2 ký tự!' });
             user.hoTen = hoTenMoi;
         }
         if (duLieu.soDienThoai !== undefined) {
@@ -930,10 +953,7 @@ const doiMatKhau = async (req, res) => {
 // 10. Đăng xuất tài khoản và thu hồi phiên trên Database
 const dangXuat = async (req, res) => {
     try {
-        await NguoiDung.updateOne(
-            { _id: req.user._id },
-            { $inc: { tokenVersion: 1 } }
-        );
+        await NguoiDung.updateOne({ _id: req.user._id }, { $inc: { tokenVersion: 1 } });
         return res.status(200).json({ thanh_cong: true, thong_diep: 'Đăng xuất và thu hồi phiên thành công!' });
     } catch (loi) {
         return res.status(500).json({ thong_diep: 'Lỗi máy chủ khi đăng xuất', chi_tiet: loi.message });

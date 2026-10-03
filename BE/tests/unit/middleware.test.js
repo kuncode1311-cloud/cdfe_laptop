@@ -9,9 +9,17 @@ const { chiAdmin } = require('../../middleware/xac-thuc.middleware');
 // Tạo đối tượng response giả: ghi lại header, status và body để kiểm tra
 const taoResGia = () => {
     const res = { headers: {}, statusCode: 200, body: null };
-    res.setHeader = (ten, giaTri) => { res.headers[ten] = giaTri; };
-    res.status = (ma) => { res.statusCode = ma; return res; };
-    res.json = (duLieu) => { res.body = duLieu; return res; };
+    res.setHeader = (ten, giaTri) => {
+        res.headers[ten] = giaTri;
+    };
+    res.status = (ma) => {
+        res.statusCode = ma;
+        return res;
+    };
+    res.json = (duLieu) => {
+        res.body = duLieu;
+        return res;
+    };
     return res;
 };
 

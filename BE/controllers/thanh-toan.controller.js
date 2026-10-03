@@ -71,7 +71,7 @@ const taoChuKyPayOS = (data, checksumKey) => {
  * Sinh link ảnh VietQR có sẵn số tiền và nội dung chuyển khoản tức thời (0ms)
  */
 const taoUrlVietQR = (bin, stk, tenTk, soTien, noiDung) => {
-    const cauHinhNganHang = (!bin || !stk || !tenTk) ? layCauHinhNganHang() : null;
+    const cauHinhNganHang = !bin || !stk || !tenTk ? layCauHinhNganHang() : null;
     const bankBin = bin || cauHinhNganHang.bin;
     const accountNo = stk || cauHinhNganHang.soTaiKhoan;
     const accountName = tenTk || cauHinhNganHang.tenChuTaiKhoan;
@@ -115,8 +115,9 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
         const userId = String(req.user?.id || req.user?._id || '');
         const idChuDon = String(donHang.id_nguoi_dung || '');
         const laChuDon = idChuDon
-            ? (idChuDon === userId || idChuDon === String(req.user?._id || ''))
-            : (!!req.user?.email && req.user.email.toLowerCase() === String(donHang.thong_tin_giao_hang?.email || '').toLowerCase());
+            ? idChuDon === userId || idChuDon === String(req.user?._id || '')
+            : !!req.user?.email &&
+              req.user.email.toLowerCase() === String(donHang.thong_tin_giao_hang?.email || '').toLowerCase();
 
         if (!laAdmin && !laChuDon) {
             return res.status(403).json({
@@ -141,7 +142,7 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
                 message: 'Đơn hàng không có số tiền thanh toán hợp lệ.'
             });
         }
-        
+
         // Tạo orderCode dạng số nguyên dương duy nhất cho PayOS
         let numericCode = 0;
         if (donHang.ma_don_hang) {
@@ -155,7 +156,9 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
         }
 
         // Nội dung thanh toán ngắn gọn tối đa 25 ký tự theo quy định PayOS
-        const noiDungChuyenKhoan = (donHang.ma_don_hang ? `TRIKUN ${donHang.ma_don_hang.slice(-6)}` : `TRIKUN ${numericCode}`).slice(0, 25);
+        const noiDungChuyenKhoan = (
+            donHang.ma_don_hang ? `TRIKUN ${donHang.ma_don_hang.slice(-6)}` : `TRIKUN ${numericCode}`
+        ).slice(0, 25);
 
         // Chuẩn bị sẵn link VietQR tức thời (0ms) đảm bảo luôn có QR ngay cả khi mạng PayOS trễ
         let qrImageUrl = taoUrlVietQR(
@@ -185,22 +188,26 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
 
         // Gọi cổng PayOS với timeout 2.2 giây để không làm treo giao diện khách
         try {
-            const phanHoi = await fetchWithTimeout(`${PAYOS_ENDPOINT}/v2/payment-requests`, {
-                method: 'POST',
-                headers: {
-                    'x-client-id': cauHinhPayOS.clientId,
-                    'x-api-key': cauHinhPayOS.apiKey,
-                    'Content-Type': 'application/json'
+            const phanHoi = await fetchWithTimeout(
+                `${PAYOS_ENDPOINT}/v2/payment-requests`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'x-client-id': cauHinhPayOS.clientId,
+                        'x-api-key': cauHinhPayOS.apiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payloadPayOS)
                 },
-                body: JSON.stringify(payloadPayOS)
-            }, 2200);
+                2200
+            );
 
             const duLieu = await phanHoi.json();
             if (duLieu && duLieu.code === '00' && duLieu.data) {
                 ketQuaPayOS = duLieu.data;
                 checkoutUrl = duLieu.data.checkoutUrl || '';
                 qrCode = duLieu.data.qrCode || '';
-                
+
                 qrImageUrl = taoUrlVietQR(
                     duLieu.data.bin || cauHinhNganHang.bin,
                     duLieu.data.accountNumber || cauHinhNganHang.soTaiKhoan,
@@ -223,7 +230,7 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
                     trang_thai_thanh_toan: 'cho_thanh_toan'
                 }
             }
-        ).catch(err => console.warn('⚠️ Lỗi update payos_order_code:', err.message));
+        ).catch((err) => console.warn('⚠️ Lỗi update payos_order_code:', err.message));
 
         return res.status(200).json({
             success: true,
@@ -257,7 +264,9 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
  */
 const kiemTraTrangThaiPayOS = async (req, res) => {
     try {
-        const orderCode = String(req.params.orderCode || '').trim().slice(0, 30);
+        const orderCode = String(req.params.orderCode || '')
+            .trim()
+            .slice(0, 30);
         if (!orderCode) {
             return res.status(400).json({ success: false, message: 'Thiếu mã orderCode' });
         }
@@ -267,11 +276,10 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
 
         // 1. Kiểm tra trạng thái trong DB trước với Lean Query (Cực nhanh < 2ms)
         const donHangDB = await DonHang.findOne({
-            $or: [
-                { payos_order_code: orderNum },
-                { ma_don_hang: String(orderCode) }
-            ]
-        }).select('da_thanh_toan trang_thai_thanh_toan ma_don_hang payos_order_code').lean();
+            $or: [{ payos_order_code: orderNum }, { ma_don_hang: String(orderCode) }]
+        })
+            .select('da_thanh_toan trang_thai_thanh_toan ma_don_hang payos_order_code')
+            .lean();
 
         if (donHangDB && (donHangDB.da_thanh_toan || donHangDB.trang_thai_thanh_toan === 'da_thanh_toan')) {
             // Endpoint công khai: chỉ trả trạng thái, không trả thông tin đơn hàng
@@ -286,7 +294,7 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
         // 2. Kiểm tra bộ nhớ đệm Throttle (Nếu vừa kiểm tra trong 3 giây qua -> trả kết quả ngay, không spam PayOS)
         const bayGio = Date.now();
         const cacheHienTai = boNhoDemPayOS.get(cacheKey);
-        if (cacheHienTai && (bayGio - cacheHienTai.timestamp) < 3000) {
+        if (cacheHienTai && bayGio - cacheHienTai.timestamp < 3000) {
             return res.status(200).json({
                 success: true,
                 da_thanh_toan: cacheHienTai.daThanhToan,
@@ -351,10 +359,7 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
         if (daThanhToan) {
             DonHang.updateOne(
                 {
-                    $or: [
-                        { payos_order_code: orderNum },
-                        { ma_don_hang: String(orderCode) }
-                    ]
+                    $or: [{ payos_order_code: orderNum }, { ma_don_hang: String(orderCode) }]
                 },
                 {
                     $set: {
@@ -363,9 +368,11 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
                         trang_thai: 'da_xac_nhan'
                     }
                 }
-            ).then(() => {
-                console.log(`✅ [PayOS] Cập nhật thành công đơn hàng #${orderCode} ĐÃ THANH TOÁN!`);
-            }).catch(err => console.warn('⚠️ Lỗi cập nhật đơn:', err.message));
+            )
+                .then(() => {
+                    console.log(`✅ [PayOS] Cập nhật thành công đơn hàng #${orderCode} ĐÃ THANH TOÁN!`);
+                })
+                .catch((err) => console.warn('⚠️ Lỗi cập nhật đơn:', err.message));
         }
 
         return res.status(200).json({
@@ -398,8 +405,9 @@ const xuLyWebhookPayOS = async (req, res) => {
         // Xác minh chữ ký PayOS
         const chuKyTinh = taoChuKyPayOS(payload.data, cauHinhPayOS.checksumKey);
         const chuKyNhan = String(payload.signature || '');
-        const chuKyHopLe = chuKyNhan.length === chuKyTinh.length
-            && crypto.timingSafeEqual(Buffer.from(chuKyTinh), Buffer.from(chuKyNhan));
+        const chuKyHopLe =
+            chuKyNhan.length === chuKyTinh.length &&
+            crypto.timingSafeEqual(Buffer.from(chuKyTinh), Buffer.from(chuKyNhan));
         if (!chuKyHopLe) {
             console.warn('⚠️ [PayOS Webhook] Chữ ký không hợp lệ!');
             return res.status(400).json({ success: false, message: 'Chữ ký không hợp lệ' });
@@ -410,7 +418,9 @@ const xuLyWebhookPayOS = async (req, res) => {
         const amount = Number(data.amount) || 0;
 
         if (String(data.code || '').toUpperCase() !== '00' || !orderCode || amount <= 0) {
-            return res.status(400).json({ success: false, message: 'Giao dịch chưa thành công hoặc dữ liệu không hợp lệ' });
+            return res
+                .status(400)
+                .json({ success: false, message: 'Giao dịch chưa thành công hoặc dữ liệu không hợp lệ' });
         }
 
         const orderNum = Number(orderCode) || 0;
@@ -457,16 +467,21 @@ const xuLyWebhookPayOS = async (req, res) => {
                 }
             },
             { returnDocument: 'after' }
-        ).then((donHangDaCapNhat) => {
-            console.log(`✅ [PayOS Webhook] Đã lưu vào MongoDB đơn hàng #${orderCode}`);
-            if (donHangDaCapNhat) {
-                if (donHangDaCapNhat.thong_tin_giao_hang?.email || donHangDaCapNhat.email) {
-                    guiMailXacNhanDonHang(donHangDaCapNhat).catch(e => console.warn('⚠️ Lỗi gửi mail sau webhook:', e.message));
+        )
+            .then((donHangDaCapNhat) => {
+                console.log(`✅ [PayOS Webhook] Đã lưu vào MongoDB đơn hàng #${orderCode}`);
+                if (donHangDaCapNhat) {
+                    if (donHangDaCapNhat.thong_tin_giao_hang?.email || donHangDaCapNhat.email) {
+                        guiMailXacNhanDonHang(donHangDaCapNhat).catch((e) =>
+                            console.warn('⚠️ Lỗi gửi mail sau webhook:', e.message)
+                        );
+                    }
+                    guiThongBaoDonHangTelegram(donHangDaCapNhat).catch((e) =>
+                        console.warn('⚠️ Lỗi gửi Telegram sau webhook:', e.message)
+                    );
                 }
-                guiThongBaoDonHangTelegram(donHangDaCapNhat).catch(e => console.warn('⚠️ Lỗi gửi Telegram sau webhook:', e.message));
-            }
-        }).catch(err => console.warn('⚠️ Lỗi cập nhật Webhook vào DB:', err.message));
-
+            })
+            .catch((err) => console.warn('⚠️ Lỗi cập nhật Webhook vào DB:', err.message));
     } catch (error) {
         console.error('❌ [PayOS Webhook] Lỗi xử lý webhook:', error);
         return res.status(500).json({ success: false, message: 'Lỗi xử lý webhook.' });

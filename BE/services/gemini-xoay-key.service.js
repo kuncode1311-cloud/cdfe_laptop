@@ -13,7 +13,7 @@ const cauHinhGemini = require('../config/gemini.config');
 // Bộ nhớ theo dõi trạng thái sức khỏe của các cặp (Model : Key)
 const bangTheoDoiSucKhoe = {
     thoiGianNghi: {}, // { [pairId]: { hetHanLuc: timestamp, lyDo: string } }
-    capUuTien: null,  // pairId hoạt động thành công gần nhất
+    capUuTien: null, // pairId hoạt động thành công gần nhất
     thoiGianCapNhat: Date.now()
 };
 
@@ -99,7 +99,9 @@ async function goiGeminiXoayKey({ systemPrompt, userPrompt, lichSuChat = [], gen
 
     // Nếu tất cả đều đang cooldown, mở khóa tạm thời các cặp để cứu hộ
     if (ungVien.length === 0) {
-        console.warn('⚠️ [Gemini AI] Tất cả API key đang trong thời gian nghỉ. Đang giải phóng bộ nhớ để thử lại khẩn cấp...');
+        console.warn(
+            '⚠️ [Gemini AI] Tất cả API key đang trong thời gian nghỉ. Đang giải phóng bộ nhớ để thử lại khẩn cấp...'
+        );
         bangTheoDoiSucKhoe.thoiGianNghi = {};
         ungVien = layDanhSachUngVien();
     }
@@ -113,7 +115,7 @@ async function goiGeminiXoayKey({ systemPrompt, userPrompt, lichSuChat = [], gen
 
     // Nạp lịch sử chat nếu có
     if (Array.isArray(lichSuChat) && lichSuChat.length > 0) {
-        lichSuChat.forEach(msg => {
+        lichSuChat.forEach((msg) => {
             const role = msg.role === 'model' || msg.role === 'assistant' ? 'model' : 'user';
             const text = msg.content || msg.text || '';
             if (text.trim()) {
@@ -189,7 +191,9 @@ async function goiGeminiXoayKey({ systemPrompt, userPrompt, lichSuChat = [], gen
                     hetHanLuc: bayGio + 45000,
                     lyDo: 'Phản hồi rỗng hoặc nội dung bị lọc'
                 };
-                console.warn(`⚠️ [Gemini AI] Cặp ${u.model} (Key #${u.keyId}) trả về rỗng. Đang chuyển sang ứng viên tiếp theo...`);
+                console.warn(
+                    `⚠️ [Gemini AI] Cặp ${u.model} (Key #${u.keyId}) trả về rỗng. Đang chuyển sang ứng viên tiếp theo...`
+                );
             } else {
                 const errorData = await res.json().catch(() => ({}));
                 const thongBaoLoi = errorData?.error?.message || `HTTP ${res.status}`;
@@ -201,21 +205,27 @@ async function goiGeminiXoayKey({ systemPrompt, userPrompt, lichSuChat = [], gen
                         hetHanLuc: bayGio + 300000,
                         lyDo: '429 Quota Exceeded'
                     };
-                    console.warn(`⚠️ [Gemini AI - Xoay Key] Key #${u.keyId} (${u.model}) chạm hạn ngạch (429 Quota). Tạm dừng 5 phút, tự động chuyển key tiếp theo...`);
+                    console.warn(
+                        `⚠️ [Gemini AI - Xoay Key] Key #${u.keyId} (${u.model}) chạm hạn ngạch (429 Quota). Tạm dừng 5 phút, tự động chuyển key tiếp theo...`
+                    );
                 } else if (res.status === 403) {
                     // Key hết hạn hoặc sai quyền: Nghỉ 6 tiếng
                     bangTheoDoiSucKhoe.thoiGianNghi[u.pairId] = {
                         hetHanLuc: bayGio + 21600000,
                         lyDo: '403 Forbidden / Invalid Key'
                     };
-                    console.error(`❌ [Gemini AI - Xoay Key] Key #${u.keyId} bị từ chối (403 Forbidden: ${thongBaoLoi}). Nghỉ 6h, chuyển sang key khác...`);
+                    console.error(
+                        `❌ [Gemini AI - Xoay Key] Key #${u.keyId} bị từ chối (403 Forbidden: ${thongBaoLoi}). Nghỉ 6h, chuyển sang key khác...`
+                    );
                 } else {
                     // Lỗi 500, 503, Gateway: Nghỉ ngắn 30s
                     bangTheoDoiSucKhoe.thoiGianNghi[u.pairId] = {
                         hetHanLuc: bayGio + 30000,
                         lyDo: `HTTP ${res.status}: ${thongBaoLoi}`
                     };
-                    console.warn(`⚠️ [Gemini AI - Xoay Key] Cặp ${u.model} (Key #${u.keyId}) lỗi ${res.status}. Đang chuyển sang ứng viên tiếp theo...`);
+                    console.warn(
+                        `⚠️ [Gemini AI - Xoay Key] Cặp ${u.model} (Key #${u.keyId}) lỗi ${res.status}. Đang chuyển sang ứng viên tiếp theo...`
+                    );
                 }
 
                 loiCuoiCung = new Error(`Lỗi Gemini [${res.status}]: ${thongBaoLoi}`);
@@ -227,13 +237,15 @@ async function goiGeminiXoayKey({ systemPrompt, userPrompt, lichSuChat = [], gen
                 hetHanLuc: bayGio + 30000,
                 lyDo: error.name === 'AbortError' ? 'Timeout 18s' : error.message
             };
-            console.warn(`⚠️ [Gemini AI - Xoay Key] Kết nối tới ${u.model} (Key #${u.keyId}) gián đoạn (${error.message}). Thử ứng viên kế tiếp...`);
+            console.warn(
+                `⚠️ [Gemini AI - Xoay Key] Kết nối tới ${u.model} (Key #${u.keyId}) gián đoạn (${error.message}). Thử ứng viên kế tiếp...`
+            );
             loiCuoiCung = error;
         }
     }
 
     // Nếu đã thử tất cả các key/model mà đều thất bại
-    throw (loiCuoiCung || new Error('Không thể kết nối đến bất kỳ mô hình Gemini AI nào khả dụng.'));
+    throw loiCuoiCung || new Error('Không thể kết nối đến bất kỳ mô hình Gemini AI nào khả dụng.');
 }
 
 /**
@@ -242,7 +254,7 @@ async function goiGeminiXoayKey({ systemPrompt, userPrompt, lichSuChat = [], gen
 function layTrangThaiKeyHienTai() {
     const bayGio = Date.now();
     const tongSoKeys = cauHinhGemini.apiKeys.length;
-    const danhSachChiTiet = cauHinhGemini.apiKeys.map(k => {
+    const danhSachChiTiet = cauHinhGemini.apiKeys.map((k) => {
         const keyId = bamMaKey(k);
         const dangNghi = Object.entries(bangTheoDoiSucKhoe.thoiGianNghi)
             .filter(([pId, info]) => pId.includes(keyId) && info.hetHanLuc > bayGio)

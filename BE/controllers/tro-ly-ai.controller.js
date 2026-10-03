@@ -23,14 +23,15 @@ const xuLyChatAI = async (req, res) => {
             });
         }
 
-        const danhSachLichSu = Array.isArray(lich_su_chat) 
-            ? lich_su_chat 
-            : (Array.isArray(history) ? history : []);
+        const danhSachLichSu = Array.isArray(lich_su_chat) ? lich_su_chat : Array.isArray(history) ? history : [];
         // FE có thể đã thêm câu hỏi hiện tại vào lịch sử; chỉ gửi nó một lần tới model.
         const lichSuTruocCauHoi = [...danhSachLichSu];
         const tinCuoi = lichSuTruocCauHoi.at(-1);
-        if (tinCuoi && tinCuoi.role === 'user' &&
-            String(tinCuoi.content || tinCuoi.text || '').trim() === cauHoi.trim()) {
+        if (
+            tinCuoi &&
+            tinCuoi.role === 'user' &&
+            String(tinCuoi.content || tinCuoi.text || '').trim() === cauHoi.trim()
+        ) {
             lichSuTruocCauHoi.pop();
         }
 
@@ -69,12 +70,15 @@ const xuLyChatAIStream = async (req, res) => {
         const ketQua = await xuLyTroLyChat({
             tinNhan: tin_nhan.trim(),
             lichSuChat: lichSu,
-            onText: text => { if (!res.destroyed) res.write(JSON.stringify({ type: 'text', text }) + '\n'); }
+            onText: (text) => {
+                if (!res.destroyed) res.write(JSON.stringify({ type: 'text', text }) + '\n');
+            }
         });
         if (!res.destroyed) res.write(JSON.stringify({ type: 'done', result: { thanh_cong: true, ...ketQua } }) + '\n');
     } catch (error) {
         console.error('[Trợ lý AI] Stream lỗi:', error.message);
-        if (!res.destroyed) res.write(JSON.stringify({ type: 'error', message: 'Không thể kết nối Trợ lý AI.' }) + '\n');
+        if (!res.destroyed)
+            res.write(JSON.stringify({ type: 'error', message: 'Không thể kết nối Trợ lý AI.' }) + '\n');
     } finally {
         res.end();
     }

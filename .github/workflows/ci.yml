@@ -54,6 +54,13 @@ jobs:
       - name: Quét lỗ hổng thư viện (npm audit)
         run: npm audit --omit=dev --audit-level=high
 
+      # ESLint bắt lỗi tiềm ẩn; Prettier bảo đảm cả nhóm dùng chung một kiểu định dạng
+      - name: Kiểm tra chất lượng mã (ESLint)
+        run: npm run lint
+
+      - name: Kiểm tra định dạng mã (Prettier)
+        run: npm run format:check
+
       - name: Chạy kiểm thử và đo độ phủ
         run: npm run test:coverage
 

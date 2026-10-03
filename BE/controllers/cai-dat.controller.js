@@ -22,11 +22,14 @@ exports.capNhatCaiDatShowroom = async (req, res) => {
         );
         return res.json({ thanh_cong: true, du_lieu: caiDat.danh_sach_showroom });
     } catch (loi) {
-        return res.status(500).json({ thanh_cong: false, thong_diep: 'Không thể lưu cài đặt showroom', chi_tiet: loi.message });
+        return res
+            .status(500)
+            .json({ thanh_cong: false, thong_diep: 'Không thể lưu cài đặt showroom', chi_tiet: loi.message });
     }
 };
 
-exports.khoiPhucShowroomMacDinh = (req, res) => res.status(410).json({
-    thanh_cong: false,
-    thong_diep: 'Dữ liệu showroom được quản lý trong MongoDB; không có dữ liệu mẫu để khôi phục.'
-});
+exports.khoiPhucShowroomMacDinh = (req, res) =>
+    res.status(410).json({
+        thanh_cong: false,
+        thong_diep: 'Dữ liệu showroom được quản lý trong MongoDB; không có dữ liệu mẫu để khôi phục.'
+    });

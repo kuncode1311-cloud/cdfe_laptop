@@ -9,7 +9,18 @@ const { chuoiAnToan, kiemTraMatKhauManh } = require('../utils/bao-mat');
 
 // Admin chỉ được thay đổi đúng các trường này (chống Mass Assignment:
 // không thể ghi đè tokenVersion, OTP, googleId, bộ đếm bảo mật... qua body).
-const TRUONG_ADMIN_DUOC_SUA = ['hoTen', 'soDienThoai', 'avatar', 'vaiTro', 'hangThanhVien', 'trangThai', 'biKhoa', 'lyDoKhoa', 'gioiTinh', 'ngaySinh'];
+const TRUONG_ADMIN_DUOC_SUA = [
+    'hoTen',
+    'soDienThoai',
+    'avatar',
+    'vaiTro',
+    'hangThanhVien',
+    'trangThai',
+    'biKhoa',
+    'lyDoKhoa',
+    'gioiTinh',
+    'ngaySinh'
+];
 
 const locDuLieuChoPhep = (duLieu = {}) => {
     const ketQua = {};
@@ -21,9 +32,8 @@ const locDuLieuChoPhep = (duLieu = {}) => {
     return ketQua;
 };
 
-const laChinhMinh = (req, user) => user && (
-    String(user._id) === String(req.user._id) || String(user.id) === String(req.user.id)
-);
+const laChinhMinh = (req, user) =>
+    user && (String(user._id) === String(req.user._id) || String(user.id) === String(req.user.id));
 
 const timNguoiDung = async (id) => {
     const dinhDanh = String(id || '').slice(0, 254);
@@ -98,9 +108,14 @@ const capNhatNguoiDung = async (req, res) => {
 
         // Admin không được tự khóa hoặc tự hạ quyền chính mình (tránh mất quyền quản trị hệ thống)
         if (laChinhMinh(req, user)) {
-            if (duLieuCapNhat.biKhoa === true || duLieuCapNhat.trangThai === 'bi_khoa'
-                || (duLieuCapNhat.vaiTro && duLieuCapNhat.vaiTro !== 'admin')) {
-                return res.status(400).json({ thong_diep: 'Bạn không thể tự khóa hoặc tự hạ quyền tài khoản Admin của chính mình!' });
+            if (
+                duLieuCapNhat.biKhoa === true ||
+                duLieuCapNhat.trangThai === 'bi_khoa' ||
+                (duLieuCapNhat.vaiTro && duLieuCapNhat.vaiTro !== 'admin')
+            ) {
+                return res
+                    .status(400)
+                    .json({ thong_diep: 'Bạn không thể tự khóa hoặc tự hạ quyền tài khoản Admin của chính mình!' });
             }
         }
 
@@ -112,13 +127,19 @@ const capNhatNguoiDung = async (req, res) => {
         }
 
         // Khóa tài khoản / đổi vai trò / đổi mật khẩu → thu hồi ngay mọi token đang dùng
-        const canThuHoiPhien = duLieuCapNhat.biKhoa === true || duLieuCapNhat.trangThai === 'bi_khoa'
-            || (duLieuCapNhat.vaiTro && duLieuCapNhat.vaiTro !== user.vaiTro) || duLieuCapNhat.matKhau;
+        const canThuHoiPhien =
+            duLieuCapNhat.biKhoa === true ||
+            duLieuCapNhat.trangThai === 'bi_khoa' ||
+            (duLieuCapNhat.vaiTro && duLieuCapNhat.vaiTro !== user.vaiTro) ||
+            duLieuCapNhat.matKhau;
 
         const capNhat = { $set: duLieuCapNhat };
         if (canThuHoiPhien) capNhat.$inc = { tokenVersion: 1 };
 
-        const ketQua = await NguoiDung.findByIdAndUpdate(user._id, capNhat, { returnDocument: 'after', runValidators: true });
+        const ketQua = await NguoiDung.findByIdAndUpdate(user._id, capNhat, {
+            returnDocument: 'after',
+            runValidators: true
+        });
         return res.status(200).json(ketQua);
     } catch (loi) {
         console.error('Lỗi cập nhật người dùng:', loi);

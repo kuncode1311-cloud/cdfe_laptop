@@ -61,7 +61,11 @@ async function goiNineRouter({ systemPrompt, userPrompt, lichSuChat = [], genera
                     const events = buffer.split(/\r?\n\r?\n/);
                     buffer = events.pop();
                     for (const event of events) {
-                        const dataLine = event.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trim()).join('');
+                        const dataLine = event
+                            .split(/\r?\n/)
+                            .filter((line) => line.startsWith('data:'))
+                            .map((line) => line.slice(5).trim())
+                            .join('');
                         if (!dataLine || dataLine === '[DONE]') continue;
                         const chunk = JSON.parse(dataLine);
                         const delta = chunk?.choices?.[0]?.delta?.content;
@@ -91,13 +95,17 @@ async function goiNineRouter({ systemPrompt, userPrompt, lichSuChat = [], genera
                     const chunk = JSON.parse(jsonStr);
                     const delta = chunk?.choices?.[0]?.delta?.content || chunk?.choices?.[0]?.message?.content || '';
                     content += delta;
-                } catch {}
+                } catch {
+                    // Dòng SSE không phải JSON hợp lệ (vd: "[DONE]") → bỏ qua
+                }
             }
         } else {
             try {
                 const data = JSON.parse(rawText);
                 content = data?.choices?.[0]?.message?.content || '';
-            } catch {}
+            } catch {
+                // Phản hồi không phải JSON → content để trống, bên dưới sẽ báo lỗi rõ ràng
+            }
         }
         if (typeof content !== 'string' || !content.trim()) {
             throw new Error('9Router trả về nội dung rỗng');

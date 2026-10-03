@@ -23,27 +23,29 @@ const taoNguoiDung = async (tuyChon = {}) => {
 };
 
 // Ký JWT giống hệt cách controller đăng nhập tạo token
-const taoTokenCho = (nguoiDung) => jwt.sign(
-    {
-        userId: nguoiDung.id,
-        email: nguoiDung.email,
-        vaiTro: nguoiDung.vaiTro,
-        tokenVersion: Number(nguoiDung.tokenVersion || 0)
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: '1h' }
-);
+const taoTokenCho = (nguoiDung) =>
+    jwt.sign(
+        {
+            userId: nguoiDung.id,
+            email: nguoiDung.email,
+            vaiTro: nguoiDung.vaiTro,
+            tokenVersion: Number(nguoiDung.tokenVersion || 0)
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+    );
 
 // Tạo một sản phẩm laptop đủ các trường bắt buộc của schema
-const taoSanPham = async (tuyChon = {}) => SanPham.create({
-    id: 'asus-zenbook-14-test',
-    slug: 'asus-zenbook-14-test',
-    ma_san_pham: 'UX3405-TEST',
-    ten_san_pham: 'ASUS Zenbook 14 OLED Test',
-    hang_san_xuat: 'asus',
-    gia_khuyen_mai: 25990000,
-    hinh_anh_chinh: '/images/sp/zenbook.jpg',
-    ...tuyChon
-});
+const taoSanPham = async (tuyChon = {}) =>
+    SanPham.create({
+        id: 'asus-zenbook-14-test',
+        slug: 'asus-zenbook-14-test',
+        ma_san_pham: 'UX3405-TEST',
+        ten_san_pham: 'ASUS Zenbook 14 OLED Test',
+        hang_san_xuat: 'asus',
+        gia_khuyen_mai: 25990000,
+        hinh_anh_chinh: '/images/sp/zenbook.jpg',
+        ...tuyChon
+    });
 
 module.exports = { MAT_KHAU_MAU, taoNguoiDung, taoTokenCho, taoSanPham };

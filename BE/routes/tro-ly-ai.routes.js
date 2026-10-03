@@ -8,7 +8,11 @@ const router = express.Router();
 const troLyAiController = require('../controllers/tro-ly-ai.controller');
 const { gioiHanRequest } = require('../middleware/gioi-han-request.middleware');
 
-const gioiHanChatAi = gioiHanRequest({ windowMs: 60 * 1000, max: 12, message: 'Bạn gửi tin nhắn AI quá nhanh. Vui lòng thử lại sau.' });
+const gioiHanChatAi = gioiHanRequest({
+    windowMs: 60 * 1000,
+    max: 12,
+    message: 'Bạn gửi tin nhắn AI quá nhanh. Vui lòng thử lại sau.'
+});
 const gioiHanTrangThaiAi = gioiHanRequest({ windowMs: 60 * 1000, max: 30 });
 
 // 1. Gửi tin nhắn trò chuyện với Trợ lý AI (Hỗ trợ cả /chat và /)

@@ -4,9 +4,9 @@
 
 // 1. Security headers (tương đương các header cơ bản của thư viện Helmet)
 const datHeaderBaoMat = (req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');           // Chặn trình duyệt đoán sai kiểu nội dung
-    res.setHeader('X-Frame-Options', 'DENY');                     // Chống Clickjacking (nhúng API vào iframe)
-    res.setHeader('Referrer-Policy', 'no-referrer');              // Không rò rỉ URL khi chuyển trang
+    res.setHeader('X-Content-Type-Options', 'nosniff'); // Chặn trình duyệt đoán sai kiểu nội dung
+    res.setHeader('X-Frame-Options', 'DENY'); // Chống Clickjacking (nhúng API vào iframe)
+    res.setHeader('Referrer-Policy', 'no-referrer'); // Không rò rỉ URL khi chuyển trang
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     res.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
     if (process.env.NODE_ENV === 'production') {
@@ -22,7 +22,13 @@ const locKhoaNguyHiem = (giaTri, doSau = 0) => {
     if (doSau > DO_SAU_TOI_DA || giaTri === null || typeof giaTri !== 'object') return 0;
     let soKhoaDaXoa = 0;
     for (const khoa of Object.keys(giaTri)) {
-        if (khoa.startsWith('$') || khoa.includes('.') || khoa === '__proto__' || khoa === 'constructor' || khoa === 'prototype') {
+        if (
+            khoa.startsWith('$') ||
+            khoa.includes('.') ||
+            khoa === '__proto__' ||
+            khoa === 'constructor' ||
+            khoa === 'prototype'
+        ) {
             delete giaTri[khoa];
             soKhoaDaXoa += 1;
         } else {

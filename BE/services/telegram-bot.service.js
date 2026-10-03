@@ -79,7 +79,12 @@ async function xuLyCapNhatTonKho(danhSachSanPham, thaoTac = 'tru') {
     for (const item of danhSachSanPham) {
         try {
             const soLuong = Math.max(1, Number(item.so_luong) || 1);
-            const spId = item.san_pham_id || item.san_pham?.id || item.san_pham?._id || item.san_pham?.ma_san_pham || item.id_muc;
+            const spId =
+                item.san_pham_id ||
+                item.san_pham?.id ||
+                item.san_pham?._id ||
+                item.san_pham?.ma_san_pham ||
+                item.id_muc;
             if (!spId && !item.ten_san_pham) continue;
 
             const orConds = [];
@@ -222,9 +227,9 @@ function taoMauTinNhanDonHang(donHang, tieuDe = '🔔 CÓ ĐƠN HÀNG MỚI CẦ
     const ttgh = donHang.thong_tin_giao_hang || {};
     const tenKhach = ttgh.ho_ten || ttgh.ho_va_ten || 'Khách vãng lai';
     const sdt = ttgh.so_dien_thoai || 'Chưa có SĐT';
-    const diaChi = [ttgh.dia_chi_chi_tiet, ttgh.phuong_xa, ttgh.quan_huyen, ttgh.tinh_thanh]
-        .filter(Boolean)
-        .join(', ') || 'Nhận tại cửa hàng';
+    const diaChi =
+        [ttgh.dia_chi_chi_tiet, ttgh.phuong_xa, ttgh.quan_huyen, ttgh.tinh_thanh].filter(Boolean).join(', ') ||
+        'Nhận tại cửa hàng';
 
     let danhSachMon = '';
     if (Array.isArray(donHang.danh_sach_san_pham)) {
@@ -276,10 +281,7 @@ function taoBanPhimThaoTacDonHang(maDonHang, trangThaiHienTai = 'cho_xac_nhan') 
                     { text: '✅ Xác Nhận Đơn', callback_data: `doi_tt:da_xac_nhan:${maDonHang}` },
                     { text: '🚚 Giao Hàng Luôn', callback_data: `doi_tt:dang_giao:${maDonHang}` }
                 ],
-                [
-                    { text: '❌ Hủy Đơn', callback_data: `doi_tt:da_huy:${maDonHang}` },
-                    nutDoiKhac
-                ],
+                [{ text: '❌ Hủy Đơn', callback_data: `doi_tt:da_huy:${maDonHang}` }, nutDoiKhac],
                 [nutChiTiet]
             ]
         };
@@ -292,10 +294,7 @@ function taoBanPhimThaoTacDonHang(maDonHang, trangThaiHienTai = 'cho_xac_nhan') 
                     { text: '🚚 Chuyển Đang Giao Hàng', callback_data: `doi_tt:dang_giao:${maDonHang}` },
                     { text: '🎉 Đã Giao Xong', callback_data: `doi_tt:da_giao:${maDonHang}` }
                 ],
-                [
-                    { text: '❌ Hủy Đơn', callback_data: `doi_tt:da_huy:${maDonHang}` },
-                    nutDoiKhac
-                ],
+                [{ text: '❌ Hủy Đơn', callback_data: `doi_tt:da_huy:${maDonHang}` }, nutDoiKhac],
                 [nutChiTiet]
             ]
         };
@@ -304,13 +303,8 @@ function taoBanPhimThaoTacDonHang(maDonHang, trangThaiHienTai = 'cho_xac_nhan') 
     if (trangThaiHienTai === 'dang_giao') {
         return {
             inline_keyboard: [
-                [
-                    { text: '🎉 Xác Nhận Đã Giao Xong', callback_data: `doi_tt:da_giao:${maDonHang}` }
-                ],
-                [
-                    { text: '❌ Hủy Đơn', callback_data: `doi_tt:da_huy:${maDonHang}` },
-                    nutDoiKhac
-                ],
+                [{ text: '🎉 Xác Nhận Đã Giao Xong', callback_data: `doi_tt:da_giao:${maDonHang}` }],
+                [{ text: '❌ Hủy Đơn', callback_data: `doi_tt:da_huy:${maDonHang}` }, nutDoiKhac],
                 [nutChiTiet]
             ]
         };
@@ -319,13 +313,8 @@ function taoBanPhimThaoTacDonHang(maDonHang, trangThaiHienTai = 'cho_xac_nhan') 
     if (trangThaiHienTai === 'da_giao') {
         return {
             inline_keyboard: [
-                [
-                    { text: '✅ Đơn Đã Giao Hoàn Tất', callback_data: `toast:Đơn hàng này đã giao thành công!` }
-                ],
-                [
-                    nutDoiKhac,
-                    nutChiTiet
-                ]
+                [{ text: '✅ Đơn Đã Giao Hoàn Tất', callback_data: `toast:Đơn hàng này đã giao thành công!` }],
+                [nutDoiKhac, nutChiTiet]
             ]
         };
     }
@@ -333,21 +322,14 @@ function taoBanPhimThaoTacDonHang(maDonHang, trangThaiHienTai = 'cho_xac_nhan') 
     if (trangThaiHienTai === 'da_huy') {
         return {
             inline_keyboard: [
-                [
-                    { text: '🔄 Khôi Phục: Chờ Xác Nhận', callback_data: `doi_tt:cho_xac_nhan:${maDonHang}` }
-                ],
-                [
-                    nutDoiKhac,
-                    nutChiTiet
-                ]
+                [{ text: '🔄 Khôi Phục: Chờ Xác Nhận', callback_data: `doi_tt:cho_xac_nhan:${maDonHang}` }],
+                [nutDoiKhac, nutChiTiet]
             ]
         };
     }
 
     return {
-        inline_keyboard: [
-            [nutDoiKhac, nutChiTiet]
-        ]
+        inline_keyboard: [[nutDoiKhac, nutChiTiet]]
     };
 }
 
@@ -363,7 +345,7 @@ function taoBanPhimChon5TrangThai(maDonHang, trangThaiHienTai) {
         { key: 'da_huy', label: '❌ 5. Đã hủy đơn hàng' }
     ];
 
-    const cacNut = dsTrangThai.map(tt => {
+    const cacNut = dsTrangThai.map((tt) => {
         const laDangChon = tt.key === trangThaiHienTai;
         return [
             {
@@ -373,9 +355,7 @@ function taoBanPhimChon5TrangThai(maDonHang, trangThaiHienTai) {
         ];
     });
 
-    cacNut.push([
-        { text: '⬅️ Quay Lại Thao Tác Nhanh', callback_data: `quay_lai:${maDonHang}` }
-    ]);
+    cacNut.push([{ text: '⬅️ Quay Lại Thao Tác Nhanh', callback_data: `quay_lai:${maDonHang}` }]);
 
     return { inline_keyboard: cacNut };
 }
@@ -454,7 +434,8 @@ async function xuLyNutBamTelegram(callbackQuery) {
                 return;
             }
             await traLoiCallback(idCallback, `Đang tra cứu #${maDonHang}...`);
-            const noiDungChiTiet = taoMauTinNhanDonHang(donHang, '🔎 <b>THÔNG TIN CHI TIẾT ĐƠN HÀNG</b>') +
+            const noiDungChiTiet =
+                taoMauTinNhanDonHang(donHang, '🔎 <b>THÔNG TIN CHI TIẾT ĐƠN HÀNG</b>') +
                 `\n🌐 <b>Mở quản trị Web:</b> ${(process.env.CLIENT_URL || 'http://localhost:3000').split(',')[0].trim().replace(/\/$/, '')}/admin?tab=don_hang`;
             await guiTinNhanAdmin(noiDungChiTiet, taoBanPhimThaoTacDonHang(maDonHang, donHang.trang_thai));
             return;
@@ -469,7 +450,6 @@ async function xuLyNutBamTelegram(callbackQuery) {
                 return;
             }
 
-            const trangThaiCu = donHang.trang_thai;
             donHang.trang_thai = trangThaiMoi;
 
             // Xử lý trừ kho hoặc hoàn kho chuẩn xác 2 chiều theo DB
@@ -540,20 +520,20 @@ async function xuLyTinNhanVanBan(tinNhan) {
             homNay.setHours(0, 0, 0, 0);
 
             const tatCaDon = await DonHang.find({}).sort({ createdAt: -1 });
-            const donHomNay = tatCaDon.filter(dh => {
+            const donHomNay = tatCaDon.filter((dh) => {
                 const tg = new Date(dh.createdAt || dh.ngay_tao);
                 return tg >= homNay;
             });
 
             const tongDoanhThuHomNay = donHomNay
-                .filter(dh => dh.trang_thai !== 'da_huy')
+                .filter((dh) => dh.trang_thai !== 'da_huy')
                 .reduce((sum, dh) => sum + (Number(dh.tong_tien_thanh_toan) || 0), 0);
 
-            const soDonCho = tatCaDon.filter(dh => dh.trang_thai === 'cho_xac_nhan').length;
-            const soDonXacNhan = tatCaDon.filter(dh => dh.trang_thai === 'da_xac_nhan').length;
-            const soDonDangGiao = tatCaDon.filter(dh => dh.trang_thai === 'dang_giao').length;
-            const soDonDaGiao = tatCaDon.filter(dh => dh.trang_thai === 'da_giao').length;
-            const soDonDaHuy = tatCaDon.filter(dh => dh.trang_thai === 'da_huy').length;
+            const soDonCho = tatCaDon.filter((dh) => dh.trang_thai === 'cho_xac_nhan').length;
+            const soDonXacNhan = tatCaDon.filter((dh) => dh.trang_thai === 'da_xac_nhan').length;
+            const soDonDangGiao = tatCaDon.filter((dh) => dh.trang_thai === 'dang_giao').length;
+            const soDonDaGiao = tatCaDon.filter((dh) => dh.trang_thai === 'da_giao').length;
+            const soDonDaHuy = tatCaDon.filter((dh) => dh.trang_thai === 'da_huy').length;
 
             const baoCao = `
 📊 <b>BÁO CÁO DOANH THU & KHO ĐƠN HÀNG</b>
@@ -577,9 +557,7 @@ async function xuLyTinNhanVanBan(tinNhan) {
 
         // 3. Lệnh /donmoi hoặc Nút "📋 Đơn Chờ Duyệt"
         if (text.startsWith('/donmoi') || text === '📋 Đơn Chờ Duyệt') {
-            const danhSachCho = await DonHang.find({ trang_thai: 'cho_xac_nhan' })
-                .sort({ createdAt: -1 })
-                .limit(5);
+            const danhSachCho = await DonHang.find({ trang_thai: 'cho_xac_nhan' }).sort({ createdAt: -1 }).limit(5);
 
             if (!danhSachCho || danhSachCho.length === 0) {
                 await guiTinNhanAdmin('✨ Hiện không có đơn hàng nào đang chờ duyệt. Danh sách sạch sẽ! 👍');
@@ -597,9 +575,7 @@ async function xuLyTinNhanVanBan(tinNhan) {
 
         // 4. Lệnh /tatcadon hoặc Nút "📦 10 Đơn Gần Đây"
         if (text.startsWith('/tatcadon') || text === '📦 10 Đơn Gần Đây') {
-            const danhSach = await DonHang.find({})
-                .sort({ createdAt: -1 })
-                .limit(10);
+            const danhSach = await DonHang.find({}).sort({ createdAt: -1 }).limit(10);
 
             if (!danhSach || danhSach.length === 0) {
                 await guiTinNhanAdmin('Chưa có đơn hàng nào trong hệ thống.');
@@ -619,17 +595,14 @@ async function xuLyTinNhanVanBan(tinNhan) {
 
         // 5. Lệnh /timdon hoặc /timdon_...
         if (text.startsWith('/timdon')) {
-            let tuKhoa = text.replace('/timdon_', '').replace('/timdon', '').trim();
+            const tuKhoa = text.replace('/timdon_', '').replace('/timdon', '').trim();
             if (!tuKhoa) {
                 await guiTinNhanAdmin('⚠️ Vui lòng nhập mã đơn cần tìm. Ví dụ: <code>/timdon 123456</code>');
                 return;
             }
 
             const don = await DonHang.findOne({
-                $or: [
-                    { ma_don_hang: { $regex: new RegExp(tuKhoa, 'i') } },
-                    { id: tuKhoa }
-                ]
+                $or: [{ ma_don_hang: { $regex: new RegExp(tuKhoa, 'i') } }, { id: tuKhoa }]
             });
 
             if (!don) {
@@ -695,13 +668,13 @@ async function batDauPolling() {
                 }
             }
         } catch (err) {
-            await new Promise(r => setTimeout(r, 3000));
+            await new Promise((r) => setTimeout(r, 3000));
         }
     }
 }
 
 function khoiTaoTelegramBot() {
-    batDauPolling().catch(err => console.error('❌ Lỗi Telegram Bot:', err.message));
+    batDauPolling().catch((err) => console.error('❌ Lỗi Telegram Bot:', err.message));
 }
 
 module.exports = {

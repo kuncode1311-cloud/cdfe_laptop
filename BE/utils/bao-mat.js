@@ -19,10 +19,11 @@ const chuoiAnToan = (giaTri, doDaiToiDa = 200) => {
 const taoMaOtp = () => crypto.randomInt(100000, 1000000).toString();
 
 // OTP chỉ lưu dạng băm HMAC-SHA256 trong DB: lộ DB cũng không đọc được mã đang hiệu lực.
-const bamOtp = (otp) => crypto
-    .createHmac('sha256', process.env.JWT_SECRET || 'otp')
-    .update(String(otp))
-    .digest('hex');
+const bamOtp = (otp) =>
+    crypto
+        .createHmac('sha256', process.env.JWT_SECRET || 'otp')
+        .update(String(otp))
+        .digest('hex');
 
 // So sánh OTP người dùng nhập với giá trị đã lưu, thời gian so sánh không đổi (chống timing attack).
 const soSanhOtp = (giaTriDaLuu, otpNhap) => {
@@ -50,9 +51,8 @@ const kiemTraMatKhauManh = (matKhau) => {
 };
 
 // Chỉ nhận đường dẫn ảnh http(s) hoặc đường dẫn nội bộ "/..." (chặn javascript:, data: ...).
-const laUrlAnhHopLe = (url) => typeof url === 'string'
-    && url.length <= 500
-    && (/^https?:\/\//i.test(url) || /^\/[^/]/.test(url));
+const laUrlAnhHopLe = (url) =>
+    typeof url === 'string' && url.length <= 500 && (/^https?:\/\//i.test(url) || /^\/[^/]/.test(url));
 
 module.exports = {
     escapeRegex,

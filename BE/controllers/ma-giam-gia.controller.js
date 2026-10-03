@@ -183,11 +183,7 @@ const luuMaVoucherVaoVi = async (req, res) => {
         let user = req.user;
         if (!user || !user.save) {
             user = await NguoiDung.findOne({
-                $or: [
-                    { id: userId },
-                    { _id: userId },
-                    { email: req.user?.email }
-                ]
+                $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }]
             });
         }
         if (!user) {
@@ -233,7 +229,11 @@ const luuMaVoucherVaoVi = async (req, res) => {
             }
             voucherSauKhiLuu.phan_tram_da_dung = Math.min(
                 99,
-                Math.round(((voucherSauKhiLuu.so_luong_phat_hanh - voucherSauKhiLuu.so_luong_con_lai) / voucherSauKhiLuu.so_luong_phat_hanh) * 100)
+                Math.round(
+                    ((voucherSauKhiLuu.so_luong_phat_hanh - voucherSauKhiLuu.so_luong_con_lai) /
+                        voucherSauKhiLuu.so_luong_phat_hanh) *
+                        100
+                )
             );
             await voucherSauKhiLuu.save();
         }
@@ -274,11 +274,7 @@ const layViVoucherNguoiDung = async (req, res) => {
         let user = req.user;
         if (!user || !user.viVoucher) {
             user = await NguoiDung.findOne({
-                $or: [
-                    { id: userId },
-                    { _id: userId },
-                    { email: req.user?.email }
-                ]
+                $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }]
             });
         }
         if (!user) {

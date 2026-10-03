@@ -33,17 +33,18 @@ const taoWebhook = (data, chuKy) => ({
     signature: chuKy ?? taoChuKyPayOS(data, process.env.PAYOS_CHECKSUM_KEY)
 });
 
-const taoDonChoThanhToan = () => DonHang.create({
-    id: 'dh_test_1',
-    ma_don_hang: 'LPN-2026-TEST',
-    ngay_tao: '02/10/2026',
-    thong_tin_giao_hang: { so_dien_thoai: '0912345678', email: 'khach@gmail.com' },
-    tam_tinh: SO_TIEN,
-    tong_tien_thanh_toan: SO_TIEN,
-    hinh_thuc_thanh_toan: 'chuyen_khoan_vietqr',
-    trang_thai_thanh_toan: 'cho_thanh_toan',
-    payos_order_code: MA_PAYOS
-});
+const taoDonChoThanhToan = () =>
+    DonHang.create({
+        id: 'dh_test_1',
+        ma_don_hang: 'LPN-2026-TEST',
+        ngay_tao: '02/10/2026',
+        thong_tin_giao_hang: { so_dien_thoai: '0912345678', email: 'khach@gmail.com' },
+        tam_tinh: SO_TIEN,
+        tong_tien_thanh_toan: SO_TIEN,
+        hinh_thuc_thanh_toan: 'chuyen_khoan_vietqr',
+        trang_thai_thanh_toan: 'cho_thanh_toan',
+        payos_order_code: MA_PAYOS
+    });
 
 // Webhook cập nhật DB sau khi đã trả 200 cho PayOS → chờ một chút rồi mới đọc DB
 const choCapNhatNen = () => new Promise((resolve) => setTimeout(resolve, 200));
@@ -55,7 +56,9 @@ describe('POST /api/thanh-toan/webhook', () => {
     });
 
     test('thiếu chữ ký → 400', async () => {
-        const res = await request(app).post('/api/thanh-toan/webhook').send({ data: { orderCode: 1 } });
+        const res = await request(app)
+            .post('/api/thanh-toan/webhook')
+            .send({ data: { orderCode: 1 } });
 
         expect(res.status).toBe(400);
     });

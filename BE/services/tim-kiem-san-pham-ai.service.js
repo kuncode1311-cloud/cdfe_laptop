@@ -7,11 +7,27 @@
 const SanPham = require('../models/san-pham.model');
 
 // Danh sách các thương hiệu phổ biến được chuẩn hóa
-const DANH_SACH_HANG = ['asus', 'dell', 'hp', 'lenovo', 'acer', 'msi', 'apple', 'razer', 'logitech', 'anker', 'ugreen', 'samsung', 'kingston', 'tomtoc', 'moft'];
+const DANH_SACH_HANG = [
+    'asus',
+    'dell',
+    'hp',
+    'lenovo',
+    'acer',
+    'msi',
+    'apple',
+    'razer',
+    'logitech',
+    'anker',
+    'ugreen',
+    'samsung',
+    'kingston',
+    'tomtoc',
+    'moft'
+];
 
 /**
  * Phân tích câu hỏi của khách hàng để trích xuất các tiêu chí lọc sản phẩm
- * @param {string} cauHoi 
+ * @param {string} cauHoi
  * @returns {Object} Tiêu chí trích xuất
  */
 function phanTichYDinhCauHoi(cauHoi = '') {
@@ -57,7 +73,9 @@ function phanTichYDinhCauHoi(cauHoi = '') {
         tieuChi.danhMuc = 'sac-cap-hub';
         tieuChi.laPhuKien = true;
         tieuChi.hoiSac = true;
-    } else if (/tản nhiệt|tan nhiet|keo tản nhiệt|keo tan nhiet|sò lạnh|so lanh|giá đỡ|gia do|đế tản nhiệt|stand/i.test(text)) {
+    } else if (
+        /tản nhiệt|tan nhiet|keo tản nhiệt|keo tan nhiet|sò lạnh|so lanh|giá đỡ|gia do|đế tản nhiệt|stand/i.test(text)
+    ) {
         tieuChi.danhMuc = 'de-tan-gia-do';
         tieuChi.laPhuKien = true;
         tieuChi.hoiTanNhiet = true;
@@ -79,7 +97,11 @@ function phanTichYDinhCauHoi(cauHoi = '') {
 
     // 3. Nhận diện Danh mục Laptop nếu không hỏi phụ kiện
     if (!tieuChi.laPhuKien) {
-        if (/gaming|chơi game|choi game|chiến game|chien game|game thủ|game thu|pubg|valorant|lol|fifa|gta|chiến|do hoa game/i.test(text)) {
+        if (
+            /gaming|chơi game|choi game|chiến game|chien game|game thủ|game thu|pubg|valorant|lol|fifa|gta|chiến|do hoa game/i.test(
+                text
+            )
+        ) {
             tieuChi.danhMuc = 'gaming';
         } else if (/đồ họa|do hoa|render|photoshop|premiere|autocad|blender|3d|dựng phim/i.test(text)) {
             tieuChi.danhMuc = 'do-hoa-sang-tao';
@@ -93,7 +115,8 @@ function phanTichYDinhCauHoi(cauHoi = '') {
     }
 
     // 4. Nhận diện Mức giá / Ngân sách
-    const regexKhoangGia = /(?:từ|khoảng|tam|tầm)\s*(\d+)(?:\s*(?:đến|-|tới)\s*(\d+))?\s*(?:triệu|tr|củ|m|k|nghìn|ngàn)/i;
+    const regexKhoangGia =
+        /(?:từ|khoảng|tam|tầm)\s*(\d+)(?:\s*(?:đến|-|tới)\s*(\d+))?\s*(?:triệu|tr|củ|m|k|nghìn|ngàn)/i;
     const matchKhoangGia = text.match(regexKhoangGia);
     if (matchKhoangGia) {
         const dv = /k|nghìn|ngàn/i.test(matchKhoangGia[0]) ? 1000 : 1000000;
@@ -123,21 +146,36 @@ function phanTichYDinhCauHoi(cauHoi = '') {
     }
 
     // 5. Tách các từ khóa phần cứng hoặc linh phụ kiện
-    const regexPhanCung = /(rtx\s*\d{4}|core\s*i[3579]|ryzen\s*[3579]|ultra\s*[579]|16gb|32gb|64gb|oled|rog|tuf|legion|loq|vivobook|zenbook|thinkpad|inspiron|predator|nitro|victus|omen|macbook|sạc|chuột|bàn phím|tản nhiệt|balo|tai nghe|ssd|ram|keo|lót chuột)/gi;
+    const regexPhanCung =
+        /(rtx\s*\d{4}|core\s*i[3579]|ryzen\s*[3579]|ultra\s*[579]|16gb|32gb|64gb|oled|rog|tuf|legion|loq|vivobook|zenbook|thinkpad|inspiron|predator|nitro|victus|omen|macbook|sạc|chuột|bàn phím|tản nhiệt|balo|tai nghe|ssd|ram|keo|lót chuột)/gi;
     const matchPhanCung = text.match(regexPhanCung);
     if (matchPhanCung) {
-        tieuChi.tuKhoa = matchPhanCung.map(k => k.trim());
+        tieuChi.tuKhoa = matchPhanCung.map((k) => k.trim());
     }
 
     // 6. Nhận diện xem khách có thực sự muốn tìm kiếm / mua sản phẩm hay chỉ là chào hỏi xã giao
-    const laChaoHoiHoacXaGiao = /^(hi|hello|alo|chào|chao|ê|hey|tôi tên|mình tên|anh tên|em tên|bạn tên|shop ơi|ad ơi|admin ơi|chào shop|chào ad|chào em|chào bạn|hi shop|hi ad|hi pro|hi shop pro)[\s!.,?~]*$/i.test(text)
-        || /^(shop ở đâu|địa chỉ|mấy giờ|có ship không|chính sách|bảo hành|trả góp|hotline|liên hệ|ở đâu)[\s!.,?~]*$/i.test(text);
+    const laChaoHoiHoacXaGiao =
+        /^(hi|hello|alo|chào|chao|ê|hey|tôi tên|mình tên|anh tên|em tên|bạn tên|shop ơi|ad ơi|admin ơi|chào shop|chào ad|chào em|chào bạn|hi shop|hi ad|hi pro|hi shop pro)[\s!.,?~]*$/i.test(
+            text
+        ) ||
+        /^(shop ở đâu|địa chỉ|mấy giờ|có ship không|chính sách|bảo hành|trả góp|hotline|liên hệ|ở đâu)[\s!.,?~]*$/i.test(
+            text
+        );
 
-    const coTuKhoaTimKiem = /(mua|tìm|tim|tư vấn|tu van|giá|gia|bao nhiêu|báo giá|gợi ý|goi y|xem|có con nào|máy tính|laptop|chuột|phím|sạc|tai nghe|balo|tản nhiệt|ssd|ram|gear|phụ kiện)/i.test(text);
+    const coTuKhoaTimKiem =
+        /(mua|tìm|tim|tư vấn|tu van|giá|gia|bao nhiêu|báo giá|gợi ý|goi y|xem|có con nào|máy tính|laptop|chuột|phím|sạc|tai nghe|balo|tản nhiệt|ssd|ram|gear|phụ kiện)/i.test(
+            text
+        );
 
     tieuChi.coNhuCauSanPham = Boolean(
-        (tieuChi.hang || tieuChi.danhMuc || tieuChi.laPhuKien || tieuChi.giaMin !== null || tieuChi.giaMax !== null || tieuChi.tuKhoa.length > 0 || coTuKhoaTimKiem)
-        && !laChaoHoiHoacXaGiao
+        (tieuChi.hang ||
+            tieuChi.danhMuc ||
+            tieuChi.laPhuKien ||
+            tieuChi.giaMin !== null ||
+            tieuChi.giaMax !== null ||
+            tieuChi.tuKhoa.length > 0 ||
+            coTuKhoaTimKiem) &&
+        !laChaoHoiHoacXaGiao
     );
 
     return tieuChi;
@@ -147,8 +185,18 @@ function phanTichYDinhCauHoi(cauHoi = '') {
  * Kiểm tra xem một sản phẩm có phải phụ kiện / linh kiện hay không
  */
 function laPhuKienLinhKien(sp) {
-    const dm = (sp.danh_muc || []).map(d => String(d).toLowerCase());
-    return dm.some(d => d.includes('phu-kien') || d.includes('chuot') || d.includes('sac') || d.includes('balo') || d.includes('tai-nghe') || d.includes('de-tan') || d.includes('linh-kien') || d.includes('ban-phim'));
+    const dm = (sp.danh_muc || []).map((d) => String(d).toLowerCase());
+    return dm.some(
+        (d) =>
+            d.includes('phu-kien') ||
+            d.includes('chuot') ||
+            d.includes('sac') ||
+            d.includes('balo') ||
+            d.includes('tai-nghe') ||
+            d.includes('de-tan') ||
+            d.includes('linh-kien') ||
+            d.includes('ban-phim')
+    );
 }
 
 /**
@@ -203,8 +251,8 @@ function sapXepTheoYeuCau(danhSach, tieuChi, rawText) {
 
 /**
  * Tìm kiếm danh sách sản phẩm phù hợp nhất trong MongoDB hoặc Fallback
- * @param {string} cauHoiKhachHang 
- * @param {number} soLuongToiDa 
+ * @param {string} cauHoiKhachHang
+ * @param {number} soLuongToiDa
  * @returns {Promise<Array>} Danh sách sản phẩm đầy đủ
  */
 async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
@@ -231,13 +279,17 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
             if (tieuChi.danhMuc) {
                 if (tieuChi.laPhuKien) {
                     const orConditions = [{ danh_muc: tieuChi.danhMuc }];
-                    if (tieuChi.hoiBanPhim) orConditions.push({ ten_san_pham: { $regex: 'phím|keyboard', $options: 'i' } });
+                    if (tieuChi.hoiBanPhim)
+                        orConditions.push({ ten_san_pham: { $regex: 'phím|keyboard', $options: 'i' } });
                     if (tieuChi.hoiChuot) orConditions.push({ ten_san_pham: { $regex: 'chuột', $options: 'i' } });
-                    if (tieuChi.hoiLotChuot) orConditions.push({ ten_san_pham: { $regex: 'lót chuột|pad', $options: 'i' } });
+                    if (tieuChi.hoiLotChuot)
+                        orConditions.push({ ten_san_pham: { $regex: 'lót chuột|pad', $options: 'i' } });
                     if (tieuChi.hoiSac) orConditions.push({ ten_san_pham: { $regex: 'sạc|hub', $options: 'i' } });
-                    if (tieuChi.hoiTaiNghe) orConditions.push({ ten_san_pham: { $regex: 'tai nghe|loa', $options: 'i' } });
+                    if (tieuChi.hoiTaiNghe)
+                        orConditions.push({ ten_san_pham: { $regex: 'tai nghe|loa', $options: 'i' } });
                     if (tieuChi.hoiBalo) orConditions.push({ ten_san_pham: { $regex: 'balo|túi', $options: 'i' } });
-                    if (tieuChi.hoiTanNhiet) orConditions.push({ ten_san_pham: { $regex: 'tản nhiệt|giá đỡ', $options: 'i' } });
+                    if (tieuChi.hoiTanNhiet)
+                        orConditions.push({ ten_san_pham: { $regex: 'tản nhiệt|giá đỡ', $options: 'i' } });
                     filter.$or = orConditions;
                 } else {
                     filter.danh_muc = tieuChi.danhMuc;
@@ -251,12 +303,12 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
             }
 
             if (tieuChi.tuKhoa.length > 0 && !filter.$or) {
-                filter.$or = tieuChi.tuKhoa.map(kw => ({
+                filter.$or = tieuChi.tuKhoa.map((kw) => ({
                     ten_san_pham: { $regex: kw, $options: 'i' }
                 }));
             }
 
-            let query = SanPham.find(filter);
+            const query = SanPham.find(filter);
             const rawList = await query.limit(10).lean().exec();
             danhSachKetQua = sapXepTheoYeuCau(rawList, tieuChi, rawText).slice(0, soLuongToiDa);
         } catch (e) {
@@ -269,15 +321,15 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
 
 /**
  * Định dạng danh sách sản phẩm thành văn bản cô đọng đưa vào System Prompt
- * @param {Array} danhSachSanPham 
+ * @param {Array} danhSachSanPham
  * @returns {string}
  */
 function dinhDangNguCanhSanPham(danhSachSanPham = []) {
     if (!danhSachSanPham || danhSachSanPham.length === 0) {
-        return "Khách hàng hiện đang chào hỏi xã giao hoặc hỏi thông tin chung, CHƯA có nhu cầu xem sản phẩm cụ thể. Bạn tuyệt đối KHÔNG đề xuất sản phẩm nào (BẮT BUỘC để mảng \"id_san_pham_phu_hop\": [] rỗng).";
+        return 'Khách hàng hiện đang chào hỏi xã giao hoặc hỏi thông tin chung, CHƯA có nhu cầu xem sản phẩm cụ thể. Bạn tuyệt đối KHÔNG đề xuất sản phẩm nào (BẮT BUỘC để mảng "id_san_pham_phu_hop": [] rỗng).';
     }
 
-    let text = "=== DANH SÁCH MÃ SẢN PHẨM & PHỤ KIỆN CÓ SẴN TRONG KHO SHOWROOM ===\n";
+    let text = '=== DANH SÁCH MÃ SẢN PHẨM & PHỤ KIỆN CÓ SẴN TRONG KHO SHOWROOM ===\n';
     danhSachSanPham.forEach((sp, idx) => {
         const id = sp.id || sp.slug || sp._id;
         const ten = sp.ten_san_pham || 'Sản phẩm';

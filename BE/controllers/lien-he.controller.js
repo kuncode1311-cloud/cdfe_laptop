@@ -181,11 +181,7 @@ exports.capNhatLienHe = async (req, res) => {
         if (trang_thai) updateFields.trang_thai = trang_thai;
         if (ghi_chu_noi_bo !== undefined) updateFields.ghi_chu_noi_bo = ghi_chu_noi_bo;
 
-        const lienHe = await LienHe.findByIdAndUpdate(
-            id,
-            { $set: updateFields },
-            { returnDocument: 'after' }
-        );
+        const lienHe = await LienHe.findByIdAndUpdate(id, { $set: updateFields }, { returnDocument: 'after' });
 
         if (!lienHe) {
             return res.status(404).json({

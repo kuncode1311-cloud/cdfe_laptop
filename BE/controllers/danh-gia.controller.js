@@ -23,14 +23,17 @@ const layDanhGiaTheoSanPham = async (req, res) => {
         const danhSachDanhGia = await DanhGia.find(filter).sort(sortQuery).lean();
 
         // Tự động gộp tên sản phẩm từ bảng san_pham để Frontend hiển thị chuẩn 100% DB
-        const idsSanPham = [...new Set(danhSachDanhGia.map(dg => dg.id_san_pham).filter(Boolean))];
-        const danhSachSp = await SanPham.find({ id: { $in: idsSanPham } }, { id: 1, ten_san_pham: 1, hinh_anh_chinh: 1 }).lean();
+        const idsSanPham = [...new Set(danhSachDanhGia.map((dg) => dg.id_san_pham).filter(Boolean))];
+        const danhSachSp = await SanPham.find(
+            { id: { $in: idsSanPham } },
+            { id: 1, ten_san_pham: 1, hinh_anh_chinh: 1 }
+        ).lean();
         const banDoSanPham = {};
-        danhSachSp.forEach(sp => {
+        danhSachSp.forEach((sp) => {
             banDoSanPham[sp.id] = sp;
         });
 
-        const ketQua = danhSachDanhGia.map(dg => ({
+        const ketQua = danhSachDanhGia.map((dg) => ({
             ...dg,
             ho_ten: dg.ho_ten || dg.ten_nguoi_dung,
             ten_nguoi_dung: dg.ho_ten || dg.ten_nguoi_dung,
@@ -66,7 +69,9 @@ const themDanhGiaMoi = async (req, res) => {
         }
 
         const userId = String(req.user?.id || req.user?._id || '');
-        const userEmail = String(req.user?.email || '').trim().toLowerCase();
+        const userEmail = String(req.user?.email || '')
+            .trim()
+            .toLowerCase();
 
         // Chỉ xác định đơn của mình theo id tài khoản (email chỉ cho đơn cũ chưa gắn id).
         // Không dùng SĐT vì SĐT hồ sơ do người dùng tự khai, không được xác minh.
@@ -82,7 +87,7 @@ const themDanhGiaMoi = async (req, res) => {
         const donHangDaMua = await DonHang.findOne({
             trang_thai: 'da_giao',
             $or: dieuKienChuDon,
-            'danh_sach_san_pham': {
+            danh_sach_san_pham: {
                 $elemMatch: {
                     $or: [
                         { san_pham_id: idSanPham },
@@ -118,10 +123,15 @@ const themDanhGiaMoi = async (req, res) => {
             ten_nguoi_dung: req.user?.hoTen || req.user?.ho_ten || 'Khách hàng',
             avatar: req.user?.avatar || '',
             so_sao: soSao,
-            tieu_de: String(duLieuGuiLen.tieu_de || '').trim().slice(0, 120) || 'Khách hàng đánh giá sản phẩm',
+            tieu_de:
+                String(duLieuGuiLen.tieu_de || '')
+                    .trim()
+                    .slice(0, 120) || 'Khách hàng đánh giá sản phẩm',
             noi_dung: noiDung.slice(0, 1000),
             // Chỉ nhận URL ảnh http(s) hoặc đường dẫn nội bộ, chặn javascript:/data: (XSS)
-            hinh_anh_dinh_kem: Array.isArray(duLieuGuiLen.hinh_anh_dinh_kem) ? duLieuGuiLen.hinh_anh_dinh_kem.filter(laUrlAnhHopLe).slice(0, 5) : [],
+            hinh_anh_dinh_kem: Array.isArray(duLieuGuiLen.hinh_anh_dinh_kem)
+                ? duLieuGuiLen.hinh_anh_dinh_kem.filter(laUrlAnhHopLe).slice(0, 5)
+                : [],
             da_mua_hang: true,
             luot_thich: 0,
             thoi_gian_dung: String(duLieuGuiLen.thoi_gian_dung || 'Khách vừa nhận hàng').slice(0, 80)

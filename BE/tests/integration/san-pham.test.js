@@ -24,7 +24,13 @@ describe('Xem sản phẩm (công khai)', () => {
 
     test('tìm kiếm theo từ khóa và lọc theo hãng', async () => {
         await taoSanPham();
-        await taoSanPham({ id: 'dell-xps', slug: 'dell-xps', ma_san_pham: 'XPS', ten_san_pham: 'Dell XPS 13', hang_san_xuat: 'dell' });
+        await taoSanPham({
+            id: 'dell-xps',
+            slug: 'dell-xps',
+            ma_san_pham: 'XPS',
+            ten_san_pham: 'Dell XPS 13',
+            hang_san_xuat: 'dell'
+        });
 
         const theoTuKhoa = await request(app).get('/api/san-pham').query({ tu_khoa: 'xps' });
         const theoHang = await request(app).get('/api/san-pham').query({ hang_san_xuat: 'asus' });

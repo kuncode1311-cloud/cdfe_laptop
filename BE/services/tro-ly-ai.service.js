@@ -13,7 +13,8 @@ const { timKiemSanPhamPhuHop, dinhDangNguCanhSanPham, phanTichYDinhCauHoi } = re
 function bocTachJsonTuAi(vanBan) {
     if (!vanBan || typeof vanBan !== 'string') return null;
 
-    let textClean = vanBan.trim()
+    const textClean = vanBan
+        .trim()
         .replace(/^```(?:json)?/gim, '')
         .replace(/```$/gim, '')
         .trim();
@@ -21,19 +22,25 @@ function bocTachJsonTuAi(vanBan) {
     // 1. Thử parse trực tiếp
     try {
         return JSON.parse(textClean);
-    } catch {}
+    } catch {
+        // Không phải JSON thuần → thử các cách bóc tách bên dưới
+    }
 
     // 2. Tìm và parse khối JSON {...}
     const matchKhoiJson = textClean.match(/\{[\s\S]*\}/);
     if (matchKhoiJson) {
         try {
             return JSON.parse(matchKhoiJson[0]);
-        } catch {}
+        } catch {
+            // Khối {...} chưa parse được → thử sửa ký tự escape lỗi ngay bên dưới
+        }
 
         try {
-            const textFixed = matchKhoiJson[0].replace(/\\([^"\\\/bfnrtu])/g, '$1');
+            const textFixed = matchKhoiJson[0].replace(/\\([^"\\/bfnrtu])/g, '$1');
             return JSON.parse(textFixed);
-        } catch {}
+        } catch {
+            // Vẫn lỗi → rơi xuống bước bóc tách bằng regex
+        }
     }
 
     // 3. Fallback bóc tách bằng Regex nếu JSON bị lỗi cú pháp nhỏ
@@ -42,31 +49,30 @@ function bocTachJsonTuAi(vanBan) {
         let idSanPham = [];
         let goiY = [];
 
-        const matchCauTraLoi = textClean.match(/"cau_tra_loi"\s*:\s*"([\s\S]*?)"\s*,\s*"(?:id_san_pham_phu_hop|goi_y_tiep_theo)/);
+        const matchCauTraLoi = textClean.match(
+            /"cau_tra_loi"\s*:\s*"([\s\S]*?)"\s*,\s*"(?:id_san_pham_phu_hop|goi_y_tiep_theo)/
+        );
         if (matchCauTraLoi) {
             cauTraLoi = matchCauTraLoi[1];
         } else {
-            const matchCauTraLoiDon = textClean.match(/"cau_tra_loi"\s*:\s*"([\s\S]*?)"\s*[\},]/);
+            const matchCauTraLoiDon = textClean.match(/"cau_tra_loi"\s*:\s*"([\s\S]*?)"\s*[},]/);
             if (matchCauTraLoiDon) {
                 cauTraLoi = matchCauTraLoiDon[1];
             }
         }
 
         if (cauTraLoi) {
-            cauTraLoi = cauTraLoi
-                .replace(/\\n/g, '\n')
-                .replace(/\\"/g, '"')
-                .replace(/\\\\/g, '\\');
+            cauTraLoi = cauTraLoi.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
         }
 
         const matchIds = textClean.match(/"id_san_pham_phu_hop"\s*:\s*\[(.*?)\]/s);
         if (matchIds) {
-            idSanPham = (matchIds[1].match(/"([^"]+)"/g) || []).map(s => s.replace(/"/g, ''));
+            idSanPham = (matchIds[1].match(/"([^"]+)"/g) || []).map((s) => s.replace(/"/g, ''));
         }
 
         const matchGoiY = textClean.match(/"goi_y_tiep_theo"\s*:\s*\[(.*?)\]/s);
         if (matchGoiY) {
-            goiY = (matchGoiY[1].match(/"([^"]+)"/g) || []).map(s => s.replace(/"/g, ''));
+            goiY = (matchGoiY[1].match(/"([^"]+)"/g) || []).map((s) => s.replace(/"/g, ''));
         }
 
         if (cauTraLoi) {
@@ -76,7 +82,9 @@ function bocTachJsonTuAi(vanBan) {
                 goi_y_tiep_theo: goiY
             };
         }
-    } catch {}
+    } catch {
+        // Bóc tách bằng regex cũng thất bại → trả null để nơi gọi dùng câu trả lời dự phòng
+    }
 
     return null;
 }
@@ -198,13 +206,23 @@ function layCauTraLoiDangSinh(raw) {
     let end = start;
     for (; end < raw.length; end++) {
         const char = raw[end];
-        if (escaped) { escaped = false; continue; }
-        if (char === '\\') { escaped = true; continue; }
+        if (escaped) {
+            escaped = false;
+            continue;
+        }
+        if (char === '\\') {
+            escaped = true;
+            continue;
+        }
         if (char === '"') break;
     }
     let value = raw.slice(start, end);
     if (value.endsWith('\\')) value = value.slice(0, -1);
-    try { return JSON.parse(`"${value}"`); } catch { return ''; }
+    try {
+        return JSON.parse(`"${value}"`);
+    } catch {
+        return '';
+    }
 }
 
 function cheGiauApiKey(key) {
@@ -293,7 +311,6 @@ QUY TẮC BẮT BUỘC:
             }
         };
         let phanHoiText;
-        let nhaCungCap = 'Gemini';
         let batDauGoiAi = Date.now();
         const cauHinh9R = layCauHinhNineRouter();
 
@@ -301,15 +318,16 @@ QUY TẮC BẮT BUỘC:
             try {
                 phanHoiText = await goiNineRouter({
                     ...yeuCauAi,
-                    onChunk: onText ? raw => {
-                        const text = layCauTraLoiDangSinh(raw);
-                        if (text) onText(text);
-                    } : undefined
+                    onChunk: onText
+                        ? (raw) => {
+                              const text = layCauTraLoiDangSinh(raw);
+                              if (text) onText(text);
+                          }
+                        : undefined
                 });
                 if (!bocTachJsonTuAi(phanHoiText)?.cau_tra_loi) {
                     throw new Error('9Router trả về sai định dạng phản hồi chatbot');
                 }
-                nhaCungCap = '9Router';
                 const thoiGianGoi = Date.now() - batDauGoiAi;
                 thongTinKetNoi = {
                     provider: '9Router',
@@ -319,7 +337,9 @@ QUY TẮC BẮT BUỘC:
                     thoi_gian_tong_ms: Date.now() - batDauToanBo
                 };
             } catch (loiRouter) {
-                console.warn(`[Trợ lý AI] 9Router lỗi sau ${Date.now() - batDauGoiAi}ms (${loiRouter.message}); thử Gemini.`);
+                console.warn(
+                    `[Trợ lý AI] 9Router lỗi sau ${Date.now() - batDauGoiAi}ms (${loiRouter.message}); thử Gemini.`
+                );
                 batDauGoiAi = Date.now();
                 phanHoiText = await goiGeminiXoayKey(yeuCauAi);
                 const thoiGianGoi = Date.now() - batDauGoiAi;
@@ -342,7 +362,9 @@ QUY TẮC BẮT BUỘC:
                 thoi_gian_tong_ms: Date.now() - batDauToanBo
             };
         }
-        console.info(`[Trợ lý AI] tra_cuu=${thoiGianTraCuu}ms ai=${thongTinKetNoi.thoi_gian_ai_ms}ms provider=${thongTinKetNoi.provider} model=${thongTinKetNoi.model}`);
+        console.info(
+            `[Trợ lý AI] tra_cuu=${thoiGianTraCuu}ms ai=${thongTinKetNoi.thoi_gian_ai_ms}ms provider=${thongTinKetNoi.provider} model=${thongTinKetNoi.model}`
+        );
 
         const duLieuJson = bocTachJsonTuAi(phanHoiText);
 
@@ -360,7 +382,7 @@ QUY TẮC BẮT BUỘC:
     } catch (loiAi) {
         console.error('❌ [Trợ lý AI Service] Lỗi gọi AI:', loiAi.message);
         cauTraLoiCuoiCung = taoCauPhanHoiFallback(tieuChi);
-        danhSachIdGoiY = tieuChi.coNhuCauSanPham ? danhSachSanPhamThucTe.slice(0, 3).map(sp => sp.id || sp.slug) : [];
+        danhSachIdGoiY = tieuChi.coNhuCauSanPham ? danhSachSanPhamThucTe.slice(0, 3).map((sp) => sp.id || sp.slug) : [];
         thongTinKetNoi = {
             provider: 'HeThong (Offline Fallback)',
             model: 'LuatQuyTac',
@@ -375,11 +397,11 @@ QUY TẮC BẮT BUỘC:
     let sanPhamGoiYChiTiet = [];
 
     if (danhSachIdGoiY.length > 0 && danhSachSanPhamThucTe.length > 0) {
-        sanPhamGoiYChiTiet = danhSachSanPhamThucTe.filter(sp => {
+        sanPhamGoiYChiTiet = danhSachSanPhamThucTe.filter((sp) => {
             const spId = String(sp.id || '').toLowerCase();
             const spSlug = String(sp.slug || '').toLowerCase();
             const spOid = String(sp._id || '').toLowerCase();
-            return danhSachIdGoiY.some(id => {
+            return danhSachIdGoiY.some((id) => {
                 const target = String(id).toLowerCase();
                 return spId === target || spSlug === target || spOid === target;
             });
@@ -392,7 +414,7 @@ QUY TẮC BẮT BUỘC:
     }
 
     // Chuẩn hóa dữ liệu trả về cho Frontend
-    const sanPhamCards = sanPhamGoiYChiTiet.map(sp => ({
+    const sanPhamCards = sanPhamGoiYChiTiet.map((sp) => ({
         id: sp.id || sp.slug,
         slug: sp.slug || sp.id,
         ten_san_pham: sp.ten_san_pham,

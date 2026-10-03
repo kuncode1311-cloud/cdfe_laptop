@@ -13,14 +13,19 @@ const { guiThongBaoDonHangTelegram } = require('../services/telegram-bot.service
 const chiGiuSo = (value = '') => String(value || '').replace(/\D/g, '');
 
 const cheTen = (value = '') => {
-    const words = String(value || '').trim().split(/\s+/).filter(Boolean);
+    const words = String(value || '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
     if (words.length === 0) return '';
-    return words.map((word, index) => {
-        if (index === 0 || index === words.length - 1) {
-            return `${word.charAt(0)}${'*'.repeat(Math.max(1, word.length - 1))}`;
-        }
-        return `${word.charAt(0)}***`;
-    }).join(' ');
+    return words
+        .map((word, index) => {
+            if (index === 0 || index === words.length - 1) {
+                return `${word.charAt(0)}${'*'.repeat(Math.max(1, word.length - 1))}`;
+            }
+            return `${word.charAt(0)}***`;
+        })
+        .join(' ');
 };
 
 const cheSoDienThoai = (value = '') => {
@@ -76,8 +81,12 @@ const laChuSoHuuDon = (user, donHang) => {
     if (idDon) {
         return idDon === String(user.id || '') || idDon === String(user._id || '');
     }
-    const userEmail = String(user.email || '').trim().toLowerCase();
-    const donEmail = String(donHang.thong_tin_giao_hang?.email || '').trim().toLowerCase();
+    const userEmail = String(user.email || '')
+        .trim()
+        .toLowerCase();
+    const donEmail = String(donHang.thong_tin_giao_hang?.email || '')
+        .trim()
+        .toLowerCase();
     return !!userEmail && userEmail === donEmail;
 };
 
@@ -91,7 +100,9 @@ const laChuDonHang = (req, donHang) => {
 const dieuKienDonCuaToi = (user) => {
     const dieuKien = [{ id_nguoi_dung: String(user.id || '') }];
     if (user._id) dieuKien.push({ id_nguoi_dung: String(user._id) });
-    const email = String(user.email || '').trim().toLowerCase();
+    const email = String(user.email || '')
+        .trim()
+        .toLowerCase();
     if (email) {
         dieuKien.push({
             'thong_tin_giao_hang.email': email,
@@ -112,7 +123,13 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
     for (const item of danhSachSanPham) {
         try {
             const soLuong = Math.max(1, Number(item.so_luong) || 1);
-            const spId = item.san_pham_id || item.san_pham?.id || item.san_pham?._id || item.san_pham?.ma_san_pham || item.id_muc || (typeof item.san_pham === 'string' ? item.san_pham : null);
+            const spId =
+                item.san_pham_id ||
+                item.san_pham?.id ||
+                item.san_pham?._id ||
+                item.san_pham?.ma_san_pham ||
+                item.id_muc ||
+                (typeof item.san_pham === 'string' ? item.san_pham : null);
 
             if (!spId && !item.ten_san_pham) continue;
 
@@ -134,7 +151,10 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
             }
 
             if (!sp) {
-                console.warn(`⚠️ [Kho] Không tìm thấy sản phẩm trong DB để cập nhật tồn kho:`, spId || item.ten_san_pham);
+                console.warn(
+                    `⚠️ [Kho] Không tìm thấy sản phẩm trong DB để cập nhật tồn kho:`,
+                    spId || item.ten_san_pham
+                );
                 continue;
             }
 
@@ -159,7 +179,9 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
                         }
                     }
                 }
-                console.log(`📦 [Kho] ĐÃ TRỪ TỒN KHO: "${sp.ten_san_pham}" (-${soLuong}) | Còn lại: ${sp.so_luong_ton_kho} | Đã bán: ${sp.so_luong_da_ban}`);
+                console.log(
+                    `📦 [Kho] ĐÃ TRỪ TỒN KHO: "${sp.ten_san_pham}" (-${soLuong}) | Còn lại: ${sp.so_luong_ton_kho} | Đã bán: ${sp.so_luong_da_ban}`
+                );
             } else if (thaoTac === 'hoan') {
                 // Hoàn lại tồn kho, giảm số lượng đã bán
                 sp.so_luong_ton_kho = (Number(sp.so_luong_ton_kho) || 0) + soLuong;
@@ -172,7 +194,9 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
                 if (Array.isArray(sp.ton_kho) && sp.ton_kho.length > 0) {
                     sp.ton_kho[0].so_luong_con = (Number(sp.ton_kho[0].so_luong_con) || 0) + soLuong;
                 }
-                console.log(`↩️ [Kho] ĐÃ HOÀN TỒN KHO: "${sp.ten_san_pham}" (+${soLuong}) | Tồn kho mới: ${sp.so_luong_ton_kho} | Đã bán: ${sp.so_luong_da_ban}`);
+                console.log(
+                    `↩️ [Kho] ĐÃ HOÀN TỒN KHO: "${sp.ten_san_pham}" (+${soLuong}) | Tồn kho mới: ${sp.so_luong_ton_kho} | Đã bán: ${sp.so_luong_da_ban}`
+                );
             }
 
             await sp.save();
@@ -209,9 +233,12 @@ const taoDonHangMoi = async (req, res) => {
         }
 
         // Chuẩn hóa thông tin giao hàng: chỉ nhận chuỗi, cắt độ dài, kiểm tra SĐT Việt Nam
-        const ttGoc = (duLieuDonHang.thong_tin_giao_hang && typeof duLieuDonHang.thong_tin_giao_hang === 'object')
-            ? duLieuDonHang.thong_tin_giao_hang : {};
-        const chuoi = (v, max = 255) => (typeof v === 'string' || typeof v === 'number') ? String(v).trim().slice(0, max) : '';
+        const ttGoc =
+            duLieuDonHang.thong_tin_giao_hang && typeof duLieuDonHang.thong_tin_giao_hang === 'object'
+                ? duLieuDonHang.thong_tin_giao_hang
+                : {};
+        const chuoi = (v, max = 255) =>
+            typeof v === 'string' || typeof v === 'number' ? String(v).trim().slice(0, max) : '';
         const ten = chuoi(ttGoc.ho_ten || ttGoc.ho_va_ten, 100);
         duLieuDonHang.thong_tin_giao_hang = {
             ho_ten: ten,
@@ -225,7 +252,9 @@ const taoDonHangMoi = async (req, res) => {
             ghi_chu: chuoi(ttGoc.ghi_chu, 500)
         };
         if (!laAdmin && (!ten || !/^(0|\+84)[0-9]{9}$/.test(duLieuDonHang.thong_tin_giao_hang.so_dien_thoai))) {
-            return res.status(400).json({ thong_diep: 'Vui lòng nhập họ tên và số điện thoại nhận hàng hợp lệ (10 số).' });
+            return res
+                .status(400)
+                .json({ thong_diep: 'Vui lòng nhập họ tên và số điện thoại nhận hàng hợp lệ (10 số).' });
         }
 
         if (!laAdmin) {
@@ -245,7 +274,9 @@ const taoDonHangMoi = async (req, res) => {
                 if (mongoose.Types.ObjectId.isValid(idSanPham)) dieuKien.push({ _id: idSanPham });
                 const sanPham = idSanPham ? await SanPham.findOne({ $or: dieuKien }) : null;
                 if (!sanPham || !sanPham.con_hang) {
-                    return res.status(400).json({ thong_diep: `Sản phẩm ${idSanPham || 'không xác định'} không tồn tại hoặc đã hết hàng.` });
+                    return res.status(400).json({
+                        thong_diep: `Sản phẩm ${idSanPham || 'không xác định'} không tồn tại hoặc đã hết hàng.`
+                    });
                 }
 
                 const soLuong = Math.min(10, Math.max(1, Math.floor(Number(item.so_luong) || 1)));
@@ -258,11 +289,15 @@ const taoDonHangMoi = async (req, res) => {
                     ? (sanPham.tuy_chon_phien_ban || []).find((x) => x.ma_tuy_chon === maTuyChon)
                     : null;
                 if (maTuyChon && !tuyChon) {
-                    return res.status(400).json({ thong_diep: `Tùy chọn của sản phẩm "${sanPham.ten_san_pham}" không hợp lệ.` });
+                    return res
+                        .status(400)
+                        .json({ thong_diep: `Tùy chọn của sản phẩm "${sanPham.ten_san_pham}" không hợp lệ.` });
                 }
 
-                const donGia = Math.max(0, Number(sanPham.gia_khuyen_mai || sanPham.gia_goc || 0)
-                    + Number(tuyChon?.chenh_lech_gia || 0));
+                const donGia = Math.max(
+                    0,
+                    Number(sanPham.gia_khuyen_mai || sanPham.gia_goc || 0) + Number(tuyChon?.chenh_lech_gia || 0)
+                );
                 const tongTienMuc = donGia * soLuong;
                 tamTinhServer += tongTienMuc;
                 danhSachDaXacMinh.push({
@@ -286,15 +321,20 @@ const taoDonHangMoi = async (req, res) => {
             }
 
             let tienGiamServer = 0;
-            const maGiamGia = String(duLieuDonHang.ma_giam_gia || '').trim().toUpperCase();
+            const maGiamGia = String(duLieuDonHang.ma_giam_gia || '')
+                .trim()
+                .toUpperCase();
             if (maGiamGia) {
                 const voucher = await MaGiamGia.findOne({ ma_code: maGiamGia, kich_hoat: true });
                 if (!voucher || tamTinhServer < Number(voucher.don_hang_toi_thieu || 0)) {
-                    return res.status(400).json({ thong_diep: 'Mã giảm giá không hợp lệ hoặc đơn hàng chưa đạt giá trị tối thiểu.' });
+                    return res
+                        .status(400)
+                        .json({ thong_diep: 'Mã giảm giá không hợp lệ hoặc đơn hàng chưa đạt giá trị tối thiểu.' });
                 }
-                tienGiamServer = voucher.loai_giam === 'phan_tram'
-                    ? Math.round(tamTinhServer * Number(voucher.gia_tri_giam || 0) / 100)
-                    : Number(voucher.gia_tri_giam || 0);
+                tienGiamServer =
+                    voucher.loai_giam === 'phan_tram'
+                        ? Math.round((tamTinhServer * Number(voucher.gia_tri_giam || 0)) / 100)
+                        : Number(voucher.gia_tri_giam || 0);
                 if (voucher.giam_toi_da > 0) tienGiamServer = Math.min(tienGiamServer, voucher.giam_toi_da);
                 tienGiamServer = Math.min(tamTinhServer, Math.max(0, tienGiamServer));
             }
@@ -317,11 +357,24 @@ const taoDonHangMoi = async (req, res) => {
         }
 
         // Chuẩn hóa trạng thái thanh toán theo enum hợp lệ
-        const trangThaiHopLe = ['chua_thanh_toan', 'cho_thanh_toan', 'da_thanh_toan', 'that_bai', 'thanh_toan_khi_nhan_hang'];
-        if (!laAdmin || !duLieuDonHang.trang_thai_thanh_toan || !trangThaiHopLe.includes(duLieuDonHang.trang_thai_thanh_toan)) {
-            duLieuDonHang.trang_thai_thanh_toan = (duLieuDonHang.hinh_thuc_thanh_toan === 'tien_mat_cod' || duLieuDonHang.hinh_thuc_thanh_toan === 'cod')
-                ? 'thanh_toan_khi_nhan_hang'
-                : (duLieuDonHang.da_thanh_toan ? 'da_thanh_toan' : 'cho_thanh_toan');
+        const trangThaiHopLe = [
+            'chua_thanh_toan',
+            'cho_thanh_toan',
+            'da_thanh_toan',
+            'that_bai',
+            'thanh_toan_khi_nhan_hang'
+        ];
+        if (
+            !laAdmin ||
+            !duLieuDonHang.trang_thai_thanh_toan ||
+            !trangThaiHopLe.includes(duLieuDonHang.trang_thai_thanh_toan)
+        ) {
+            duLieuDonHang.trang_thai_thanh_toan =
+                duLieuDonHang.hinh_thuc_thanh_toan === 'tien_mat_cod' || duLieuDonHang.hinh_thuc_thanh_toan === 'cod'
+                    ? 'thanh_toan_khi_nhan_hang'
+                    : duLieuDonHang.da_thanh_toan
+                      ? 'da_thanh_toan'
+                      : 'cho_thanh_toan';
         }
 
         // Chỉ Admin mới có thể tạo trực tiếp đơn đã giao.
@@ -336,13 +389,15 @@ const taoDonHangMoi = async (req, res) => {
         const donHangMoi = new DonHang(duLieuDonHang);
         const ketQua = await donHangMoi.save();
 
-        console.log(`📦 Tạo đơn hàng mới thành công: ${ketQua.ma_don_hang} | ID User: ${ketQua.id_nguoi_dung} | Hình thức: ${ketQua.hinh_thuc_thanh_toan} | Trạng thái TT: ${ketQua.trang_thai_thanh_toan}`);
+        console.log(
+            `📦 Tạo đơn hàng mới thành công: ${ketQua.ma_don_hang} | ID User: ${ketQua.id_nguoi_dung} | Hình thức: ${ketQua.hinh_thuc_thanh_toan} | Trạng thái TT: ${ketQua.trang_thai_thanh_toan}`
+        );
 
         // Tự động gửi email xác nhận đơn hàng kèm hóa đơn chi tiết cho khách
-        guiMailXacNhanDonHang(ketQua).catch(err => console.warn('⚠️ Lỗi gửi email xác nhận:', err.message));
+        guiMailXacNhanDonHang(ketQua).catch((err) => console.warn('⚠️ Lỗi gửi email xác nhận:', err.message));
 
         // Tự động bắn thông báo Realtime kèm nút duyệt đơn về Bot Telegram Quản trị viên
-        guiThongBaoDonHangTelegram(ketQua).catch(err => console.warn('⚠️ Lỗi gửi thông báo Telegram:', err.message));
+        guiThongBaoDonHangTelegram(ketQua).catch((err) => console.warn('⚠️ Lỗi gửi thông báo Telegram:', err.message));
 
         return res.status(201).json(ketQua);
     } catch (loi) {
@@ -407,10 +462,7 @@ const layDonHangTheoIdHoacMa = async (req, res) => {
         const sdtXacMinh = chiGiuSo(req.query.sdt || req.query.so_dien_thoai || '');
         const cleanIdRegex = cleanId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-        const queryList = [
-            { id: cleanId },
-            { ma_don_hang: { $regex: `^${cleanIdRegex}$`, $options: 'i' } }
-        ];
+        const queryList = [{ id: cleanId }, { ma_don_hang: { $regex: `^${cleanIdRegex}$`, $options: 'i' } }];
 
         // Nếu là số: tìm theo payos_order_code hoặc mã đơn chứa số
         if (!isNaN(Number(cleanId))) {
@@ -427,7 +479,7 @@ const layDonHangTheoIdHoacMa = async (req, res) => {
             queryList.push({ _id: cleanId });
         }
 
-        let donHang = await DonHang.findOne({ $or: queryList });
+        const donHang = await DonHang.findOne({ $or: queryList });
 
         if (!donHang) {
             return res.status(404).json({ thong_diep: `Không tìm thấy đơn hàng với mã/id: ${cleanId}` });
@@ -443,8 +495,9 @@ const layDonHangTheoIdHoacMa = async (req, res) => {
             });
         }
 
-        const maDonDuocNhap = String(donHang.ma_don_hang || '').toLowerCase() === cleanId.toLowerCase()
-            || String(donHang.id || '').toLowerCase() === cleanId.toLowerCase();
+        const maDonDuocNhap =
+            String(donHang.ma_don_hang || '').toLowerCase() === cleanId.toLowerCase() ||
+            String(donHang.id || '').toLowerCase() === cleanId.toLowerCase();
         const sdtKhach = chiGiuSo(donHang.thong_tin_giao_hang?.so_dien_thoai || '');
 
         if (!maDonDuocNhap || !sdtXacMinh || sdtXacMinh !== sdtKhach) {
@@ -467,7 +520,9 @@ const capNhatTrangThaiDonHang = async (req, res) => {
         const { id } = req.params;
         const duLieuCapNhat = { ...(req.body || {}) };
         // Các trường do hệ thống quản lý, client (kể cả Admin) không được ghi đè trực tiếp
-        ['_id', 'id', 'ma_don_hang', 'id_nguoi_dung', 'da_tru_ton_kho', 'createdAt', 'updatedAt'].forEach(k => delete duLieuCapNhat[k]);
+        ['_id', 'id', 'ma_don_hang', 'id_nguoi_dung', 'da_tru_ton_kho', 'createdAt', 'updatedAt'].forEach(
+            (k) => delete duLieuCapNhat[k]
+        );
 
         // 1. Tìm đơn hàng hiện tại trong MongoDB trước khi cập nhật
         let donHangHienTai = await DonHang.findOne({
@@ -501,7 +556,8 @@ const capNhatTrangThaiDonHang = async (req, res) => {
 
             if (Object.keys(filteredUpdate).length === 0) {
                 return res.status(403).json({
-                    thong_diep: 'Khách hàng chỉ được hủy đơn khi đơn còn ở trạng thái chờ xác nhận. Trạng thái thanh toán do hệ thống hoặc Admin cập nhật.'
+                    thong_diep:
+                        'Khách hàng chỉ được hủy đơn khi đơn còn ở trạng thái chờ xác nhận. Trạng thái thanh toán do hệ thống hoặc Admin cập nhật.'
                 });
             }
 
@@ -515,9 +571,10 @@ const capNhatTrangThaiDonHang = async (req, res) => {
 
         // Admin: Cho phép cập nhật toàn quyền, bao gồm trạng thái giao hàng và tồn kho
         const trangThaiMoi = duLieuCapNhat.trang_thai;
-        const danhSachSp = (Array.isArray(duLieuCapNhat.danh_sach_san_pham) && duLieuCapNhat.danh_sach_san_pham.length > 0)
-            ? duLieuCapNhat.danh_sach_san_pham
-            : donHangHienTai.danh_sach_san_pham || [];
+        const danhSachSp =
+            Array.isArray(duLieuCapNhat.danh_sach_san_pham) && duLieuCapNhat.danh_sach_san_pham.length > 0
+                ? duLieuCapNhat.danh_sach_san_pham
+                : donHangHienTai.danh_sach_san_pham || [];
 
         // 2. Logic trừ / hoàn kho chuẩn xác 2 chiều theo trạng thái (thao tác nguyên tử, chống trừ kho 2 lần)
         if (trangThaiMoi) {

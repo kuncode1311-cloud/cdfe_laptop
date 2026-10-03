@@ -1,5 +1,5 @@
 const DonHang = require('../models/don-hang.model');
-const SanPham = require('../models/san-pham.model');
+require('../models/san-pham.model'); // chỉ để đăng ký model SanPham với Mongoose
 
 /**
  * Tra cứu thời hạn bảo hành điện tử theo:
@@ -12,7 +12,7 @@ const traCuuBaoHanh = async (req, res) => {
     try {
         const tuKhoa = (req.query.tu_khoa || req.query.q || '').trim();
         const maDonXacMinh = String(req.query.ma_don_hang || req.query.maDonHang || '').trim();
-        
+
         // 1. Kiểm tra tính hợp lệ: Tối thiểu 3 ký tự
         if (!tuKhoa || tuKhoa.length < 3) {
             return res.status(200).json({
@@ -79,7 +79,7 @@ const traCuuBaoHanh = async (req, res) => {
 
                 const hoTen = dh.thong_tin_giao_hang?.ho_ten || dh.thong_tin_giao_hang?.ho_va_ten || 'Khách Hàng';
 
-                for (const item of (dh.danh_sach_san_pham || [])) {
+                for (const item of dh.danh_sach_san_pham || []) {
                     const sp = item.san_pham || {};
                     const thoiGianBHThang = 24; // Mặc định 24 tháng cho Laptop chính hãng
                     const ngayHetHan = new Date(ngayMua);
@@ -90,7 +90,8 @@ const traCuuBaoHanh = async (req, res) => {
                     const diffTime = ngayHetHan.getTime() - now.getTime();
                     const soThangConLai = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30)));
 
-                    const serialMay = item.so_serial || `${sp.ma_san_pham || 'LPN'}-${dh.ma_don_hang?.replace('LPN-', '') || '8899'}`;
+                    const serialMay =
+                        item.so_serial || `${sp.ma_san_pham || 'LPN'}-${dh.ma_don_hang?.replace('LPN-', '') || '8899'}`;
 
                     danhSachKetQua.push({
                         hop_le: true,
@@ -100,7 +101,10 @@ const traCuuBaoHanh = async (req, res) => {
                         so_serial: serialMay,
                         ma_san_pham: sp.ma_san_pham || 'CHÍNH HÃNG',
                         ten_san_pham: item.ten_san_pham || sp.ten_san_pham || 'Laptop Chính Hãng',
-                        hinh_anh: item.hinh_anh || sp.hinh_anh_chinh || (Array.isArray(sp.hinh_anh) ? sp.hinh_anh[0] : '/images/asus_rog_scar18.jpg'),
+                        hinh_anh:
+                            item.hinh_anh ||
+                            sp.hinh_anh_chinh ||
+                            (Array.isArray(sp.hinh_anh) ? sp.hinh_anh[0] : '/images/asus_rog_scar18.jpg'),
                         hang_san_xuat: (sp.hang_san_xuat || 'TNTP').toUpperCase(),
                         khach_hang: hoTen,
                         so_dien_thoai: sdtMasked,
@@ -136,7 +140,6 @@ const traCuuBaoHanh = async (req, res) => {
             thong_diep: `Không tìm thấy thông tin bảo hành cho mã "${tuKhoa}". Quý khách vui lòng kiểm tra lại Số Serial trên máy, Mã đơn hàng hoặc Số điện thoại mua hàng.`,
             danh_sach: []
         });
-
     } catch (loi) {
         console.error('Lỗi tra cứu bảo hành:', loi);
         return res.status(500).json({

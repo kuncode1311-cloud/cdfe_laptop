@@ -12,11 +12,6 @@ module.exports = {
     // Lần đầu chạy, mongodb-memory-server cần tải MongoDB nên cho phép thời gian dài hơn
     testTimeout: 60000,
     // Chỉ đo độ phủ ở mã nghiệp vụ, bỏ qua script nạp dữ liệu và tài liệu
-    collectCoverageFrom: [
-        'controllers/**/*.js',
-        'middleware/**/*.js',
-        'utils/**/*.js',
-        'app.js'
-    ],
+    collectCoverageFrom: ['controllers/**/*.js', 'middleware/**/*.js', 'utils/**/*.js', 'app.js'],
     coverageReporters: ['text-summary', 'lcov']
 };

@@ -142,8 +142,12 @@ const nhanDienNguoiDungMem = async (req, res, next) => {
 
         const decoded = jwt.verify(token, secret, { algorithms: ['HS256'] });
         const nguoiDung = await NguoiDung.findOne({ $or: [{ id: decoded.userId }, { email: decoded.email }] });
-        if (nguoiDung && !nguoiDung.biKhoa && nguoiDung.trangThai !== 'bi_khoa'
-            && Number(decoded.tokenVersion || 0) === Number(nguoiDung.tokenVersion || 0)) {
+        if (
+            nguoiDung &&
+            !nguoiDung.biKhoa &&
+            nguoiDung.trangThai !== 'bi_khoa' &&
+            Number(decoded.tokenVersion || 0) === Number(nguoiDung.tokenVersion || 0)
+        ) {
             req.user = nguoiDung;
         }
     } catch (loi) {

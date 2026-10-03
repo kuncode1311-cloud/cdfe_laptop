@@ -34,9 +34,7 @@ describe('POST /api/auth/dang-nhap', () => {
 
     test('đúng thông tin → 200, trả JWT và KHÔNG trả mật khẩu băm', async () => {
         const user = await taoNguoiDung();
-        const res = await request(app)
-            .post('/api/auth/dang-nhap')
-            .send({ email: user.email, matKhau: MAT_KHAU_MAU });
+        const res = await request(app).post('/api/auth/dang-nhap').send({ email: user.email, matKhau: MAT_KHAU_MAU });
 
         expect(res.status).toBe(200);
         expect(res.body.token.split('.')).toHaveLength(3); // header.payload.signature
@@ -56,22 +54,18 @@ describe('POST /api/auth/dang-nhap', () => {
 
     test('sai mật khẩu 5 lần → tạm khóa 429, kể cả nhập đúng sau đó', async () => {
         const user = await taoNguoiDung();
-        const dangNhap = (matKhau) => request(app)
-            .post('/api/auth/dang-nhap')
-            .send({ email: user.email, matKhau });
+        const dangNhap = (matKhau) => request(app).post('/api/auth/dang-nhap').send({ email: user.email, matKhau });
 
         for (let i = 0; i < 4; i += 1) {
             expect((await dangNhap('SaiMatKhau999')).status).toBe(401);
         }
         expect((await dangNhap('SaiMatKhau999')).status).toBe(429); // lần thứ 5
-        expect((await dangNhap(MAT_KHAU_MAU)).status).toBe(429);    // vẫn đang bị khóa
+        expect((await dangNhap(MAT_KHAU_MAU)).status).toBe(429); // vẫn đang bị khóa
     });
 
     test('tài khoản bị Admin khóa → 403', async () => {
         const user = await taoNguoiDung({ biKhoa: true, trangThai: 'bi_khoa' });
-        const res = await request(app)
-            .post('/api/auth/dang-nhap')
-            .send({ email: user.email, matKhau: MAT_KHAU_MAU });
+        const res = await request(app).post('/api/auth/dang-nhap').send({ email: user.email, matKhau: MAT_KHAU_MAU });
 
         expect(res.status).toBe(403);
     });
@@ -80,7 +74,10 @@ describe('POST /api/auth/dang-nhap', () => {
 describe('POST /api/auth/dang-ky — kiểm tra dữ liệu đầu vào', () => {
     test.each([
         [{ hoTen: 'A', email: 'a@gmail.com', soDienThoai: '0912345678', matKhau: 'MatKhau123' }, 'họ tên quá ngắn'],
-        [{ hoTen: 'Trí Kun', email: 'khong-phai-email', soDienThoai: '0912345678', matKhau: 'MatKhau123' }, 'email sai định dạng'],
+        [
+            { hoTen: 'Trí Kun', email: 'khong-phai-email', soDienThoai: '0912345678', matKhau: 'MatKhau123' },
+            'email sai định dạng'
+        ],
         [{ hoTen: 'Trí Kun', email: 'a@gmail.com', soDienThoai: '12345', matKhau: 'MatKhau123' }, 'SĐT sai định dạng'],
         [{ hoTen: 'Trí Kun', email: 'a@gmail.com', soDienThoai: '0912345678', matKhau: '123' }, 'mật khẩu yếu']
     ])('từ chối 400 khi %#: %s', async (duLieu) => {
@@ -121,14 +118,10 @@ describe('POST /api/auth/dang-xuat — thu hồi phiên', () => {
         const user = await taoNguoiDung();
         const token = taoTokenCho(user);
 
-        const dangXuat = await request(app)
-            .post('/api/auth/dang-xuat')
-            .set('Authorization', `Bearer ${token}`);
+        const dangXuat = await request(app).post('/api/auth/dang-xuat').set('Authorization', `Bearer ${token}`);
         expect(dangXuat.status).toBe(200);
 
-        const goiLai = await request(app)
-            .get('/api/auth/toi')
-            .set('Authorization', `Bearer ${token}`);
+        const goiLai = await request(app).get('/api/auth/toi').set('Authorization', `Bearer ${token}`);
         expect(goiLai.status).toBe(401);
 
         const trongDb = await NguoiDung.findById(user._id).select('+tokenVersion');

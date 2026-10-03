@@ -5,9 +5,13 @@ const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || emailUser;
 
 // Escape HTML cho dữ liệu người dùng nhập (họ tên, địa chỉ...) trước khi chèn vào email
 // → chống HTML Injection / chèn link lừa đảo vào email gửi từ tên miền của cửa hàng.
-const escapeHtml = (giaTri = '') => String(giaTri ?? '')
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const escapeHtml = (giaTri = '') =>
+    String(giaTri ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 
 if (!brevoApiKey && process.env.NODE_ENV !== 'test') {
     console.warn('⚠️ Thiếu BREVO_API_KEY; chức năng gửi email sẽ không hoạt động trên production.');
@@ -20,14 +24,15 @@ async function guiMailBangTransporter(mailOptions) {
     // Ưu tiên 1: Brevo API (hoạt động trên Railway — SMTP bị chặn)
     if (key) {
         try {
-            const danhSachTo = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to])
-                .map(e => ({ email: String(e).trim() }));
+            const danhSachTo = (Array.isArray(mailOptions.to) ? mailOptions.to : [mailOptions.to]).map((e) => ({
+                email: String(e).trim()
+            }));
             const res = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
                 headers: {
                     'api-key': key,
                     'Content-Type': 'application/json',
-                    'accept': 'application/json'
+                    accept: 'application/json'
                 },
                 body: JSON.stringify({
                     sender: { name: process.env.BREVO_SENDER_NAME || 'Trí Kun Laptop', email: sender },
@@ -283,25 +288,35 @@ async function guiMailXacNhanDonHang(donHang) {
     const tt = donHang?.thong_tin_giao_hang || {};
     const tenKhach = escapeHtml(tt.ho_ten || tt.ho_va_ten || 'Quý khách');
     const sdtKhach = escapeHtml(tt.so_dien_thoai || '');
-    const diaChiKhach = escapeHtml([tt.dia_chi_chi_tiet, tt.phuong_xa, tt.quan_huyen, tt.tinh_thanh].filter(Boolean).join(', '));
+    const diaChiKhach = escapeHtml(
+        [tt.dia_chi_chi_tiet, tt.phuong_xa, tt.quan_huyen, tt.tinh_thanh].filter(Boolean).join(', ')
+    );
     const maDon = escapeHtml(donHang?.ma_don_hang || donHang?.id || 'LPN-ORDER');
     const tongTien = Number(donHang?.tong_tien_thanh_toan || 0).toLocaleString('vi-VN') + ' đ';
-    const hinhThucTT = donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? 'Chuyển khoản Ngân hàng (VietQR Pro)' : 'Thanh toán tiền mặt khi nhận hàng (COD)';
-    const trangThaiTT = donHang?.da_thanh_toan ? 'ĐÃ THANH TOÁN THÀNH CÔNG' : (donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr' ? 'Chờ chuyển khoản VietQR' : 'Thanh toán khi nhận hàng');
+    const hinhThucTT =
+        donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr'
+            ? 'Chuyển khoản Ngân hàng (VietQR Pro)'
+            : 'Thanh toán tiền mặt khi nhận hàng (COD)';
+    const trangThaiTT = donHang?.da_thanh_toan
+        ? 'ĐÃ THANH TOÁN THÀNH CÔNG'
+        : donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr'
+          ? 'Chờ chuyển khoản VietQR'
+          : 'Thanh toán khi nhận hàng';
 
-    const danhSachItemHtml = (donHang?.danh_sach_san_pham || []).map(sp => {
-        const ten = escapeHtml(sp.ten_san_pham || 'Laptop');
-        const sl = sp.so_luong || 1;
-        const gia = Number(sp.gia_hien_tai || sp.gia_tai_thoi_diem_them || sp.gia || 0).toLocaleString('vi-VN') + ' đ';
-        const tongMuc = Number(sp.tong_tien_muc || (sp.gia_hien_tai || 0) * sl).toLocaleString('vi-VN') + ' đ';
-        return `
+    const danhSachItemHtml = (donHang?.danh_sach_san_pham || [])
+        .map((sp) => {
+            const ten = escapeHtml(sp.ten_san_pham || 'Laptop');
+            const sl = sp.so_luong || 1;
+            const tongMuc = Number(sp.tong_tien_muc || (sp.gia_hien_tai || 0) * sl).toLocaleString('vi-VN') + ' đ';
+            return `
             <tr>
                 <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px; font-weight: 600; color: #1e293b;">${ten}</td>
                 <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 13px; color: #64748b;">${sl}</td>
                 <td style="padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 13px; font-weight: 700; color: #0052cc;">${tongMuc}</td>
             </tr>
         `;
-    }).join('');
+        })
+        .join('');
 
     const htmlContent = `
     <!DOCTYPE html>

@@ -44,13 +44,19 @@ const layTatCaSanPham = async (req, res) => {
 
         // Lọc theo hãng sản xuất
         if (hang_san_xuat) {
-            const brands = String(hang_san_xuat).split(',').slice(0, 20).map(b => b.trim().toLowerCase());
+            const brands = String(hang_san_xuat)
+                .split(',')
+                .slice(0, 20)
+                .map((b) => b.trim().toLowerCase());
             filter.hang_san_xuat = { $in: brands };
         }
 
         // Lọc theo danh mục
         if (danh_muc) {
-            const cats = String(danh_muc).split(',').slice(0, 20).map(c => c.trim().toLowerCase());
+            const cats = String(danh_muc)
+                .split(',')
+                .slice(0, 20)
+                .map((c) => c.trim().toLowerCase());
             filter.danh_muc = { $in: cats };
         }
 
@@ -107,7 +113,11 @@ const laySanPhamTheoId = async (req, res) => {
     try {
         const { id } = req.params;
         let decodedId = String(id).slice(0, 200).trim();
-        try { decodedId = decodeURIComponent(decodedId).trim(); } catch (e) { /* giữ nguyên nếu URI hỏng */ }
+        try {
+            decodedId = decodeURIComponent(decodedId).trim();
+        } catch (e) {
+            /* giữ nguyên nếu URI hỏng */
+        }
         const slugId = decodedId
             .toLowerCase()
             .replace(/đ/g, 'd')
@@ -134,9 +144,12 @@ const laySanPhamTheoId = async (req, res) => {
 
         // Tìm kiếm gần đúng theo các từ khóa trong tên sản phẩm nếu chưa thấy
         if (!sanPham) {
-            const words = decodedId.split(/[\s-]+/).filter(w => w.length > 1);
+            const words = decodedId.split(/[\s-]+/).filter((w) => w.length > 1);
             if (words.length >= 2) {
-                const regexPattern = words.slice(0, 8).map(w => `(?=.*${escapeRegex(w)})`).join('');
+                const regexPattern = words
+                    .slice(0, 8)
+                    .map((w) => `(?=.*${escapeRegex(w)})`)
+                    .join('');
                 sanPham = await SanPham.findOne({
                     ten_san_pham: { $regex: regexPattern, $options: 'i' }
                 });
@@ -197,7 +210,11 @@ const capNhatSanPham = async (req, res) => {
             { returnDocument: 'after', runValidators: true }
         );
         if (!sanPham && id.match(/^[0-9a-fA-F]{24}$/)) {
-            sanPham = await SanPham.findByIdAndUpdate(id, { $set: duLieuCapNhat }, { returnDocument: 'after', runValidators: true });
+            sanPham = await SanPham.findByIdAndUpdate(
+                id,
+                { $set: duLieuCapNhat },
+                { returnDocument: 'after', runValidators: true }
+            );
         }
         if (!sanPham) return res.status(404).json({ thong_diep: 'Không tìm thấy sản phẩm' });
         return res.status(200).json(sanPham);
