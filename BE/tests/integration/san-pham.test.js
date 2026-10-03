@@ -78,6 +78,22 @@ describe('Sản phẩm tạm ẩn (con_hang = false)', () => {
         expect(res.body.map((sp) => sp.id)).toEqual(['asus-zenbook-14-test']);
     });
 
+    test('sản phẩm BÁN HẾT (tồn kho 0, con_hang = false) vẫn hiện cho khách, khác với sản phẩm Admin chủ động ẩn', async () => {
+        await taoSanPham({
+            id: 'het-hang',
+            slug: 'het-hang',
+            ma_san_pham: 'HET-01',
+            so_luong_ton_kho: 0,
+            con_hang: false
+        });
+        await taoSanPhamAn();
+        const ds = await request(app).get('/api/san-pham');
+        const ct = await request(app).get('/api/san-pham/het-hang');
+
+        expect(ds.body.map((sp) => sp.id)).toEqual(['het-hang']);
+        expect(ct.status).toBe(200);
+    });
+
     test('khách mở chi tiết sản phẩm ẩn → 404', async () => {
         await taoSanPhamAn();
         const res = await request(app).get('/api/san-pham/an-di');

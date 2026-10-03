@@ -79,6 +79,11 @@ export function CartProvider({ children }) {
     };
 
     const themVaoGioHang = (sanPham, tuyChon, soLuong = 1) => {
+        // Hết hàng hoặc đang tạm ẩn: không cho thêm (server cũng từ chối lúc tạo đơn)
+        if (sanPham.con_hang === false || Number(sanPham.so_luong_ton_kho) <= 0) {
+            toast.error(`"${sanPham.ten_san_pham.substring(0, 35)}..." hiện đã hết hàng, bạn vui lòng chọn sản phẩm khác.`);
+            return;
+        }
         const idTuyChon = tuyChon ? tuyChon.ma_tuy_chon : 'mac_dinh';
         const idMuc = `${sanPham.id}_${idTuyChon}`;
         const chenhLech = tuyChon ? tuyChon.chenh_lech_gia : 0;

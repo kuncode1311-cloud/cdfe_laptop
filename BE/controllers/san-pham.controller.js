@@ -6,8 +6,13 @@ const { escapeRegex, chuoiAnToan } = require('../utils/bao-mat');
  * Controller xử lý nghiệp vụ cho Sản phẩm Laptop
  */
 
-// Sản phẩm "tạm ẩn" (con_hang = false) chỉ Admin nhìn thấy; khách chỉ thấy sản phẩm đang mở bán.
+// Sản phẩm "tạm ẩn" chỉ Admin nhìn thấy; khách chỉ thấy sản phẩm đang mở bán.
+// Phân biệt hai trường hợp cùng có con_hang = false:
+//  - Admin chủ động ẩn: con_hang = false nhưng VẪN CÒN tồn kho  → ẩn khỏi khách.
+//  - Bán hết hàng: hệ thống tự đặt con_hang = false khi tồn kho về 0 → vẫn hiện (khách biết món đã hết),
+//    việc mua bị chặn ở giỏ hàng và lúc tạo đơn.
 const laAdmin = (req) => req.user?.vaiTro === 'admin';
+const daBiAn = (sanPham) => sanPham.con_hang === false && Number(sanPham.so_luong_ton_kho) > 0;
 
 // Phản hồi dành cho Admin (có thể chứa sản phẩm ẩn) không được cache dùng chung;
 // phản hồi công khai cache ngắn để giảm tải cho server.
@@ -40,7 +45,7 @@ const layTatCaSanPham = async (req, res) => {
         const filter = {};
 
         // Khách không thấy sản phẩm đã bị Admin tạm ẩn
-        if (!laAdmin(req)) filter.con_hang = { $ne: false };
+        if (!laAdmin(req)) filter.$nor = [{ con_hang: false, so_luong_ton_kho: { $gt: 0 } }];
 
         // Tìm kiếm theo từ khóa
         // Escape từ khóa: người dùng gõ ký tự đặc biệt như '(a+)+$' không làm treo server (ReDoS)
@@ -170,7 +175,7 @@ const laySanPhamTheoId = async (req, res) => {
         }
 
         // Sản phẩm đã tạm ẩn thì khách nhận 404 như thể không tồn tại (không lộ việc có sản phẩm ẩn)
-        if (!sanPham || (sanPham.con_hang === false && !laAdmin(req))) {
+        if (!sanPham || (daBiAn(sanPham) && !laAdmin(req))) {
             return res.status(404).json({ thong_diep: `Không tìm thấy sản phẩm với mã/id: ${id}` });
         }
 
