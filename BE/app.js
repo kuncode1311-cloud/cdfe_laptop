@@ -133,6 +133,19 @@ const thanhToanRoutes = require('./routes/thanh-toan.routes');
 const lienHeRoutes = require('./routes/lien-he.routes');
 const caiDatRoutes = require('./routes/cai-dat.routes');
 const troLyAiRoutes = require('./routes/tro-ly-ai.routes');
+const dongBoRoutes = require('./routes/dong-bo.routes');
+const { xoaBoNhoDemPhienBan } = require('./controllers/dong-bo.controller');
+
+// Sau mỗi thao tác ghi (POST / PUT / PATCH / DELETE) thành công, xóa bộ nhớ đệm chữ ký phiên bản
+// để GET /api/dong-bo phản ánh ngay thay đổi của Admin cho các trình duyệt đang mở.
+app.use('/api', (req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'OPTIONS') {
+        res.on('finish', () => {
+            if (res.statusCode < 400) xoaBoNhoDemPhienBan();
+        });
+    }
+    next();
+});
 
 // 4. Gắn các Tuyến đường REST API chuẩn (/api/...)
 app.use('/api/auth', xacThucRoutes);
@@ -148,6 +161,7 @@ app.use('/api/thanh-toan', thanhToanRoutes);
 app.use('/api/lien-he', lienHeRoutes);
 app.use('/api/cai-dat', caiDatRoutes);
 app.use('/api/tro-ly-ai', troLyAiRoutes);
+app.use('/api/dong-bo', dongBoRoutes);
 
 // 5. Tuyến đường kiểm tra máy chủ
 app.get('/', (req, res) => {

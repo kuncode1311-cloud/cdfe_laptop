@@ -52,6 +52,11 @@ const CaiDatSchema = new mongoose.Schema(
         danh_sach_showroom: {
             type: [ShowroomSchema],
             default: []
+        },
+        // Cấu hình Banner / Flash Sale do Admin đặt; cấu trúc tự do (đối tượng các cặp khóa - giá trị)
+        khuyen_mai: {
+            type: mongoose.Schema.Types.Mixed,
+            default: {}
         }
     },
     {

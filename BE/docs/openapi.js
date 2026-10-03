@@ -511,6 +511,27 @@ const paths = {
         })
     },
 
+    '/api/cai-dat/khuyen-mai': {
+        get: op({
+            tag: T.cd, summary: 'Cấu hình Banner / Flash Sale',
+            description: 'Công khai, không cache. Trả đối tượng cấu hình khuyến mãi do Admin đặt (rỗng `{}` nếu chưa đặt).',
+            responses: { 200: ok('Cấu hình khuyến mãi', { type: 'object', properties: { thanh_cong: { type: 'boolean' }, du_lieu: { type: 'object' } } }, { thanh_cong: true, du_lieu: {} }) }
+        }),
+        put: op({
+            tag: T.cd, summary: 'Lưu cấu hình Banner / Flash Sale (Admin)', auth: 'admin',
+            description: 'Ghi đè toàn bộ cấu hình khuyến mãi (tối đa 20.000 ký tự). Mọi khách thấy thay đổi trong vài giây nhờ `GET /api/dong-bo`.',
+            requestBody: body({ type: 'object', properties: { khuyen_mai: { type: 'object' } } }),
+            responses: { 200: ok('Đã lưu', { type: 'object', properties: { thanh_cong: { type: 'boolean' }, du_lieu: { type: 'object' } } }, { thanh_cong: true, du_lieu: {} }), 400: ok('Dữ liệu không hợp lệ', ref('LoiThanhCong')) }
+        })
+    },
+    '/api/dong-bo': {
+        get: op({
+            tag: T.ht, summary: 'Phiên bản dữ liệu (tự làm mới giao diện)',
+            description: 'Công khai, không cache. Trả **chữ ký** của từng bảng công khai (sản phẩm, danh mục, mã giảm giá, tin tức, đánh giá, cài đặt). Front-End gọi vài giây một lần và chỉ nạp lại bảng nào có chữ ký đổi, nhờ đó khách thấy thay đổi của Admin ngay mà không cần F5. Không chứa dữ liệu nghiệp vụ.',
+            responses: { 200: ok('Chữ ký phiên bản các bảng', { type: 'object', properties: { phien_ban: { type: 'object', additionalProperties: { type: 'string' } } } }, { phien_ban: { san_pham: '61:1790900000000', danh_muc: '21:1790800000000', ma_giam_gia: '14:1790700000000', tin_tuc: '10:1790600000000', danh_gia: '120:1790500000000', cai_dat: 'a1b2c3d4e5f6' } }) }
+        })
+    },
+
     // ============================================================ AUTH
     '/api/auth/dang-ky': {
         post: op({
