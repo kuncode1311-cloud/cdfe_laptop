@@ -34,6 +34,28 @@ const mucTuServer = (muc) => {
     };
 };
 
+// Thông báo về giỏ hàng quan trọng (đổi giá, hết hàng) nên hiện lâu hơn mặc định 3,5 giây để khách kịp đọc
+const TUY_CHON_THONG_BAO_GIO = { duration: 9000 };
+const tenNganSp = (sp) => `"${String(sp?.ten_san_pham || '').substring(0, 35)}..."`;
+const tienVndGio = (n) => `${Number(n).toLocaleString('vi-VN')} ₫`;
+
+// So giỏ đang hiển thị với giỏ mới nhận từ server và trả các thông báo cần hiện cho khách (đổi giá, giảm số lượng)
+const thongBaoThayDoiGio = (gioCu, gioMoi) => {
+    const theoId = new Map(gioCu.map((m) => [m.id_muc, m]));
+    const thongBao = [];
+    for (const moi of gioMoi) {
+        const cu = theoId.get(moi.id_muc);
+        if (!cu) continue;
+        if (cu.gia_hien_tai !== moi.gia_hien_tai) {
+            thongBao.push(['info', `Giá ${tenNganSp(moi.san_pham)} đã thay đổi: ${tienVndGio(cu.gia_hien_tai)} → ${tienVndGio(moi.gia_hien_tai)}.`]);
+        }
+        if (moi.so_luong < cu.so_luong) {
+            thongBao.push(['warning', `${tenNganSp(moi.san_pham)} chỉ còn ${moi.so_luong} sản phẩm, số lượng trong giỏ đã được điều chỉnh.`]);
+        }
+    }
+    return thongBao;
+};
+
 // Hợp nhất giỏ khách vãng lai vào giỏ trên server: món trùng lấy số lượng lớn hơn (không cộng dồn để F5 không nhân đôi)
 const hopNhatGio = (tuServer, tuMayNay) => {
     const theoId = new Map(tuServer.map((m) => [m.id_muc, m]));
@@ -55,7 +77,14 @@ export function CartProvider({ children }) {
     const [tienGiamGia, setTienGiamGia] = useState(0);
     const [daKhoiTao, setDaKhoiTao] = useState(false);
     const daDongBoRef = useRef(null); // id người dùng đã đồng bộ giỏ với server (null = chưa / không đồng bộ)
+    const danhSachMucMoiNhat = useRef([]); // bản mới nhất của giỏ, cho các hàm bất đồng bộ đọc đúng dữ liệu lúc có phản hồi
+    const maGiamGiaMoiNhat = useRef(undefined);
     const lanDayCuoiRef = useRef('[]'); // nội dung giỏ gần nhất đã biết là khớp với server, để khỏi gửi lại thừa
+
+    useEffect(() => {
+        danhSachMucMoiNhat.current = danhSachMuc;
+        maGiamGiaMoiNhat.current = maGiamGiaDaDung;
+    });
 
     // Đọc giỏ hàng từ LocalStorage khi khởi động
     useEffect(() => {
@@ -122,16 +151,21 @@ export function CartProvider({ children }) {
             if (!laLanDau && daDongBoRef.current !== idNguoi) return;
             const tuServer = tuServerTho.map(mucTuServer);
             const daTungDongBo = localStorage.getItem(KHOA_NGUOI_DA_DONG_BO) === idNguoi;
-            setDanhSachMuc((cu) => {
-                const moi = daTungDongBo ? tuServer : hopNhatGio(tuServer, cu);
-                // Nếu bản mới không khác server thì không cần đẩy lại
-                lanDayCuoiRef.current = JSON.stringify(tuServer.map(rutGonMuc));
-                return moi;
-            });
+            const gioDangHienThi = danhSachMucMoiNhat.current;
+            const gioMoi = daTungDongBo ? tuServer : hopNhatGio(tuServer, gioDangHienThi);
+            // Giỏ lấy từ server đã có giá mới nên phải so với giỏ đang hiển thị để báo khách (không cập nhật im lặng)
+            const thongBao = thongBaoThayDoiGio(gioDangHienThi, gioMoi);
+            // Bản mới khớp với server nên không cần đẩy lại lên server
+            lanDayCuoiRef.current = JSON.stringify(tuServer.map(rutGonMuc));
+            setDanhSachMuc(gioMoi);
             localStorage.setItem(KHOA_NGUOI_DA_DONG_BO, idNguoi);
             daDongBoRef.current = idNguoi;
+            thongBao.forEach(([loai, noiDung]) => toast[loai](noiDung, TUY_CHON_THONG_BAO_GIO));
             if (daGo.length > 0) {
-                toast.warning(`${daGo.length} sản phẩm trong giỏ đã hết hàng hoặc ngừng bán nên được gỡ: ${daGo.join(', ')}`);
+                toast.warning(
+                    `${daGo.length} sản phẩm trong giỏ đã hết hàng hoặc ngừng bán nên được gỡ: ${daGo.join(', ')}`,
+                    TUY_CHON_THONG_BAO_GIO
+                );
             }
         });
     };
@@ -181,14 +215,6 @@ export function CartProvider({ children }) {
      * Chạy khi mở trang và mỗi khi bảng sản phẩm thay đổi (nhờ cơ chế tự làm mới dữ liệu).
      */
     const phienBanSanPham = useDuLieuMoi('san_pham');
-    const danhSachMucMoiNhat = useRef(danhSachMuc);
-    const maGiamGiaMoiNhat = useRef(maGiamGiaDaDung);
-    useEffect(() => {
-        // Giữ bản mới nhất để hàm bất đồng bộ bên dưới đọc đúng dữ liệu lúc nhận được phản hồi
-        danhSachMucMoiNhat.current = danhSachMuc;
-        maGiamGiaMoiNhat.current = maGiamGiaDaDung;
-    });
-
     useEffect(() => {
         if (!daKhoiTao || danhSachMucMoiNhat.current.length === 0) return;
         let daHuy = false;
@@ -234,7 +260,7 @@ export function CartProvider({ children }) {
                         .filter((m) => !quyetDinh.get(m.id_muc)?.xoa)
                         .map((m) => quyetDinh.get(m.id_muc)?.muc || m)
                 );
-                thongBao.forEach(([loai, noiDung]) => toast[loai](noiDung));
+                thongBao.forEach(([loai, noiDung]) => toast[loai](noiDung, TUY_CHON_THONG_BAO_GIO));
 
                 // Giá đổi thì số tiền giảm của mã giảm giá cũng phải tính lại theo tạm tính mới
                 const maDangDung = maGiamGiaMoiNhat.current;
@@ -251,7 +277,7 @@ export function CartProvider({ children }) {
                     } else {
                         setMaGiamGiaDaDung(undefined);
                         setTienGiamGia(0);
-                        toast.warning(`Mã giảm giá ${maDangDung} không còn áp dụng cho giỏ hàng mới: ${ketQua.thong_diep}`);
+                        toast.warning(`Mã giảm giá ${maDangDung} không còn áp dụng cho giỏ hàng mới: ${ketQua.thong_diep}`, TUY_CHON_THONG_BAO_GIO);
                     }
                 }
             })
