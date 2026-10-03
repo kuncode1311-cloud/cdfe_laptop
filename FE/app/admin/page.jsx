@@ -338,7 +338,7 @@ export default function TrangQuanTriCuaHang() {
         const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
-        const chuoi = d > 0 ? `${d} ngày ${h} giờ ${m} phút` : `${h} giờ ${m} phút ${s} giây`;
+        const chuoi = d > 0 ? `${d} ngày ${h} giờ ${m} phút ${s} giây` : `${h} giờ ${m} phút ${s} giây`;
         return { hetHan: false, chuoi, d, h, m, s };
     }, [formCaiDatKm?.thoi_gian_ket_thuc, thoiGianHienTaiKm]);
 
@@ -7703,17 +7703,17 @@ export default function TrangQuanTriCuaHang() {
                                                     </span>
                                                     <div className="flex items-center gap-1">
                                                         {(conLaiKm.d > 0
-                                                            ? [{ val: conLaiKm.d, nhan: 'Ngày' }, { val: conLaiKm.h, nhan: 'Giờ' }, { val: conLaiKm.m, nhan: 'Phút' }]
+                                                            ? [{ val: conLaiKm.d, nhan: 'Ngày' }, { val: conLaiKm.h, nhan: 'Giờ' }, { val: conLaiKm.m, nhan: 'Phút' }, { val: conLaiKm.s, nhan: 'Giây' }]
                                                             : [{ val: conLaiKm.h, nhan: 'Giờ' }, { val: conLaiKm.m, nhan: 'Phút' }, { val: conLaiKm.s, nhan: 'Giây' }]
-                                                        ).map((b, i) => (
+                                                        ).map((b, i, arr) => (
                                                             <React.Fragment key={b.nhan}>
                                                                 <div className="flex flex-col items-center">
-                                                                    <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-b from-[#6A0C16]/95 via-[#48040C]/95 to-[#2A0105]/95 backdrop-blur-md rounded-xl border border-white/30 flex items-center justify-center text-white font-black text-xs sm:text-sm font-mono shadow-md">
+                                                                    <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-b from-[#6A0C16]/95 via-[#48040C]/95 to-[#2A0105]/95 backdrop-blur-md rounded-xl border border-white/30 flex items-center justify-center text-white font-black text-xs font-mono shadow-md">
                                                                         {b.val.toString().padStart(2, '0')}
                                                                     </div>
                                                                     <span className="text-[8px] text-white font-bold uppercase mt-0.5">{b.nhan}</span>
                                                                 </div>
-                                                                {i < 2 && <span className="text-white font-black text-sm pb-3">:</span>}
+                                                                {i < arr.length - 1 && <span className="text-white font-black text-xs pb-3">:</span>}
                                                             </React.Fragment>
                                                         ))}
                                                     </div>

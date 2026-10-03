@@ -49,34 +49,32 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
         }
     }, [danhSachSanPham, phienBanDuLieu]);
 
+    // Hàm tính toán thời gian đếm ngược còn lại
+    const tinhThoiGianConLai = (thoiGianKetThuc) => {
+        let target = thoiGianKetThuc ? new Date(thoiGianKetThuc).getTime() : NaN;
+        if (isNaN(target)) {
+            const cuoiNgay = new Date();
+            cuoiNgay.setHours(23, 59, 59, 999);
+            target = cuoiNgay.getTime();
+        }
+        const diff = target - Date.now();
+        if (diff > 0) {
+            return {
+                d: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                h: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+                m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+                s: Math.floor((diff % (1000 * 60)) / 1000)
+            };
+        }
+        return { d: 0, h: 0, m: 0, s: 0 };
+    };
+
     // Đồng hồ đếm ngược Flash Sale đồng bộ với Admin Cài Đặt Khuyến Mãi
-    const [ngay, setNgay] = useState(0);
-    const [gio, setGio] = useState(14);
-    const [phut, setPhut] = useState(36);
-    const [giay, setGiay] = useState(14);
+    const [thoiGian, setThoiGian] = useState(() => tinhThoiGianConLai(caiDat?.thoi_gian_ket_thuc));
 
     useEffect(() => {
         const capNhatDongHo = () => {
-            if (!caiDat?.thoi_gian_ket_thuc) return;
-            const target = new Date(caiDat.thoi_gian_ket_thuc).getTime();
-            const now = Date.now();
-            const diff = target - now;
-
-            if (diff > 0) {
-                const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const s = Math.floor((diff % (1000 * 60)) / 1000);
-                setNgay(d);
-                setGio(h);
-                setPhut(m);
-                setGiay(s);
-            } else {
-                setNgay(0);
-                setGio(0);
-                setPhut(0);
-                setGiay(0);
-            }
+            setThoiGian(tinhThoiGianConLai(caiDat?.thoi_gian_ket_thuc));
         };
 
         capNhatDongHo();
@@ -84,12 +82,20 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
         return () => clearInterval(timer);
     }, [caiDat?.thoi_gian_ket_thuc]);
 
-    // Hiển thị NGÀY:GIỜ:PHÚT khi >= 1 ngày, GIỘ:PHÚT:GIÂY khi < 1 ngày
-    const coDemNgay = ngay > 0;
+    // Luôn hiển thị cả Ngày, Giờ, Phút, Giây để số giây nhảy lùi liên tục từng giây (Realtime)
+    const coDemNgay = thoiGian.d > 0;
     const donViDemNguoc = coDemNgay
-        ? [{ val: ngay, nhan: 'Ngày' }, { val: gio, nhan: 'Giờ' }, { val: phut, nhan: 'Phút' }]
-        : [{ val: gio, nhan: 'Giờ' }, { val: phut, nhan: 'Phút' }, { val: giay, nhan: 'Giây' }];
-
+        ? [
+            { val: thoiGian.d, nhan: 'Ngày' },
+            { val: thoiGian.h, nhan: 'Giờ' },
+            { val: thoiGian.m, nhan: 'Phút' },
+            { val: thoiGian.s, nhan: 'Giây' }
+          ]
+        : [
+            { val: thoiGian.h, nhan: 'Giờ' },
+            { val: thoiGian.m, nhan: 'Phút' },
+            { val: thoiGian.s, nhan: 'Giây' }
+          ];
 
     if (danhSach.length === 0 && !dangTai) return null;
 
@@ -157,36 +163,40 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
                     </div>
 
                     {/* CỘT GIỮA: Khoảng thở tự nhiên cho 3D Glass Artwork */}
-                    <div className="hidden lg:block lg:w-[24%]" />
+                    <div className="hidden lg:block lg:w-[20%]" />
 
-                    {/* CỘT PHẢI (~28%): COUNTDOWN BOXES & CTA PILL BUTTON */}
-                    <div className="flex flex-col items-center lg:items-end gap-3 lg:w-[28%] shrink-0">
+                    {/* CỘT PHẢI: COUNTDOWN BOXES & CTA PILL BUTTON */}
+                    <div className="flex flex-col items-center lg:items-end gap-3 lg:w-auto shrink-0">
                         <span className="text-[13px] sm:text-[14px] font-black uppercase tracking-wider text-white [text-shadow:_0_2px_4px_rgba(0,0,0,0.4)]">
                             KẾT THÚC TRONG
                         </span>
 
                         {/* Countdown boxes — dùng chung donViDemNguoc */}
-                        <div className="flex items-center gap-2 sm:gap-2.5">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                             {donViDemNguoc.map((dv, i) => (
                                 <React.Fragment key={dv.nhan}>
-                                    <div className="flex flex-col items-center gap-1.5">
-                                        <div className="relative w-[58px] h-[58px] sm:w-[64px] sm:h-[64px] bg-gradient-to-b from-[#6A0C16]/90 via-[#48040C]/90 to-[#2A0105]/95 backdrop-blur-md rounded-2xl border border-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_10px_22px_rgba(0,0,0,0.35)] overflow-hidden">
+                                    <div className="flex flex-col items-center gap-1 sm:gap-1.5">
+                                        <div className={`relative ${coDemNgay ? 'w-[48px] h-[48px] sm:w-[56px] sm:h-[56px]' : 'w-[58px] h-[58px] sm:w-[64px] sm:h-[64px]'} bg-gradient-to-b from-[#6A0C16]/90 via-[#48040C]/90 to-[#2A0105]/95 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_10px_22px_rgba(0,0,0,0.35)] overflow-hidden`}>
                                             <div className="absolute top-0 inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                                            <span className="text-[28px] sm:text-[32px] font-black tracking-tight tabular-nums leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
+                                            <span className={`${coDemNgay ? 'text-[22px] sm:text-[26px]' : 'text-[28px] sm:text-[32px]'} font-black tracking-tight tabular-nums leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]`}>
                                                 {dv.val.toString().padStart(2, '0')}
                                             </span>
                                         </div>
-                                        <span className="text-[11px] text-white/95 font-bold uppercase tracking-wider drop-shadow-xs">{dv.nhan}</span>
+                                        <span className="text-[10px] sm:text-[11px] text-white/95 font-bold uppercase tracking-wider drop-shadow-xs">{dv.nhan}</span>
                                     </div>
-                                    {i < 2 && <span className="text-white font-black text-2xl pb-6 drop-shadow-sm select-none">:</span>}
+                                    {i < donViDemNguoc.length - 1 && (
+                                        <span className={`text-white font-black ${coDemNgay ? 'text-lg sm:text-xl pb-4 sm:pb-5' : 'text-2xl pb-6'} drop-shadow-sm select-none`}>
+                                            :
+                                        </span>
+                                    )}
                                 </React.Fragment>
                             ))}
                         </div>
 
-                        {/* CTA White Pill Button (width ~215-225px, height ~48px) */}
+                        {/* CTA White Pill Button (width ~220-240px, height ~48px) */}
                         <a
                             href="#danh-sach-flash-sale"
-                            className="mt-1 group w-[215px] sm:w-[225px] h-[48px] rounded-full bg-white hover:bg-slate-50 text-[#D31828] font-black text-[15px] sm:text-[16px] uppercase tracking-wider shadow-[0_10px_25px_rgba(0,0,0,0.25)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                            className="mt-1 group w-[220px] sm:w-[240px] h-[48px] rounded-full bg-white hover:bg-slate-50 text-[#D31828] font-black text-[15px] sm:text-[16px] uppercase tracking-wider shadow-[0_10px_25px_rgba(0,0,0,0.25)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
                         >
                             <span>SĂN DEAL NGAY</span>
                             <ArrowRight className="w-4 h-4 text-[#D31828] group-hover:translate-x-1.5 transition-transform duration-300" />
