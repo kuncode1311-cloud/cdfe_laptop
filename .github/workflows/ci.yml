@@ -50,6 +50,10 @@ jobs:
       - name: Cài thư viện
         run: npm ci
 
+      # Quét lỗ hổng trong thư viện chạy trên production; dừng CI nếu có lỗ hổng mức cao trở lên
+      - name: Quét lỗ hổng thư viện (npm audit)
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Chạy kiểm thử và đo độ phủ
         run: npm run test:coverage
 
@@ -81,6 +85,9 @@ jobs:
 
       - name: Cài thư viện
         run: npm ci
+
+      - name: Quét lỗ hổng thư viện (npm audit)
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Kiểm tra lint (ESLint)
         run: npm run lint

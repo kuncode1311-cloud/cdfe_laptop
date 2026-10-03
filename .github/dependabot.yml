@@ -1,0 +1,26 @@
+# Dependabot: mỗi tuần tự quét thư viện lỗi thời / có lỗ hổng và mở Pull Request nâng cấp.
+# Các PR này đi qua CI (ci.yml) nên chỉ merge khi bộ kiểm thử vẫn xanh.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /BE
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      cap-nhat-nho:            # gom cập nhật minor/patch thành 1 PR cho đỡ rối
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /FE
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      cap-nhat-nho:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
