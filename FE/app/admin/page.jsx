@@ -2177,10 +2177,7 @@ export default function TrangQuanTriCuaHang() {
                 'Hệ thống tản nhiệt thông minh tối ưu luồng gió mát lạnh êm ái',
                 'Bộ nhớ tốc độ cao và khả năng nâng cấp linh hoạt trong tương lai'
             ],
-            qua_tang: [
-                { ten_qua_tang: 'Balo laptop cao cấp chống sốc', gia_tri: 990000 },
-                { ten_qua_tang: 'Chuột không dây công thái học', gia_tri: 450000 }
-            ],
+            qua_tang: [],
             tuy_chon_phien_ban: [],
             thu_vien_hinh_anh: [],
 
@@ -5085,7 +5082,7 @@ export default function TrangQuanTriCuaHang() {
                             {/* Bảng Đơn Mới & Top Bán Chạy */}
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                                 {/* Đơn Hàng Mới Nhất */}
-                                <div className="lg:col-span-7 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 space-y-4">
+                                <div className="lg:col-span-7 bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white dark:from-[#0a1526] dark:via-blue-950/20 dark:to-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-blue-200/80 dark:border-blue-900/60 shadow-lg shadow-blue-500/5 space-y-4">
                                     <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                                         <h3 className="font-black text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                             <span className="w-2.5 h-2.5 rounded-full bg-blue-600 shadow-xs" />
@@ -5156,7 +5153,7 @@ export default function TrangQuanTriCuaHang() {
                                 </div>
 
                                 {/* Top Bán Chạy */}
-                                <div className="lg:col-span-5 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 space-y-4">
+                                <div className="lg:col-span-5 bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white dark:from-[#1c1305] dark:via-amber-950/20 dark:to-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-amber-200/80 dark:border-amber-900/60 shadow-lg shadow-orange-500/5 space-y-4">
                                     <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                                         <h3 className="font-black text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-xs" />
@@ -5853,8 +5850,122 @@ export default function TrangQuanTriCuaHang() {
                     {/* ========================================= */}
                     {tabHienTai === 'san_pham' && (
                         <div className="space-y-4 animate-in fade-in duration-200">
-                            {/* Toolbar & Filter Controls */}
-                            <div className="bg-white dark:bg-[#0d1527] p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+                            {/* 4 KPI Cards Kho Sản Phẩm Gradient 3D Hiện Đại */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                                {/* Thẻ 1: Tổng Sản Phẩm */}
+                                <div
+                                    onClick={() => { setLocNganhHang('tat_ca'); setLocHangSanPham('tat_ca'); }}
+                                    className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-cyan-50/90 via-teal-50/40 to-white dark:from-[#081a20] dark:via-teal-950/30 dark:to-[#0d1527] border-2 border-teal-200/90 dark:border-teal-900/60 shadow-md shadow-teal-500/5 hover:shadow-xl hover:shadow-teal-500/15 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group"
+                                >
+                                    <Boxes className="absolute -right-3 -bottom-3 w-24 h-24 text-teal-500/10 dark:text-teal-400/5 pointer-events-none group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                                    <div className="flex items-center justify-between relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500 via-teal-500 to-emerald-600 text-white flex items-center justify-center shadow-lg shadow-teal-500/35 ring-4 ring-white/80 dark:ring-teal-900/40 group-hover:scale-110 transition-transform">
+                                            <Boxes className="w-5 h-5 stroke-[2.2]" />
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300">
+                                                Kho Hàng
+                                            </span>
+                                            <div className="w-6 h-6 rounded-full bg-teal-100/80 text-teal-600 dark:bg-teal-900/60 dark:text-teal-300 flex items-center justify-center text-xs font-black group-hover:translate-x-0.5 transition-transform">
+                                                →
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 relative z-10">
+                                        <div className="text-xs font-black text-teal-900 dark:text-teal-200 uppercase tracking-wider">Tổng Mẫu Máy</div>
+                                        <div className="text-2xl sm:text-3xl font-black font-mono text-teal-950 dark:text-white mt-0.5 tracking-tight">
+                                            {danhSachSanPham.length}
+                                        </div>
+                                        <div className="text-[11px] font-bold text-teal-700 dark:text-teal-400 mt-1">Đang quản lý trên website</div>
+                                    </div>
+                                </div>
+
+                                {/* Thẻ 2: Laptop & AI PC */}
+                                <div
+                                    onClick={() => setLocNganhHang('laptop')}
+                                    className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white dark:from-[#0d1527] dark:via-purple-950/20 dark:to-[#0a0f1d] border-2 border-indigo-200/90 dark:border-indigo-900/60 shadow-md shadow-indigo-500/5 hover:shadow-xl hover:shadow-indigo-500/15 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group"
+                                >
+                                    <Laptop className="absolute -right-3 -bottom-3 w-24 h-24 text-indigo-500/10 dark:text-purple-400/5 pointer-events-none group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                                    <div className="flex items-center justify-between relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-purple-500/35 ring-4 ring-white/80 dark:ring-purple-900/40 group-hover:scale-110 transition-transform">
+                                            <Laptop className="w-5 h-5 stroke-[2.2]" />
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                                Chủ Lực
+                                            </span>
+                                            <div className="w-6 h-6 rounded-full bg-indigo-100/80 text-indigo-600 dark:bg-indigo-900/60 dark:text-indigo-300 flex items-center justify-center text-xs font-black group-hover:translate-x-0.5 transition-transform">
+                                                →
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 relative z-10">
+                                        <div className="text-xs font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">Laptop Gaming & AI</div>
+                                        <div className="text-2xl sm:text-3xl font-black font-mono text-indigo-950 dark:text-white mt-0.5 tracking-tight">
+                                            {thongKe.soLuongLaptop || 0}
+                                        </div>
+                                        <div className="text-[11px] font-bold text-indigo-600/80 dark:text-indigo-400 mt-1">Dòng máy cao cấp & Gaming</div>
+                                    </div>
+                                </div>
+
+                                {/* Thẻ 3: Gear & Phụ Kiện */}
+                                <div
+                                    onClick={() => setLocNganhHang('phu-kien-gear')}
+                                    className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-amber-50/95 via-orange-50/60 to-rose-50/40 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-[#0d1527] border-2 border-amber-300/80 dark:border-amber-700/80 shadow-md shadow-orange-500/10 hover:shadow-xl hover:shadow-orange-500/15 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group"
+                                >
+                                    <Sparkles className="absolute -right-3 -bottom-3 w-24 h-24 text-amber-500/10 dark:text-amber-400/5 pointer-events-none group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                                    <div className="flex items-center justify-between relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-white flex items-center justify-center shadow-lg shadow-orange-500/35 ring-4 ring-white/80 dark:ring-amber-900/40 group-hover:scale-110 transition-transform">
+                                            <Sparkles className="w-5 h-5 stroke-[2.2]" />
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300">
+                                                Hệ Sinh Thái
+                                            </span>
+                                            <div className="w-6 h-6 rounded-full bg-orange-100/80 text-orange-600 dark:bg-orange-900/60 dark:text-orange-300 flex items-center justify-center text-xs font-black group-hover:translate-x-0.5 transition-transform">
+                                                →
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 relative z-10">
+                                        <div className="text-xs font-black text-amber-950 dark:text-amber-200 uppercase tracking-wider">Gear & Phụ Kiện</div>
+                                        <div className="text-2xl sm:text-3xl font-black font-mono text-orange-950 dark:text-amber-100 mt-0.5 tracking-tight">
+                                            {(thongKe.soLuongGear || 0) + (thongKe.soLuongBanPhim || 0) + (thongKe.soLuongChuot || 0) + (thongKe.soLuongBalo || 0)}
+                                        </div>
+                                        <div className="text-[11px] font-bold text-amber-700 dark:text-amber-400 mt-1">Phím cơ, chuột, balo, sạc</div>
+                                    </div>
+                                </div>
+
+                                {/* Thẻ 4: Tổng Tồn Kho Sẵn Sàng */}
+                                <div
+                                    className="p-4 sm:p-5 rounded-3xl bg-gradient-to-br from-emerald-50/95 via-teal-50/50 to-green-50/30 dark:from-[#061c16] dark:via-emerald-950/30 dark:to-[#0b1120] border-2 border-emerald-200/90 dark:border-emerald-800/60 shadow-md shadow-emerald-500/5 hover:shadow-xl hover:shadow-emerald-500/15 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col justify-between relative overflow-hidden group"
+                                >
+                                    <PackageCheck className="absolute -right-3 -bottom-3 w-24 h-24 text-emerald-500/10 dark:text-emerald-400/5 pointer-events-none group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" />
+                                    <div className="flex items-center justify-between relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/35 ring-4 ring-white/80 dark:ring-emerald-900/40 group-hover:scale-110 transition-transform">
+                                            <PackageCheck className="w-5 h-5 stroke-[2.2]" />
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                                Sẵn Sàng Giao
+                                            </span>
+                                            <div className="w-6 h-6 rounded-full bg-emerald-100/80 text-emerald-600 dark:bg-emerald-900/60 dark:text-emerald-300 flex items-center justify-center text-xs font-black group-hover:translate-x-0.5 transition-transform">
+                                                ✓
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 relative z-10">
+                                        <div className="text-xs font-black text-emerald-900 dark:text-emerald-200 uppercase tracking-wider">Tổng Tồn Kho Sẵn Có</div>
+                                        <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-950 dark:text-emerald-100 mt-0.5 tracking-tight">
+                                            {thongKe.tongTonKho || 0}
+                                        </div>
+                                        <div className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 mt-1">Chiếc trong toàn hệ thống</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Toolbar & Filter Controls (Khối Gradient Sắc Nét) */}
+                            <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-50/90 via-white to-cyan-50/30 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#0f1d2e] border-2 border-cyan-100/90 dark:border-slate-800 shadow-md shadow-cyan-500/5 space-y-4">
                                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3.5">
                                     <div className="flex flex-wrap items-center gap-2.5">
                                         <span className="w-2.5 h-6 bg-cyan-600 rounded-full" />
@@ -5889,7 +6000,7 @@ export default function TrangQuanTriCuaHang() {
 
                                         <button
                                             onClick={moModalThemSp}
-                                            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-blue-500/25 cursor-pointer shrink-0 transition-all hover:scale-102 active:scale-98"
+                                            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 !text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-blue-500/30 cursor-pointer shrink-0 transition-all hover:scale-105 active:scale-95"
                                         >
                                             <Plus className="w-4 h-4 !text-white" />
                                             <span className="!text-white">Thêm Sản Phẩm Mới</span>
@@ -6154,7 +6265,52 @@ export default function TrangQuanTriCuaHang() {
                     {/* ========================================= */}
                     {tabHienTai === 'danh_muc' && (
                         <div className="space-y-4 animate-in fade-in duration-200">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-[#0d1527] p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            {/* 3 KPI Cards Thương Hiệu Gradient 3D */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-purple-50/90 via-fuchsia-50/40 to-white dark:from-[#180924] dark:via-purple-950/30 dark:to-[#0b1120] border-2 border-purple-200/90 dark:border-purple-800/80 shadow-md shadow-purple-500/5 hover:shadow-xl hover:shadow-purple-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-600 via-fuchsia-600 to-indigo-600 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-purple-500/35 ring-4 ring-white/80 dark:ring-purple-900/40 group-hover:scale-110 transition-transform">
+                                            🏷️
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] font-black text-purple-900 dark:text-purple-200 uppercase tracking-wider">Tổng Thương Hiệu</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-purple-950 dark:text-white leading-tight">
+                                                {danhMucHienThi.length} <span className="text-xs font-bold text-purple-600/80 dark:text-purple-400">Hãng Đối Tác</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white dark:from-[#0a1526] dark:via-blue-950/30 dark:to-[#0b1120] border-2 border-blue-200/90 dark:border-blue-800/80 shadow-md shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-sky-500 to-cyan-600 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-blue-500/35 ring-4 ring-white/80 dark:ring-blue-900/40 group-hover:scale-110 transition-transform">
+                                            💻
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] font-black text-blue-900 dark:text-blue-200 uppercase tracking-wider">Hãng Laptop Chính Hãng</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-blue-700 dark:text-blue-400 leading-tight">
+                                                7 <span className="text-xs font-bold text-blue-500/80">ASUS, Acer, Dell, HP, Lenovo, MSI, Apple</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-amber-50/95 via-orange-50/60 to-rose-50/40 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-[#0d1527] border-2 border-amber-300 dark:border-amber-700/80 shadow-md shadow-orange-500/10 hover:shadow-xl hover:shadow-orange-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-orange-500/35 ring-4 ring-white/80 dark:ring-amber-900/40 group-hover:scale-110 transition-transform">
+                                            🎮
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] font-black text-amber-900 dark:text-amber-200 uppercase tracking-wider">Phụ Kiện & Custom Gear</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-amber-700 dark:text-amber-400 leading-tight">
+                                                Logitech, Razer, Akko...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-50/90 via-white to-purple-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#1a0f2b] p-5 rounded-3xl border-2 border-purple-100/90 dark:border-slate-800 shadow-md shadow-purple-500/5">
                                 <div className="flex items-center gap-2.5">
                                     <span className="w-2.5 h-6 bg-purple-600 rounded-full" />
                                     <div>
@@ -6177,7 +6333,7 @@ export default function TrangQuanTriCuaHang() {
 
                                     <button
                                         onClick={moModalThemDanhMuc}
-                                        className="px-4 py-2.5 rounded-2xl bg-purple-600 hover:bg-purple-700 !text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-purple-500/25 cursor-pointer whitespace-nowrap shrink-0"
+                                        className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 !text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-purple-500/25 cursor-pointer whitespace-nowrap shrink-0 transition-all hover:scale-105 active:scale-95"
                                     >
                                         <Plus className="w-4 h-4 !text-white" />
                                         <span className="!text-white">Thêm Thương Hiệu</span>
@@ -6188,9 +6344,9 @@ export default function TrangQuanTriCuaHang() {
                             {/* Bảng Danh Mục / Thương Hiệu (Excel-Style Grid Sắc Nét) */}
                             <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
                                 {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
-                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                                <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-800 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2 shadow-md">
                                     <div className="flex items-center gap-2">
-                                        <Tag className="w-4 h-4 text-blue-200" />
+                                        <Tag className="w-4 h-4 text-purple-200" />
                                         <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
                                             Danh Sách Thương Hiệu & Hãng Sản Xuất
                                         </h3>
@@ -6385,7 +6541,7 @@ export default function TrangQuanTriCuaHang() {
                             </div>
 
                             {/* Toolbar & Filter (Mỏng Nhẹ - Tiết Kiệm Không Gian) */}
-                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-white dark:bg-[#0d1527] px-4 py-3 rounded-2xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-gradient-to-r from-slate-50/90 via-white to-indigo-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#111c35] px-4 py-3 rounded-3xl border-2 border-indigo-100/90 dark:border-slate-800 shadow-md shadow-indigo-500/5">
                                 <div className="flex flex-wrap items-center gap-2 flex-1">
                                     <div className="relative flex-1 sm:max-w-xs min-w-[200px]">
                                         <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -6437,9 +6593,9 @@ export default function TrangQuanTriCuaHang() {
                             {/* Bảng Khách Hàng Tinh Gọn - Trực Quan - Fit 1 Màn Hình */}
                             <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-400 dark:border-slate-600 shadow-lg shadow-slate-900/10 overflow-hidden flex flex-col">
                                 {/* Banner Tiêu Đề Bảng */}
-                                <div className="bg-gradient-to-r from-blue-800 via-indigo-800 to-blue-900 text-white px-4 py-2.5 flex items-center justify-between gap-2 shadow-sm shrink-0">
+                                <div className="bg-gradient-to-r from-indigo-700 via-purple-700 to-blue-700 text-white px-4 py-3 flex items-center justify-between gap-2 shadow-md shrink-0">
                                     <div className="flex items-center gap-2">
-                                        <Users className="w-4 h-4 text-blue-200" />
+                                        <Users className="w-4 h-4 text-indigo-200" />
                                         <h3 className="font-black text-xs uppercase tracking-wider text-white">
                                             Danh Sách Tài Khoản Khách Hàng
                                         </h3>
@@ -6670,8 +6826,53 @@ export default function TrangQuanTriCuaHang() {
                     {/* ========================================= */}
                     {tabHienTai === 'voucher' && (
                         <div className="space-y-4 animate-in fade-in duration-200">
-                            {/* Toolbar & Filter Bar */}
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white dark:bg-[#0d1527] p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            {/* 3 KPI Cards Voucher Gradient 3D */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-rose-50/95 via-pink-50/50 to-orange-50/30 dark:from-[#1f0b12] dark:via-rose-950/30 dark:to-[#0d1527] border-2 border-rose-200 dark:border-rose-900/60 shadow-md shadow-rose-500/5 hover:shadow-xl hover:shadow-rose-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-red-500 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-rose-500/35 ring-4 ring-white/80 dark:ring-rose-900/40 group-hover:scale-110 transition-transform">
+                                            🎟️
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] font-black text-rose-900 dark:text-rose-200 uppercase tracking-wider">Tổng Số Voucher</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-rose-600 dark:text-rose-400 leading-tight">
+                                                {danhSachVoucher.length} <span className="text-xs font-bold text-rose-400/80">Mã Khuyến Mãi</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-50/95 via-teal-50/50 to-green-50/30 dark:from-[#061c16] dark:via-emerald-950/30 dark:to-[#0b1120] border-2 border-emerald-200 dark:border-emerald-900/60 shadow-md shadow-emerald-500/5 hover:shadow-xl hover:shadow-emerald-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-emerald-500/35 ring-4 ring-white/80 dark:ring-emerald-900/40 group-hover:scale-110 transition-transform">
+                                            ✅
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] font-black text-emerald-900 dark:text-emerald-200 uppercase tracking-wider">Đang Kích Hoạt</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 leading-tight">
+                                                {danhSachVoucher.filter(v => v.kich_hoat !== false).length} <span className="text-xs font-bold text-emerald-400/80">Mã Áp Dụng Được</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-amber-50/95 via-orange-50/60 to-yellow-50/30 dark:from-[#1c1305] dark:via-amber-950/30 dark:to-[#0b1120] border-2 border-amber-300 dark:border-amber-700/80 shadow-md shadow-orange-500/10 hover:shadow-xl hover:shadow-orange-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-yellow-500 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-orange-500/35 ring-4 ring-white/80 dark:ring-amber-900/40 group-hover:scale-110 transition-transform">
+                                            ⏸️
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] font-black text-amber-900 dark:text-amber-200 uppercase tracking-wider">Đã Tạm Ẩn</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-amber-700 dark:text-amber-400 leading-tight">
+                                                {danhSachVoucher.filter(v => v.kich_hoat === false).length} <span className="text-xs font-bold text-amber-400/80">Mã Đang Khóa</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Toolbar & Filter Bar (Khối Gradient Sắc Nét) */}
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-gradient-to-r from-slate-50/90 via-white to-rose-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#220d18] p-5 rounded-3xl border-2 border-rose-100/90 dark:border-slate-800 shadow-md shadow-rose-500/5">
                                 <div className="flex items-center gap-3">
                                     <span className="w-2.5 h-6 bg-rose-600 rounded-full" />
                                     <div>
@@ -6730,9 +6931,9 @@ export default function TrangQuanTriCuaHang() {
                             {/* Bảng Danh Sách Voucher Chuẩn Mẫu Siêu Đẹp (Excel-Style Grid Sắc Nét) */}
                             <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
                                 {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
-                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                                <div className="bg-gradient-to-r from-rose-700 via-pink-700 to-purple-800 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2 shadow-md">
                                     <div className="flex items-center gap-2">
-                                        <Ticket className="w-4 h-4 text-blue-200" />
+                                        <Ticket className="w-4 h-4 text-rose-200" />
                                         <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
                                             Kho Mã Giảm Giá & Voucher Khuyến Mãi
                                         </h3>
@@ -7005,7 +7206,7 @@ export default function TrangQuanTriCuaHang() {
                             </div>
 
                             {/* Toolbar & Filter */}
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white dark:bg-[#0d1527] p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-50/90 via-white to-teal-50/40 dark:from-[#081a20] dark:via-slate-900 dark:to-[#111c35] p-5 rounded-3xl border-2 border-teal-100/90 dark:border-slate-800 shadow-md shadow-teal-500/5">
                                 <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
                                     <div className="relative w-full sm:w-64">
                                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -7054,9 +7255,9 @@ export default function TrangQuanTriCuaHang() {
                             {/* Bảng Danh Sách Bài Viết Chuẩn Magazine (Excel-Style Grid Sắc Nét) */}
                             <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
                                 {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
-                                <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+                                <div className="bg-gradient-to-r from-teal-700 via-emerald-700 to-cyan-800 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2 shadow-md">
                                     <div className="flex items-center gap-2">
-                                        <Newspaper className="w-4 h-4 text-blue-200" />
+                                        <Newspaper className="w-4 h-4 text-teal-200" />
                                         <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
                                             Danh Sách Bài Viết & Tin Tức Công Nghệ
                                         </h3>
@@ -7230,10 +7431,10 @@ export default function TrangQuanTriCuaHang() {
                     {tabHienTai === 'khuyen_mai' && (
                         <div className="space-y-5 animate-in fade-in duration-200">
                             {/* Toolbar Header */}
-                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white dark:bg-[#0d1527] p-5 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-white dark:from-[#1c1305] dark:via-amber-950/20 dark:to-[#0d1527] p-5 rounded-3xl border-2 border-amber-200/80 dark:border-amber-800/60 shadow-md shadow-amber-500/5">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-500/20">
-                                        <Sparkles className="w-5 h-5" />
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-rose-600 text-white flex items-center justify-center shadow-lg shadow-orange-500/35 ring-4 ring-white/80 dark:ring-amber-900/40">
+                                        <Sparkles className="w-6 h-6 stroke-[2.2]" />
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
@@ -7606,11 +7807,11 @@ export default function TrangQuanTriCuaHang() {
                     {tabHienTai === 'showroom' && (
                         <div className="space-y-6 animate-in fade-in duration-200">
                             {/* Header Toolbar Gọn Gàng */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-sm">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-sky-50/90 via-blue-50/40 to-white dark:from-[#0a1526] dark:via-sky-950/20 dark:to-[#0d1527] p-4 sm:p-5 rounded-3xl border-2 border-sky-200/80 dark:border-sky-800/60 shadow-md shadow-sky-500/5">
                                 <div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-2 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
-                                            <MapPin className="w-5 h-5" />
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/35 ring-4 ring-white/80 dark:ring-sky-900/40">
+                                            <MapPin className="w-6 h-6 stroke-[2.2]" />
                                         </div>
                                         <div>
                                             <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
@@ -8047,7 +8248,7 @@ export default function TrangQuanTriCuaHang() {
                                     }`}
                                 >
                                     <Sparkles className={`w-4 h-4 shrink-0 ${tabModalSp === 'hinh_anh' ? 'text-white' : 'text-amber-500 dark:text-amber-400'}`} />
-                                    <span className="truncate">4. Ảnh & Quà Tặng</span>
+                                    <span className="truncate">4. Ảnh & Bộ Sưu Tập</span>
                                 </button>
                             </div>
                         </div>
@@ -10895,99 +11096,7 @@ export default function TrangQuanTriCuaHang() {
                                             )}
                                         </div>
 
-                                        {/* KHỐI 5: ĐẶC QUYỀN QUÀ TẶNG TNTP */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-4">
-                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 gap-2">
-                                                <div>
-                                                    <span className="font-black text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                                        <span className="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs shadow-xs">
-                                                            <Gift className="w-3.5 h-3.5" />
-                                                        </span>
-                                                        <span>Đặc Quyền Quà Tặng TNTP Kèm Theo</span>
-                                                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-black">
-                                                            Tổng: {dinhDangTienVND((formSp.qua_tang || []).reduce((t, q) => t + (Number(q.gia_tri) || 0), 0))}
-                                                        </span>
-                                                    </span>
-                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                                                        💡 Hiển thị trong khung viền cam đặc quyền quà tặng bên phải nút Mua Ngay ở trang chi tiết sản phẩm.
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const current = Array.isArray(formSp.qua_tang) ? formSp.qua_tang : [];
-                                                        setFormSp({ ...formSp, qua_tang: [...current, { ten_qua_tang: '', gia_tri: 500000 }] });
-                                                    }}
-                                                    className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black flex items-center gap-1.5 cursor-pointer text-xs shadow-xs transition-all shrink-0 self-start sm:self-auto active:scale-95"
-                                                >
-                                                    <PlusCircle className="w-3.5 h-3.5" />
-                                                    <span>+ Thêm quà tặng</span>
-                                                </button>
-                                            </div>
-
-                                            {(!formSp.qua_tang || formSp.qua_tang.length === 0) ? (
-                                                <div className="text-center py-6 px-4 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
-                                                    <Gift className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto" />
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                                        Chưa thiết lập quà tặng kèm cho sản phẩm này.
-                                                    </p>
-                                                </div>
-                                            ) : (
-                                                <div className="space-y-3">
-                                                    {formSp.qua_tang.map((item, idx) => (
-                                                        <div key={idx} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80">
-                                                            <div className="flex-1 space-y-1">
-                                                                <span className="text-[10.5px] font-bold text-slate-500">Tên quà tặng #{idx + 1}</span>
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Balo laptop cao cấp chống sốc..."
-                                                                    value={item.ten_qua_tang}
-                                                                    onChange={(e) => {
-                                                                        const updated = [...formSp.qua_tang];
-                                                                        updated[idx] = { ...updated[idx], ten_qua_tang: e.target.value };
-                                                                        setFormSp({ ...formSp, qua_tang: updated });
-                                                                    }}
-                                                                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-semibold focus:border-amber-500 focus:outline-none"
-                                                                />
-                                                            </div>
-                                                            <div className="w-full sm:w-44 space-y-1">
-                                                                <span className="text-[10.5px] font-bold text-slate-500">Trị giá quà (VNĐ)</span>
-                                                                <input
-                                                                    type="number"
-                                                                    placeholder="500000"
-                                                                    value={item.gia_tri}
-                                                                    onChange={(e) => {
-                                                                        const updated = [...formSp.qua_tang];
-                                                                        updated[idx] = { ...updated[idx], gia_tri: Number(e.target.value) || 0 };
-                                                                        setFormSp({ ...formSp, qua_tang: updated });
-                                                                    }}
-                                                                    className="w-full px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono font-bold focus:border-amber-500 focus:outline-none text-right"
-                                                                />
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={async () => {
-                                                                    const dongY = await xacNhan({
-                                                                        tieuDe: 'Xóa Quà Tặng Này?',
-                                                                        noiDung: `Bạn có chắc chắn muốn xóa phần quà "${item.ten_qua_tang || `#${idx + 1}`}" không?`,
-                                                                        loai: 'danger',
-                                                                        nutXacNhan: 'Xóa Quà',
-                                                                        nutHuy: 'Hủy Bỏ'
-                                                                    });
-                                                                    if (!dongY) return;
-                                                                    const updated = formSp.qua_tang.filter((_, i) => i !== idx);
-                                                                    setFormSp({ ...formSp, qua_tang: updated });
-                                                                }}
-                                                                className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/50 rounded-xl cursor-pointer transition-colors self-end sm:self-center shrink-0"
-                                                                title="Xóa phần quà này"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
+                                        
                                     </div>
                                 )}
                             </div>
