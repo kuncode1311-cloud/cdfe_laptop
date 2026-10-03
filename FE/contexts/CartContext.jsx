@@ -1,6 +1,8 @@
 'use client';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
+import { SanPhamService } from '@/services/san-pham.service';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 import { toast } from 'sonner';
 
 export const CartContext = createContext(undefined);
@@ -61,6 +63,96 @@ export function CartProvider({ children }) {
             console.error(e);
         }
     }, [danhSachMuc, maGiamGiaDaDung, tienGiamGia, daKhoiTao]);
+
+    /**
+     * Đồng bộ giỏ hàng với dữ liệu thật trên server.
+     * Giỏ chỉ lưu trong trình duyệt khách (localStorage) kèm giá lúc bỏ vào giỏ, nên nếu Admin đổi giá
+     * hoặc sản phẩm hết hàng thì giỏ phải tự cập nhật, khách khỏi thấy giá cũ rồi lúc thanh toán lại ra giá khác.
+     * Chạy khi mở trang và mỗi khi bảng sản phẩm thay đổi (nhờ cơ chế tự làm mới dữ liệu).
+     */
+    const phienBanSanPham = useDuLieuMoi('san_pham');
+    const danhSachMucMoiNhat = useRef(danhSachMuc);
+    const maGiamGiaMoiNhat = useRef(maGiamGiaDaDung);
+    useEffect(() => {
+        // Giữ bản mới nhất để hàm bất đồng bộ bên dưới đọc đúng dữ liệu lúc nhận được phản hồi
+        danhSachMucMoiNhat.current = danhSachMuc;
+        maGiamGiaMoiNhat.current = maGiamGiaDaDung;
+    });
+
+    useEffect(() => {
+        if (!daKhoiTao || danhSachMucMoiNhat.current.length === 0) return;
+        let daHuy = false;
+
+        SanPhamService.layTatCaSanPhamAsync()
+            .then(async (tatCa) => {
+                // Không có danh sách thật (lỗi mạng / rỗng) thì giữ nguyên giỏ, tránh xóa oan
+                if (daHuy || !Array.isArray(tatCa) || tatCa.length === 0) return;
+                const theoId = new Map(tatCa.map((sp) => [sp.id, sp]));
+                const ten = (sp) => `"${String(sp?.ten_san_pham || '').substring(0, 35)}..."`;
+                const tienVnd = (n) => `${Number(n).toLocaleString('vi-VN')} ₫`;
+
+                const quyetDinh = new Map(); // id_muc → { xoa } hoặc { muc mới }
+                const thongBao = [];
+                for (const muc of danhSachMucMoiNhat.current) {
+                    const sp = theoId.get(muc.san_pham?.id);
+                    const khongBanDuoc = !sp || sp.con_hang === false || Number(sp.so_luong_ton_kho) <= 0;
+                    if (khongBanDuoc) {
+                        quyetDinh.set(muc.id_muc, { xoa: true });
+                        thongBao.push(['warning', `${ten(muc.san_pham)} đã hết hàng hoặc ngừng bán nên được gỡ khỏi giỏ.`]);
+                        continue;
+                    }
+                    const giaMoi = Number(sp.gia_khuyen_mai || sp.gia_goc || 0) + Number(muc.tuy_chon_chon?.chenh_lech_gia || 0);
+                    const tonKho = Number(sp.so_luong_ton_kho);
+                    const soLuongMoi = Number.isFinite(tonKho) ? Math.min(muc.so_luong, tonKho) : muc.so_luong;
+                    if (giaMoi !== muc.gia_hien_tai) {
+                        thongBao.push(['info', `Giá ${ten(sp)} đã thay đổi: ${tienVnd(muc.gia_hien_tai)} → ${tienVnd(giaMoi)}.`]);
+                    }
+                    if (soLuongMoi !== muc.so_luong) {
+                        thongBao.push(['warning', `${ten(sp)} chỉ còn ${soLuongMoi} sản phẩm, số lượng trong giỏ đã được điều chỉnh.`]);
+                    }
+                    if (giaMoi !== muc.gia_hien_tai || soLuongMoi !== muc.so_luong || sp.ten_san_pham !== muc.san_pham?.ten_san_pham) {
+                        quyetDinh.set(muc.id_muc, {
+                            muc: { ...muc, san_pham: sp, gia_hien_tai: giaMoi, so_luong: soLuongMoi, tong_tien_muc: giaMoi * soLuongMoi }
+                        });
+                    }
+                }
+                if (quyetDinh.size === 0) return;
+
+                // Áp dụng theo id_muc để không ghi đè nếu khách vừa thêm / sửa món khác trong lúc chờ
+                setDanhSachMuc((cu) =>
+                    cu
+                        .filter((m) => !quyetDinh.get(m.id_muc)?.xoa)
+                        .map((m) => quyetDinh.get(m.id_muc)?.muc || m)
+                );
+                thongBao.forEach(([loai, noiDung]) => toast[loai](noiDung));
+
+                // Giá đổi thì số tiền giảm của mã giảm giá cũng phải tính lại theo tạm tính mới
+                const maDangDung = maGiamGiaMoiNhat.current;
+                if (maDangDung) {
+                    const tamTinhMoi = danhSachMucMoiNhat.current.reduce((tong, m) => {
+                        const q = quyetDinh.get(m.id_muc);
+                        if (q?.xoa) return tong;
+                        return tong + (q?.muc || m).tong_tien_muc;
+                    }, 0);
+                    const ketQua = await MaGiamGiaService.kiemTraMaGiamGiaAsync(maDangDung, tamTinhMoi);
+                    if (daHuy) return;
+                    if (ketQua.hop_le) {
+                        setTienGiamGia(ketQua.so_tien_giam);
+                    } else {
+                        setMaGiamGiaDaDung(undefined);
+                        setTienGiamGia(0);
+                        toast.warning(`Mã giảm giá ${maDangDung} không còn áp dụng cho giỏ hàng mới: ${ketQua.thong_diep}`);
+                    }
+                }
+            })
+            .catch(() => {
+                /* mất mạng: giữ nguyên giỏ, lúc thanh toán server vẫn kiểm tra lại */
+            });
+
+        return () => {
+            daHuy = true;
+        };
+    }, [daKhoiTao, phienBanSanPham]);
 
     // Tính toán các tổng số
     const tongSoLuong = danhSachMuc.reduce((tong, muc) => tong + muc.so_luong, 0);
