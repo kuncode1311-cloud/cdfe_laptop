@@ -5509,22 +5509,22 @@ export default function TrangQuanTriCuaHang() {
                                     <table className="w-full min-w-[1050px] text-left text-xs border-collapse">
                                         <thead>
                                             <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
-                                                <th className="py-2.5 px-2 w-20 text-center whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                <th className="py-2.5 px-2.5 w-36 sm:w-40 text-center whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
                                                     # MÃ ĐƠN
                                                 </th>
-                                                <th className="py-2.5 px-2.5 min-w-[130px] whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                <th className="py-2.5 px-3 w-48 sm:w-56 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
                                                     KHÁCH HÀNG
                                                 </th>
-                                                <th className="py-2.5 px-2.5 min-w-[140px] border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                <th className="py-2.5 px-3 min-w-[180px] max-w-[260px] border-b-2 border-r border-slate-300 dark:border-slate-700">
                                                     ĐỊA CHỈ & KIỆN HÀNG
                                                 </th>
-                                                <th className="py-2.5 px-2 w-28 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                <th className="py-2.5 px-2 w-32 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
                                                     TỔNG TIỀN
                                                 </th>
-                                                <th className="py-2.5 px-2 w-36 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                <th className="py-2.5 px-2 w-40 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
                                                     THANH TOÁN
                                                 </th>
-                                                <th className="py-2.5 px-2 w-36 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
+                                                <th className="py-2.5 px-2 w-40 whitespace-nowrap border-b-2 border-r border-slate-300 dark:border-slate-700">
                                                     TRẠNG THÁI
                                                 </th>
                                                 <th className="py-2.5 px-1.5 w-16 text-center whitespace-nowrap border-b-2 border-slate-300 dark:border-slate-700">
@@ -5609,7 +5609,7 @@ export default function TrangQuanTriCuaHang() {
                                                             }`}
                                                         >
                                                             {/* Cột 1: Mã & Thứ tự */}
-                                                            <td className={`py-2.5 px-2 text-center whitespace-nowrap border-b border-r ${daHuy ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                            <td className={`py-2.5 px-2.5 text-center whitespace-nowrap border-b border-r ${daHuy ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                                 <div className="flex flex-col items-center justify-center">
                                                                     <div className="flex items-center gap-1">
                                                                         <span className={`px-1.5 py-0.5 rounded font-mono font-black text-[10px] shadow-2xs ${daHuy ? 'bg-rose-200 text-rose-900 border border-rose-300' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-300'}`}>
@@ -5623,7 +5623,7 @@ export default function TrangQuanTriCuaHang() {
                                                                     </div>
                                                                     <button
                                                                         onClick={() => setDonHangChiTiet(dh)}
-                                                                        className={`text-[11px] font-mono font-black hover:underline block mt-1 tracking-tight cursor-pointer whitespace-nowrap ${daHuy ? 'text-rose-800 dark:text-rose-300' : 'text-blue-600 dark:text-blue-400 hover:text-blue-700'}`}
+                                                                        className={`text-[11px] font-mono font-bold hover:underline block mt-1 tracking-tight cursor-pointer whitespace-nowrap ${daHuy ? 'text-rose-800 dark:text-rose-300' : 'text-blue-600 dark:text-blue-400 hover:text-blue-700'}`}
                                                                         title="Bấm để xem chi tiết đơn hàng"
                                                                     >
                                                                         {maHienThi}
@@ -5632,18 +5632,18 @@ export default function TrangQuanTriCuaHang() {
                                                             </td>
 
                                                             {/* Cột 2: Khách hàng */}
-                                                            <td className="py-2.5 px-3 whitespace-nowrap border-b border-r border-slate-200 dark:border-slate-800">
-                                                                <div className="flex items-center gap-2">
+                                                            <td className="py-2.5 px-3 border-b border-r border-slate-200 dark:border-slate-800">
+                                                                <div className="flex items-center gap-2.5">
                                                                     <div className={`w-8 h-8 rounded-xl bg-gradient-to-tr ${avatarBg} text-white font-black text-[11px] flex items-center justify-center shrink-0 shadow-2xs`}>
                                                                         {initials}
                                                                     </div>
-                                                                    <div className="min-w-0 max-w-[125px]">
+                                                                    <div className="min-w-0 flex-1">
                                                                         <div className="font-extrabold text-xs text-slate-900 dark:text-white truncate" title={tenKhach}>
                                                                             {tenKhach}
                                                                         </div>
                                                                         <div className="flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                                                                             <Phone className="w-2.5 h-2.5 text-emerald-500 shrink-0" />
-                                                                            <a href={`tel:${dh.thong_tin_giao_hang?.so_dien_thoai}`} className="hover:text-blue-600 font-semibold truncate">
+                                                                            <a href={`tel:${dh.thong_tin_giao_hang?.so_dien_thoai}`} className="hover:text-blue-600 font-semibold truncate" title={dh.thong_tin_giao_hang?.so_dien_thoai}>
                                                                                 {dh.thong_tin_giao_hang?.so_dien_thoai || 'Chưa có SĐT'}
                                                                             </a>
                                                                         </div>
@@ -5657,31 +5657,33 @@ export default function TrangQuanTriCuaHang() {
 
                                                             {/* Cột 3: Địa chỉ & Kiện hàng */}
                                                             <td className="py-2.5 px-3 border-b border-r border-slate-200 dark:border-slate-800">
-                                                                <div className="flex items-start gap-1 text-slate-700 dark:text-slate-300 font-medium text-xs leading-snug">
-                                                                    <MapPin className="w-3 h-3 text-rose-500 shrink-0 mt-0.5" />
-                                                                    <div className="line-clamp-2" title={dh.thong_tin_giao_hang?.dia_chi_chi_tiet}>
-                                                                        {dh.thong_tin_giao_hang?.dia_chi_chi_tiet || 'Nhận trực tiếp tại showroom'}
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                                                                    <button
-                                                                        onClick={() => setDonHangChiTiet(dh)}
-                                                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-[10px] font-extrabold transition-all cursor-pointer whitespace-nowrap"
-                                                                    >
-                                                                        <Package className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-                                                                        <span>{soLuongSp} kiện</span>
-                                                                        <ArrowUpRight className="w-2.5 h-2.5 text-blue-500" />
-                                                                    </button>
-
-                                                                    {dh.thong_tin_giao_hang?.ghi_chu && (
-                                                                        <span 
-                                                                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[9px] font-bold whitespace-nowrap"
-                                                                            title={`Ghi chú: ${dh.thong_tin_giao_hang.ghi_chu}`}
-                                                                        >
-                                                                            <MessageSquare className="w-2.5 h-2.5 text-amber-600" />
-                                                                            <span>Ghi chú</span>
+                                                                <div className="min-w-0 max-w-[260px] space-y-1">
+                                                                    <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-medium text-xs leading-snug">
+                                                                        <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                                                                        <span className="truncate block" title={dh.thong_tin_giao_hang?.dia_chi_chi_tiet || 'Nhận trực tiếp tại showroom'}>
+                                                                            {dh.thong_tin_giao_hang?.dia_chi_chi_tiet || 'Nhận trực tiếp tại showroom'}
                                                                         </span>
-                                                                    )}
+                                                                    </div>
+                                                                    <div className="flex flex-wrap items-center gap-1.5">
+                                                                        <button
+                                                                            onClick={() => setDonHangChiTiet(dh)}
+                                                                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800/80 text-[10px] font-extrabold transition-all cursor-pointer whitespace-nowrap"
+                                                                        >
+                                                                            <Package className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                                                                            <span>{soLuongSp} kiện</span>
+                                                                            <ArrowUpRight className="w-2.5 h-2.5 text-blue-500" />
+                                                                        </button>
+
+                                                                        {dh.thong_tin_giao_hang?.ghi_chu && (
+                                                                            <span 
+                                                                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[9px] font-bold whitespace-nowrap"
+                                                                                title={`Ghi chú: ${dh.thong_tin_giao_hang.ghi_chu}`}
+                                                                            >
+                                                                                <MessageSquare className="w-2.5 h-2.5 text-amber-600" />
+                                                                                <span>Ghi chú</span>
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </td>
 
