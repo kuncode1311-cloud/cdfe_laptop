@@ -43,7 +43,7 @@ app.use(
         const origin = req.get('origin');
         // Cho phép Postman/server-to-server (không có Origin), frontend đã khai báo và chính trang Swagger.
         if (!origin || corsOrigins.includes(origin) || laCungTenMien(origin, req)) {
-            return callback(null, { origin: true, credentials: true });
+            return callback(null, { origin: true, credentials: true, maxAge: 600 }); // trình duyệt nhớ kết quả kiểm tra CORS 10 phút, đỡ gửi OPTIONS lặp lại
         }
         return callback(new Error(`CORS không cho phép origin: ${origin}`));
     })
