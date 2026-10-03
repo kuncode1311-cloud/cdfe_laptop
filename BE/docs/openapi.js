@@ -476,6 +476,7 @@ const tags = [
     { name: 'Xác thực & Tài khoản', description: 'Đăng ký (OTP email), đăng nhập, Google, quên / đổi mật khẩu, hồ sơ cá nhân. Token JWT lấy từ đây.' },
     { name: 'Sản phẩm', description: 'Danh sách / tìm kiếm / lọc laptop (công khai); thêm, sửa, xóa (Admin).' },
     { name: 'Danh mục', description: 'Thương hiệu, nhu cầu, phân khúc.' },
+    { name: 'Giỏ hàng', description: 'Giỏ hàng của người đã đăng nhập, lưu trong MongoDB nên đi theo tài khoản giữa các thiết bị. Chỉ lưu mã sản phẩm + số lượng; giá và tồn kho luôn lấy mới nhất từ server.' },
     { name: 'Đơn hàng', description: 'Đặt hàng, lịch sử, tra cứu, hủy đơn, quản trị trạng thái. Tồn kho được trừ/hoàn tự động theo trạng thái.' },
     { name: 'Thanh toán', description: 'PayOS / VietQR: tạo mã QR, kiểm tra trạng thái, nhận webhook.' },
     { name: 'Mã giảm giá', description: 'Kiểm tra voucher, ví voucher cá nhân, quản trị voucher.' },
@@ -492,7 +493,7 @@ const tags = [
 // ---------------------------------------------------------------- Paths
 const T = {
     auth: 'Xác thực & Tài khoản', sp: 'Sản phẩm', dm: 'Danh mục', dh: 'Đơn hàng', tt: 'Thanh toán', mgg: 'Mã giảm giá',
-    dg: 'Đánh giá', nd: 'Người dùng', tin: 'Tin tức', bh: 'Bảo hành', lh: 'Liên hệ', cd: 'Cài đặt', ai: 'Trợ lý AI', ht: 'Hệ thống'
+    gh: 'Giỏ hàng', dg: 'Đánh giá', nd: 'Người dùng', tin: 'Tin tức', bh: 'Bảo hành', lh: 'Liên hệ', cd: 'Cài đặt', ai: 'Trợ lý AI', ht: 'Hệ thống'
 };
 const phanHoiOtp = (vd) => ok('Đã gửi mã OTP tới email', { type: 'object', properties: { thong_diep: { type: 'string' }, email: { type: 'string' } } }, vd);
 
@@ -522,6 +523,19 @@ const paths = {
             description: 'Ghi đè toàn bộ cấu hình khuyến mãi (tối đa 20.000 ký tự). Mọi khách thấy thay đổi trong vài giây nhờ `GET /api/dong-bo`.',
             requestBody: body({ type: 'object', properties: { khuyen_mai: { type: 'object' } } }),
             responses: { 200: ok('Đã lưu', { type: 'object', properties: { thanh_cong: { type: 'boolean' }, du_lieu: { type: 'object' } } }, { thanh_cong: true, du_lieu: {} }), 400: ok('Dữ liệu không hợp lệ', ref('LoiThanhCong')) }
+        })
+    },
+    '/api/gio-hang': {
+        get: op({
+            tag: T.gh, summary: 'Xem giỏ hàng của tôi', auth: 'user',
+            description: 'Trả các món trong giỏ kèm **thông tin sản phẩm mới nhất** (giá, tồn kho). Món đã bị Admin ẩn / hết hàng / xóa được **gỡ khỏi giỏ** và liệt kê trong `da_go`; món có số lượng vượt tồn kho được hạ về đúng tồn kho.',
+            responses: { 200: ok('Giỏ hàng hiện tại', { type: 'object', properties: { danh_sach_muc: { type: 'array', items: { type: 'object', properties: { san_pham_id: { type: 'string' }, ma_tuy_chon: { type: 'string' }, so_luong: { type: 'integer' }, san_pham: { type: 'object' } } } }, da_go: { type: 'array', items: { type: 'string' } } } }, { danh_sach_muc: [], da_go: [] }) }
+        }),
+        put: op({
+            tag: T.gh, summary: 'Lưu giỏ hàng của tôi', auth: 'user', rate: '120 lần / phút / IP',
+            description: 'Ghi đè toàn bộ giỏ (mảng rỗng = xóa giỏ). Tối đa 50 dòng, mỗi dòng 1–10 sản phẩm; dòng trùng được gộp. **Giá không được nhận từ client.**',
+            requestBody: body({ type: 'object', required: ['danh_sach_muc'], properties: { danh_sach_muc: { type: 'array', maxItems: 50, items: { type: 'object', required: ['san_pham_id', 'so_luong'], properties: { san_pham_id: { type: 'string', example: 'asus-zenbook-14-oled-ai' }, ma_tuy_chon: { type: 'string', example: 'ram32' }, so_luong: { type: 'integer', minimum: 1, maximum: 10, example: 1 } } } } } }),
+            responses: { 200: ok('Đã lưu', { type: 'object', properties: { thanh_cong: { type: 'boolean' }, so_muc: { type: 'integer' } } }, { thanh_cong: true, so_muc: 1 }), 400: ok('Giỏ không hợp lệ (không phải mảng hoặc quá 50 dòng)', ref('Loi')) }
         })
     },
     '/api/dong-bo': {
