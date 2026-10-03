@@ -4972,7 +4972,7 @@ export default function TrangQuanTriCuaHang() {
                             {/* 4 Cards Thống Kê Nổi Bật Đậm Tone Sang & Trực Quan */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {/* Card 1: Doanh Thu (Sapphire Tech) */}
-                                <div className="relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-blue-300 dark:border-blue-800/80 shadow-md shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 hover:border-blue-500 hover:-translate-y-1 transition-all space-y-2 group">
+                                <div className="relative overflow-hidden p-5 rounded-3xl bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white dark:from-[#0a1526] dark:via-blue-950/30 dark:to-[#0b1120] border-2 border-blue-200/90 dark:border-blue-800/80 shadow-md shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20 hover:border-blue-500 hover:-translate-y-1 transition-all space-y-2 group">
                                     <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600" />
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
@@ -4995,7 +4995,7 @@ export default function TrangQuanTriCuaHang() {
                                 </div>
 
                                 {/* Card 2: Đơn Hàng (Amber Flame) */}
-                                <div className="relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-amber-300 dark:border-amber-800/80 shadow-md shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 hover:border-amber-500 hover:-translate-y-1 transition-all space-y-2 group">
+                                <div className="relative overflow-hidden p-5 rounded-3xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white dark:from-[#1c1305] dark:via-amber-950/30 dark:to-[#0b1120] border-2 border-amber-300 dark:border-amber-700/80 shadow-md shadow-amber-500/10 hover:shadow-xl hover:shadow-amber-500/20 hover:border-amber-500 hover:-translate-y-1 transition-all space-y-2 group">
                                     <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-red-500" />
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
@@ -5018,7 +5018,7 @@ export default function TrangQuanTriCuaHang() {
                                 </div>
 
                                 {/* Card 3: Khách Hàng (Royal Amethyst) */}
-                                <div className="relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-purple-300 dark:border-purple-800/80 shadow-md shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 hover:border-purple-500 hover:-translate-y-1 transition-all space-y-2 group">
+                                <div className="relative overflow-hidden p-5 rounded-3xl bg-gradient-to-br from-purple-50/90 via-fuchsia-50/40 to-white dark:from-[#180924] dark:via-purple-950/30 dark:to-[#0b1120] border-2 border-purple-200/90 dark:border-purple-800/80 shadow-md shadow-purple-500/10 hover:shadow-xl hover:shadow-purple-500/20 hover:border-purple-500 hover:-translate-y-1 transition-all space-y-2 group">
                                     <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-purple-600 via-fuchsia-500 to-pink-500" />
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-black uppercase tracking-wider text-purple-700 dark:text-purple-400 flex items-center gap-1.5">
@@ -5041,7 +5041,7 @@ export default function TrangQuanTriCuaHang() {
                                 </div>
 
                                 {/* Card 4: Kho Hàng (Emerald Vault) */}
-                                <div className="relative overflow-hidden p-5 rounded-3xl bg-white dark:bg-[#0d1527] border-2 border-teal-300 dark:border-teal-800/80 shadow-md shadow-teal-500/10 hover:shadow-xl hover:shadow-teal-500/20 hover:border-teal-500 hover:-translate-y-1 transition-all space-y-2 group">
+                                <div className="relative overflow-hidden p-5 rounded-3xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white dark:from-[#061c16] dark:via-emerald-950/30 dark:to-[#0b1120] border-2 border-teal-200/90 dark:border-teal-800/80 shadow-md shadow-teal-500/10 hover:shadow-xl hover:shadow-teal-500/20 hover:border-teal-500 hover:-translate-y-1 transition-all space-y-2 group">
                                     <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500" />
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
@@ -6339,44 +6339,44 @@ export default function TrangQuanTriCuaHang() {
                     {/* ========================================= */}
                     {tabHienTai === 'khach_hang' && (
                         <div className="space-y-4 animate-in fade-in duration-200">
-                            {/* Insight Cards (Thống Kê Nhanh Tinh Gọn) */}
+                            {/* Insight Cards (3 KPI Cards Gradient 3D Hiện Đại) */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                                <div className="px-4 py-3 rounded-2xl bg-white dark:bg-[#0d1527] border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 flex items-center justify-center text-sm shrink-0 border border-blue-200 dark:border-blue-800">
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white dark:from-[#0d1527] dark:via-purple-950/20 dark:to-[#0a0f1d] border-2 border-indigo-200/80 dark:border-indigo-800/60 shadow-md shadow-indigo-500/5 hover:shadow-xl hover:shadow-indigo-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-purple-500/35 ring-4 ring-white/80 dark:ring-purple-900/40 group-hover:scale-110 transition-transform">
                                             👥
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Tổng Khách Hàng</div>
-                                            <div className="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-tight">
-                                                {danhSachNguoiDung.length} <span className="text-xs font-bold text-slate-400">Thành Viên</span>
+                                            <div className="text-[10px] font-black text-indigo-900 dark:text-indigo-200 uppercase tracking-wider">Tổng Khách Hàng</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-indigo-950 dark:text-white leading-tight">
+                                                {danhSachNguoiDung.length} <span className="text-xs font-bold text-indigo-600/80 dark:text-indigo-400">Thành Viên</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="px-4 py-3 rounded-2xl bg-white dark:bg-[#0d1527] border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300 flex items-center justify-center text-sm shrink-0 border border-rose-200 dark:border-rose-800">
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-rose-50/95 via-pink-50/50 to-orange-50/30 dark:from-[#1f0b12] dark:via-rose-950/30 dark:to-[#0d1527] border-2 border-rose-200 dark:border-rose-900/60 shadow-md shadow-rose-500/5 hover:shadow-xl hover:shadow-rose-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-red-500 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-rose-500/35 ring-4 ring-white/80 dark:ring-rose-900/40 group-hover:scale-110 transition-transform">
                                             🔥
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Khách Tiềm Năng</div>
-                                            <div className="text-sm sm:text-base font-black text-rose-600 dark:text-rose-400 leading-tight">
+                                            <div className="text-[10px] font-black text-rose-900 dark:text-rose-200 uppercase tracking-wider">Khách Tiềm Năng</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-rose-600 dark:text-rose-400 leading-tight">
                                                 {danhSachKhachHangKemDoanhThu.filter(u => u.laTiemNang).length} <span className="text-xs font-bold text-rose-400/80">Khách Tiềm Năng</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="px-4 py-3 rounded-2xl bg-white dark:bg-[#0d1527] border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 flex items-center justify-between">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 flex items-center justify-center text-sm shrink-0 border border-emerald-200 dark:border-emerald-800">
+                                <div className="p-4 rounded-3xl bg-gradient-to-br from-emerald-50/95 via-teal-50/50 to-green-50/30 dark:from-[#061c16] dark:via-emerald-950/30 dark:to-[#0b1120] border-2 border-emerald-200 dark:border-emerald-900/60 shadow-md shadow-emerald-500/5 hover:shadow-xl hover:shadow-emerald-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="flex items-center gap-3 relative z-10">
+                                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-emerald-500/35 ring-4 ring-white/80 dark:ring-emerald-900/40 group-hover:scale-110 transition-transform">
                                             💰
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Doanh Thu Từ Khách</div>
-                                            <div className="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 leading-tight">
+                                            <div className="text-[10px] font-black text-emerald-900 dark:text-emerald-200 uppercase tracking-wider">Doanh Thu Từ Khách</div>
+                                            <div className="text-base sm:text-lg font-black font-mono text-emerald-600 dark:text-emerald-400 leading-tight">
                                                 {dinhDangTienVND(danhSachKhachHangKemDoanhThu.reduce((s, u) => s + (u.tongChiTieu || 0), 0))}
                                             </div>
                                         </div>
@@ -6967,38 +6967,38 @@ export default function TrangQuanTriCuaHang() {
                     {/* ========================================= */}
                     {tabHienTai === 'tin_tuc' && (
                         <div className="space-y-4 animate-in fade-in duration-200">
-                            {/* Insight Cards */}
+                            {/* Insight Cards (3 KPI Cards Gradient 3D Hiện Đại) */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                                    <div>
-                                        <div className="text-xs font-black text-slate-500 uppercase tracking-wider">Tổng Bài Viết</div>
-                                        <div className="text-xl font-black text-slate-900 dark:text-white mt-1">{danhSachTinTuc.length} Bài Đăng</div>
+                                <div className="p-5 rounded-3xl bg-gradient-to-br from-cyan-50/90 via-teal-50/40 to-white dark:from-[#081a20] dark:via-teal-950/30 dark:to-[#0d1527] border-2 border-teal-200 dark:border-teal-900/60 shadow-md shadow-teal-500/5 hover:shadow-xl hover:shadow-teal-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="text-xs font-black text-teal-900 dark:text-teal-200 uppercase tracking-wider">Tổng Bài Viết</div>
+                                        <div className="text-xl sm:text-2xl font-black font-mono text-teal-950 dark:text-white mt-1">{danhSachTinTuc.length} Bài Đăng</div>
                                     </div>
-                                    <div className="w-10 h-10 rounded-2xl bg-teal-50 text-teal-600 dark:bg-teal-950 dark:text-teal-400 flex items-center justify-center text-lg">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 via-teal-500 to-emerald-600 text-white flex items-center justify-center text-xl shadow-lg shadow-teal-500/35 ring-4 ring-white/80 dark:ring-teal-900/40 shrink-0 group-hover:scale-110 transition-transform">
                                         📰
                                     </div>
                                 </div>
 
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                                    <div>
-                                        <div className="text-xs font-black text-slate-500 uppercase tracking-wider">Bài Tiêu Điểm 2026</div>
-                                        <div className="text-xl font-black text-rose-600 dark:text-rose-400 mt-1">
+                                <div className="p-5 rounded-3xl bg-gradient-to-br from-rose-50/95 via-orange-50/50 to-amber-50/30 dark:from-[#1f0b12] dark:via-rose-950/30 dark:to-[#0d1527] border-2 border-rose-200 dark:border-rose-900/60 shadow-md shadow-rose-500/5 hover:shadow-xl hover:shadow-rose-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="text-xs font-black text-rose-900 dark:text-rose-200 uppercase tracking-wider">Bài Tiêu Điểm 2026</div>
+                                        <div className="text-xl sm:text-2xl font-black font-mono text-rose-600 dark:text-rose-400 mt-1">
                                             {danhSachTinTuc.filter(t => t.la_tieu_diem).length} Bài Hot
                                         </div>
                                     </div>
-                                    <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400 flex items-center justify-center text-lg">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 via-orange-500 to-amber-500 text-white flex items-center justify-center text-xl shadow-lg shadow-rose-500/35 ring-4 ring-white/80 dark:ring-rose-900/40 shrink-0 group-hover:scale-110 transition-transform">
                                         🔥
                                     </div>
                                 </div>
 
-                                <div className="p-5 rounded-3xl bg-white dark:bg-[#0d1527] border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
-                                    <div>
-                                        <div className="text-xs font-black text-slate-500 uppercase tracking-wider">Tổng Lượt Xem Đọc</div>
-                                        <div className="text-xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                                <div className="p-5 rounded-3xl bg-gradient-to-br from-emerald-50/95 via-teal-50/50 to-green-50/30 dark:from-[#061c16] dark:via-emerald-950/30 dark:to-[#0b1120] border-2 border-emerald-200 dark:border-emerald-900/60 shadow-md shadow-emerald-500/5 hover:shadow-xl hover:shadow-emerald-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="text-xs font-black text-emerald-900 dark:text-emerald-200 uppercase tracking-wider">Tổng Lượt Xem Đọc</div>
+                                        <div className="text-xl sm:text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400 mt-1">
                                             {thongKe.tongLuotXemTin.toLocaleString('vi-VN')} Lượt
                                         </div>
                                     </div>
-                                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400 flex items-center justify-center text-lg">
+                                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-green-600 text-white flex items-center justify-center text-xl shadow-lg shadow-emerald-500/35 ring-4 ring-white/80 dark:ring-emerald-900/40 shrink-0 group-hover:scale-110 transition-transform">
                                         👁️
                                     </div>
                                 </div>
