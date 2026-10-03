@@ -55,7 +55,7 @@ LAPTOP_NEW/
 │   ├── middleware/         # Middleware xác thực JWT, phân quyền
 │   ├── models/             # Schema Mongoose (Người dùng, Laptop, Tin tức...)
 │   ├── routes/             # Định tuyến API (/api/...)
-│   ├── scripts/            # Script nạp dữ liệu mẫu (nap-du-lieu.js)
+│   ├── scripts-local/      # Script chạy tay ở máy local: nạp dữ liệu mẫu, chuyển đổi dữ liệu (xem scripts-local/README.md)
 │   ├── .env                # Biến môi trường (PORT, MONGODB_URI, JWT_SECRET)
 │   ├── server.js           # Entry point của Backend
 │   └── package.json

@@ -9,7 +9,7 @@ const globals = require('globals');
 const prettier = require('eslint-config-prettier');
 
 module.exports = [
-    { ignores: ['node_modules/**', 'coverage/**', 'backup_db/**', 'scripts/**'] },
+    { ignores: ['node_modules/**', 'coverage/**', 'backup_db/**', 'scripts-local/**'] },
     js.configs.recommended,
     {
         files: ['**/*.js'],

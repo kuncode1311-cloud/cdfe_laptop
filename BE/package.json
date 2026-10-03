@@ -13,7 +13,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "migrate:slug": "node scripts/bo-sung-slug.js"
+    "migrate:slug": "node scripts-local/bo-sung-slug.js"
   },
   "keywords": [],
   "author": "",
