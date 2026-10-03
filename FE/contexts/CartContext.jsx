@@ -3,16 +3,59 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 import { SanPhamService } from '@/services/san-pham.service';
 import { useDuLieuMoi } from '@/services/dong-bo.service';
+import { GioHangService } from '@/services/gio-hang.service';
+import { useNguoiDung } from './AuthContext';
 import { toast } from 'sonner';
 
 export const CartContext = createContext(undefined);
 const CART_STORAGE_KEY = 'laptopnew_gio_hang_data';
+// Ghi nhớ giỏ trong trình duyệt này đã được đồng bộ với tài khoản nào (để phân biệt "giỏ khách vãng lai" với "bản sao của giỏ trên server")
+const KHOA_NGUOI_DA_DONG_BO = 'laptopnew_gio_hang_nguoi_dong_bo';
+
+// Dạng gọn gửi lên server: không gồm giá, server luôn tự lấy giá thật
+const rutGonMuc = (muc) => ({
+    san_pham_id: muc.san_pham?.id,
+    ma_tuy_chon: muc.tuy_chon_chon?.ma_tuy_chon || '',
+    so_luong: muc.so_luong
+});
+
+// Đổi một dòng của server (kèm sản phẩm mới nhất) sang dạng dòng giỏ hàng dùng trên giao diện
+const mucTuServer = (muc) => {
+    const sp = muc.san_pham;
+    const tuyChon = muc.ma_tuy_chon ? (sp.tuy_chon_phien_ban || []).find((x) => x.ma_tuy_chon === muc.ma_tuy_chon) : null;
+    const gia = Number(sp.gia_khuyen_mai || sp.gia_goc || 0) + Number(tuyChon?.chenh_lech_gia || 0);
+    return {
+        id_muc: `${sp.id}_${muc.ma_tuy_chon || 'mac_dinh'}`,
+        san_pham: sp,
+        tuy_chon_chon: tuyChon || undefined,
+        so_luong: muc.so_luong,
+        gia_hien_tai: gia,
+        tong_tien_muc: gia * muc.so_luong
+    };
+};
+
+// Hợp nhất giỏ khách vãng lai vào giỏ trên server: món trùng lấy số lượng lớn hơn (không cộng dồn để F5 không nhân đôi)
+const hopNhatGio = (tuServer, tuMayNay) => {
+    const theoId = new Map(tuServer.map((m) => [m.id_muc, m]));
+    for (const muc of tuMayNay) {
+        const cu = theoId.get(muc.id_muc);
+        if (!cu) theoId.set(muc.id_muc, muc);
+        else if (muc.so_luong > cu.so_luong) {
+            theoId.set(muc.id_muc, { ...cu, so_luong: muc.so_luong, tong_tien_muc: cu.gia_hien_tai * muc.so_luong });
+        }
+    }
+    return [...theoId.values()];
+};
 
 export function CartProvider({ children }) {
+    const { nguoiDung } = useNguoiDung();
+    const idNguoiDung = nguoiDung?.id || null;
     const [danhSachMuc, setDanhSachMuc] = useState([]);
     const [maGiamGiaDaDung, setMaGiamGiaDaDung] = useState(undefined);
     const [tienGiamGia, setTienGiamGia] = useState(0);
     const [daKhoiTao, setDaKhoiTao] = useState(false);
+    const daDongBoRef = useRef(null); // id người dùng đã đồng bộ giỏ với server (null = chưa / không đồng bộ)
+    const lanDayCuoiRef = useRef('[]'); // nội dung giỏ gần nhất đã biết là khớp với server, để khỏi gửi lại thừa
 
     // Đọc giỏ hàng từ LocalStorage khi khởi động
     useEffect(() => {
@@ -37,11 +80,13 @@ export function CartProvider({ children }) {
     // Lắng nghe sự kiện đăng xuất để xóa sạch giỏ hàng của phiên cũ
     useEffect(() => {
         const xuLyDangXuat = () => {
+            daDongBoRef.current = null; // phải ngắt trước, kẻo giỏ rỗng bị đẩy lên server và xóa mất giỏ của tài khoản
             setDanhSachMuc([]);
             setMaGiamGiaDaDung(undefined);
             setTienGiamGia(0);
             try {
                 localStorage.removeItem(CART_STORAGE_KEY);
+                localStorage.removeItem(KHOA_NGUOI_DA_DONG_BO);
             } catch (e) {}
         };
 
@@ -63,6 +108,71 @@ export function CartProvider({ children }) {
             console.error(e);
         }
     }, [danhSachMuc, maGiamGiaDaDung, tienGiamGia, daKhoiTao]);
+
+    /**
+     * ĐỒNG BỘ GIỎ THEO TÀI KHOẢN (chỉ khi đã đăng nhập; khách vãng lai vẫn dùng giỏ trong trình duyệt như cũ).
+     *  - Khi đăng nhập / mở trang: kéo giỏ từ server. Nếu giỏ trong trình duyệt là giỏ khách vãng lai thì hợp nhất vào giỏ tài khoản;
+     *    nếu nó đã là bản sao của giỏ tài khoản này thì lấy theo server (phản ánh thay đổi từ máy khác).
+     *  - Sau đó mỗi thay đổi của giỏ được đẩy lên server (gộp 0,6 giây).
+     *  - Quay lại tab hoặc đổi máy: kéo lại để luôn thấy giỏ mới nhất.
+     */
+    const keoGioTuServer = (idNguoi, laLanDau, daBiHuy) => {
+        return GioHangService.layGioHangAsync().then(({ danh_sach_muc: tuServerTho, da_go: daGo }) => {
+            if (daBiHuy()) return; // đã đăng xuất / đổi tài khoản / rời trang trong lúc chờ → bỏ kết quả
+            if (!laLanDau && daDongBoRef.current !== idNguoi) return;
+            const tuServer = tuServerTho.map(mucTuServer);
+            const daTungDongBo = localStorage.getItem(KHOA_NGUOI_DA_DONG_BO) === idNguoi;
+            setDanhSachMuc((cu) => {
+                const moi = daTungDongBo ? tuServer : hopNhatGio(tuServer, cu);
+                // Nếu bản mới không khác server thì không cần đẩy lại
+                lanDayCuoiRef.current = JSON.stringify(tuServer.map(rutGonMuc));
+                return moi;
+            });
+            localStorage.setItem(KHOA_NGUOI_DA_DONG_BO, idNguoi);
+            daDongBoRef.current = idNguoi;
+            if (daGo.length > 0) {
+                toast.warning(`${daGo.length} sản phẩm trong giỏ đã hết hàng hoặc ngừng bán nên được gỡ: ${daGo.join(', ')}`);
+            }
+        });
+    };
+
+    useEffect(() => {
+        if (!daKhoiTao || !idNguoiDung) {
+            daDongBoRef.current = null;
+            return;
+        }
+        let daHuy = false;
+        keoGioTuServer(idNguoiDung, true, () => daHuy).catch(() => {
+            /* server tạm thời lỗi: vẫn dùng giỏ trong trình duyệt, lần sau đồng bộ lại */
+        });
+
+        // Quay lại tab (hoặc mở lại trình duyệt) thì kéo lại giỏ để thấy thay đổi từ máy khác
+        const khiHienLai = () => {
+            if (!daHuy && document.visibilityState === 'visible' && daDongBoRef.current === idNguoiDung) {
+                keoGioTuServer(idNguoiDung, false, () => daHuy).catch(() => {});
+            }
+        };
+        document.addEventListener('visibilitychange', khiHienLai);
+        return () => {
+            daHuy = true;
+            document.removeEventListener('visibilitychange', khiHienLai);
+        };
+    }, [daKhoiTao, idNguoiDung]);
+
+    // Đẩy thay đổi của giỏ lên server (chỉ khi đã đồng bộ lần đầu cho đúng tài khoản này)
+    useEffect(() => {
+        if (!daKhoiTao || !idNguoiDung || daDongBoRef.current !== idNguoiDung) return;
+        const noiDung = JSON.stringify(danhSachMuc.map(rutGonMuc));
+        if (noiDung === lanDayCuoiRef.current) return;
+        const hen = setTimeout(() => {
+            GioHangService.luuGioHangAsync(danhSachMuc.map(rutGonMuc))
+                .then(() => {
+                    lanDayCuoiRef.current = noiDung;
+                })
+                .catch((loi) => console.warn('[Giỏ hàng] Chưa lưu được lên server:', loi.message));
+        }, 600);
+        return () => clearTimeout(hen);
+    }, [danhSachMuc, daKhoiTao, idNguoiDung]);
 
     /**
      * Đồng bộ giỏ hàng với dữ liệu thật trên server.
