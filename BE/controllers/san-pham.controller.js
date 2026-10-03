@@ -181,10 +181,36 @@ const laySanPhamTheoId = async (req, res) => {
     }
 };
 
+// Kiểm tra cặp giá và tính phần trăm giảm.
+//  - "Giá niêm yết gốc" chỉ để hiện giá gạch ngang so sánh: phải bằng 0 (không có giá cũ) hoặc >= giá bán.
+//    Nếu cho nhập thấp hơn giá bán thì giá gạch ngang biến mất và Admin tưởng "lưu không đổi giá".
+//  - Giá bán thật là "Giá khuyến mãi" (gia_khuyen_mai).
+//  - Phần trăm giảm do server tính từ hai giá, không tin số client gửi, để nhãn "-x%" luôn khớp giá thật.
+const dinhDangVnd = (so) => `${Number(so).toLocaleString('vi-VN')} đ`;
+
+const kiemTraVaTinhGia = (duLieu, hienTai = {}) => {
+    const giaGoc = Number(duLieu.gia_goc ?? hienTai.gia_goc ?? 0);
+    const giaBan = Number(duLieu.gia_khuyen_mai ?? hienTai.gia_khuyen_mai ?? 0);
+    if (!Number.isFinite(giaGoc) || !Number.isFinite(giaBan) || giaGoc < 0 || giaBan < 0) {
+        return { loi: 'Giá sản phẩm không hợp lệ.' };
+    }
+    if (giaGoc > 0 && giaGoc < giaBan) {
+        return {
+            loi:
+                `Giá niêm yết gốc (${dinhDangVnd(giaGoc)}) phải lớn hơn hoặc bằng giá khuyến mãi (${dinhDangVnd(giaBan)}). ` +
+                'Muốn đổi giá bán, hãy sửa ô "Giá Khuyến Mãi (Thực Thu)"; để giá gốc bằng 0 nếu không có giá cũ.'
+        };
+    }
+    return { phanTramGiamGia: giaGoc > giaBan ? Math.round(((giaGoc - giaBan) / giaGoc) * 100) : 0 };
+};
+
 // 3. Thêm sản phẩm mới (dành cho Admin)
 const themSanPham = async (req, res) => {
     const duLieuMoi = { ...req.body };
     try {
+        const ketQuaGia = kiemTraVaTinhGia(duLieuMoi);
+        if (ketQuaGia.loi) return res.status(400).json({ thong_diep: ketQuaGia.loi });
+        duLieuMoi.phan_tram_giam_gia = ketQuaGia.phanTramGiamGia;
         if (!duLieuMoi.id && duLieuMoi.ten_san_pham) {
             duLieuMoi.id = 'sp-' + Date.now();
         }
@@ -216,6 +242,17 @@ const capNhatSanPham = async (req, res) => {
     try {
         if (duLieuCapNhat.ten_san_pham && !duLieuCapNhat.slug) {
             duLieuCapNhat.slug = taoSlug(duLieuCapNhat.ten_san_pham);
+        }
+
+        // Chỉ kiểm tra giá khi lần sửa này có đụng tới giá (đổi trạng thái ẩn / flash sale thì bỏ qua)
+        if (duLieuCapNhat.gia_goc !== undefined || duLieuCapNhat.gia_khuyen_mai !== undefined) {
+            const hienTai =
+                (await SanPham.findOne({ $or: [{ slug: id }, { id }, { ma_san_pham: id }] })
+                    .select('gia_goc gia_khuyen_mai')
+                    .lean()) || {};
+            const ketQuaGia = kiemTraVaTinhGia(duLieuCapNhat, hienTai);
+            if (ketQuaGia.loi) return res.status(400).json({ thong_diep: ketQuaGia.loi });
+            duLieuCapNhat.phan_tram_giam_gia = ketQuaGia.phanTramGiamGia;
         }
 
         let sanPham = await SanPham.findOneAndUpdate(

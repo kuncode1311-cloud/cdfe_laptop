@@ -157,3 +157,71 @@ describe('Quản lý sản phẩm (chỉ Admin)', () => {
         expect(await SanPham.countDocuments()).toBe(0);
     });
 });
+
+describe('Giá sản phẩm (Admin sửa giá)', () => {
+    const dangNhapAdmin = async () => ({
+        Authorization: `Bearer ${taoTokenCho(await taoNguoiDung({ vaiTro: 'admin' }))}`
+    });
+
+    test('giá niêm yết gốc THẤP HƠN giá bán → 400, kèm hướng dẫn sửa ô "Giá Khuyến Mãi"', async () => {
+        await taoSanPham({ gia_goc: 30000000, gia_khuyen_mai: 25990000 });
+        const res = await request(app)
+            .put('/api/san-pham/asus-zenbook-14-test')
+            .set(await dangNhapAdmin())
+            .send({ gia_goc: 1000, gia_khuyen_mai: 25990000 });
+
+        expect(res.status).toBe(400);
+        expect(res.body.thong_diep).toContain('Giá Khuyến Mãi');
+        expect((await SanPham.findOne({ id: 'asus-zenbook-14-test' })).gia_goc).toBe(30000000); // không bị ghi đè
+    });
+
+    test('sửa giá bán hợp lệ → phần trăm giảm do server tính lại, không tin số client gửi', async () => {
+        await taoSanPham({ gia_goc: 125000000, gia_khuyen_mai: 109990000, phan_tram_giam_gia: 12 });
+        const res = await request(app)
+            .put('/api/san-pham/asus-zenbook-14-test')
+            .set(await dangNhapAdmin())
+            .send({ gia_goc: 125000000, gia_khuyen_mai: 100000000, phan_tram_giam_gia: 99 });
+
+        expect(res.status).toBe(200);
+        expect(res.body.gia_khuyen_mai).toBe(100000000);
+        expect(res.body.phan_tram_giam_gia).toBe(20); // (125tr - 100tr) / 125tr
+    });
+
+    test('giá gốc = 0 (không có giá cũ) → hợp lệ, phần trăm giảm = 0', async () => {
+        await taoSanPham();
+        const res = await request(app)
+            .put('/api/san-pham/asus-zenbook-14-test')
+            .set(await dangNhapAdmin())
+            .send({ gia_goc: 0, gia_khuyen_mai: 25990000 });
+
+        expect(res.status).toBe(200);
+        expect(res.body.phan_tram_giam_gia).toBe(0);
+    });
+
+    test('đổi trạng thái ẩn / hiện (không gửi giá) vẫn được và không bị kiểm tra giá', async () => {
+        await taoSanPham({ gia_goc: 1000, gia_khuyen_mai: 25990000 }); // dữ liệu cũ có giá lệch
+        const res = await request(app)
+            .put('/api/san-pham/asus-zenbook-14-test')
+            .set(await dangNhapAdmin())
+            .send({ con_hang: false });
+
+        expect(res.status).toBe(200);
+        expect(res.body.con_hang).toBe(false);
+    });
+
+    test('thêm sản phẩm với giá gốc thấp hơn giá bán → 400', async () => {
+        const res = await request(app)
+            .post('/api/san-pham')
+            .set(await dangNhapAdmin())
+            .send({
+                ma_san_pham: 'GIA-01',
+                ten_san_pham: 'Laptop Sai Giá',
+                hang_san_xuat: 'asus',
+                gia_goc: 5000000,
+                gia_khuyen_mai: 9000000
+            });
+
+        expect(res.status).toBe(400);
+        expect(await SanPham.countDocuments()).toBe(0);
+    });
+});
