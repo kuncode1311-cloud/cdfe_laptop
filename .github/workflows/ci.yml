@@ -33,7 +33,7 @@ jobs:
       run:
         working-directory: BE
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -75,7 +75,7 @@ jobs:
       NEXT_PUBLIC_API_URL: https://api.trikun.site/api
       NEXT_TELEMETRY_DISABLED: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -104,7 +104,7 @@ jobs:
       API_URL: https://laptop.up.railway.app      # service Back-End trên Railway
       WEB_URL: https://shoplaptop.up.railway.app  # service Front-End trên Railway
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Kiểm tra các điểm quan trọng: server sống, tài liệu API, API công khai,
       # API được bảo vệ phải từ chối khi thiếu token, và website Front-End.
