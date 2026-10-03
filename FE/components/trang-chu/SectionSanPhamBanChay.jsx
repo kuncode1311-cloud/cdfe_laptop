@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { ArrowRight, Trophy } from 'lucide-react';
 import { SanPhamService } from '@/services/san-pham.service';
 import TheSanPham from '@/components/san-pham/TheSanPham';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 export default function SectionSanPhamBanChay() {
     const [tabHienTai, setTabHienTai] = useState('tat_ca');
     const [tatCaSanPham, setTatCaSanPham] = useState([]);
     const [dangTai, setDangTai] = useState(true);
 
     // Đồng bộ danh sách sản phẩm từ MongoDB Atlas theo thời gian thực
+    const phienBanDuLieu = useDuLieuMoi('san_pham');
     useEffect(() => {
         let daHuy = false;
         // Nếu đã có dữ liệu trong bộ nhớ đệm, hiển thị ngay
@@ -28,7 +30,7 @@ export default function SectionSanPhamBanChay() {
             if (!daHuy) setDangTai(false);
         });
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
     // Lọc sản phẩm bán chạy theo tab và sắp xếp theo lượt bán thực tế từ MongoDB
     const danhSachLoc = tatCaSanPham
         .filter((sp) => {

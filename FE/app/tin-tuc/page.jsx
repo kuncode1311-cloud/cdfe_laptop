@@ -6,6 +6,7 @@ import { Home, ChevronRight, Calendar, ArrowRight, Eye, Clock, Search, Flame, X,
 import { TinTucService } from '@/services/tin-tuc.service';
 import { slugTinTuc } from '@/utils/taoSlug';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 const CHUYEN_MUC = [
   {
@@ -163,14 +164,17 @@ export default function TrangTinTuc() {
     return () => clearTimeout(timer);
   }, [locChon, tuKhoa]);
 
+  // Admin thêm / sửa / xóa bài → tự nạp lại ngầm (chỉ lần đầu mới hiện vòng quay)
+  const phienBanDuLieu = useDuLieuMoi('tin_tuc');
+  const daNapLanDauRef = React.useRef(false);
   useEffect(() => {
     (async () => {
-      setDangTai(true);
+      if (!daNapLanDauRef.current) setDangTai(true);
       try { setDanhSachTin((await TinTucService.layDanhSachTinTucAsync()) || []); }
       catch (e) { console.error(e); }
-      finally { setDangTai(false); }
+      finally { setDangTai(false); daNapLanDauRef.current = true; }
     })();
-  }, []);
+  }, [phienBanDuLieu]);
 
   const danhSachLoc = useMemo(() => {
     return danhSachTin.filter(t => {

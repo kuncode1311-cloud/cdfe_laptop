@@ -20,6 +20,7 @@ import confetti from 'canvas-confetti';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import { CaiDatService } from '@/services/cai-dat.service';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 export default function TrangKhuyenMai() {
     const { daDangNhap, nguoiDung, moModalDangNhap, capNhatViVoucher } = useNguoiDung();
@@ -34,6 +35,7 @@ export default function TrangKhuyenMai() {
     const [tabHienTai, setTabHienTai] = useState('tat_ca');
     const [dangLocTab, setDangLocTab] = useState(false);
     const daMountTabRef = React.useRef(false);
+    const daNapLanDauRef = React.useRef(false);
 
     useEffect(() => {
         if (!daMountTabRef.current) {
@@ -67,7 +69,7 @@ export default function TrangKhuyenMai() {
 
     // Tải dữ liệu Voucher và Sản phẩm Giảm Sâu 100% từ MongoDB Atlas qua Service
     const taiDuLieuKhuyenMai = () => {
-        setDangTai(true);
+        if (!daNapLanDauRef.current) setDangTai(true); // làm mới ngầm khi Admin đổi dữ liệu
         setLoiKetNoi(null);
 
         Promise.all([
@@ -89,11 +91,17 @@ export default function TrangKhuyenMai() {
             })
             .finally(() => {
                 setDangTai(false);
+                daNapLanDauRef.current = true;
             });
     };
 
+    // Admin thêm / sửa / xóa voucher hoặc sản phẩm giảm sâu → tự nạp lại
+    const phienBanDuLieu = useDuLieuMoi('san_pham', 'ma_giam_gia');
     useEffect(() => {
         taiDuLieuKhuyenMai();
+    }, [phienBanDuLieu]);
+
+    useEffect(() => {
 
         setCaiDatKm(CaiDatService.layCaiDatKhuyenMai());
         const xuLyCaiDatDoi = (e) => {

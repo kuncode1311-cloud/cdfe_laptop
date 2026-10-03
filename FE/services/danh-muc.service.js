@@ -1,4 +1,5 @@
 import { apiFetch } from './api-client';
+import { thongBaoThayDoi } from './dong-bo.service';
 
 // Bộ nhớ đệm danh mục để hỗ trợ render nhanh và fallback an toàn
 let boNhoDemDanhMuc = [];
@@ -64,6 +65,7 @@ export const DanhMucService = {
             body: JSON.stringify(duLieu)
         });
         await this.layDanhSachDanhMucAsync(); // Cập nhật lại bộ nhớ đệm
+        thongBaoThayDoi('danh_muc');
         return res;
     },
 
@@ -76,6 +78,7 @@ export const DanhMucService = {
             body: JSON.stringify(duLieu)
         });
         await this.layDanhSachDanhMucAsync();
+        thongBaoThayDoi('danh_muc');
         return res;
     },
 
@@ -87,6 +90,7 @@ export const DanhMucService = {
             method: 'DELETE'
         });
         await this.layDanhSachDanhMucAsync();
+        thongBaoThayDoi('danh_muc');
         return res;
     }
 };

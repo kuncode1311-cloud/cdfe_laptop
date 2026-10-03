@@ -29,6 +29,7 @@ import { useGioHang } from '@/contexts/CartContext';
 import { SanPhamService } from '@/services/san-pham.service';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import { slugSanPham } from '@/utils/taoSlug';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 export default function TrangSoSanh() {
     const {
@@ -56,6 +57,7 @@ export default function TrangSoSanh() {
     const loaiHienTai = danhSachChuan.length > 0 ? layLoaiSanPham(danhSachChuan[0]) : 'laptop';
     const tenLoaiHienTai = layTenLoaiSanPham(loaiHienTai);
 
+    const phienBanDuLieu = useDuLieuMoi('san_pham');
     useEffect(() => {
         let daHuy = false;
         SanPhamService.layTatCaSanPhamAsync().then((data) => {
@@ -64,7 +66,7 @@ export default function TrangSoSanh() {
             }
         });
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
 
     // Định nghĩa bảng tiêu chí kỹ thuật chuẩn xác theo từng loại sản phẩm
     const cacNhomTieuChi = useMemo(() => {

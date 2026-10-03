@@ -1,4 +1,5 @@
 import { apiFetch } from './api-client';
+import { thongBaoThayDoi } from './dong-bo.service';
 import { taoSlug } from '@/utils/taoSlug';
 
 let boNhoDemTinTuc = [];
@@ -74,6 +75,7 @@ export const TinTucService = {
         if (itemMoi) {
             boNhoDemTinTuc.unshift(itemMoi);
         }
+        thongBaoThayDoi('tin_tuc');
         return itemMoi;
     },
 
@@ -90,6 +92,7 @@ export const TinTucService = {
             const idx = boNhoDemTinTuc.findIndex(t => t.id === id || t._id === id);
             if (idx !== -1) boNhoDemTinTuc[idx] = itemSua;
         }
+        thongBaoThayDoi('tin_tuc');
         return itemSua;
     },
 
@@ -101,6 +104,7 @@ export const TinTucService = {
             method: 'DELETE'
         });
         boNhoDemTinTuc = boNhoDemTinTuc.filter(t => t.id !== id && t._id !== id);
+        thongBaoThayDoi('tin_tuc');
         return true;
     }
 };

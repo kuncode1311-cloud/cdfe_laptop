@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Star, CheckCircle, Quote, ThumbsUp, Sparkles, MapPin, ShieldCheck } from 'lucide-react';
 import { DanhGiaService } from '@/services/danh-gia.service';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 // Danh sách avatar mặc định tinh tế cho khách hàng thực tế
 const AVATAR_MAC_DINH = [
@@ -118,6 +119,7 @@ export default function DanhGiaKhachHang() {
     };
 
     // Nạp toàn bộ dữ liệu đánh giá thực tế từ MongoDB Atlas qua RESTful API
+    const phienBanDuLieu = useDuLieuMoi('danh_gia');
     useEffect(() => {
         let daHuy = false;
         DanhGiaService.layTatCaDanhGiaAsync().then((data) => {
@@ -156,7 +158,7 @@ export default function DanhGiaKhachHang() {
         });
 
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
 
     return (
         <section className="w-full space-y-5">

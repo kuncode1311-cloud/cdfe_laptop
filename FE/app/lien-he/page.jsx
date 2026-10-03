@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 import { LienHeService } from '@/services/lien-he.service';
 import { CaiDatService } from '@/services/cai-dat.service';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 // Danh sách các chủ đề tư vấn thông dụng để khách chọn nhanh
 const DANH_SACH_CHU_DE = [
@@ -39,6 +40,7 @@ export default function TrangLienHe() {
     const [danhSachShowroom, setDanhSachShowroom] = useState([]);
     const [showroomHienTai, setShowroomHienTai] = useState(null);
 
+    const phienBanDuLieu = useDuLieuMoi('cai_dat');
     useEffect(() => {
         // Tải danh sách showroom từ Backend hoặc LocalStorage
         CaiDatService.layDanhSachShowroomAsync().then((ds) => {
@@ -58,7 +60,7 @@ export default function TrangLienHe() {
 
         window.addEventListener('tntp_showroom_cap_nhat', xuLyCapNhatShowroom);
         return () => window.removeEventListener('tntp_showroom_cap_nhat', xuLyCapNhatShowroom);
-    }, []);
+    }, [phienBanDuLieu]);
 
     // 2. Quản lý vị trí GPS của người dùng & chế độ chỉ đường Google Maps
     const [viTriNguoiDung, setViTriNguoiDung] = useState(null); // { vi_do, kinh_do }

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, ChevronDown, Gamepad2, Cpu, Feather, HardDrive, Keyboard, Mouse, Headphones, Laptop, Flame, ShieldCheck, ArrowRight, } from "lucide-react";
 import { DanhMucService } from "@/services/danh-muc.service";
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 export default function MenuDanhMuc() {
     const [menuDanhMucMo, setMenuDanhMucMo] = useState(false);
     const [menuChinhSachMo, setMenuChinhSachMo] = useState(false);
@@ -17,6 +18,7 @@ export default function MenuDanhMuc() {
         { ma_hang: 'hp', ten_hang: 'HP OMEN' }
     ]);
 
+    const phienBanDuLieu = useDuLieuMoi('danh_muc');
     useEffect(() => {
         let daHuy = false;
         DanhMucService.layDanhSachThuongHieuAsync().then((data) => {
@@ -29,7 +31,7 @@ export default function MenuDanhMuc() {
             }
         });
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
     return (<nav className="w-full bg-[#0040a8] text-white shadow-md hidden lg:block transition-colors border-t border-white/10 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between text-xs font-bold uppercase tracking-wider">
         {/* 1. Nút Lớn "DANH MỤC SẢN PHẨM" với Mega Menu Đa Cột */}

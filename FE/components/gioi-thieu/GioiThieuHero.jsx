@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { SanPhamService } from '@/services/san-pham.service';
 import { DanhMucService } from '@/services/danh-muc.service';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 /**
  * Component Hero Giới Thiệu Cửa Hàng & Băng Thống Kê TNT LAPTOP
@@ -36,6 +37,7 @@ export default function GioiThieuHero() {
   const [tongSoMay, setTongSoMay] = useState(12);
   const [tongSoHang, setTongSoHang] = useState(7);
 
+  const phienBanDuLieu = useDuLieuMoi('san_pham', 'danh_muc');
   useEffect(() => {
     let daHuy = false;
     Promise.all([
@@ -48,7 +50,7 @@ export default function GioiThieuHero() {
       }
     }).catch(() => {});
     return () => { daHuy = true; };
-  }, []);
+  }, [phienBanDuLieu]);
 
   return (
     <div className="space-y-4 sm:space-y-5 w-full">

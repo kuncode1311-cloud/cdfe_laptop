@@ -8,6 +8,7 @@ import TheSanPham from '@/components/san-pham/TheSanPham';
 import { SanPhamService } from '@/services/san-pham.service';
 
 import { CaiDatService } from '@/services/cai-dat.service';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 export default function FlashSaleDemNguoc({ danhSachSanPham }) {
     const [danhSach, setDanhSach] = useState(danhSachSanPham || []);
@@ -24,6 +25,7 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
     }, []);
 
     // Nạp danh sách Flash Sale từ MongoDB Atlas qua API
+    const phienBanDuLieu = useDuLieuMoi('san_pham');
     useEffect(() => {
         if (!danhSachSanPham) {
             let daHuy = false;
@@ -45,7 +47,7 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
             });
             return () => { daHuy = true; };
         }
-    }, [danhSachSanPham]);
+    }, [danhSachSanPham, phienBanDuLieu]);
 
     // Đồng hồ đếm ngược Flash Sale đồng bộ với Admin Cài Đặt Khuyến Mãi
     const [ngay, setNgay] = useState(0);

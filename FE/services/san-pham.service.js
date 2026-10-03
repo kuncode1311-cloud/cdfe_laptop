@@ -1,4 +1,5 @@
 import { apiFetch } from './api-client';
+import { thongBaoThayDoi } from './dong-bo.service';
 import { taoSlug } from '@/utils/taoSlug';
 
 // Bộ nhớ tạm chứa danh sách sản phẩm nạp từ MongoDB Atlas qua API
@@ -72,12 +73,27 @@ export const SanPhamService = {
         const slugKey = taoSlug(decoded);
 
         try {
+            // Server trả 404 = sản phẩm không tồn tại / đã bị Admin ẩn hoặc xóa (khác với lỗi mạng)
+            let serverBaoKhongCo = false;
+            const goiApi = (khoa) =>
+                apiFetch(`/san-pham/${encodeURIComponent(khoa)}`, { cache: 'no-store' }).catch((err) => {
+                    if (err?.status === 404) serverBaoKhongCo = true;
+                    return null;
+                });
+
             // 1. Thử gọi API với mã gốc / decoded
-            let sp = await apiFetch(`/san-pham/${encodeURIComponent(decoded)}`, { cache: 'no-store' }).catch(() => null);
+            let sp = await goiApi(decoded);
 
             // 2. Nếu chưa có, thử gọi bằng slug chuẩn hóa
             if (!sp && slugKey && slugKey !== decoded) {
-                sp = await apiFetch(`/san-pham/${encodeURIComponent(slugKey)}`, { cache: 'no-store' }).catch(() => null);
+                sp = await goiApi(slugKey);
+            }
+
+            // 3. Server xác nhận không còn → xóa khỏi bộ nhớ đệm, không hiện lại bản cũ
+            if (!sp && serverBaoKhongCo) {
+                const cu = this.laySanPhamTheoId(idHoacSku);
+                if (cu) boNhoDemSanPham = boNhoDemSanPham.filter((item) => item !== cu);
+                return null;
             }
 
             if (sp && (sp.id || sp._id)) {
@@ -362,6 +378,7 @@ export const SanPhamService = {
             body: JSON.stringify(duLieuMoi)
         });
         await this.layTatCaSanPhamAsync(); // Cập nhật lại bộ nhớ đệm
+        thongBaoThayDoi('san_pham'); // Báo cho các tab / trang của khách tự làm mới
         return res;
     },
 
@@ -374,6 +391,7 @@ export const SanPhamService = {
             body: JSON.stringify(duLieuCapNhat)
         });
         await this.layTatCaSanPhamAsync(); // Cập nhật lại bộ nhớ đệm
+        thongBaoThayDoi('san_pham'); // Báo cho các tab / trang của khách tự làm mới
         return res;
     },
 
@@ -385,6 +403,7 @@ export const SanPhamService = {
             method: 'DELETE'
         });
         await this.layTatCaSanPhamAsync(); // Cập nhật lại bộ nhớ đệm
+        thongBaoThayDoi('san_pham'); // Báo cho các tab / trang của khách tự làm mới
         return res;
     }
 };

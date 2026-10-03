@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ArrowRight, Newspaper, Clock, Eye, Calendar, Sparkles, Flame } from 'lucide-react';
 import { TinTucService } from '@/services/tin-tuc.service';
 import { slugTinTuc } from '@/utils/taoSlug';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 const DANH_MUC_TIN = [
     'TẤT CẢ',
@@ -58,6 +59,7 @@ export default function TinTucCongNghe() {
     const [dangTai, setDangTai] = useState(true);
 
     // Nạp dữ liệu tin tức thời gian thực từ MongoDB Atlas
+    const phienBanDuLieu = useDuLieuMoi('tin_tuc');
     useEffect(() => {
         let daHuy = false;
         TinTucService.layDanhSachTinTucAsync().then((data) => {
@@ -69,7 +71,7 @@ export default function TinTucCongNghe() {
             if (!daHuy) setDangTai(false);
         });
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
 
     // Lọc danh sách tin tức theo chuyên mục đã chọn
     const danhSachHienThi = chuyenMucChon === 'TẤT CẢ'

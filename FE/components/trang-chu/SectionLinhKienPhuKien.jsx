@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { Cpu, HardDrive, Keyboard, Mouse, ArrowRight, Sparkles, Wrench } from 'lucide-react';
 import { SanPhamService } from '@/services/san-pham.service';
 import TheSanPham from '@/components/san-pham/TheSanPham';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 export default function SectionLinhKienPhuKien() {
     const [danhSachLinhKien, setDanhSachLinhKien] = useState([]);
     const [dangTai, setDangTai] = useState(true);
 
+    const phienBanDuLieu = useDuLieuMoi('san_pham');
     useEffect(() => {
         let daHuy = false;
         SanPhamService.layTatCaSanPhamAsync().then((data) => {
@@ -24,7 +26,7 @@ export default function SectionLinhKienPhuKien() {
             if (!daHuy) setDangTai(false);
         });
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
 
     return (
         <section className="space-y-6">

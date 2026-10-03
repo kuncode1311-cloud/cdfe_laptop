@@ -24,6 +24,7 @@ import { TinTucService } from '@/services/tin-tuc.service';
 import { SanPhamService } from '@/services/san-pham.service';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import { slugTinTuc } from '@/utils/taoSlug';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 export default function ChiTietTinTuc() {
     const params = useParams();
@@ -35,10 +36,13 @@ export default function ChiTietTinTuc() {
     const [dangTai, setDangTai] = useState(true);
     const [daCopyLink, setDaCopyLink] = useState(false);
 
+    // Admin sửa / xóa bài hoặc sản phẩm → tự nạp lại ngầm (chỉ lần đầu mới hiện vòng quay)
+    const phienBanDuLieu = useDuLieuMoi('tin_tuc', 'san_pham');
+    const daNapLanDauRef = React.useRef(false);
     useEffect(() => {
         const napDuLieu = async () => {
             if (!id) return;
-            setDangTai(true);
+            if (!daNapLanDauRef.current) setDangTai(true);
             try {
                 const [bv, allNews, allProducts] = await Promise.all([
                     TinTucService.layChiTietTinTucAsync(id),
@@ -59,11 +63,28 @@ export default function ChiTietTinTuc() {
                 console.error('Lỗi tải bài viết chi tiết:', err);
             } finally {
                 setDangTai(false);
+                daNapLanDauRef.current = true;
             }
         };
 
+        daNapLanDauRef.current = false; // đổi sang bài khác thì hiện lại vòng quay
         napDuLieu();
     }, [id]);
+
+    useEffect(() => {
+        if (!daNapLanDauRef.current) return;
+        // Làm mới ngầm khi dữ liệu đổi: không đổi trạng thái tải
+        Promise.all([TinTucService.layChiTietTinTucAsync(id), TinTucService.layDanhSachTinTucAsync(), SanPhamService.layTatCaSanPhamAsync()])
+            .then(([bv, allNews, allProducts]) => {
+                if (bv) {
+                    setBaiViet(bv);
+                    setTinLienQuan((allNews || []).filter(t => (t.id || t._id) !== (bv.id || bv._id)).slice(0, 3));
+                }
+                setSanPhamLienQuan((allProducts || []).slice(0, 3));
+            })
+            .catch(() => {});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [phienBanDuLieu]);
 
     const xuLyCopyLink = () => {
         if (typeof window !== 'undefined') {

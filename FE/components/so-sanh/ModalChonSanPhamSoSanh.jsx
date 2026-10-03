@@ -6,6 +6,7 @@ import { Search, X, Plus, Check, Laptop, Sparkles } from 'lucide-react';
 import { useSoSanh, layLoaiSanPham, layTenLoaiSanPham } from '@/contexts/CompareContext';
 import { SanPhamService } from '@/services/san-pham.service';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 export default function ModalChonSanPhamSoSanh({ isOpen, onClose }) {
     const { danh_sach_so_sanh, themVaoSoSanh, kiemTraDaCoTrongSoSanh } = useSoSanh();
@@ -18,6 +19,7 @@ export default function ModalChonSanPhamSoSanh({ isOpen, onClose }) {
     const loaiHienTai = danh_sach_so_sanh.length > 0 ? layLoaiSanPham(danh_sach_so_sanh[0]) : 'laptop';
     const tenLoaiHienTai = layTenLoaiSanPham(loaiHienTai);
 
+    const phienBanDuLieu = useDuLieuMoi('san_pham');
     useEffect(() => {
         setMounted(true);
         let daHuy = false;
@@ -27,7 +29,7 @@ export default function ModalChonSanPhamSoSanh({ isOpen, onClose }) {
             }
         });
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
 
     useEffect(() => {
         if (isOpen) {

@@ -4,6 +4,7 @@ import { Check, Ticket, Sparkles, AlertCircle, CheckCircle2, ArrowRight, Tag, Cl
 import { useGioHang } from '@/contexts/CartContext';
 import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 export default function NhapMaGiamGia() {
     const { gio_hang, apDungVoucher, huyVoucher } = useGioHang();
@@ -11,6 +12,7 @@ export default function NhapMaGiamGia() {
     const [danhSachVoucher, setDanhSachVoucher] = useState(() => MaGiamGiaService.layDanhSachMaGiamGia());
     const [dangXuLy, setDangXuLy] = useState(false);
 
+    const phienBanDuLieu = useDuLieuMoi('ma_giam_gia');
     useEffect(() => {
         let daHuy = false;
         MaGiamGiaService.layDanhSachMaGiamGiaAsync().then((data) => {
@@ -19,7 +21,7 @@ export default function NhapMaGiamGia() {
             }
         });
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
 
     const xuLyApDung = async (e) => {
         e.preventDefault();

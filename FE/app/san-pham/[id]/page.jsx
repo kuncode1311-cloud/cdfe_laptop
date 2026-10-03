@@ -15,6 +15,7 @@ import BangThongSoKyThuat from '@/components/san-pham/BangThongSoKyThuat';
 import KhoHangChiNhanh from '@/components/san-pham/KhoHangChiNhanh';
 import DanhGiaSanPham from '@/components/san-pham/DanhGiaSanPham';
 import TheSanPham from '@/components/san-pham/TheSanPham';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 export default function TrangChiTietSanPham({ params }) {
     const router = useRouter();
     const { nguoiDung, moModalDangNhap } = useNguoiDung();
@@ -53,6 +54,22 @@ export default function TrangChiTietSanPham({ params }) {
     useEffect(() => {
         taiLaiDuLieu();
     }, [id]);
+
+    // Admin sửa / ẩn / xóa sản phẩm → tự nạp lại ngầm (không hiện vòng quay).
+    // Nếu server báo sản phẩm không còn thì trang chuyển sang "không tìm thấy" thay vì giữ bản cũ.
+    const phienBanDuLieu = useDuLieuMoi('san_pham');
+    const boQuaLanDauRef = React.useRef(true);
+    useEffect(() => {
+        if (boQuaLanDauRef.current) {
+            boQuaLanDauRef.current = false;
+            return;
+        }
+        if (!id) return;
+        SanPhamService.laySanPhamTheoIdAsync(id)
+            .then((sp) => setSanPham(sp || null))
+            .catch(() => {});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [phienBanDuLieu]);
 
     const { themVaoGioHang } = useGioHang();
     const { themVaoSoSanh, kiemTraDaCoTrongSoSanh } = useSoSanh();

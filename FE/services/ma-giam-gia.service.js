@@ -1,4 +1,5 @@
 import { apiFetch } from './api-client';
+import { thongBaoThayDoi } from './dong-bo.service';
 
 let boNhoDemVoucher = [];
 
@@ -107,20 +108,24 @@ export const MaGiamGiaService = {
      * Thêm mã giảm giá mới (Dành cho Admin)
      */
     async themMaGiamGia(duLieuMoi) {
-        return await apiFetch('/ma-giam-gia', {
+        const res = await apiFetch('/ma-giam-gia', {
             method: 'POST',
             body: JSON.stringify(duLieuMoi)
         });
+        thongBaoThayDoi('ma_giam_gia');
+        return res;
     },
 
     /**
      * Cập nhật mã giảm giá (Dành cho Admin)
      */
     async capNhatMaGiamGia(id, duLieuCapNhat) {
-        return await apiFetch(`/ma-giam-gia/${id}`, {
+        const res = await apiFetch(`/ma-giam-gia/${id}`, {
             method: 'PUT',
             body: JSON.stringify(duLieuCapNhat)
         });
+        thongBaoThayDoi('ma_giam_gia');
+        return res;
     },
 
     /**
@@ -150,8 +155,10 @@ export const MaGiamGiaService = {
      * Xóa mã giảm giá (Dành cho Admin)
      */
     async xoaMaGiamGia(id) {
-        return await apiFetch(`/ma-giam-gia/${id}`, {
+        const res = await apiFetch(`/ma-giam-gia/${id}`, {
             method: 'DELETE'
         });
+        thongBaoThayDoi('ma_giam_gia');
+        return res;
     }
 };

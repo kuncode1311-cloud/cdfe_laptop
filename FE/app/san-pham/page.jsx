@@ -11,6 +11,7 @@ import ThanhBoLocTinhGon from '@/components/san-pham/ThanhBoLocTinhGon';
 import BoLocSanPhamComponent from '@/components/san-pham/BoLocSanPham';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 function NoiDungDanhSachSanPham() {
     const searchParams = useSearchParams();
@@ -102,6 +103,7 @@ function NoiDungDanhSachSanPham() {
             });
     };
 
+    const phienBanDuLieu = useDuLieuMoi('san_pham');
     useEffect(() => {
         let daHuy = false;
         // Kiểm tra bộ nhớ đệm nếu đã có
@@ -129,7 +131,7 @@ function NoiDungDanhSachSanPham() {
                 }
             });
         return () => { daHuy = true; };
-    }, []);
+    }, [phienBanDuLieu]);
 
     // Thống kê số lượng theo danh mục cho Topbar
     const danhSachDanhMucTopbar = useMemo(() => {
