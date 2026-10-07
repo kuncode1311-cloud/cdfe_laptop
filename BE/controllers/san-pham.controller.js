@@ -20,7 +20,13 @@ const datCacheTheoVaiTro = (req, res, cachePublic) => {
     res.set('Cache-Control', laAdmin(req) ? 'private, no-store' : cachePublic);
 };
 
-// 1. Lấy tất cả sản phẩm (kèm tìm kiếm, lọc đa tiêu chí và sắp xếp)
+/**
+ * LUỒNG 6: Truy vấn & Quản lý Danh mục Sản phẩm Laptop
+ * - Hỗ trợ lọc đa tiêu chí: Hãng, phân khúc giá, nhu cầu, tình trạng Flash Sale, Bán chạy.
+ * - Cơ chế Caching thông minh: Phân biệt quyền Khách (Public Cache 60s) vs Admin (No-store để cập nhật tức thì).
+ * - Phòng chống ReDoS (Regular Expression Denial of Service) khi khách gõ từ khóa tìm kiếm.
+ * - Cơ chế tự động ẩn sản phẩm hết hàng hoặc bị tạm ẩn khỏi người mua thường.
+ */
 const layTatCaSanPham = async (req, res) => {
     // HTTP Caching cho khách (60s); Admin luôn lấy dữ liệu mới nhất
     datCacheTheoVaiTro(req, res, 'public, max-age=60, stale-while-revalidate=120');

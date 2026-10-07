@@ -27,13 +27,16 @@ const layCauHinhNganHang = () => ({
 });
 
 /**
- * Tạo chữ ký HMAC SHA256 cho dữ liệu PayOS
+ * LUỒNG 4: Xử lý Thanh toán trực tuyến (PayOS Gateway & VietQR)
+ * - Tích hợp cổng thanh toán tự động PayOS và tạo mã VietQR tức thời (0ms).
+ * - Cơ chế bảo mật toàn vẹn dữ liệu: Sử dụng mã hóa HMAC SHA256 với Checksum Key bí mật.
  */
+
 // Bộ nhớ đệm Throttle cache (3 giây) để ngăn chặn dồn ứ request polling từ Frontend
 const boNhoDemPayOS = new Map();
 
 /**
- * Hàm fetch có gắn timeout chống treo mạng
+ * Hàm fetch có gắn timeout chống treo mạng khi gọi API bên thứ ba
  */
 const fetchWithTimeout = async (url, options = {}, timeoutMs = 2500) => {
     const controller = new AbortController();
@@ -52,7 +55,8 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 2500) => {
 };
 
 /**
- * Tạo chữ ký HMAC SHA256 cho dữ liệu PayOS
+ * Tạo chữ ký số HMAC SHA256 để bảo vệ tính toàn vẹn của dữ liệu gửi tới PayOS
+ * Thuật toán: Sắp xếp các trường dữ liệu theo thứ tự A-Z, ghép chuỗi dạng `key=value&...` và mã hóa với checksumKey.
  */
 const taoChuKyPayOS = (data, checksumKey) => {
     const keys = Object.keys(data).sort();
@@ -68,7 +72,8 @@ const taoChuKyPayOS = (data, checksumKey) => {
 };
 
 /**
- * Sinh link ảnh VietQR có sẵn số tiền và nội dung chuyển khoản tức thời (0ms)
+ * Sinh đường dẫn ảnh VietQR động siêu tốc (0ms) chuẩn NAPAS 24/7
+ * Nhúng sẵn Số tài khoản, Ngân hàng, Số tiền chính xác và Nội dung chuyển khoản duy nhất của đơn hàng.
  */
 const taoUrlVietQR = (bin, stk, tenTk, soTien, noiDung) => {
     const cauHinhNganHang = !bin || !stk || !tenTk ? layCauHinhNganHang() : null;
@@ -83,7 +88,13 @@ const taoUrlVietQR = (bin, stk, tenTk, soTien, noiDung) => {
 };
 
 /**
- * Tạo yêu cầu thanh toán PayOS hoặc sinh thông tin chuyển khoản chuẩn siêu tốc (<300ms)
+ * [BƯỚC CHÍNH 1]: Tạo liên kết thanh toán PayOS hoặc chuẩn bị thông tin VietQR tức thời
+ * Endpoint: POST /api/thanh-toan/tao-link
+ * Các bước thực thi:
+ *   Bước 1: Tra cứu đơn hàng trong MongoDB, kiểm tra quyền sở hữu đơn hàng (Chống lỗ hổng IDOR).
+ *   Bước 2: Lấy số tiền thực tế TỪ DATABASE (Tuyệt đối không lấy số tiền từ client gửi lên).
+ *   Bước 3: Sinh orderCode số nguyên dương duy nhất và ký HMAC SHA256 bảo mật.
+ *   Bước 4: Gọi PayOS API với timeout 2.2 giây. Nếu mạng PayOS chậm, kích hoạt VietQR tức thì để khách không phải đợi.
  */
 const taoYeuCauThanhToanPayOS = async (req, res) => {
     try {
@@ -392,7 +403,13 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
 };
 
 /**
- * Xử lý Webhook gửi từ PayOS (Tối ưu phản hồi ngay lập tức cho PayOS < 50ms)
+ * [BƯỚC CHÍNH 2]: Xử lý Webhook gửi từ PayOS khi khách chuyển khoản thành công
+ * Endpoint: POST /api/thanh-toan/webhook
+ * Tiêu chuẩn bảo mật tài chính:
+ *   Bước 1: Xác thực chữ ký số bằng thuật toán crypto.timingSafeEqual (Ngăn chặn Timing Attack).
+ *   Bước 2: Kiểm tra mã đơn hàng và số tiền thực nhận với đơn hàng trong database.
+ *   Bước 3: Tính lũy đẳng (Idempotency): PayOS có thể gửi lại webhook nhiều lần; nếu đơn đã thanh toán thì bỏ qua, không xử lý lại.
+ *   Bước 4: Cập nhật đơn hàng thành công, kích hoạt email/telegram và trả về mã 200 tức thời cho PayOS (< 50ms).
  */
 const xuLyWebhookPayOS = async (req, res) => {
     try {
@@ -402,7 +419,7 @@ const xuLyWebhookPayOS = async (req, res) => {
         }
         const cauHinhPayOS = layCauHinhPayOS();
 
-        // Xác minh chữ ký PayOS
+        // BƯỚC 1: Xác minh tính toàn vẹn của chữ ký số PayOS
         const chuKyTinh = taoChuKyPayOS(payload.data, cauHinhPayOS.checksumKey);
         const chuKyNhan = String(payload.signature || '');
         const chuKyHopLe =

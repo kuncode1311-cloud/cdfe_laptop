@@ -52,7 +52,13 @@ const taoToken = (nguoiDung) => {
 
 const { guiMailOTPQuenMatKhau, guiMailOTPDoiMatKhau, guiMailKichHoatTaiKhoan } = require('../services/email.service');
 
-// 1. Đăng ký tài khoản người dùng mới (Bắt buộc xác thực Email qua OTP)
+/**
+ * LUỒNG 5: Xác thực & Bảo mật Tài khoản (Authentication & Authorization)
+ * - Sử dụng JSON Web Token (JWT) cho các yêu cầu có xác thực (Stateless Session).
+ * - Mật khẩu được mã hóa an toàn bằng thuật toán Bcrypt với Salt 10 vòng.
+ * - Quy trình Đăng ký 2 bước (Two-Factor Registration) qua OTP Email.
+ * - Phòng chống các cuộc tấn công Brute-force & Dò Email (Email Enumeration Timing Attack).
+ */
 const dangKy = async (req, res) => {
     try {
         const { hoTen, email, soDienThoai, matKhau } = req.body;
@@ -287,7 +293,17 @@ const kichHoatTaiKhoan = async (req, res) => {
     }
 };
 
-// 2. Đăng nhập tài khoản
+/**
+ * [BƯỚC CHÍNH 2]: Đăng nhập tài khoản người dùng
+ * Endpoint: POST /api/auth/dang-nhap
+ * Cơ chế bảo vệ đa lớp:
+ *   Bước 1: Chống NoSQL Injection bằng cách làm sạch chuỗi `chuoiAnToan(email)`.
+ *   Bước 2: Chống Timing Attack dò Email: Nếu email không tồn tại trong hệ thống, server vẫn
+ *           thực thi `bcrypt.compare(matKhau, HASH_GIA)` để thời gian phản hồi đồng nhất (không đoán được email có thật hay không).
+ *   Bước 3: Chống Brute-force mật khẩu: Sau 5 lần nhập sai liên tiếp, khóa đăng nhập tài khoản 15 phút.
+ *   Bước 4: Kiểm tra trạng thái kích hoạt tài khoản qua OTP.
+ *   Bước 5: Ký và cấp chuỗi mã JSON Web Token (JWT) cho phiên làm việc của người dùng.
+ */
 const dangNhap = async (req, res) => {
     try {
         // Ép kiểu chuỗi: chặn payload kiểu { "matKhau": { "$ne": null } }

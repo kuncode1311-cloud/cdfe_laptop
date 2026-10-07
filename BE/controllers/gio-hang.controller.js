@@ -3,11 +3,13 @@ const SanPham = require('../models/san-pham.model');
 const { chuoiAnToan } = require('../utils/bao-mat');
 
 /**
- * API giỏ hàng của người dùng đã đăng nhập.
- * Mọi route đều yêu cầu JWT; giỏ gắn với req.user.id nên người này không đọc / ghi được giỏ của người khác.
+ * LUỒNG 7: Quản lý Giỏ hàng Người dùng (Cart Management & Synchronization)
+ * - Mọi thao tác đều gắn chặt với JWT (`req.user.id`), đảm bảo tài khoản này không can thiệp giỏ của tài khoản khác.
+ * - Server chỉ lưu { san_pham_id, ma_tuy_chon, so_luong }, giá tiền luôn được lấy động từ DB để chống sửa giá client.
+ * - Tự động dọn dẹp các mặt hàng hết tồn kho hoặc bị ẩn khi khách xem giỏ.
  */
 const TOI_DA_SO_MUC = 50;
-const TOI_DA_SO_LUONG = 10; // khớp giới hạn mỗi dòng khi tạo đơn hàng
+const TOI_DA_SO_LUONG = 10; // Khớp giới hạn mỗi dòng khi tạo đơn hàng
 
 // Sản phẩm còn bán được: không bị Admin ẩn và còn tồn kho
 const conBanDuoc = (sanPham) => Boolean(sanPham) && sanPham.con_hang !== false && Number(sanPham.so_luong_ton_kho) > 0;
@@ -19,7 +21,16 @@ const chuanHoaMuc = (muc) => ({
     so_luong: Math.min(TOI_DA_SO_LUONG, Math.max(1, Math.floor(Number(muc?.so_luong) || 1)))
 });
 
-// GET /api/gio-hang — trả giỏ kèm thông tin sản phẩm MỚI NHẤT; tự gỡ món đã ẩn / hết hàng / bị xóa
+/**
+ * [BƯỚC 1]: Lấy thông tin giỏ hàng của tài khoản đang đăng nhập
+ * Endpoint: GET /api/gio-hang
+ * Luồng thực thi:
+ *   Bước 1: Lấy danh sách mã sản phẩm từ giỏ hàng trong MongoDB.
+ *   Bước 2: Nạp dữ liệu sản phẩm mới nhất từ bảng SanPham (giá hiện tại, khuyến mãi, tồn kho thực).
+ *   Bước 3: Tự động phát hiện và gỡ bỏ các món đã hết hàng hoặc bị ẩn.
+ *   Bước 4: Nếu số lượng đặt lớn hơn tồn kho thực, tự động hạ về bằng số lượng tồn kho tối đa.
+ *   Bước 5: Trả về danh sách món hợp lệ kèm danh sách các món bị gỡ (để FE thông báo cho khách).
+ */
 const layGioHang = async (req, res) => {
     res.set('Cache-Control', 'no-store');
     try {

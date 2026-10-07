@@ -113,8 +113,12 @@ const dieuKienDonCuaToi = (user) => {
 };
 
 /**
- * Hàm hỗ trợ xử lý tăng/giảm tồn kho và số lượng đã bán của sản phẩm khi đơn hàng thay đổi trạng thái
- * Sử dụng findOneAndUpdate nguyên tử chống bán vượt tồn kho (oversell) khi có nhiều người mua đồng thời.
+ * LUỒNG 2: Xử lý Tồn kho nguyên tử (Atomic Inventory Update)
+ * - Mục đích: Ngăn chặn tuyệt đối lỗi bán vượt số lượng tồn (Oversell) khi nhiều khách cùng mua đồng thời.
+ * - Cơ chế: Sử dụng lệnh `findOneAndUpdate` của MongoDB với điều kiện `{ so_luong_ton_kho: { $gte: soLuong } }`
+ *   và toán tử `$inc: { so_luong_ton_kho: -soLuong }`. Nếu tồn kho không đủ, thao tác thất bại tức thì.
+ * - Rollback: Nếu bất kỳ sản phẩm nào trong giỏ không đủ hàng, tự động hoàn trả số lượng các món đã trừ trước đó.
+ *
  * @param {Array} danhSachSanPham - Danh sách mặt hàng trong đơn
  * @param {'tru' | 'hoan'} thaoTac - 'tru' khi tạo đơn/kích hoạt đơn, 'hoan' khi hủy đơn/xóa đơn
  * @returns {Promise<{ thanh_cong: boolean, loi?: string }>}
@@ -277,11 +281,22 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
     return { thanh_cong: true };
 };
 
-// 1. Tạo đơn hàng mới
+/**
+ * LUỒNG 3: Tạo đơn hàng mới (Order Creation Flow)
+ * Quy trình xử lý gồm 7 bước bảo mật nghiêm ngặt:
+ *   Bước 1: Bắt buộc đăng nhập tài khoản (Kiểm tra token người dùng qua req.user).
+ *   Bước 2: Chuẩn hóa và làm sạch thông tin giao hàng (Validate định dạng SĐT Việt Nam 10 số).
+ *   Bước 3: TÍNH TOÁN LẠI TOÀN BỘ GIÁ TIỀN PHÍA SERVER từ Database (Chống hack can thiệp giá client-side).
+ *   Bước 4: Kiểm tra tính hợp lệ của Mã giảm giá Voucher và áp dụng mức giảm tối đa.
+ *   Bước 5: Trừ kho nguyên tử tức thời (Atomic Stock Deduction) để giữ hàng cho khách.
+ *   Bước 6: Lưu đơn hàng vào MongoDB (Tự động Rollback hoàn trả kho nếu lưu vào DB thất bại).
+ *   Bước 7: Kích hoạt dịch vụ phụ trợ nền bất đồng bộ (Gửi mail hóa đơn & Thông báo Telegram cho Quản trị viên).
+ */
 const taoDonHangMoi = async (req, res) => {
     try {
         const duLieuDonHang = { ...(req.body || {}) };
 
+        // BƯỚC 1: Xác thực người dùng
         const laAdmin = req.user && req.user.vaiTro === 'admin';
         if (!req.user) {
             return res.status(401).json({
@@ -303,7 +318,7 @@ const taoDonHangMoi = async (req, res) => {
             duLieuDonHang.ngay_tao = new Date().toLocaleString('vi-VN');
         }
 
-        // Chuẩn hóa thông tin giao hàng: chỉ nhận chuỗi, cắt độ dài, kiểm tra SĐT Việt Nam
+        // BƯỚC 2: Chuẩn hóa và validate thông tin người nhận hàng
         const ttGoc =
             duLieuDonHang.thong_tin_giao_hang && typeof duLieuDonHang.thong_tin_giao_hang === 'object'
                 ? duLieuDonHang.thong_tin_giao_hang
@@ -688,7 +703,8 @@ const capNhatTrangThaiDonHang = async (req, res) => {
                     if (!ketQuaKho || !ketQuaKho.thanh_cong) {
                         await DonHang.findByIdAndUpdate(donHangHienTai._id, { $set: { da_tru_ton_kho: false } });
                         return res.status(400).json({
-                            thong_diep: ketQuaKho?.loi || 'Không thể khôi phục đơn do sản phẩm trong kho không đủ số lượng.'
+                            thong_diep:
+                                ketQuaKho?.loi || 'Không thể khôi phục đơn do sản phẩm trong kho không đủ số lượng.'
                         });
                     }
                 }

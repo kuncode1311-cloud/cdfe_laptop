@@ -232,20 +232,29 @@ function cheGiauApiKey(key) {
     return firstKey.slice(0, 7) + '...' + firstKey.slice(-4);
 }
 
+/**
+ * KIẾN TRÚC RAG (Retrieval-Augmented Generation) CHO TRỢ LÝ AI:
+ * Quy trình xử lý gồm 5 bước tiêu chuẩn:
+ *   Bước 1: Phân tích ý định & bóc tách tiêu chí lọc (Intent Analysis) từ câu hỏi người dùng.
+ *   Bước 2: Truy vấn cơ sở dữ liệu MongoDB Atlas (Vector/Keyword Search) để lấy sản phẩm thực tế còn hàng.
+ *   Bước 3: Định dạng ngữ cảnh thực tế (Context Formulation) và ghép vào System Prompt.
+ *   Bước 4: Gọi mô hình AI (Ưu tiên 9Router -> Tự động xoay key Gemini nếu gặp lỗi/hết quota).
+ *   Bước 5: Bóc tách JSON an toàn, gắn lại thẻ sản phẩm (Product Cards) và câu hỏi gợi ý tiếp theo.
+ */
 async function xuLyTroLyChat({ tinNhan, lichSuChat = [], onText }) {
     const batDauToanBo = Date.now();
     if (!tinNhan || !tinNhan.trim()) {
         throw new Error('Tin nhắn không được để trống.');
     }
 
-    // 1. Phân tích ý định & tìm kiếm sản phẩm thực tế trong Database phù hợp với nhu cầu khách
+    // BƯỚC 1 & 2: Phân tích ý định và tra cứu dữ liệu sản phẩm thực tế từ Database (RAG Retrieval)
     const tieuChi = phanTichYDinhCauHoi(tinNhan);
     const batDauTraCuu = Date.now();
     const danhSachSanPhamThucTe = await timKiemSanPhamPhuHop(tinNhan, 5);
     const thoiGianTraCuu = Date.now() - batDauTraCuu;
     const nguCanhSanPham = dinhDangNguCanhSanPham(danhSachSanPhamThucTe, tieuChi);
 
-    // 2. Xây dựng System Prompt tối ưu: LỊCH THIỆP - TRẢ LỜI TRÚNG ĐÍCH - VUI TÍNH - KHÔNG CỘC LỐC
+    // BƯỚC 3: Xây dựng System Prompt tối ưu bám sát ngữ cảnh thực tế từ kho hàng
     const systemPrompt = `Bạn là Trợ lý AI Bán hàng cao cấp, siêu dễ thương, vui tính, hài hước duyên dáng và am hiểu sâu sắc về công nghệ của Hệ thống TNTP LAPTOP (Laptop New).
 
 DANH SÁCH MÃ SẢN PHẨM & PHỤ KIỆN THỰC TẾ TRONG KHO SHOWROOM:

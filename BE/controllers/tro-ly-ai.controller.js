@@ -1,6 +1,9 @@
 /**
- * Chú thích file: Controller xử lý các yêu cầu Chatbot AI tư vấn và kiểm tra trạng thái xoay key.
- * Chuẩn MVC Backend Express.js.
+ * LUỒNG 1: Controller Trợ lý AI (MVC Architecture)
+ * - Nhiệm vụ: Tiếp nhận request chat từ client, validate dữ liệu, điều phối service RAG và phản hồi.
+ * - Hỗ trợ cả 2 phương thức:
+ *   + JSON truyền thống (Request-Response đơn)
+ *   + NDJSON Streaming (Phản hồi dạng gõ chữ từng từ theo thời gian thực)
  */
 
 const { xuLyTroLyChat } = require('../services/tro-ly-ai.service');
@@ -8,14 +11,20 @@ const { layTrangThaiKeyHienTai } = require('../services/gemini-xoay-key.service'
 const { layCauHinhNineRouter } = require('../services/nine-router.service');
 
 /**
- * Endpoint tiếp nhận câu hỏi và trả lời bằng 9Router, dự phòng Gemini (RAG)
- * POST /api/tro-ly-ai/chat
+ * [PHƯƠNG THỨC 1]: Xử lý chat AI dạng JSON đóng gói tiêu chuẩn
+ * Endpoint: POST /api/tro-ly-ai/chat
+ * Luồng hoạt động:
+ *   Bước 1: Trích xuất và kiểm tra tính hợp lệ của câu hỏi (tin_nhan / message).
+ *   Bước 2: Chuẩn hóa lịch sử hội thoại (loại bỏ câu hỏi bị trùng lặp ở cuối danh sách).
+ *   Bước 3: Gọi tầng Service xử lý nghiệp vụ RAG (truy vấn DB + sinh câu trả lời bằng AI).
+ *   Bước 4: Trả về kết quả JSON kèm danh sách thẻ sản phẩm gợi ý phù hợp.
  */
 const xuLyChatAI = async (req, res) => {
     try {
         const { tin_nhan, message, lich_su_chat, history } = req.body;
         const cauHoi = tin_nhan || message;
 
+        // BƯỚC 1: Kiểm tra tính hợp lệ của câu hỏi
         if (!cauHoi || typeof cauHoi !== 'string' || !cauHoi.trim()) {
             return res.status(400).json({
                 thanh_cong: false,
@@ -23,10 +32,11 @@ const xuLyChatAI = async (req, res) => {
             });
         }
 
+        // BƯỚC 2: Chuẩn hóa mảng lịch sử chat từ FE gửi lên
         const danhSachLichSu = Array.isArray(lich_su_chat) ? lich_su_chat : Array.isArray(history) ? history : [];
-        // FE có thể đã thêm câu hỏi hiện tại vào lịch sử; chỉ gửi nó một lần tới model.
         const lichSuTruocCauHoi = [...danhSachLichSu];
         const tinCuoi = lichSuTruocCauHoi.at(-1);
+        // Tránh trùng lặp câu hỏi nếu FE đã push trước vào lịch sử
         if (
             tinCuoi &&
             tinCuoi.role === 'user' &&
@@ -35,11 +45,13 @@ const xuLyChatAI = async (req, res) => {
             lichSuTruocCauHoi.pop();
         }
 
+        // BƯỚC 3: Chuyển dữ liệu sang tầng Service để xử lý RAG & gọi mô hình ngôn ngữ lớn
         const ketQua = await xuLyTroLyChat({
             tinNhan: cauHoi.trim(),
             lichSuChat: lichSuTruocCauHoi
         });
 
+        // BƯỚC 4: Phản hồi thành công về cho Frontend
         return res.status(200).json({
             thanh_cong: true,
             ...ketQua
@@ -54,7 +66,14 @@ const xuLyChatAI = async (req, res) => {
     }
 };
 
-// NDJSON: các dòng text đang sinh, sau cùng là kết quả đầy đủ có thẻ sản phẩm.
+/**
+ * [PHƯƠNG THỨC 2]: Xử lý chat AI dạng Stream NDJSON (Gõ chữ từng từ)
+ * Endpoint: POST /api/tro-ly-ai/chat-stream
+ * Luồng hoạt động:
+ *   Bước 1: Thiết lập Header phản hồi chuẩn NDJSON và tắt bộ đệm (No buffering) để stream tức thời.
+ *   Bước 2: Mỗi khi AI sinh ra một đoạn text, hàm callback onText sẽ gửi dòng `{ type: 'text', text }`.
+ *   Bước 3: Sau khi sinh text xong, gửi dòng cuối `{ type: 'done', result: ... }` chứa toàn bộ thẻ sản phẩm.
+ */
 const xuLyChatAIStream = async (req, res) => {
     const { tin_nhan, lich_su_chat } = req.body || {};
     if (typeof tin_nhan !== 'string' || !tin_nhan.trim()) {
