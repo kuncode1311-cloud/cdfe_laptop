@@ -102,23 +102,21 @@ async function xuLyCapNhatTonKho(danhSachSanPham, thaoTac = 'tru') {
             if (!sp) continue;
 
             if (thaoTac === 'tru') {
-                const tonKhoMoi = Math.max(0, (sp.so_luong_ton_kho || sp.ton_kho || 0) - soLuong);
+                const tonKhoMoi = Math.max(0, (sp.so_luong_ton_kho || 0) - soLuong);
                 const daBanMoi = (sp.so_luong_da_ban || 0) + soLuong;
                 await SanPham.findByIdAndUpdate(sp._id, {
                     $set: {
                         so_luong_ton_kho: tonKhoMoi,
-                        ton_kho: tonKhoMoi,
                         so_luong_da_ban: daBanMoi,
                         con_hang: tonKhoMoi > 0
                     }
                 });
             } else if (thaoTac === 'hoan') {
-                const tonKhoMoi = (sp.so_luong_ton_kho || sp.ton_kho || 0) + soLuong;
+                const tonKhoMoi = (sp.so_luong_ton_kho || 0) + soLuong;
                 const daBanMoi = Math.max(0, (sp.so_luong_da_ban || 0) - soLuong);
                 await SanPham.findByIdAndUpdate(sp._id, {
                     $set: {
                         so_luong_ton_kho: tonKhoMoi,
-                        ton_kho: tonKhoMoi,
                         so_luong_da_ban: daBanMoi,
                         con_hang: tonKhoMoi > 0
                     }
@@ -453,14 +451,20 @@ async function xuLyNutBamTelegram(callbackQuery) {
             donHang.trang_thai = trangThaiMoi;
 
             // Xử lý trừ kho hoặc hoàn kho chuẩn xác 2 chiều theo DB
-            if (trangThaiMoi === 'da_giao' && !donHang.da_tru_ton_kho) {
-                await xuLyCapNhatTonKho(donHang.danh_sach_san_pham, 'tru');
-                donHang.da_tru_ton_kho = true;
-                donHang.da_thanh_toan = true;
-                donHang.trang_thai_thanh_toan = 'da_thanh_toan';
-            } else if (trangThaiMoi !== 'da_giao' && donHang.da_tru_ton_kho) {
-                await xuLyCapNhatTonKho(donHang.danh_sach_san_pham, 'hoan');
-                donHang.da_tru_ton_kho = false;
+            if (trangThaiMoi === 'da_huy') {
+                if (donHang.da_tru_ton_kho) {
+                    await xuLyCapNhatTonKho(donHang.danh_sach_san_pham, 'hoan');
+                    donHang.da_tru_ton_kho = false;
+                }
+            } else {
+                if (!donHang.da_tru_ton_kho) {
+                    await xuLyCapNhatTonKho(donHang.danh_sach_san_pham, 'tru');
+                    donHang.da_tru_ton_kho = true;
+                }
+                if (trangThaiMoi === 'da_giao') {
+                    donHang.da_thanh_toan = true;
+                    donHang.trang_thai_thanh_toan = 'da_thanh_toan';
+                }
             }
 
             await donHang.save();

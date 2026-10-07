@@ -3469,9 +3469,9 @@ export default function TrangQuanTriCuaHang() {
                 da_thanh_toan: trangThaiMoi === 'da_giao' ? true : undefined
             });
             const thongBaoText = trangThaiMoi === 'da_giao'
-                ? 'Giao hàng thành công! Đã tự động trừ tồn kho & tăng số lượng đã bán.'
+                ? 'Giao hàng thành công! Đơn hàng đã hoàn tất.'
                 : trangThaiMoi === 'da_huy'
-                    ? 'Đã hủy đơn hàng! Đã hoàn trả tồn kho & điều chỉnh lại số lượng.'
+                    ? 'Đã hủy đơn hàng! Tồn kho sản phẩm đã được hoàn trả.'
                     : 'Đã cập nhật trạng thái đơn hàng thành công!';
             const kieuThongBao = trangThaiMoi === 'da_giao' ? 'success' : trangThaiMoi === 'da_huy' ? 'warning' : 'info';
             hienThongBao(thongBaoText, kieuThongBao, 'Kho & Đơn Hàng');

@@ -114,11 +114,17 @@ const dieuKienDonCuaToi = (user) => {
 
 /**
  * Hàm hỗ trợ xử lý tăng/giảm tồn kho và số lượng đã bán của sản phẩm khi đơn hàng thay đổi trạng thái
+ * Sử dụng findOneAndUpdate nguyên tử chống bán vượt tồn kho (oversell) khi có nhiều người mua đồng thời.
  * @param {Array} danhSachSanPham - Danh sách mặt hàng trong đơn
- * @param {'tru' | 'hoan'} thaoTac - 'tru' khi giao thành công, 'hoan' khi hủy đơn/chuyển khỏi giao thành công
+ * @param {'tru' | 'hoan'} thaoTac - 'tru' khi tạo đơn/kích hoạt đơn, 'hoan' khi hủy đơn/xóa đơn
+ * @returns {Promise<{ thanh_cong: boolean, loi?: string }>}
  */
 const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
-    if (!Array.isArray(danhSachSanPham) || danhSachSanPham.length === 0) return;
+    if (!Array.isArray(danhSachSanPham) || danhSachSanPham.length === 0) {
+        return { thanh_cong: true };
+    }
+
+    const daThaoTacThanhCong = [];
 
     for (const item of danhSachSanPham) {
         try {
@@ -133,14 +139,24 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
 
             if (!spId && !item.ten_san_pham) continue;
 
-            const orConditions = [];
+            const candidateIds = new Set();
             if (spId) {
                 const strId = String(spId).trim();
-                orConditions.push({ id: strId });
-                orConditions.push({ ma_san_pham: strId });
-                orConditions.push({ slug: strId });
-                if (mongoose.Types.ObjectId.isValid(strId)) {
-                    orConditions.push({ _id: strId });
+                candidateIds.add(strId);
+                // Nếu id_muc có dạng "sp-123-mac-dinh" hoặc "sp-123-option", bóc tách phần id chính
+                if (strId.includes('-')) {
+                    const stripped = strId.replace(/-[^-]+$/, '');
+                    if (stripped) candidateIds.add(stripped);
+                }
+            }
+
+            const orConditions = [];
+            for (const cand of candidateIds) {
+                orConditions.push({ id: cand });
+                orConditions.push({ ma_san_pham: cand });
+                orConditions.push({ slug: cand });
+                if (mongoose.Types.ObjectId.isValid(cand)) {
+                    orConditions.push({ _id: cand });
                 }
             }
 
@@ -155,21 +171,51 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
                     `⚠️ [Kho] Không tìm thấy sản phẩm trong DB để cập nhật tồn kho:`,
                     spId || item.ten_san_pham
                 );
+                if (thaoTac === 'tru') {
+                    // Rollback các món đã trừ trước đó trong đơn này
+                    await capNhatTonKhoTheoDonHang(daThaoTacThanhCong, 'hoan');
+                    return {
+                        thanh_cong: false,
+                        loi: `Không tìm thấy thông tin sản phẩm "${item.ten_san_pham || spId}" trong kho hàng.`
+                    };
+                }
                 continue;
             }
 
             if (thaoTac === 'tru') {
-                // Trừ số lượng tồn kho (không âm), tăng số lượng đã bán
-                sp.so_luong_ton_kho = Math.max(0, (Number(sp.so_luong_ton_kho) || 0) - soLuong);
-                sp.so_luong_da_ban = (Number(sp.so_luong_da_ban) || 0) + soLuong;
-                if (sp.so_luong_ton_kho <= 0) {
-                    sp.con_hang = false;
+                // Kiểm tra và trừ nguyên tử bằng findOneAndUpdate chống oversell
+                const spDaTru = await SanPham.findOneAndUpdate(
+                    {
+                        _id: sp._id,
+                        so_luong_ton_kho: { $gte: soLuong }
+                    },
+                    {
+                        $inc: {
+                            so_luong_ton_kho: -soLuong,
+                            so_luong_da_ban: soLuong
+                        }
+                    },
+                    { returnDocument: 'after' }
+                );
+
+                if (!spDaTru) {
+                    // Tồn kho không đủ tại thời điểm đặt hàng!
+                    await capNhatTonKhoTheoDonHang(daThaoTacThanhCong, 'hoan');
+                    return {
+                        thanh_cong: false,
+                        loi: `Sản phẩm "${sp.ten_san_pham}" chỉ còn ${sp.so_luong_ton_kho || 0} sản phẩm trong kho, không đủ số lượng ${soLuong} bạn yêu cầu.`
+                    };
                 }
 
-                // Cập nhật tồn kho chi nhánh nếu có
-                if (Array.isArray(sp.ton_kho) && sp.ton_kho.length > 0) {
+                // Cập nhật trạng thái con_hang nếu hết kho
+                if (spDaTru.so_luong_ton_kho <= 0) {
+                    spDaTru.con_hang = false;
+                }
+
+                // Cập nhật tồn kho chi nhánh
+                if (Array.isArray(spDaTru.ton_kho) && spDaTru.ton_kho.length > 0) {
                     let conLai = soLuong;
-                    for (const cn of sp.ton_kho) {
+                    for (const cn of spDaTru.ton_kho) {
                         if (conLai <= 0) break;
                         const sl = Number(cn.so_luong_con) || 0;
                         if (sl > 0) {
@@ -179,31 +225,56 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
                         }
                     }
                 }
+
+                await spDaTru.save();
+                daThaoTacThanhCong.push({
+                    san_pham_id: sp._id,
+                    so_luong: soLuong,
+                    ten_san_pham: sp.ten_san_pham
+                });
+
                 console.log(
-                    `📦 [Kho] ĐÃ TRỪ TỒN KHO: "${sp.ten_san_pham}" (-${soLuong}) | Còn lại: ${sp.so_luong_ton_kho} | Đã bán: ${sp.so_luong_da_ban}`
+                    `📦 [Kho] ĐÃ TRỪ TỒN KHO NGUYÊN TỬ: "${spDaTru.ten_san_pham}" (-${soLuong}) | Còn lại: ${spDaTru.so_luong_ton_kho} | Đã bán: ${spDaTru.so_luong_da_ban}`
                 );
             } else if (thaoTac === 'hoan') {
                 // Hoàn lại tồn kho, giảm số lượng đã bán
-                sp.so_luong_ton_kho = (Number(sp.so_luong_ton_kho) || 0) + soLuong;
-                sp.so_luong_da_ban = Math.max(0, (Number(sp.so_luong_da_ban) || 0) - soLuong);
-                if (sp.so_luong_ton_kho > 0) {
-                    sp.con_hang = true;
-                }
-
-                // Hoàn lại tồn kho chi nhánh
-                if (Array.isArray(sp.ton_kho) && sp.ton_kho.length > 0) {
-                    sp.ton_kho[0].so_luong_con = (Number(sp.ton_kho[0].so_luong_con) || 0) + soLuong;
-                }
-                console.log(
-                    `↩️ [Kho] ĐÃ HOÀN TỒN KHO: "${sp.ten_san_pham}" (+${soLuong}) | Tồn kho mới: ${sp.so_luong_ton_kho} | Đã bán: ${sp.so_luong_da_ban}`
+                const spDaHoan = await SanPham.findByIdAndUpdate(
+                    sp._id,
+                    {
+                        $inc: {
+                            so_luong_ton_kho: soLuong
+                        }
+                    },
+                    { returnDocument: 'after' }
                 );
-            }
 
-            await sp.save();
+                if (spDaHoan) {
+                    spDaHoan.so_luong_da_ban = Math.max(0, (Number(spDaHoan.so_luong_da_ban) || 0) - soLuong);
+                    if (spDaHoan.so_luong_ton_kho > 0) {
+                        spDaHoan.con_hang = true;
+                    }
+
+                    // Hoàn lại tồn kho chi nhánh
+                    if (Array.isArray(spDaHoan.ton_kho) && spDaHoan.ton_kho.length > 0) {
+                        spDaHoan.ton_kho[0].so_luong_con = (Number(spDaHoan.ton_kho[0].so_luong_con) || 0) + soLuong;
+                    }
+
+                    await spDaHoan.save();
+                    console.log(
+                        `↩️ [Kho] ĐÃ HOÀN TỒN KHO: "${spDaHoan.ten_san_pham}" (+${soLuong}) | Tồn kho mới: ${spDaHoan.so_luong_ton_kho} | Đã bán: ${spDaHoan.so_luong_da_ban}`
+                    );
+                }
+            }
         } catch (err) {
             console.error(`❌ [Kho] Lỗi cập nhật tồn kho cho item:`, item?.ten_san_pham || item?.san_pham_id, err);
+            if (thaoTac === 'tru') {
+                await capNhatTonKhoTheoDonHang(daThaoTacThanhCong, 'hoan');
+                return { thanh_cong: false, loi: err.message };
+            }
         }
     }
+
+    return { thanh_cong: true };
 };
 
 // 1. Tạo đơn hàng mới
@@ -377,17 +448,30 @@ const taoDonHangMoi = async (req, res) => {
                       : 'cho_thanh_toan';
         }
 
-        // Chỉ Admin mới có thể tạo trực tiếp đơn đã giao.
-        if (laAdmin && duLieuDonHang.trang_thai === 'da_giao') {
-            await capNhatTonKhoTheoDonHang(duLieuDonHang.danh_sach_san_pham, 'tru');
+        // Trừ kho nguyên tử khi tạo đơn hàng mới (nếu đơn không ở trạng thái 'da_huy')
+        if (duLieuDonHang.trang_thai !== 'da_huy') {
+            const ketQuaKho = await capNhatTonKhoTheoDonHang(duLieuDonHang.danh_sach_san_pham, 'tru');
+            if (!ketQuaKho || !ketQuaKho.thanh_cong) {
+                return res.status(400).json({
+                    thong_diep: ketQuaKho?.loi || 'Không thể tạo đơn hàng do sản phẩm không đủ tồn kho.'
+                });
+            }
             duLieuDonHang.da_tru_ton_kho = true;
         } else {
             duLieuDonHang.da_tru_ton_kho = false;
         }
 
-        // Tạo đơn hàng mới trong MongoDB
-        const donHangMoi = new DonHang(duLieuDonHang);
-        const ketQua = await donHangMoi.save();
+        // Tạo đơn hàng mới trong MongoDB (có cơ chế rollback hoàn kho nếu lưu thất bại)
+        let ketQua;
+        try {
+            const donHangMoi = new DonHang(duLieuDonHang);
+            ketQua = await donHangMoi.save();
+        } catch (loiLuuDon) {
+            if (duLieuDonHang.da_tru_ton_kho) {
+                await capNhatTonKhoTheoDonHang(duLieuDonHang.danh_sach_san_pham, 'hoan');
+            }
+            throw loiLuuDon;
+        }
 
         console.log(
             `📦 Tạo đơn hàng mới thành công: ${ketQua.ma_don_hang} | ID User: ${ketQua.id_nguoi_dung} | Hình thức: ${ketQua.hinh_thuc_thanh_toan} | Trạng thái TT: ${ketQua.trang_thai_thanh_toan}`
@@ -548,25 +632,30 @@ const capNhatTrangThaiDonHang = async (req, res) => {
         // Nếu là khách hàng (chủ đơn nhưng không phải admin), chỉ cho phép hủy đơn khi còn chờ xác nhận.
         // Trạng thái thanh toán chỉ được cập nhật bởi Admin hoặc webhook/PayOS backend.
         if (!laAdmin && laChuDon) {
-            const filteredUpdate = {};
-
             if (duLieuCapNhat.trang_thai === 'da_huy' && donHangHienTai.trang_thai === 'cho_xac_nhan') {
-                filteredUpdate.trang_thai = 'da_huy';
+                // Hoàn lại tồn kho bằng thao tác giành cờ nguyên tử nếu đơn đã trừ kho
+                const daGianhCo = await DonHang.findOneAndUpdate(
+                    { _id: donHangHienTai._id, da_tru_ton_kho: true },
+                    { $set: { da_tru_ton_kho: false, trang_thai: 'da_huy' } },
+                    { returnDocument: 'after' }
+                );
+                if (daGianhCo) {
+                    await capNhatTonKhoTheoDonHang(donHangHienTai.danh_sach_san_pham, 'hoan');
+                    return res.status(200).json(daGianhCo);
+                }
+
+                const donHang = await DonHang.findByIdAndUpdate(
+                    donHangHienTai._id,
+                    { $set: { trang_thai: 'da_huy' } },
+                    { returnDocument: 'after', runValidators: true }
+                );
+                return res.status(200).json(donHang);
             }
 
-            if (Object.keys(filteredUpdate).length === 0) {
-                return res.status(403).json({
-                    thong_diep:
-                        'Khách hàng chỉ được hủy đơn khi đơn còn ở trạng thái chờ xác nhận. Trạng thái thanh toán do hệ thống hoặc Admin cập nhật.'
-                });
-            }
-
-            const donHang = await DonHang.findByIdAndUpdate(
-                donHangHienTai._id,
-                { $set: filteredUpdate },
-                { returnDocument: 'after', runValidators: true }
-            );
-            return res.status(200).json(donHang);
+            return res.status(403).json({
+                thong_diep:
+                    'Khách hàng chỉ được hủy đơn khi đơn còn ở trạng thái chờ xác nhận. Trạng thái thanh toán do hệ thống hoặc Admin cập nhật.'
+            });
         }
 
         // Admin: Cho phép cập nhật toàn quyền, bao gồm trạng thái giao hàng và tồn kho
@@ -576,30 +665,46 @@ const capNhatTrangThaiDonHang = async (req, res) => {
                 ? duLieuCapNhat.danh_sach_san_pham
                 : donHangHienTai.danh_sach_san_pham || [];
 
-        // 2. Logic trừ / hoàn kho chuẩn xác 2 chiều theo trạng thái (thao tác nguyên tử, chống trừ kho 2 lần)
+        // 2. Logic trừ / hoàn kho chuẩn xác 2 chiều theo trạng thái (thao tác nguyên tử, chống trừ/hoàn trùng lặp)
         if (trangThaiMoi) {
-            // Case A: Đổi sang "da_giao" và đơn chưa từng trừ tồn kho
-            if (trangThaiMoi === 'da_giao') {
-                const daGianhCo = await DonHang.findOneAndUpdate(
-                    { _id: donHangHienTai._id, da_tru_ton_kho: { $ne: true } },
-                    { $set: { da_tru_ton_kho: true } }
-                );
-                if (daGianhCo) {
-                    await capNhatTonKhoTheoDonHang(danhSachSp, 'tru');
-                }
-                // Giao thành công nghĩa là đã thu tiền (kể cả COD) → đồng bộ cả 2 trường thanh toán
-                if (duLieuCapNhat.da_thanh_toan === undefined) {
-                    duLieuCapNhat.da_thanh_toan = true;
-                }
-            }
-            // Case B: Đơn đã trừ tồn kho nhưng trạng thái mới không còn là "da_giao" → hoàn kho
-            else {
+            if (trangThaiMoi === 'da_huy') {
+                // Đổi sang "da_huy": nếu đơn đang ở trạng thái đã trừ kho -> hoàn kho
                 const daGianhCo = await DonHang.findOneAndUpdate(
                     { _id: donHangHienTai._id, da_tru_ton_kho: true },
                     { $set: { da_tru_ton_kho: false } }
                 );
                 if (daGianhCo) {
                     await capNhatTonKhoTheoDonHang(danhSachSp, 'hoan');
+                }
+            } else {
+                // Đổi sang trạng thái hoạt động (cho_xac_nhan, da_xac_nhan, dang_giao, da_giao):
+                // Nếu đơn chưa từng trừ tồn kho (ví dụ đơn khôi phục từ da_huy hoặc đơn cũ) -> trừ kho
+                const daGianhCo = await DonHang.findOneAndUpdate(
+                    { _id: donHangHienTai._id, da_tru_ton_kho: { $ne: true } },
+                    { $set: { da_tru_ton_kho: true } }
+                );
+                if (daGianhCo) {
+                    const ketQuaKho = await capNhatTonKhoTheoDonHang(danhSachSp, 'tru');
+                    if (!ketQuaKho || !ketQuaKho.thanh_cong) {
+                        await DonHang.findByIdAndUpdate(donHangHienTai._id, { $set: { da_tru_ton_kho: false } });
+                        return res.status(400).json({
+                            thong_diep: ketQuaKho?.loi || 'Không thể khôi phục đơn do sản phẩm trong kho không đủ số lượng.'
+                        });
+                    }
+                }
+
+                // Giao thành công nghĩa là đã thu tiền (kể cả COD) -> đồng bộ trạng thái thanh toán
+                if (trangThaiMoi === 'da_giao') {
+                    if (duLieuCapNhat.da_thanh_toan === undefined) {
+                        duLieuCapNhat.da_thanh_toan = true;
+                    }
+                    if (
+                        !duLieuCapNhat.trang_thai_thanh_toan ||
+                        duLieuCapNhat.trang_thai_thanh_toan === 'cho_thanh_toan' ||
+                        duLieuCapNhat.trang_thai_thanh_toan === 'thanh_toan_khi_nhan_hang'
+                    ) {
+                        duLieuCapNhat.trang_thai_thanh_toan = 'da_thanh_toan';
+                    }
                 }
             }
         }
