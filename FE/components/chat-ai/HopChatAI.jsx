@@ -88,13 +88,16 @@ function dinhDangInDam(text) {
 }
 
 /**
- * Hộp Chatbot Trợ lý AI Toàn diện (HopChatAI) - Giao diện Sang Trọng, Độ tương phản cao, Gọn gàng
+ * Component Hộp Chatbot Trợ lý AI (HopChatAI)
+ * - Tự động tư vấn thông minh, phân tích nhu cầu và trả lời thời gian thực.
+ * - Hiển thị thẻ sản phẩm tương tác (thêm vào giỏ hàng, xem chi tiết).
  */
 export default function HopChatAI() {
-    const [dangMo, setDangMo] = useState(false);
-    const [tinNhanNhap, setTinNhanNhap] = useState('');
-    const [dangTai, setDangTai] = useState(false);
-    const [danhSachTinNhan, setDanhSachTinNhan] = useState([
+    // 1. Quản lý các trạng thái giao diện (React States)
+    const [dangMo, setDangMo] = useState(false);              // Trạng thái mở hoặc thu nhỏ hộp chat
+    const [tinNhanNhap, setTinNhanNhap] = useState('');       // Văn bản người dùng đang gõ trong ô input
+    const [dangTai, setDangTai] = useState(false);            // Báo hiệu AI đang suy nghĩ / đang phản hồi
+    const [danhSachTinNhan, setDanhSachTinNhan] = useState([   // Mảng lưu trữ toàn bộ tin nhắn hỏi-đáp
         {
             id: 'chao-mung',
             role: 'model',
@@ -104,18 +107,19 @@ export default function HopChatAI() {
         }
     ]);
 
-    const cuonCuoiRef = useRef(null);
-    const oNhapRef = useRef(null);
-    const idTinNhanRef = useRef(0);
+    // Các biến tham chiếu DOM (Refs)
+    const cuonCuoiRef = useRef(null);   // Tham chiếu đến đáy khung chat để tự động cuộn
+    const oNhapRef = useRef(null);      // Tham chiếu đến ô input để tự động đặt con trỏ chuột
+    const idTinNhanRef = useRef(0);     // Bộ đếm tạo ID duy nhất cho mỗi lượt chat
 
-    // Tự động cuộn xuống tin nhắn mới nhất
+    // [HIỆU ỨNG 1] Tự động cuộn mượt xuống đáy mỗi khi có tin nhắn mới hoặc AI đang gõ
     useEffect(() => {
         if (dangMo) {
             cuonCuoiRef.current?.scrollIntoView({ behavior: 'smooth' });
         }
     }, [danhSachTinNhan, dangTai, dangMo]);
 
-    // Tự động giữ focus liên tục vào ô nhập liệu khi mở chat hoặc khi AI trả lời xong
+    // [HIỆU ỨNG 2] Tự động giữ con trỏ chuột (focus) trong ô nhập liệu khi mở chat hoặc khi AI xong
     useEffect(() => {
         if (dangMo && !dangTai) {
             const timer = setTimeout(() => {
@@ -125,13 +129,16 @@ export default function HopChatAI() {
         }
     }, [dangMo, dangTai]);
 
-    // Xử lý gửi tin nhắn
+    /**
+     * [HÀM XỬ LÝ CHÍNH] Gửi tin nhắn từ người dùng lên Server AI
+     * @param {string} [noiDungTuyChon] - Nội dung khi người dùng bấm vào nút gợi ý nhanh
+     */
     const xuLyGuiTinNhan = async (noiDungTuyChon) => {
         const textGui = (noiDungTuyChon || tinNhanNhap || '').trim();
         if (!textGui || dangTai) return;
 
+        // Xóa trắng ô nhập và giữ con trỏ chuột
         setTinNhanNhap('');
-        // Giữ con trỏ chuột trong ô input ngay khi vừa nhấn gửi
         setTimeout(() => {
             oNhapRef.current?.focus();
         }, 10);
@@ -139,6 +146,7 @@ export default function HopChatAI() {
         idTinNhanRef.current += 1;
         const luotChat = idTinNhanRef.current;
 
+        // Bước 1: Thêm ngay tin nhắn của người dùng vào giao diện
         const tinNhanNguoiDung = {
             id: `user-${luotChat}`,
             role: 'user',
@@ -151,11 +159,13 @@ export default function HopChatAI() {
         const aiId = `model-${luotChat}`;
 
         try {
+            // Bước 2: Chuẩn bị lịch sử hội thoại đưa vào System Prompt
             const lichSu = danhSachMoi.slice(1).map(m => ({
                 role: m.role === 'model' ? 'model' : 'user',
                 content: m.noiDung
             }));
 
+            // Bước 3: Gọi hàm Streaming của Service - Mỗi khi có chữ mới về thì render ngay lập tức
             const ketQua = await TroLyAiService.guiTinNhanStream(textGui, lichSu, text => {
                 setDanhSachTinNhan(prev => {
                     const index = prev.findIndex(msg => msg.id === aiId);
@@ -164,6 +174,7 @@ export default function HopChatAI() {
                 });
             });
 
+            // Bước 4: Khi AI phản hồi xong thành công, cập nhật thêm thẻ sản phẩm gợi ý
             if (ketQua && ketQua.thanh_cong) {
                 const tinNhanAI = {
                     id: aiId,
@@ -187,6 +198,7 @@ export default function HopChatAI() {
                 });
             }
         } catch {
+
             setDanhSachTinNhan(prev => {
                 const errorMsg = {
                     id: aiId,

@@ -34,10 +34,20 @@ function inThongTinKetNoiConsole(thongTin) {
 }
 
 export const TroLyAiService = {
+    /**
+     * [HÀM 1] Gửi tin nhắn dạng STREAM (Chữ chạy thời gian thực - Realtime typing effect)
+     * - Nhiệm vụ: Gửi câu hỏi lên API /tro-ly-ai/chat/stream, nhận dữ liệu từng mảnh (chunks)
+     *   và gọi hàm callback onText() để giao diện cập nhật ngay lập tức mà không phải chờ cả câu.
+     * @param {string} tinNhan - Nội dung câu hỏi khách vừa gõ
+     * @param {Array} lichSuChat - Các tin nhắn hỏi-đáp trước đó để AI hiểu ngữ cảnh
+     * @param {Function} onText - Hàm nhận từng chữ mới trả về để render lên màn hình
+     */
     async guiTinNhanStream(tinNhan, lichSuChat = [], onText = () => {}) {
+        // Tạo bộ đếm thời gian tối đa 35 giây (tránh treo giao diện nếu mạng lag)
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 35000);
         try {
+            // Bước 1: Gửi yêu cầu HTTP POST đến endpoint Back-End
             const response = await fetch(`${layApiBaseUrl()}/tro-ly-ai/chat/stream`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -45,25 +55,36 @@ export const TroLyAiService = {
                 signal: controller.signal
             });
             if (!response.ok || !response.body) throw new Error(`Chat HTTP ${response.status}`);
+
+            // Bước 2: Dùng ReadableStream Reader để đọc dữ liệu trả về theo luồng nhị phân
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
             let buffer = '';
             let result;
+
+            // Bước 3: Vòng lặp liên tục đọc từng gói tin từ Server trả về
             while (true) {
                 const { value, done } = await reader.read();
                 buffer += decoder.decode(value || new Uint8Array(), { stream: !done });
                 const lines = buffer.split('\n');
-                buffer = lines.pop();
+                buffer = lines.pop(); // Giữ lại dòng cuối chưa hoàn chỉnh vào buffer
+
                 for (const line of lines) {
                     if (!line.trim()) continue;
                     const event = JSON.parse(line);
+
+                    // Khi Server gửi event dạng 'text': đẩy chữ mới lên giao diện
                     if (event.type === 'text') onText(event.text);
+
+                    // Khi Server gửi event dạng 'done': đã hoàn tất, nhận kết quả cuối cùng (kèm sản phẩm gợi ý)
                     if (event.type === 'done') {
                         result = event.result;
                         if (result?.thong_tin_ket_noi) {
                             inThongTinKetNoiConsole(result.thong_tin_ket_noi);
                         }
                     }
+
+                    // Nếu Server báo lỗi
                     if (event.type === 'error') throw new Error(event.message);
                 }
                 if (done) break;
@@ -73,6 +94,7 @@ export const TroLyAiService = {
         } finally {
             clearTimeout(timeout);
         }
+
     },
     /**
      * Gửi câu hỏi của khách hàng lên Trợ lý AI
