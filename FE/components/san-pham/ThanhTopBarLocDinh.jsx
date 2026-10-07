@@ -152,10 +152,10 @@ export default function ThanhTopBarLocDinh({
                 </div>
 
                 {/* ĐƯỜNG PHÂN CÁCH ĐỨNG */}
-                <div className="w-px h-7 bg-white/20 shrink-0" />
+                <div className="hidden md:block w-px h-7 bg-white/20 shrink-0" />
 
-                {/* ===== Ở GIỮA: CÁC NÚT DANH MỤC GỌN ĐẸP, KHÔNG BỊ CẮT XÉN ===== */}
-                <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 px-0.5 flex-1 justify-center">
+                {/* ===== Ở GIỮA: CÁC NÚT DANH MỤC GỌN ĐẸP, KHÔNG BỊ CẮT XÉN (Chỉ hiện từ màn hình tablet/desktop md: trở lên) ===== */}
+                <div className="hidden md:flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 px-0.5 flex-1 justify-center">
 
                     {/* --- 1. KHI ĐANG Ở TAB TẤT CẢ --- */}
                     {tabHienTai === 'tat-ca' && (
@@ -340,7 +340,7 @@ export default function ThanhTopBarLocDinh({
                 </div>
 
                 {/* ĐƯỜNG PHÂN CÁCH ĐỨNG */}
-                <div className="w-px h-7 bg-white/20 shrink-0" />
+                <div className="hidden md:block w-px h-7 bg-white/20 shrink-0" />
 
                 {/* ===== BÊN PHẢI: BỘ LỌC + ĐẦU TRANG ===== */}
                 <div className="flex items-center gap-1.5 shrink-0">

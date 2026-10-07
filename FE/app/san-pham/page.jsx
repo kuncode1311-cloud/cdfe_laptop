@@ -205,8 +205,8 @@ function NoiDungDanhSachSanPham() {
                 <span className="font-bold text-slate-800 dark:text-slate-200">Cửa Hàng</span>
                 {boLoc.danh_muc && boLoc.danh_muc.length > 0 && (
                     <>
-                        <ChevronRight className="w-3 h-3 text-slate-300" />
-                        <span className="font-extrabold text-[#0052cc] dark:text-cyan-400 uppercase">
+                        <ChevronRight className="w-3 h-3 text-slate-300 shrink-0" />
+                        <span className="font-extrabold text-[#0052cc] dark:text-cyan-400 uppercase truncate max-w-[180px] sm:max-w-none">
                             {DANH_SACH_DANH_MUC_ANH.find(d => d.ma === boLoc.danh_muc[0])?.ten || boLoc.danh_muc[0]}
                         </span>
                     </>

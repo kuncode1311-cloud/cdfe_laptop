@@ -572,6 +572,12 @@ function NoiDungTrangTaiKhoan() {
         setTabHienTai(tab);
         router.push(`/tai-khoan?tab=${tab}`, { scroll: false });
         setThongBao({ loai: '', noiDung: '' });
+        if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+            setTimeout(() => {
+                const el = document.getElementById('khu-vuc-noi-dung-tab');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 60);
+        }
     };
 
     // Tự đóng thông báo sau 4 giây
@@ -1305,7 +1311,7 @@ function NoiDungTrangTaiKhoan() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 pb-12 animate-in fade-in duration-300">
+        <div className="max-w-7xl mx-auto space-y-6 pb-28 sm:pb-20 lg:pb-12 animate-in fade-in duration-300">
             {/* 1. Breadcrumb Tinh Tế & Hiện Đại */}
             <nav className="flex items-center gap-2 text-xs text-slate-500 font-medium">
                 <Link href="/" className="hover:text-blue-600 transition-colors">
@@ -1571,7 +1577,7 @@ function NoiDungTrangTaiKhoan() {
                 {/* ========================================================================= */}
                 {/* CỘT PHẢI: KHU VỰC NỘI DUNG TỪNG TAB - NỀN RÕ RÀNG, VIỀN NÉT 2PX           */}
                 {/* ========================================================================= */}
-                <div className="lg:col-span-8">
+                <div id="khu-vuc-noi-dung-tab" className="lg:col-span-8 scroll-mt-20">
                     {/* ========================================================================= */}
                     {/* TAB 1: HỒ SƠ CÁ NHÂN & THẺ HỘI VIÊN CHÍNH THỨC                             */}
                     {/* ========================================================================= */}
@@ -1908,9 +1914,9 @@ function NoiDungTrangTaiKhoan() {
                             </div>
 
                             <div className="p-4 sm:p-5 space-y-4">
-                                {/* Thanh Tab Bộ Lọc Trạng Thái Đơn Hàng: Gọn gàng 1 hàng vừa khít, không bao giờ cuộn */}
+                                {/* Thanh Tab Bộ Lọc Trạng Thái Đơn Hàng: Vuốt ngang mượt mà trên mobile, dàn đều grid 6 cột trên tablet/desktop */}
                                 <div className="bg-slate-100 p-1 sm:p-1.5 rounded-xl border border-slate-300 shadow-2xs">
-                                    <div className="grid grid-cols-6 gap-1 sm:gap-1.5 w-full">
+                                    <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none w-full py-0.5 px-0.5 sm:grid sm:grid-cols-6 sm:gap-1.5">
                                         {CAC_TAB_TRANG_THAI_DON.map((tab) => {
                                             const isActive = boLocTrangThaiDon === tab.id;
                                             const count = soLuongTheoTrangThai[tab.id] || 0;
@@ -1919,13 +1925,13 @@ function NoiDungTrangTaiKhoan() {
                                                     key={tab.id}
                                                     type="button"
                                                     onClick={() => setBoLocTrangThaiDon(tab.id)}
-                                                    className={`py-2 px-1 sm:px-2 rounded-lg font-black text-[11px] sm:text-xs transition-all duration-150 cursor-pointer flex items-center justify-center gap-1 select-none active:scale-95 text-center min-w-0 ${
+                                                    className={`py-2 px-3 sm:px-1.5 rounded-lg font-black text-[11px] sm:text-xs transition-all duration-150 cursor-pointer flex items-center justify-center gap-1 select-none active:scale-95 text-center shrink-0 sm:shrink min-w-fit sm:min-w-0 ${
                                                         isActive
                                                             ? 'bg-amber-500 text-white shadow-sm font-black'
                                                             : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 border border-slate-200/80 shadow-2xs'
                                                     }`}
                                                 >
-                                                    <span className="truncate">{tab.label}</span>
+                                                    <span className="whitespace-nowrap sm:truncate">{tab.label}</span>
                                                     {count > 0 && (
                                                         <span
                                                             className={`min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full text-[10.5px] font-mono font-black shrink-0 ${

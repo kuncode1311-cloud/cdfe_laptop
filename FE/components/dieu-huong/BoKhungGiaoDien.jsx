@@ -50,10 +50,10 @@ export default function BoKhungGiaoDien({ children }) {
                 onDong={() => setDangMoMenuMobile(false)}
             />
 
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-20 lg:pb-6 space-y-12 relative z-10">
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-28 sm:pb-24 lg:pb-8 space-y-12 relative z-10">
                 {children}
             </main>
-            <div className="relative z-10 pb-16 lg:pb-0">
+            <div className="relative z-10 pb-20 lg:pb-0">
                 <ChanTrang />
             </div>
             <ThanhSoSanhNoi />
