@@ -2,6 +2,8 @@
 import { ArrowRight } from "lucide-react";
 import { useCallback, useEffect, useRef } from "react";
 import styles from "./BannerDong3D.module.css";
+import BannerHeroMobile from "./BannerHeroMobile";
+
 // ==========================================
 // 1. CẤU HÌNH HẰNG SỐ & DỮ LIỆU CINEMATIC
 // ==========================================
@@ -151,7 +153,12 @@ export default function BannerDong3D() {
     // Giúp người dùng khi cuộn nhanh không bị khựng hình
     // ------------------------------------------------------------------
     useEffect(() => {
+        // Trên màn hình di động: Dùng BannerHeroMobile tối ưu, không tải trước 768 frame tốn băng thông/RAM
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            return;
+        }
         let cancelled = false;
+
         const warmFrameCache = async () => {
             // Giai đoạn 1: Nạp NGAY LẬP TỨC 30 frame đầu tiên (Chapter 1) với độ ưu tiên cao
             // Đảm bảo người dùng vừa vào trang lướt chuột là chuyển động 60fps mượt như nhung
@@ -208,7 +215,12 @@ export default function BannerDong3D() {
     // EFFECT 2: XỬ LÝ LÕI - BẮT SỰ KIỆN CUỘN & VẼ FRAME 3D LÊN CANVAS
     // ------------------------------------------------------------------
     useEffect(() => {
+        // Không khởi chạy canvas vẽ 3D nếu đang ở màn hình điện thoại
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            return;
+        }
         const root = rootRef.current;
+
         const stage = stageRef.current;
         const canvas = canvasRef.current;
         if (!root || !stage || !canvas)
@@ -471,40 +483,53 @@ export default function BannerDong3D() {
     // ------------------------------------------------------------------
     // 3. GIAO DIỆN HIỂN THỊ JSX
     // ------------------------------------------------------------------
-    return (<section ref={rootRef} className={styles.cinematic} aria-label="Trải nghiệm laptop điện ảnh">
-      <div ref={stageRef} className={styles.stage}>
-        {/* Thẻ Canvas hiển thị các frame ảnh 3D */}
-        <canvas ref={canvasRef} className={styles.canvas}/>
-
-        {/* Lớp phủ chuyển màu viền (Edge Blend) tạo chiều sâu điện ảnh */}
-        <div className={styles.edgeBlend}/>
-
-        {/* Danh sách 4 phân đoạn chữ & nút CTA */}
-        {chapters.map((c, i) => (<article key={c[0]} className={styles.chapter} data-cinematic-chapter>
-            <div className={styles.leftCopy}>
-              <p>{c[0]}</p>
-              <h1>
-                <span>{c[1]}</span>
-                <span>{c[2]}</span>
-              </h1>
-              <i />
-              <button className={styles.cta} type="button" onClick={() => goToChapter(i + 1)}>
-                {actionLabels[i]} <ArrowRight size={15}/>
-              </button>
+    return (
+        <>
+            {/* 1. MÀN HÌNH ĐIỆN THOẠI (< md): Banner Hero Mobile Sắc Nét, Nền Công Nghệ Sang Trọng, Không Bị Bó Méo */}
+            <div className="block md:hidden w-full">
+                <BannerHeroMobile />
             </div>
-            <div className={styles.rightCopy}>
-              <span>{c[3]}</span>
-              <span>{c[4]}</span>
-            </div>
-          </article>))}
 
-        {/* Thanh điều hướng chọn nhanh từng cảnh bên phải */}
-        <nav className={styles.sceneNav} aria-label="Điều hướng các cảnh laptop">
-          {chapters.map((chapter, index) => (<button key={chapter[0]} type="button" data-scene-nav data-active={index === 0} aria-label={`Đi đến cảnh ${index + 1}`} onClick={() => goToChapter(index)}>
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <em>{sceneLabels[index]}</em>
-            </button>))}
-        </nav>
-      </div>
-    </section>);
+            {/* 2. MÀN HÌNH MÁY TÍNH (>= md): Banner 3D Scrollytelling Điện Ảnh 768 Frames */}
+            <div className="hidden md:block">
+                <section ref={rootRef} className={styles.cinematic} aria-label="Trải nghiệm laptop điện ảnh">
+                    <div ref={stageRef} className={styles.stage}>
+                        {/* Thẻ Canvas hiển thị các frame ảnh 3D */}
+                        <canvas ref={canvasRef} className={styles.canvas}/>
+
+                        {/* Lớp phủ chuyển màu viền (Edge Blend) tạo chiều sâu điện ảnh */}
+                        <div className={styles.edgeBlend}/>
+
+                        {/* Danh sách 4 phân đoạn chữ & nút CTA */}
+                        {chapters.map((c, i) => (<article key={c[0]} className={styles.chapter} data-cinematic-chapter>
+                            <div className={styles.leftCopy}>
+                                <p>{c[0]}</p>
+                                <h1>
+                                    <span>{c[1]}</span>
+                                    <span>{c[2]}</span>
+                                </h1>
+                                <i />
+                                <button className={styles.cta} type="button" onClick={() => goToChapter(i + 1)}>
+                                    {actionLabels[i]} <ArrowRight size={15}/>
+                                </button>
+                            </div>
+                            <div className={styles.rightCopy}>
+                                <span>{c[3]}</span>
+                                <span>{c[4]}</span>
+                            </div>
+                        </article>))}
+
+                        {/* Thanh điều hướng chọn nhanh từng cảnh bên phải */}
+                        <nav className={styles.sceneNav} aria-label="Điều hướng các cảnh laptop">
+                            {chapters.map((chapter, index) => (<button key={chapter[0]} type="button" data-scene-nav data-active={index === 0} aria-label={`Đi đến cảnh ${index + 1}`} onClick={() => goToChapter(index)}>
+                                <span>{String(index + 1).padStart(2, "0")}</span>
+                                <em>{sceneLabels[index]}</em>
+                            </button>))}
+                        </nav>
+                    </div>
+                </section>
+            </div>
+        </>
+    );
 }
+

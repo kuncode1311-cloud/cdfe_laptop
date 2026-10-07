@@ -118,20 +118,29 @@ function phanTichYDinhCauHoi(cauHoi = '') {
 
     // 3. Nhận diện Danh mục Laptop nếu không hỏi phụ kiện
     if (!tieuChi.laPhuKien) {
+        if (/laptop|máy tính|may tinh|máy|may|con nào|con nao|chiến mã/i.test(text) || /laptop|may tinh/i.test(textKhongDau)) {
+            tieuChi.uuTienLaptop = true;
+        }
+
         if (
             /gaming|chơi game|choi game|chiến game|chien game|game thủ|game thu|pubg|valorant|lol|fifa|gta|chiến|do hoa game/i.test(
                 text
             )
         ) {
             tieuChi.danhMuc = 'gaming';
+            tieuChi.uuTienLaptop = true;
         } else if (/đồ họa|do hoa|render|photoshop|premiere|autocad|blender|3d|dựng phim/i.test(text)) {
             tieuChi.danhMuc = 'do-hoa-sang-tao';
-        } else if (/văn phòng|van phong|học tập|hoc tap|sinh viên|word|excel|kế toán/i.test(text)) {
-            tieuChi.danhMuc = 'van-phong';
-        } else if (/mỏng nhẹ|mong nhe|di chuyển|nhẹ|ultrabook/i.test(text)) {
-            tieuChi.danhMuc = 'mong-nhe';
+            tieuChi.uuTienLaptop = true;
+        } else if (/văn phòng|van phong|học tập|hoc tap|sinh viên|sinh vien|word|excel|kế toán/i.test(text) || /van phong|hoc tap|sinh vien/i.test(textKhongDau)) {
+            tieuChi.danhMuc = 'van-phong-mong-nhe';
+            tieuChi.uuTienLaptop = true;
+        } else if (/mỏng nhẹ|mong nhe|di chuyển|nhẹ|nhe|ultrabook|pin trâu|pin trau|doanh nhân|doanh nhan/i.test(text) || /mong nhe|pin trau/i.test(textKhongDau)) {
+            tieuChi.danhMuc = 'van-phong-mong-nhe';
+            tieuChi.uuTienLaptop = true;
         } else if (/ai|npu|ai-pc|trí tuệ nhân tạo/i.test(text)) {
             tieuChi.danhMuc = 'ai-pc';
+            tieuChi.uuTienLaptop = true;
         }
     }
 
@@ -341,7 +350,11 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
                         filter.$or = orConditions;
                     }
                 } else {
-                    filter.danh_muc = tieuChi.danhMuc;
+                    if (tieuChi.danhMuc === 'van-phong-mong-nhe') {
+                        filter.danh_muc = { $in: ['van-phong-mong-nhe', 'sinh-vien', 'doanh-nhan'] };
+                    } else {
+                        filter.danh_muc = tieuChi.danhMuc;
+                    }
                 }
             } else if (tieuChi.uuTienLaptop && !tieuChi.laPhuKien) {
                 filter.danh_muc = {
