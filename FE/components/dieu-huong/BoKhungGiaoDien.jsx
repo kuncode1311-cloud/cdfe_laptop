@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import ThanhDieuHuong from '@/components/dieu-huong/ThanhDieuHuong';
 import MenuDanhMuc from '@/components/dieu-huong/MenuDanhMuc';
@@ -7,6 +7,8 @@ import ChanTrang from '@/components/dieu-huong/ChanTrang';
 import NutLienHeNoi from '@/components/dieu-huong/NutLienHeNoi';
 import ThanhSoSanhNoi from '@/components/so-sanh/ThanhSoSanhNoi';
 import HopChatAI from '@/components/chat-ai/HopChatAI';
+import MenuMobileDrawer from '@/components/dieu-huong/MenuMobileDrawer';
+import ThanhDieuHuongDayMobile from '@/components/dieu-huong/ThanhDieuHuongDayMobile';
 
 /**
  * Bộ khung điều phối giao diện:
@@ -16,6 +18,7 @@ import HopChatAI from '@/components/chat-ai/HopChatAI';
 export default function BoKhungGiaoDien({ children }) {
     const pathname = usePathname();
     const laTrangAdmin = pathname?.startsWith('/admin');
+    const [dangMoMenuMobile, setDangMoMenuMobile] = useState(false);
 
     if (laTrangAdmin) {
         return (
@@ -36,19 +39,30 @@ export default function BoKhungGiaoDien({ children }) {
 
             <div className="site-sticky-nav sticky top-0 z-[100] w-full">
                 <div className="site-nav-shell">
-                    <ThanhDieuHuong />
+                    <ThanhDieuHuong onMoMenuMobile={() => setDangMoMenuMobile(true)} />
                     <MenuDanhMuc />
                 </div>
             </div>
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-12 relative z-10">
+
+            {/* Menu Drawer trượt chuyển trang trên điện thoại */}
+            <MenuMobileDrawer
+                dangMo={dangMoMenuMobile}
+                onDong={() => setDangMoMenuMobile(false)}
+            />
+
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-20 lg:pb-6 space-y-12 relative z-10">
                 {children}
             </main>
-            <div className="relative z-10">
+            <div className="relative z-10 pb-16 lg:pb-0">
                 <ChanTrang />
             </div>
             <ThanhSoSanhNoi />
             <NutLienHeNoi />
             <HopChatAI />
+
+            {/* Thanh điều hướng đáy chuyển trang cố định cho điện thoại */}
+            <ThanhDieuHuongDayMobile onMoMenu={() => setDangMoMenuMobile(true)} />
         </div>
     );
 }
+

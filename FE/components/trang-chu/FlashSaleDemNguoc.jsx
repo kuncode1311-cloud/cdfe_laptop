@@ -104,8 +104,8 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
             {/* ========================================================================= */}
             {/* 1. HERO BANNER FLASH SALE (Vivid Red-Coral-Orange Gradient & 3D Glass Art)*/}
             {/* ========================================================================= */}
-            <div className="relative w-full rounded-[24px] overflow-hidden text-white shadow-[0_20px_45px_-12px_rgba(235,30,45,0.45)] border border-white/30 min-h-[225px] lg:h-[245px] flex items-center p-5 sm:px-8 sm:py-6 bg-gradient-to-r from-[#D00A24] via-[#EB2818] to-[#F55208]">
-                {/* LỚP NỀN 3D PANORAMIC (Sáng rực rỡ, voucher 3D chuẩn reference, không bị tối) */}
+            <div className="relative w-full rounded-2xl sm:rounded-[24px] overflow-hidden text-white shadow-[0_20px_45px_-12px_rgba(235,30,45,0.45)] border border-white/30 min-h-[200px] lg:h-[245px] flex items-center p-4 sm:px-8 sm:py-6 bg-gradient-to-r from-[#D00A24] via-[#EB2818] to-[#F55208]">
+                {/* LỚP NỀN 3D PANORAMIC */}
                 <div className="absolute inset-0 z-0">
                     <Image
                         src="/images/flash_sale_vivid_bright.jpg"
@@ -115,59 +115,53 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
                         unoptimized
                         className="object-cover object-center"
                     />
-                    {/* Radial highlight nhẹ nhàng tăng cường độ sáng ấm, không có mảng đen */}
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_25%_45%,rgba(255,255,255,0.18)_0%,transparent_65%)] pointer-events-none" />
+                    {/* Lớp phủ tương phản cao (Dark Contrast Veil) giúp toàn bộ chữ trắng sắc nét tuyệt đối */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#8f0010]/85 via-[#9c0618]/75 to-[#500008]/90 pointer-events-none" />
                 </div>
 
                 {/* NỘI DUNG 3 KHU VỰC: LEFT (48%) - CENTER ART (24%) - RIGHT COUNTDOWN (28%) */}
-                <div className="relative z-10 w-full flex flex-col lg:flex-row items-center justify-between gap-6">
-                    {/* CỘT TRÁI (~48%): Heading 3D, Subtitle & 3 Benefits TRÊN CÙNG 1 HÀNG */}
-                    <div className="space-y-2.5 lg:w-[48%] text-center lg:text-left">
+                <div className="relative z-10 w-full flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6">
+                    {/* CỘT TRÁI (~48%): Heading 3D, Subtitle & 3 Benefits */}
+                    <div className="space-y-2 lg:w-[48%] text-center lg:text-left">
                         {/* Small Badge: ƯU ĐÃI CÓ HẠN */}
-                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#450007]/70 backdrop-blur-md border border-white/30 text-amber-300 text-[12px] sm:text-[12.5px] font-bold uppercase tracking-wider shadow-sm">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-black/40 backdrop-blur-md border border-amber-400/40 text-amber-300 text-[11px] sm:text-[12.5px] font-bold uppercase tracking-wider shadow-sm">
                             <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                             <span>{caiDat?.badge_noi_bat || 'ƯU ĐÃI CÓ HẠN'}</span>
                         </div>
 
-                        {/* Heading Display Typography 58-62px italic 3D chuẩn promotional electronics */}
+                        {/* Heading Display Typography 3D chuẩn promotional electronics */}
                         <div>
-                            <h2 className="text-4xl sm:text-5xl lg:text-[58px] xl:text-[62px] font-black italic uppercase tracking-tighter text-white [text-shadow:_0_2px_0_#990014,_0_4px_0_#75000f,_0_6px_12px_rgba(0,0,0,0.5)] leading-none select-none">
+                            <h2 className="text-3xl sm:text-5xl lg:text-[58px] xl:text-[62px] font-black italic uppercase tracking-tighter text-white [text-shadow:_0_2px_0_#800010,_0_4px_0_#50000a,_0_6px_14px_rgba(0,0,0,0.7)] leading-none select-none">
                                 FLASH SALE
                             </h2>
-                            <p className="text-[15px] sm:text-[16px] font-extrabold text-white uppercase tracking-wide mt-2 [text-shadow:_0_2px_4px_rgba(0,0,0,0.6)]">
+                            <p className="text-[13px] sm:text-[16px] font-black text-amber-200 sm:text-white uppercase tracking-wide mt-1.5 [text-shadow:_0_2px_6px_rgba(0,0,0,0.8)]">
                                 {caiDat?.phu_de || 'SĂN DEAL CỰC SỐC - GIÁ TỐT NHẤT NĂM'}
                             </p>
                         </div>
 
-                        {/* 3 Benefits nằm TRÊN CÙNG MỘT HÀNG DUY NHẤT */}
-                        <div className="pt-2 flex items-center justify-center lg:justify-start gap-3 sm:gap-4.5 text-white text-[12px] sm:text-[12.5px] lg:text-[13px] whitespace-nowrap overflow-x-auto scrollbar-none font-semibold [text-shadow:_0_1px_3px_rgba(0,0,0,0.4)]">
-                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                                <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm border border-white/30">
-                                    <Truck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-                                </div>
+                        {/* 3 Benefits bọc Pill trong suốt có viền, tự xuống dòng không bị cắt chữ */}
+                        <div className="pt-1.5 flex flex-wrap items-center justify-center lg:justify-start gap-1.5 sm:gap-2.5 text-white text-[10.5px] sm:text-[12.5px] font-bold">
+                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 border border-white/20 backdrop-blur-md shadow-xs">
+                                <Truck className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                                 <span>Miễn phí vận chuyển</span>
                             </div>
-                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                                <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm border border-white/30">
-                                    <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-                                </div>
+                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 border border-white/20 backdrop-blur-md shadow-xs">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
                                 <span>Bảo hành chính hãng 3 năm</span>
                             </div>
-                            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                                <div className="w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center shrink-0 shadow-sm border border-white/30">
-                                    <Gift className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />
-                                </div>
+                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/40 border border-white/20 backdrop-blur-md shadow-xs">
+                                <Gift className="w-3.5 h-3.5 text-rose-300 shrink-0" />
                                 <span>Quà tặng hấp dẫn</span>
                             </div>
                         </div>
                     </div>
 
-                    {/* CỘT GIỮA: Khoảng thở tự nhiên cho 3D Glass Artwork */}
+                    {/* CỘT GIỮA: Khoảng thở tự nhiên */}
                     <div className="hidden lg:block lg:w-[20%]" />
 
                     {/* CỘT PHẢI: COUNTDOWN BOXES & CTA PILL BUTTON */}
-                    <div className="flex flex-col items-center lg:items-end gap-3 lg:w-auto shrink-0">
-                        <span className="text-[13px] sm:text-[14px] font-black uppercase tracking-wider text-white [text-shadow:_0_2px_4px_rgba(0,0,0,0.4)]">
+                    <div className="flex flex-col items-center lg:items-end gap-2.5 sm:gap-3 lg:w-auto shrink-0">
+                        <span className="text-[12px] sm:text-[14px] font-black uppercase tracking-wider text-amber-200 [text-shadow:_0_2px_4px_rgba(0,0,0,0.6)]">
                             KẾT THÚC TRONG
                         </span>
 
@@ -175,17 +169,17 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
                         <div className="flex items-center gap-1.5 sm:gap-2">
                             {donViDemNguoc.map((dv, i) => (
                                 <React.Fragment key={dv.nhan}>
-                                    <div className="flex flex-col items-center gap-1 sm:gap-1.5">
-                                        <div className={`relative ${coDemNgay ? 'w-[48px] h-[48px] sm:w-[56px] sm:h-[56px]' : 'w-[58px] h-[58px] sm:w-[64px] sm:h-[64px]'} bg-gradient-to-b from-[#6A0C16]/90 via-[#48040C]/90 to-[#2A0105]/95 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_10px_22px_rgba(0,0,0,0.35)] overflow-hidden`}>
+                                    <div className="flex flex-col items-center gap-0.5 sm:gap-1.5">
+                                        <div className={`relative ${coDemNgay ? 'w-[42px] h-[42px] sm:w-[56px] sm:h-[56px]' : 'w-[48px] h-[48px] sm:w-[64px] sm:h-[64px]'} bg-gradient-to-b from-[#4a0008]/95 via-[#300005]/95 to-[#1a0003]/98 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.45),0_8px_18px_rgba(0,0,0,0.45)] overflow-hidden`}>
                                             <div className="absolute top-0 inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent" />
-                                            <span className={`${coDemNgay ? 'text-[22px] sm:text-[26px]' : 'text-[28px] sm:text-[32px]'} font-black tracking-tight tabular-nums leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]`}>
+                                            <span className={`${coDemNgay ? 'text-[19px] sm:text-[26px]' : 'text-[23px] sm:text-[32px]'} font-black tracking-tight tabular-nums leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]`}>
                                                 {dv.val.toString().padStart(2, '0')}
                                             </span>
                                         </div>
-                                        <span className="text-[10px] sm:text-[11px] text-white/95 font-bold uppercase tracking-wider drop-shadow-xs">{dv.nhan}</span>
+                                        <span className="text-[9.5px] sm:text-[11px] text-amber-200/90 font-bold uppercase tracking-wider drop-shadow-xs">{dv.nhan}</span>
                                     </div>
                                     {i < donViDemNguoc.length - 1 && (
-                                        <span className={`text-white font-black ${coDemNgay ? 'text-lg sm:text-xl pb-4 sm:pb-5' : 'text-2xl pb-6'} drop-shadow-sm select-none`}>
+                                        <span className={`text-white font-black ${coDemNgay ? 'text-base sm:text-xl pb-3 sm:pb-5' : 'text-xl pb-4 sm:pb-6'} drop-shadow-sm select-none`}>
                                             :
                                         </span>
                                     )}
@@ -193,17 +187,18 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
                             ))}
                         </div>
 
-                        {/* CTA White Pill Button (width ~220-240px, height ~48px) */}
+                        {/* CTA White Pill Button */}
                         <a
                             href="#danh-sach-flash-sale"
-                            className="mt-1 group w-[220px] sm:w-[240px] h-[48px] rounded-full bg-white hover:bg-slate-50 text-[#D31828] font-black text-[15px] sm:text-[16px] uppercase tracking-wider shadow-[0_10px_25px_rgba(0,0,0,0.25)] hover:shadow-[0_14px_30px_rgba(0,0,0,0.35)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+                            className="mt-0.5 group w-[200px] sm:w-[240px] h-[42px] sm:h-[48px] rounded-full bg-white hover:bg-slate-50 text-[#D31828] font-black text-[14px] sm:text-[16px] uppercase tracking-wider shadow-[0_8px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.45)] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border border-white/60"
                         >
                             <span>SĂN DEAL NGAY</span>
-                            <ArrowRight className="w-4 h-4 text-[#D31828] group-hover:translate-x-1.5 transition-transform duration-300" />
+                            <ArrowRight className="w-4 h-4 text-[#D31828] group-hover:translate-x-1.5 transition-transform duration-200" />
                         </a>
                     </div>
                 </div>
             </div>
+
 
             {/* ========================================================================= */}
             {/* 2. SECTION HEADING (Khoảng cách mt-7 banner -> title, mt-4 title -> cards) */}

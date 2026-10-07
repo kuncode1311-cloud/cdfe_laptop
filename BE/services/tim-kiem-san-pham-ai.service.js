@@ -118,7 +118,10 @@ function phanTichYDinhCauHoi(cauHoi = '') {
 
     // 3. Nhận diện Danh mục Laptop nếu không hỏi phụ kiện
     if (!tieuChi.laPhuKien) {
-        if (/laptop|máy tính|may tinh|máy|may|con nào|con nao|chiến mã/i.test(text) || /laptop|may tinh/i.test(textKhongDau)) {
+        if (
+            /\blap\b|laptop|máy tính|may tinh|máy|may|con nào|con nao|chiến mã/i.test(text) ||
+            /\blap\b|laptop|may tinh/i.test(textKhongDau)
+        ) {
             tieuChi.uuTienLaptop = true;
         }
 
@@ -149,11 +152,40 @@ function phanTichYDinhCauHoi(cauHoi = '') {
         /(rẻ|re|rẻ nhất|re nhat|rẻ nhát|thấp nhất|thap nhat|giá rẻ|gia re|bình dân|binh dan|hạt dẻ|hat de|sinh viên|sinh vien|học sinh|hoc sinh|ngon bổ rẻ|ngon bo re|kinh tế|kinh te|tiết kiệm|tiet kiem|vừa túi tiền)/i;
     if (regexGiaRe.test(text) || regexGiaRe.test(textKhongDau)) {
         tieuChi.sapXepGiaRe = true;
-        // Nếu câu hỏi nói về "con nào", "máy nào", "laptop" hoặc không chỉ đích danh phụ kiện -> ưu tiên laptop
-        if (/con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao/i.test(text) || !tieuChi.laPhuKien) {
+        if (/con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) || !tieuChi.laPhuKien) {
             tieuChi.uuTienLaptop = true;
         }
     }
+
+    // 4.1 Nhận diện tiêu chí "Mắc nhất" / "Đắt nhất" / "Mắc tiền" / "Cao cấp nhất" / "Khủng nhất"
+    const regexGiaCao =
+        /(mắc|mac|đắt|dat|mắc nhất|mac nhat|đắt nhất|dat nhat|mắc tiền|mac tien|mắc tiề|mac tie|đắt tiền|dat tien|cao cấp|cao cap|khủng nhất|khung nhat|xịn nhất|xin nhat|xa xỉ|xa xi|đắt đỏ|dat do|flagship|top đầu|vip|đắt giá|dat gia|đắt hàng|nhiều tiền nhất|nhieu tien nhat)/i;
+    if (regexGiaCao.test(text) || regexGiaCao.test(textKhongDau)) {
+        tieuChi.sapXepGiaCao = true;
+        if (/con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) || !tieuChi.laPhuKien) {
+            tieuChi.uuTienLaptop = true;
+        }
+    }
+
+    // 4.2 Nhận diện tiêu chí "Bán chạy nhất" / "Cháy hàng" / "Hot nhất" / "Ưa chuộng"
+    const regexBanChay =
+        /(bán chạy|ban chay|bán chạy nhất|ban chay nhat|bán chạy nhát|cháy hàng|chay hang|hot nhất|hot nhat|\bhot\b|ưa chuộng|ua chuong|ưa chuộng nhất|ua chuong nhat|phổ biến|pho bien|best seller|bestseller|đắt khách|dat khach|mua nhiều nhất|mua nhieu nhat|được mua nhiều|duoc mua nhieu)/i;
+    if (regexBanChay.test(text) || regexBanChay.test(textKhongDau)) {
+        tieuChi.sapXepBanChay = true;
+        if (/con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) || !tieuChi.laPhuKien) {
+            tieuChi.uuTienLaptop = true;
+        }
+    }
+
+    // 4.3 Kiểm tra xem khách có yêu cầu nhiều sản phẩm không
+    const regexYeuCauNhieu =
+        /(các|những|vài|mấy|nhiều|nhieu|danh sách|danh sach|top|top 3|top 5|gợi ý vài|cho xem mấy|tổng hợp|so sánh|nhung mau|cac mau|nhung con|cac con)/i;
+    tieuChi.yeuCauNhieu = regexYeuCauNhieu.test(text) || regexYeuCauNhieu.test(textKhongDau);
+
+    // 4.4 Nhận diện khách hỏi đích danh 1 sản phẩm (so sánh nhất hoặc hỏi số ít)
+    const regexDuyNhat =
+        /(nhất|nhat|nhát|\bcon nào\b|\bcái nào\b|\bmáy nào\b|\bchiếc nào\b|\bmẫu nào\b|\bcon gì\b|\bmáy gì\b|có lap mắc|có máy nào|có con nào)/i;
+    tieuChi.hoiChinhXacDuyNhat = (regexDuyNhat.test(text) || regexDuyNhat.test(textKhongDau)) && !tieuChi.yeuCauNhieu;
 
     // 5. Nhận diện Mức giá / Ngân sách cụ thể
     const regexKhoangGia =
@@ -199,19 +231,21 @@ function phanTichYDinhCauHoi(cauHoi = '') {
     const laChaoHoiThuanTuy =
         /^(hi|hello|alo|chào|chao|ê|hey|tôi tên|mình tên|anh tên|em tên|bạn tên|shop ơi|ad ơi|admin ơi|chào shop|chào ad|chào em|chào bạn|hi shop|hi ad|hi pro|hi shop pro)[\s!.,?~]*$/i.test(
             text
-        ) && !tieuChi.hang && !tieuChi.sapXepGiaRe;
+        ) && !tieuChi.hang && !tieuChi.sapXepGiaRe && !tieuChi.sapXepGiaCao && !tieuChi.sapXepBanChay;
 
     const coTuKhoaHoiSanPham =
-        /(con nào|máy nào|cái nào|mẫu nào|sản phẩm nào|sp nào|sarnpaharm|sarn paharm|con gì|máy gì|cái gì|mẫu gì|có con nào|có máy nào|có mẫu nào|dòng nào|loại nào|nào rẻ|rẻ nhất|mua|tìm|tim|tư vấn|tu van|giá|gia|báo giá|bao gia|gợi ý|goi y|xem|laptop|máy tính|may tinh|chuột|chuot|phím|phim|sạc|sac|tai nghe|balo|tản nhiệt|tan nhiet|ssd|ram|gear|phụ kiện|phu kien)/i.test(
+        /(con nào|máy nào|cái nào|mẫu nào|sản phẩm nào|sp nào|sarnpaharm|sarn paharm|con gì|máy gì|cái gì|mẫu gì|có con nào|có máy nào|có mẫu nào|dòng nào|loại nào|nào rẻ|rẻ nhất|mắc nhất|đắt nhất|bán chạy|hot nhất|mua|tìm|tim|tư vấn|tu van|giá|gia|báo giá|bao gia|gợi ý|goi y|xem|\blap\b|laptop|máy tính|may tinh|chuột|chuot|phím|phim|sạc|sac|tai nghe|balo|tản nhiệt|tan nhiet|ssd|ram|gear|phụ kiện|phu kien)/i.test(
             text
         ) ||
-        /(con nao|may nao|cai nao|mau nao|san pham|sp|re nhat|gia re)/i.test(textKhongDau);
+        /(con nao|may nao|cai nao|mau nao|san pham|sp|re nhat|mac nhat|dat nhat|ban chay|gia re|gia cao)/i.test(textKhongDau);
 
     tieuChi.coNhuCauSanPham = Boolean(
         (tieuChi.hang ||
             tieuChi.danhMuc ||
             tieuChi.laPhuKien ||
             tieuChi.sapXepGiaRe ||
+            tieuChi.sapXepGiaCao ||
+            tieuChi.sapXepBanChay ||
             tieuChi.giaMin !== null ||
             tieuChi.giaMax !== null ||
             tieuChi.tuKhoa.length > 0 ||
@@ -247,12 +281,22 @@ function sapXepTheoYeuCau(danhSach, tieuChi, rawText) {
     return [...danhSach].sort((a, b) => {
         const tenA = (a.ten_san_pham || '').toLowerCase();
         const tenB = (b.ten_san_pham || '').toLowerCase();
+        const giaA = a.gia_khuyen_mai || a.gia_goc || 0;
+        const giaB = b.gia_khuyen_mai || b.gia_goc || 0;
 
         // 1. Nếu khách hỏi Rẻ nhất: ƯU TIÊN GIÁ THẤP LÊN ĐẦU
         if (tieuChi.sapXepGiaRe) {
-            const giaA = a.gia_khuyen_mai || a.gia_goc || 999999999;
-            const giaB = b.gia_khuyen_mai || b.gia_goc || 999999999;
             return giaA - giaB;
+        }
+
+        // 1.1 Nếu khách hỏi Mắc nhất / Cao cấp nhất / Đắt nhất: ƯU TIÊN GIÁ CAO XUỐNG DƯỚI
+        if (tieuChi.sapXepGiaCao) {
+            return giaB - giaA;
+        }
+
+        // 1.2 Nếu khách hỏi Bán chạy nhất / Hot nhất / Cháy hàng
+        if (tieuChi.sapXepBanChay) {
+            return (b.so_luong_da_ban || 0) - (a.so_luong_da_ban || 0);
         }
 
         // 2. Phân định Laptop vs Phụ kiện
@@ -364,9 +408,17 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
 
             // Lọc mức giá
             if (tieuChi.giaMin !== null || tieuChi.giaMax !== null) {
-                filter.gia_khuyen_mai = {};
+                filter.gia_khuyen_mai = filter.gia_khuyen_mai || {};
                 if (tieuChi.giaMin !== null) filter.gia_khuyen_mai.$gte = tieuChi.giaMin;
                 if (tieuChi.giaMax !== null) filter.gia_khuyen_mai.$lte = tieuChi.giaMax;
+            }
+
+            // Lọc giá an toàn cho laptop chính hãng (tránh dữ liệu test lỗi dưới 3 triệu đồng)
+            if (tieuChi.uuTienLaptop && !tieuChi.laPhuKien) {
+                filter.gia_khuyen_mai = filter.gia_khuyen_mai || {};
+                if (!filter.gia_khuyen_mai.$gte) {
+                    filter.gia_khuyen_mai.$gte = 3000000;
+                }
             }
 
             // Lọc từ khóa phần cứng
@@ -378,16 +430,20 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
 
             let query = SanPham.find(filter);
 
-            // Nếu người dùng hỏi "rẻ nhất", ưu tiên sort theo giá tăng dần
+            // Sắp xếp theo ý định người dùng
             if (tieuChi.sapXepGiaRe) {
                 query = query.sort({ gia_khuyen_mai: 1 });
+            } else if (tieuChi.sapXepGiaCao) {
+                query = query.sort({ gia_khuyen_mai: -1, gia_goc: -1 });
+            } else if (tieuChi.sapXepBanChay) {
+                query = query.sort({ so_luong_da_ban: -1, diem_danh_gia_tb: -1 });
             } else {
                 query = query.sort({ so_luong_da_ban: -1, createdAt: -1 });
             }
 
             const rawList = await query.limit(15).lean().exec();
 
-            // Nếu người dùng hỏi "con nào rẻ nhất" và ưu tiên laptop:
+            // Nếu người dùng hỏi laptop và ưu tiên laptop:
             let ketQuaLoc = rawList;
             if (tieuChi.uuTienLaptop && !tieuChi.laPhuKien) {
                 const danhSachLaptop = rawList.filter((sp) => !laPhuKienLinhKien(sp));
@@ -396,7 +452,19 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
                 }
             }
 
-            danhSachKetQua = sapXepTheoYeuCau(ketQuaLoc, tieuChi, rawText).slice(0, soLuongToiDa);
+            // Xác định số lượng sản phẩm cần trả về:
+            // Nếu khách hỏi đích danh 1 con / so sánh nhất -> CHỈ LẤY ĐÚNG 1 CON TRÚNG ĐÍCH NHẤT!
+            // Nếu khách yêu cầu nhiều hoặc hỏi dòng chung -> Lấy 2-3 con
+            let soLuongCanLay = soLuongToiDa;
+            if (tieuChi.hoiChinhXacDuyNhat) {
+                soLuongCanLay = 1;
+            } else if (tieuChi.yeuCauNhieu) {
+                soLuongCanLay = Math.min(soLuongToiDa, 3);
+            } else {
+                soLuongCanLay = Math.min(soLuongToiDa, 3);
+            }
+
+            danhSachKetQua = sapXepTheoYeuCau(ketQuaLoc, tieuChi, rawText).slice(0, soLuongCanLay);
         } catch (e) {
             console.error('❌ [Tìm kiếm sản phẩm AI] Truy vấn MongoDB gặp sự cố:', e.message);
         }
@@ -408,9 +476,10 @@ async function timKiemSanPhamPhuHop(cauHoiKhachHang = '', soLuongToiDa = 5) {
 /**
  * Định dạng danh sách sản phẩm thành văn bản cô đọng đưa vào System Prompt
  * @param {Array} danhSachSanPham
+ * @param {Object} [tieuChi]
  * @returns {string}
  */
-function dinhDangNguCanhSanPham(danhSachSanPham = []) {
+function dinhDangNguCanhSanPham(danhSachSanPham = [], tieuChi = {}) {
     if (!danhSachSanPham || danhSachSanPham.length === 0) {
         return 'Khách hàng hiện đang chào hỏi xã giao hoặc hỏi thông tin chung, CHƯA có nhu cầu xem sản phẩm cụ thể. Bạn tuyệt đối KHÔNG đề xuất sản phẩm nào (BẮT BUỘC để mảng "id_san_pham_phu_hop": [] rỗng).';
     }
@@ -421,14 +490,19 @@ function dinhDangNguCanhSanPham(danhSachSanPham = []) {
         const ten = sp.ten_san_pham || 'Sản phẩm';
         const hang = (sp.hang_san_xuat || '').toUpperCase();
         const giaKM = (sp.gia_khuyen_mai || 0).toLocaleString('vi-VN') + 'đ';
+        const daBan = sp.so_luong_da_ban || 0;
         const cpu = sp.thong_so?.cpu || '';
         const ram = sp.thong_so?.ram || '';
 
         text += `${idx + 1}. [ID: ${id}] ${ten}\n`;
-        text += `   - Giá: ${giaKM} | Hãng: ${hang}`;
+        text += `   - Giá: ${giaKM} | Hãng: ${hang} | Đã bán: ${daBan} máy`;
         if (cpu || ram) text += ` | Thông số: ${[cpu, ram].filter(Boolean).join(' - ')}`;
         text += `\n\n`;
     });
+
+    if (tieuChi.hoiChinhXacDuyNhat) {
+        text += `\nLƯU Ý ĐẶC BIỆT QUAN TRỌNG CHO BẠN: Khách hàng đang hỏi CHÍNH XÁC / ĐÍCH DANH 1 SẢN PHẨM (Ví dụ: rẻ nhất, đắt nhất, bán chạy nhất, hoặc hỏi 'con nào...'). Bạn BẮT BUỘC chỉ nêu đích danh sản phẩm số 1 trên đây và CHỈ CHỌN ĐÚNG 1 ID này vào "id_san_pham_phu_hop" (Mảng chỉ gồm 1 ID duy nhất)! Tuyệt đối KHÔNG chọn nhiều ID làm loãng câu trả lời.\n`;
+    }
 
     return text;
 }

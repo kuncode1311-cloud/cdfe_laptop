@@ -226,7 +226,7 @@ export default function HopChatAI() {
     };
 
     return (
-        <aside className="fixed right-3 sm:right-6 bottom-4 sm:bottom-6 z-50 font-sans">
+        <aside className="fixed right-3 sm:right-6 bottom-18 lg:bottom-6 z-50 font-sans">
             {/* 1. NÚT TRÒN MỞ CHATBOT (GỌN GÀNG, KHÔNG CÓ BONG BÓNG LỜI CHÀO THỪA) */}
             {!dangMo && (
                 <button

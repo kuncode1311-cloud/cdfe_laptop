@@ -1,200 +1,172 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Sparkles, Zap, ShieldCheck, Cpu, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronRight, Sparkles, Cpu, Zap, ShieldCheck } from 'lucide-react';
 
-// Dữ liệu các slide banner công nghệ cao cấp dành riêng cho Mobile
-const SLIDES_MOBILE = [
+// Dữ liệu 4 phân đoạn (Chapters) đồng bộ với bản Desktop Cinematic nhưng tối ưu hoàn hảo cho Mobile
+const CHAPTERS_MOBILE = [
     {
-        id: 'gaming-ai',
-        chapter: '01 / AWAKEN',
-        tag: 'THẾ HỆ MỚI • AI HYBRID',
-        titlePart1: 'KHỞI ĐỘNG',
-        titlePart2: 'SỨC MẠNH',
-        sub: 'Trang bị GPU RTX 40-Series & NPU Intel Core Ultra. Mượt mà từ khung hình đầu tiên.',
-        image: '/images/banners/banner_hero_mobile.jpg',
-        ctaText: 'SĂN DEAL FLASH SALE',
-        targetId: 'flash-sale',
-        specs: ['RTX 40-Series', 'OLED 165Hz', 'AI Engine'],
-        accentColor: 'from-cyan-400 to-blue-600'
+        code: '01 / AWAKEN',
+        title1: 'KHỞI ĐỘNG',
+        title2: 'SỨC MẠNH',
+        cta: 'KHÁM PHÁ THIẾT KẾ',
+        line1: 'Hiệu năng thế hệ mới.',
+        line2: 'Sẵn sàng ngay khi bạn chạm tới.',
+        specs: ['Intel Core Ultra', 'RTX 40-Series', 'OLED 120Hz']
     },
     {
-        id: 'ultrabook-titanium',
-        chapter: '02 / EVOLVE',
-        tag: 'ULTRABOOK AI 2026',
-        titlePart1: 'BỨT PHÁ',
-        titlePart2: 'GIỚI HẠN',
-        sub: 'Vỏ Titan siêu mỏng nhẹ 1.19kg, thời lượng pin 18h, chuẩn màu đồ họa 100% DCI-P3.',
-        image: '/images/banners/banner_hero_ultrabook.jpg',
-        ctaText: 'KHÁM PHÁ CẤU HÌNH',
-        targetId: 'flash-sale',
-        specs: ['Core Ultra 7', 'Pin 18h', 'Titan 1.19kg'],
-        accentColor: 'from-amber-300 via-teal-300 to-blue-500'
+        code: '02 / POWER',
+        title1: 'SỨC MẠNH',
+        title2: 'THỨC TỈNH',
+        cta: 'XEM SỨC MẠNH',
+        line1: 'Tốc độ phản hồi tức thì.',
+        line2: 'Mọi chuyển động đều liền mạch.',
+        specs: ['NPU AI 45 TOPS', 'RAM 32GB LPDDR5X', 'SSD Gen4 7000MB/s']
+    },
+    {
+        code: '03 / EVOLVE',
+        title1: 'BỨT PHÁ',
+        title2: 'GIỚI HẠN',
+        cta: 'CHẠM VÀO HIỆU NĂNG',
+        line1: 'Thiết kế cho công việc đỉnh cao.',
+        line2: 'Tối ưu cho sáng tạo & gaming.',
+        specs: ['Vỏ Titan 1.19kg', 'Pin 18 Giờ', 'Chuẩn màu 100% DCI-P3']
+    },
+    {
+        code: '04 / EXPERIENCE',
+        title1: 'SẴN SÀNG',
+        title2: 'BỨT PHÁ',
+        cta: 'SĂN DEAL FLASH SALE',
+        line1: 'Một trải nghiệm laptop mới.',
+        line2: 'Mượt mà từ khung hình đầu tiên.',
+        specs: ['Bảo hành 3 năm', 'Đổi mới 30 ngày', 'Trả góp 0%']
     }
 ];
 
 export default function BannerHeroMobile() {
-    const [hienTai, setHienTai] = useState(0);
+    const [activeIdx, setActiveIdx] = useState(0);
 
-    // Tự động chuyển slide mượt mà mỗi 6s
+    // Tự động chuyển chapter mỗi 5.5 giây
     useEffect(() => {
-        const timer = setInterval(() => {
-            setHienTai((prev) => (prev + 1) % SLIDES_MOBILE.length);
-        }, 6000);
-        return () => clearInterval(timer);
+        const interval = setInterval(() => {
+            setActiveIdx((prev) => (prev + 1) % CHAPTERS_MOBILE.length);
+        }, 5500);
+        return () => clearInterval(interval);
     }, []);
 
-    const slide = SLIDES_MOBILE[hienTai];
+    const cur = CHAPTERS_MOBILE[activeIdx];
 
-    const cuonToiSection = (id) => {
+    const cuonToiSection = (id = 'flash-sale') => {
         const el = document.getElementById(id);
         if (el) {
             el.scrollIntoView({ behavior: 'smooth' });
         } else {
-            window.scrollBy({ top: 450, behavior: 'smooth' });
+            window.scrollBy({ top: 520, behavior: 'smooth' });
         }
     };
 
     return (
         <section
-            className="relative w-full rounded-3xl overflow-hidden bg-[#02060b] text-white border border-blue-900/30 shadow-2xl select-none"
-            aria-label="Banner điện ảnh TNTP Laptop Mobile"
+            className="relative w-screen -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 overflow-hidden bg-[#02060b] text-white select-none"
+            style={{ minHeight: '620px', height: '82vh', maxHeight: '720px' }}
+            aria-label="Banner trải nghiệm laptop điện ảnh Mobile"
         >
-            {/* 1. NỀN ẢNH VÀ HIỆU ỨNG ÁNH SÁNG CÔNG NGHỆ CHUẨN TỈ LỆ KHÔNG BỊ BÓ */}
-            <div className="relative w-full h-[540px] overflow-hidden">
-                {/* Lớp ảnh nền Render Laptop Siêu Nét */}
+            {/* 1. ẢNH NỀN RENDER LAPTOP 3D TRUNG TÂM CỰC KỲ SẮC NÉT (KHÔNG BỊ CHE BỞI CHỮ) */}
+            <div className="absolute inset-0 z-0">
                 <img
-                    src={slide.image}
-                    alt={`${slide.titlePart1} ${slide.titlePart2}`}
-                    className="w-full h-full object-cover object-center transition-all duration-700 transform scale-100 ease-out"
+                    src="/images/banners/banner_hero_mobile_v2.jpg"
+                    alt="TNTP Laptop Flagship"
+                    className="w-full h-full object-cover object-center pointer-events-none transform scale-100 transition-transform duration-1000 ease-out"
                 />
 
-                {/* Gradient phủ đỉnh (giúp thanh điều hướng và chữ hiển thị trong trẻo) */}
-                <div className="absolute inset-0 bg-gradient-to-b from-[#02060b]/90 via-[#02060b]/40 to-[#02060b]/95 pointer-events-none" />
+                {/* Gradient phủ đỉnh giúp thanh điều hướng trong trẻo và chữ nổi bật */}
+                <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-[#02060b]/95 via-[#02060b]/60 to-transparent pointer-events-none" />
 
-                {/* Vầng sáng Ambient Glow Neon */}
-                <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-cyan-500/15 rounded-full blur-3xl pointer-events-none" />
+                {/* Vầng sáng Ambient Cyan phát ra từ laptop */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                {/* 2. NỘI DUNG CHÍNH (TYPOGRAPHY & CALL TO ACTION) */}
-                <div className="absolute inset-0 p-5 flex flex-col justify-between z-10">
-                    {/* Phần trên: Badge phân cảnh & Thông số */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-widest uppercase bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 backdrop-blur-md shadow-sm">
-                                <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
-                                {slide.chapter}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 tracking-wider">
-                                {slide.tag}
-                            </span>
-                        </div>
-
-                        {/* Tiêu đề chính lớn, đậm nét */}
-                        <div className="pt-2">
-                            <h2 className="text-3xl font-black tracking-tight leading-none text-white drop-shadow-md">
-                                <span>{slide.titlePart1}</span>
-                                <br />
-                                <span className="bg-gradient-to-r from-cyan-300 via-sky-300 to-blue-400 bg-clip-text text-transparent">
-                                    {slide.titlePart2}
-                                </span>
-                            </h2>
-                        </div>
-                    </div>
-
-                    {/* Phần dưới: Mô tả, Chips thông số & Nút hành động */}
-                    <div className="space-y-4">
-                        {/* 3 Thẻ Specs thu nhỏ */}
-                        <div className="flex flex-wrap items-center gap-2">
-                            {slide.specs.map((item, idx) => (
-                                <span
-                                    key={idx}
-                                    className="px-2.5 py-1 text-[10.5px] font-bold rounded-lg bg-slate-900/80 text-slate-200 border border-slate-700/60 backdrop-blur-md shadow-xs flex items-center gap-1"
-                                >
-                                    <Cpu className="w-3 h-3 text-cyan-400" />
-                                    {item}
-                                </span>
-                            ))}
-                        </div>
-
-                        {/* Đoạn mô tả mượt mà */}
-                        <p className="text-xs text-slate-300/90 leading-relaxed font-medium line-clamp-2 drop-shadow-sm">
-                            {slide.sub}
-                        </p>
-
-                        {/* Nút hành động CTA & Chuyển slide */}
-                        <div className="pt-1 flex items-center gap-2.5">
-                            <button
-                                type="button"
-                                onClick={() => cuonToiSection(slide.targetId)}
-                                className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-cyan-400 via-sky-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-black text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 active:scale-95 transition-all cursor-pointer"
-                            >
-                                <span>{slide.ctaText}</span>
-                                <ArrowRight className="w-4 h-4 stroke-[2.5]" />
-                            </button>
-
-                            {/* Nút lùi/tiến slide nhanh */}
-                            <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
-                                <button
-                                    type="button"
-                                    onClick={() => setHienTai((prev) => (prev === 0 ? SLIDES_MOBILE.length - 1 : prev - 1))}
-                                    className="p-2 text-slate-400 hover:text-white rounded-lg active:scale-90 transition-all cursor-pointer"
-                                    aria-label="Slide trước"
-                                >
-                                    <ChevronLeft className="w-4 h-4" />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setHienTai((prev) => (prev + 1) % SLIDES_MOBILE.length)}
-                                    className="p-2 text-slate-400 hover:text-white rounded-lg active:scale-90 transition-all cursor-pointer"
-                                    aria-label="Slide kế tiếp"
-                                >
-                                    <ChevronRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Chỉ báo Dots & Thanh tiến trình */}
-                        <div className="flex items-center justify-between pt-1 text-[10px] text-slate-400 font-semibold border-t border-slate-800/80">
-                            <div className="flex items-center gap-1.5">
-                                {SLIDES_MOBILE.map((_, idx) => (
-                                    <button
-                                        key={idx}
-                                        type="button"
-                                        onClick={() => setHienTai(idx)}
-                                        className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                                            idx === hienTai ? 'w-6 bg-cyan-400' : 'w-2 bg-slate-700'
-                                        }`}
-                                        aria-label={`Chuyển tới slide ${idx + 1}`}
-                                    />
-                                ))}
-                            </div>
-                            <span className="flex items-center gap-1 text-slate-400">
-                                <span>TNTP LAPTOP // 2026</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
+                {/* Lớp chuyển màu đáy mượt mà (Seamless Edge Blend) nối liền với trang web */}
+                <div
+                    className="absolute inset-x-0 bottom-0 h-36 pointer-events-none"
+                    style={{
+                        background: 'linear-gradient(to bottom, rgba(2, 6, 11, 0) 0%, rgba(2, 6, 11, 0.45) 40%, rgba(2, 6, 11, 0.85) 75%, var(--bg-primary, #f1f5f9) 100%)'
+                    }}
+                />
             </div>
 
-            {/* 3. DẢI BẢO CHỨNG CÔNG NGHỆ BÊN DƯỚI */}
-            <div className="grid grid-cols-3 divide-x divide-slate-800/80 bg-slate-950/90 border-t border-slate-900 text-center py-2.5 px-1">
-                <div className="flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-black text-cyan-400 flex items-center gap-1">
-                        <ShieldCheck className="w-3 h-3" /> 100%
-                    </span>
-                    <span className="text-[9px] text-slate-400 font-medium">Chính Hãng</span>
+            {/* 2. CẤU TRÚC NỘI DUNG 3 PHẦN: TOP (TIÊU ĐỀ & CTA) - CENTER (LAPTOP TỰ DO) - BOTTOM (SUBTITLE & SPECS) */}
+            <div className="relative z-10 w-full h-full flex flex-col justify-between pt-5 pb-7 px-4">
+                {/* PHẦN ĐỈNH: Badge, Tiêu đề lớn & Nút CTA chuẩn flagship */}
+                <div className="flex flex-col items-center text-center space-y-1.5 animate-in fade-in duration-500">
+                    {/* Badge Chương (Chapter Code) */}
+                    <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-cyan-950/70 border border-cyan-400/30 text-cyan-300 text-[10.5px] font-extrabold tracking-[0.22em] uppercase backdrop-blur-md shadow-sm">
+                        <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
+                        <span>{cur.code}</span>
+                    </div>
+
+                    {/* Tiêu đề chính lớn, đậm nét, hiệu ứng neon điện ảnh */}
+                    <h1 className="text-[32px] font-black tracking-tight leading-[1.05] text-white drop-shadow-[0_4px_18px_rgba(0,0,0,0.9)]">
+                        <span>{cur.title1}</span>
+                        <br />
+                        <span className="bg-gradient-to-r from-cyan-300 via-sky-300 to-blue-400 bg-clip-text text-transparent">
+                            {cur.title2}
+                        </span>
+                    </h1>
+
+                    {/* Nút Call To Action dạng Pill Frosted phát sáng sang trọng */}
+                    <button
+                        type="button"
+                        onClick={() => cuonToiSection('flash-sale')}
+                        className="mt-2.5 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-sky-400 via-cyan-300 to-sky-400 text-slate-950 font-black text-[11px] tracking-wider uppercase shadow-[0_4px_22px_rgba(56,217,255,0.42)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border border-white/60"
+                    >
+                        <span>{cur.cta}</span>
+                        <ArrowRight className="w-3.5 h-3.5 stroke-[3]" />
+                    </button>
                 </div>
-                <div className="flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-black text-amber-400 flex items-center gap-1">
-                        <Zap className="w-3 h-3" /> Giao 2H
-                    </span>
-                    <span className="text-[9px] text-slate-400 font-medium">Siêu Tốc</span>
-                </div>
-                <div className="flex flex-col items-center justify-center">
-                    <span className="text-[10px] font-black text-emerald-400 flex items-center gap-1">
-                        <Flame className="w-3 h-3" /> 30 Ngày
-                    </span>
-                    <span className="text-[9px] text-slate-400 font-medium">1 Đổi 1</span>
+
+                {/* PHẦN GIỮA: KHOẢNG KHÔNG GIAN ĐỂ LAPTOP TỎA SÁNG TỰ NHIÊN, KHÔNG BỊ CHỮ CHE */}
+                <div className="flex-1 w-full pointer-events-none" />
+
+                {/* PHẦN ĐÁY: 2 dòng mô tả điện ảnh, 3 chip thông số & Chấm chuyển phân cảnh */}
+                <div className="flex flex-col items-center text-center space-y-3">
+                    {/* 2 dòng mô tả điện ảnh nguyên bản */}
+                    <div className="space-y-0.5 drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                        <p className="text-[13px] font-medium text-slate-200 leading-snug">
+                            {cur.line1}
+                        </p>
+                        <p className="text-[13px] font-semibold text-cyan-300 leading-snug">
+                            {cur.line2}
+                        </p>
+                    </div>
+
+                    {/* 3 Thẻ Specs Pill Frosted siêu mỏng & tinh tế */}
+                    <div className="flex flex-wrap items-center justify-center gap-1.5">
+                        {cur.specs.map((spec, i) => (
+                            <span
+                                key={i}
+                                className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900/60 text-slate-200 border border-cyan-500/20 backdrop-blur-md shadow-xs"
+                            >
+                                {spec}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Bộ chuyển 4 Chapter dạng Dots thanh lịch */}
+                    <div className="flex items-center gap-2 pt-1">
+                        {CHAPTERS_MOBILE.map((ch, idx) => (
+                            <button
+                                key={ch.code}
+                                type="button"
+                                onClick={() => setActiveIdx(idx)}
+                                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                    idx === activeIdx
+                                        ? 'w-7 bg-cyan-400 shadow-[0_0_8px_rgba(56,217,255,0.8)]'
+                                        : 'w-2 bg-slate-700/80 hover:bg-slate-500'
+                                }`}
+                                aria-label={`Chuyển tới cảnh ${ch.code}`}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </section>

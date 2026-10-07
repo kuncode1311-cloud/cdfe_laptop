@@ -26,7 +26,7 @@ export default function NutLienHeNoi() {
 
     return (
         <aside
-            className="fixed left-3 sm:left-4 bottom-5 sm:bottom-6 z-40 flex flex-col items-start select-none"
+            className="fixed left-3 sm:left-4 bottom-18 lg:bottom-6 z-40 flex flex-col items-start select-none"
             aria-label="Kênh liên hệ hỗ trợ nhanh"
         >
             {/* 1. DANH SÁCH CÁC NÚT LIÊN HỆ KHI MỞ RỘNG */}

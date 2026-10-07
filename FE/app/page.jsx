@@ -16,7 +16,7 @@ export default function TrangChu() {
                 <BannerDong3D />
 
                 {/* 2. Flash Sale Đếm Ngược Nổi Bật */}
-                <div className="relative z-30 mt-4 md:-mt-10">
+                <div className="relative z-30 -mt-8 sm:-mt-10">
                     <FlashSaleDemNguoc />
                 </div>
             </div>

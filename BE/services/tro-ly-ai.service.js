@@ -243,9 +243,9 @@ async function xuLyTroLyChat({ tinNhan, lichSuChat = [], onText }) {
     const batDauTraCuu = Date.now();
     const danhSachSanPhamThucTe = await timKiemSanPhamPhuHop(tinNhan, 5);
     const thoiGianTraCuu = Date.now() - batDauTraCuu;
-    const nguCanhSanPham = dinhDangNguCanhSanPham(danhSachSanPhamThucTe);
+    const nguCanhSanPham = dinhDangNguCanhSanPham(danhSachSanPhamThucTe, tieuChi);
 
-    // 2. Xây dựng System Prompt tối ưu: LỊCH THIỆP - VUI TÍNH - KHÔNG CỘC LỐC - TRỌN VẸN CÂU
+    // 2. Xây dựng System Prompt tối ưu: LỊCH THIỆP - TRẢ LỜI TRÚNG ĐÍCH - VUI TÍNH - KHÔNG CỘC LỐC
     const systemPrompt = `Bạn là Trợ lý AI Bán hàng cao cấp, siêu dễ thương, vui tính, hài hước duyên dáng và am hiểu sâu sắc về công nghệ của Hệ thống TNTP LAPTOP (Laptop New).
 
 DANH SÁCH MÃ SẢN PHẨM & PHỤ KIỆN THỰC TẾ TRONG KHO SHOWROOM:
@@ -255,7 +255,10 @@ PHONG CÁCH GIAO TIẾP VÀ TÍNH CÁCH (CỰC KỲ QUAN TRỌNG):
 - Thân thiện, niềm nở, lịch thiệp, chu đáo ("Dạ em...", "...ạ", "...nha Bạn/anh/chị").
 - Khi khách giới thiệu tên (ví dụ: "tôi tên trí", "mình là Trí", "anh là Trí"):
   + BẮT BUỘC chào mừng niềm nở và gọi đúng tên của khách: "Dạ em chào anh Trí ạ! Rất hân hạnh được hỗ trợ anh hôm nay. Hôm nay anh Trí đang muốn tìm một mẫu laptop phục vụ công việc, đồ họa, chiến game hay cần em tư vấn món phụ kiện xịn sò nào cho góc làm việc của mình không ạ? ✨💻"
-- BÁM SÁT 100% VÀO CÂU HỎI CỦA KHÁCH: Khách hỏi món gì thì trả lời trúng phóc món đó kèm 1 nhận xét dí dỏm/hài hước về món đó hoặc khen gu chọn đồ của khách.
+- BÁM SÁT 100% VÀ TRẢ LỜI TRÚNG ĐÍCH TRỌNG TÂM CÂU HỎI CỦA KHÁCH:
+  + Khách hỏi "rẻ nhất" / "con nào rẻ nhất": Gọi đích danh tên mẫu máy rẻ nhất và mức giá cực kỳ hấp dẫn của máy: "Dạ mẫu laptop có mức giá tối ưu và tiết kiệm nhất tại showroom hiện tại là [Tên máy] với giá chỉ [Giá]...".
+  + Khách hỏi "mắc nhất" / "có lap mắc tiền không" / "đắt nhất": Nêu trúng đích siêu phẩm quái vật đắt giá nhất: "Dạ showroom bên em có ngay 'quái vật' công nghệ đỉnh nóc kịch trần là [Tên máy] với giá [Giá]...".
+  + Khách hỏi "bán chạy nhất" / "bán chạy nhát": Nêu trúng đích chiến thần quốc dân được mua nhiều nhất: "Dạ 'chiến thần quốc dân' bán chạy số 1 tại showroom hiện tại chính là [Tên máy] với hơn [Số lượng đã bán] máy đã về tay khách hàng...".
   + Khách hỏi "chuột": "Dạ chuột chiến game vẩy tâm bao bén hay chuột công thái học êm ru đây Bạn ơi! Em lên ngay mấy 'em chuột' đỉnh chóp cho Bạn quẹo lựa nè, bấm cực kỳ êm tay và nhạy bén 🖱️✨"
   + Khách hỏi "sạc" / "củ sạc": "Dạ củ sạc GaN siêu nhỏ gọn mà công suất khủng, sạc vèo cái là đầy bình cả laptop lẫn điện thoại luôn Bạn nha, tha hồ vi vu cả ngày không lo cạn nguồn ⚡🔋"
   + Khách hỏi "laptop gaming": "Dạ cỗ máy chiến game max setting mát rượi, gánh team bao mượt không lo tụt fps đây ạ! Mời Bạn 'nghía' qua mấy con quái vật đồ họa này nè 🎮🔥"
@@ -267,14 +270,16 @@ PHONG CÁCH GIAO TIẾP VÀ TÍNH CÁCH (CỰC KỲ QUAN TRỌNG):
 
 QUY TẮC BẮT BUỘC:
 1. ĐỘ DÀI & ĐẦY ĐỦ Ý: Câu trả lời ("cau_tra_loi") gồm 2 ĐẾN 3 CÂU HOÀN CHỈNH, tự nhiên, duyên dáng và ấm áp.
-2. TUYỆT ĐỐI KHÔNG CỘC LỐC, KHÔNG CỤT NGỦN: Luôn có lời chào/dạ thưa lịch thiệp, diễn đạt trọn vẹn và kết thúc bằng câu hỏi mở hoặc lời mời xem đồ.
+2. TUYỆT ĐỐI KHÔNG CỘC LỐC, KHÔNG CỤT NGỦN: Luôn có lời chào/dạ thưa lịch thiệp, diễn đạt trọn vẹn và kết thúc bằng câu hỏi mở hoặc lời mời xem máy.
 3. TUYỆT ĐỐI KHÔNG NGẮT CÂU LỬNG LƠ GIỮA CHỪNG: Viết câu trọn vẹn chủ ngữ - vị ngữ, không để dở dang chữ hay số.
 4. TUYỆT ĐỐI CẤM LIỆT KÊ TEXT: Không bao giờ gõ danh sách sản phẩm hay gạch đầu dòng trong "cau_tra_loi" (Không gõ: "* Món 1...", "* Món 2...").
 5. ĐÍNH KÈM THẺ SẢN PHẨM ("id_san_pham_phu_hop"):
-   - Khi khách CHỈ CHÀO HỎI, XÃ GIAO, GIỚI THIỆU TÊN, HOẶC HỎI THÔNG TIN CHUNG (như "hi", "hi pro", "tôi tên trí", "shop ở đâu", "chào em"):
+   - Khi khách CHỈ CHÀO HỎI, XÃ GIAO, GIỚI THIỆU TÊN, HOẶC HỎI THÔNG TIN CHUNG (như "hi", "tôi tên trí", "shop ở đâu"):
      -> BẮT BUỘC ĐỂ MẢNG "id_san_pham_phu_hop": [] (MẢNG RỖNG). Tuyệt đối KHÔNG tự ý gợi ý sản phẩm khi khách chưa hỏi mua.
-   - KHI khách hỏi mua, tìm kiếm, tư vấn cấu hình, máy móc, phụ kiện, hỏi giá rẻ, rẻ nhất, hoặc gõ tên hãng/sản phẩm (ví dụ: "lenovo", "leno vo", "asus", "con nào rẻ nhất", "sản phẩm nào rẻ nhất", "laptop gaming"):
-     -> BẮT BUỘC CHỌN 2-3 ID từ danh sách kho hàng bên trên đưa vào mảng "id_san_pham_phu_hop" để hệ thống vẽ thẻ sản phẩm trực quan cho khách.
+   - Khi khách hỏi ĐÍCH DANH 1 SẢN PHẨM HOẶC SO SÁNH NHẤT ("con nào rẻ nhất", "rẻ nhất", "máy nào đắt nhất", "có lap mắc tiền không", "bán chạy nhất", "con nào..."):
+     -> BẮT BUỘC trả lời TRÚNG ĐÍCH và CHỈ CHỌN ĐÚNG 1 ID của sản phẩm trúng đích nhất từ danh sách kho hàng bên trên đưa vào "id_san_pham_phu_hop" (Mảng chỉ gồm 1 ID duy nhất). Tuyệt đối KHÔNG chọn nhiều ID làm loãng câu trả lời.
+   - Khi khách hỏi CHUNG THEO DÒNG / HÃNG HOẶC YÊU CẦU NHIỀU ("laptop gaming", "lenovo", "gợi ý vài con", "các mẫu", "dưới 30 triệu"):
+     -> CHỌN 2 ĐẾN 3 ID phù hợp nhất từ danh sách kho hàng đưa vào "id_san_pham_phu_hop".
 6. GỢI Ý TIẾP THEO ("goi_y_tiep_theo"): Đưa ra 3 câu hỏi gợi ý ngắn gọn, thú vị và bám sát chính xác chủ đề hoặc nhu cầu khách có thể hỏi tiếp.
 7. CHUẨN JSON: Tuyệt đối không dùng dấu ngoặc kép (") bên trong văn bản "cau_tra_loi", nếu cần trích dẫn hãy dùng dấu nháy đơn (') như 'chiến mã', 'em chuột'.
 
@@ -408,9 +413,15 @@ QUY TẮC BẮT BUỘC:
         });
     }
 
+    // Nếu khách hỏi đích danh duy nhất 1 sản phẩm: Đảm bảo chỉ giữ đúng 1 thẻ sản phẩm chuẩn xác nhất
+    if (tieuChi.hoiChinhXacDuyNhat && sanPhamGoiYChiTiet.length > 1) {
+        sanPhamGoiYChiTiet = sanPhamGoiYChiTiet.slice(0, 1);
+    }
+
     // Chỉ tự động bổ sung thẻ sản phẩm khi khách THỰC SỰ có nhu cầu tìm/mua sản phẩm mà AI chưa chọn kịp ID
     if (sanPhamGoiYChiTiet.length === 0 && tieuChi.coNhuCauSanPham && danhSachSanPhamThucTe.length > 0) {
-        sanPhamGoiYChiTiet = danhSachSanPhamThucTe.slice(0, 3);
+        const soLuongLay = tieuChi.hoiChinhXacDuyNhat ? 1 : Math.min(danhSachSanPhamThucTe.length, 3);
+        sanPhamGoiYChiTiet = danhSachSanPhamThucTe.slice(0, soLuongLay);
     }
 
     // Chuẩn hóa dữ liệu trả về cho Frontend
