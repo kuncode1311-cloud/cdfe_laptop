@@ -15,8 +15,8 @@ export default function TrangChu() {
                 {/* 1. Hero Banner Cinematic nối liền */}
                 <BannerDong3D />
 
-                {/* 2. Flash Sale Đếm Ngược Nổi Bật */}
-                <div className="relative z-30 -mt-8 sm:-mt-10">
+                {/* 2. Flash Sale Đếm Ngược Nổi Bật: Trên mobile có khoảng cách thoáng đẹp không che banner, trên PC nối liền cinematic */}
+                <div className="relative z-30 mt-4 sm:mt-6 md:-mt-10">
                     <FlashSaleDemNguoc />
                 </div>
             </div>

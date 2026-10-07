@@ -67,7 +67,7 @@ export default function BannerHeroMobile() {
 
     return (
         <section
-            className="relative w-screen -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 overflow-hidden bg-[#02060b] text-white select-none"
+            className="relative w-[calc(100%+2rem)] sm:w-[calc(100%+3rem)] -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 overflow-hidden bg-[#02060b] text-white select-none rounded-b-2xl sm:rounded-b-3xl"
             style={{ minHeight: '480px', height: '68vh', maxHeight: '560px' }}
             aria-label="Banner trải nghiệm laptop điện ảnh Mobile"
         >
@@ -87,15 +87,15 @@ export default function BannerHeroMobile() {
 
                 {/* Lớp chuyển màu đáy mượt mà (Seamless Edge Blend) nối liền với trang web */}
                 <div
-                    className="absolute inset-x-0 bottom-0 h-36 pointer-events-none"
+                    className="absolute inset-x-0 bottom-0 h-24 pointer-events-none"
                     style={{
-                        background: 'linear-gradient(to bottom, rgba(2, 6, 11, 0) 0%, rgba(2, 6, 11, 0.45) 40%, rgba(2, 6, 11, 0.85) 75%, var(--bg-primary, #f1f5f9) 100%)'
+                        background: 'linear-gradient(to bottom, rgba(2, 6, 11, 0) 0%, rgba(2, 6, 11, 0.4) 40%, rgba(2, 6, 11, 0.8) 75%, var(--bg-primary, #f1f5f9) 100%)'
                     }}
                 />
             </div>
 
             {/* 2. CẤU TRÚC NỘI DUNG 3 PHẦN: TOP (TIÊU ĐỀ & CTA) - CENTER (LAPTOP TỰ DO) - BOTTOM (SUBTITLE & SPECS) */}
-            <div className="relative z-10 w-full h-full flex flex-col justify-between pt-5 pb-7 px-4">
+            <div className="relative z-10 w-full h-full flex flex-col justify-between pt-5 pb-8 px-4">
                 {/* PHẦN ĐỈNH: Badge, Tiêu đề lớn & Nút CTA chuẩn flagship */}
                 <div className="flex flex-col items-center text-center space-y-1.5 animate-in fade-in duration-500">
                     {/* Badge Chương (Chapter Code) */}
