@@ -68,7 +68,7 @@ export default function BannerHeroMobile() {
     return (
         <section
             className="relative w-screen -mx-4 sm:-mx-6 -mt-6 sm:-mt-8 overflow-hidden bg-[#02060b] text-white select-none"
-            style={{ minHeight: '620px', height: '82vh', maxHeight: '720px' }}
+            style={{ minHeight: '480px', height: '68vh', maxHeight: '560px' }}
             aria-label="Banner trải nghiệm laptop điện ảnh Mobile"
         >
             {/* 1. ẢNH NỀN RENDER LAPTOP 3D TRUNG TÂM CỰC KỲ SẮC NÉT (KHÔNG BỊ CHE BỞI CHỮ) */}
