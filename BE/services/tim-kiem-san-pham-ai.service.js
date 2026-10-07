@@ -69,7 +69,8 @@ function phanTichYDinhCauHoi(cauHoi = '') {
     for (const item of HANG_MAP) {
         if (
             item.patterns.some(
-                (p) => text.includes(p) || textKhongDau.includes(p) || textKhongKhoangTrang.includes(p.replace(/\s+/g, ''))
+                (p) =>
+                    text.includes(p) || textKhongDau.includes(p) || textKhongKhoangTrang.includes(p.replace(/\s+/g, ''))
             )
         ) {
             tieuChi.hang = item.hang;
@@ -135,10 +136,16 @@ function phanTichYDinhCauHoi(cauHoi = '') {
         } else if (/đồ họa|do hoa|render|photoshop|premiere|autocad|blender|3d|dựng phim/i.test(text)) {
             tieuChi.danhMuc = 'do-hoa-sang-tao';
             tieuChi.uuTienLaptop = true;
-        } else if (/văn phòng|van phong|học tập|hoc tap|sinh viên|sinh vien|word|excel|kế toán/i.test(text) || /van phong|hoc tap|sinh vien/i.test(textKhongDau)) {
+        } else if (
+            /văn phòng|van phong|học tập|hoc tap|sinh viên|sinh vien|word|excel|kế toán/i.test(text) ||
+            /van phong|hoc tap|sinh vien/i.test(textKhongDau)
+        ) {
             tieuChi.danhMuc = 'van-phong-mong-nhe';
             tieuChi.uuTienLaptop = true;
-        } else if (/mỏng nhẹ|mong nhe|di chuyển|nhẹ|nhe|ultrabook|pin trâu|pin trau|doanh nhân|doanh nhan/i.test(text) || /mong nhe|pin trau/i.test(textKhongDau)) {
+        } else if (
+            /mỏng nhẹ|mong nhe|di chuyển|nhẹ|nhe|ultrabook|pin trâu|pin trau|doanh nhân|doanh nhan/i.test(text) ||
+            /mong nhe|pin trau/i.test(textKhongDau)
+        ) {
             tieuChi.danhMuc = 'van-phong-mong-nhe';
             tieuChi.uuTienLaptop = true;
         } else if (/ai|npu|ai-pc|trí tuệ nhân tạo/i.test(text)) {
@@ -152,7 +159,10 @@ function phanTichYDinhCauHoi(cauHoi = '') {
         /(rẻ|re|rẻ nhất|re nhat|rẻ nhát|thấp nhất|thap nhat|giá rẻ|gia re|bình dân|binh dan|hạt dẻ|hat de|sinh viên|sinh vien|học sinh|hoc sinh|ngon bổ rẻ|ngon bo re|kinh tế|kinh te|tiết kiệm|tiet kiem|vừa túi tiền)/i;
     if (regexGiaRe.test(text) || regexGiaRe.test(textKhongDau)) {
         tieuChi.sapXepGiaRe = true;
-        if (/con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) || !tieuChi.laPhuKien) {
+        if (
+            /con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) ||
+            !tieuChi.laPhuKien
+        ) {
             tieuChi.uuTienLaptop = true;
         }
     }
@@ -162,7 +172,10 @@ function phanTichYDinhCauHoi(cauHoi = '') {
         /(mắc|mac|đắt|dat|mắc nhất|mac nhat|đắt nhất|dat nhat|mắc tiền|mac tien|mắc tiề|mac tie|đắt tiền|dat tien|cao cấp|cao cap|khủng nhất|khung nhat|xịn nhất|xin nhat|xa xỉ|xa xi|đắt đỏ|dat do|flagship|top đầu|vip|đắt giá|dat gia|đắt hàng|nhiều tiền nhất|nhieu tien nhat)/i;
     if (regexGiaCao.test(text) || regexGiaCao.test(textKhongDau)) {
         tieuChi.sapXepGiaCao = true;
-        if (/con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) || !tieuChi.laPhuKien) {
+        if (
+            /con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) ||
+            !tieuChi.laPhuKien
+        ) {
             tieuChi.uuTienLaptop = true;
         }
     }
@@ -172,7 +185,10 @@ function phanTichYDinhCauHoi(cauHoi = '') {
         /(bán chạy|ban chay|bán chạy nhất|ban chay nhat|bán chạy nhát|cháy hàng|chay hang|hot nhất|hot nhat|\bhot\b|ưa chuộng|ua chuong|ưa chuộng nhất|ua chuong nhat|phổ biến|pho bien|best seller|bestseller|đắt khách|dat khach|mua nhiều nhất|mua nhieu nhat|được mua nhiều|duoc mua nhieu)/i;
     if (regexBanChay.test(text) || regexBanChay.test(textKhongDau)) {
         tieuChi.sapXepBanChay = true;
-        if (/con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) || !tieuChi.laPhuKien) {
+        if (
+            /con nào|con nao|máy nào|may nao|laptop|máy tính|may tinh|mẫu nào|mau nao|\blap\b/i.test(text) ||
+            !tieuChi.laPhuKien
+        ) {
             tieuChi.uuTienLaptop = true;
         }
     }
@@ -231,13 +247,19 @@ function phanTichYDinhCauHoi(cauHoi = '') {
     const laChaoHoiThuanTuy =
         /^(hi|hello|alo|chào|chao|ê|hey|tôi tên|mình tên|anh tên|em tên|bạn tên|shop ơi|ad ơi|admin ơi|chào shop|chào ad|chào em|chào bạn|hi shop|hi ad|hi pro|hi shop pro)[\s!.,?~]*$/i.test(
             text
-        ) && !tieuChi.hang && !tieuChi.sapXepGiaRe && !tieuChi.sapXepGiaCao && !tieuChi.sapXepBanChay;
+        ) &&
+        !tieuChi.hang &&
+        !tieuChi.sapXepGiaRe &&
+        !tieuChi.sapXepGiaCao &&
+        !tieuChi.sapXepBanChay;
 
     const coTuKhoaHoiSanPham =
         /(con nào|máy nào|cái nào|mẫu nào|sản phẩm nào|sp nào|sarnpaharm|sarn paharm|con gì|máy gì|cái gì|mẫu gì|có con nào|có máy nào|có mẫu nào|dòng nào|loại nào|nào rẻ|rẻ nhất|mắc nhất|đắt nhất|bán chạy|hot nhất|mua|tìm|tim|tư vấn|tu van|giá|gia|báo giá|bao gia|gợi ý|goi y|xem|\blap\b|laptop|máy tính|may tinh|chuột|chuot|phím|phim|sạc|sac|tai nghe|balo|tản nhiệt|tan nhiet|ssd|ram|gear|phụ kiện|phu kien)/i.test(
             text
         ) ||
-        /(con nao|may nao|cai nao|mau nao|san pham|sp|re nhat|mac nhat|dat nhat|ban chay|gia re|gia cao)/i.test(textKhongDau);
+        /(con nao|may nao|cai nao|mau nao|san pham|sp|re nhat|mac nhat|dat nhat|ban chay|gia re|gia cao)/i.test(
+            textKhongDau
+        );
 
     tieuChi.coNhuCauSanPham = Boolean(
         (tieuChi.hang ||
