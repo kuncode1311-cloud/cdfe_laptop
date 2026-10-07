@@ -273,8 +273,8 @@ QUY TẮC BẮT BUỘC:
 5. ĐÍNH KÈM THẺ SẢN PHẨM ("id_san_pham_phu_hop"):
    - Khi khách CHỈ CHÀO HỎI, XÃ GIAO, GIỚI THIỆU TÊN, HOẶC HỎI THÔNG TIN CHUNG (như "hi", "hi pro", "tôi tên trí", "shop ở đâu", "chào em"):
      -> BẮT BUỘC ĐỂ MẢNG "id_san_pham_phu_hop": [] (MẢNG RỖNG). Tuyệt đối KHÔNG tự ý gợi ý sản phẩm khi khách chưa hỏi mua.
-   - CHỈ KHI khách hỏi mua, tìm kiếm, tư vấn cấu hình, máy móc, phụ kiện cụ thể:
-     -> Mới chọn 2-3 ID từ danh sách kho hàng bên trên đưa vào mảng "id_san_pham_phu_hop" để hệ thống vẽ thẻ sản phẩm.
+   - KHI khách hỏi mua, tìm kiếm, tư vấn cấu hình, máy móc, phụ kiện, hỏi giá rẻ, rẻ nhất, hoặc gõ tên hãng/sản phẩm (ví dụ: "lenovo", "leno vo", "asus", "con nào rẻ nhất", "sản phẩm nào rẻ nhất", "laptop gaming"):
+     -> BẮT BUỘC CHỌN 2-3 ID từ danh sách kho hàng bên trên đưa vào mảng "id_san_pham_phu_hop" để hệ thống vẽ thẻ sản phẩm trực quan cho khách.
 6. GỢI Ý TIẾP THEO ("goi_y_tiep_theo"): Đưa ra 3 câu hỏi gợi ý ngắn gọn, thú vị và bám sát chính xác chủ đề hoặc nhu cầu khách có thể hỏi tiếp.
 7. CHUẨN JSON: Tuyệt đối không dùng dấu ngoặc kép (") bên trong văn bản "cau_tra_loi", nếu cần trích dẫn hãy dùng dấu nháy đơn (') như 'chiến mã', 'em chuột'.
 
