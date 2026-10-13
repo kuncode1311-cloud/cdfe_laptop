@@ -84,9 +84,9 @@ export default function TrangSoSanh() {
                     hangs: [
                         { ten: 'Thương hiệu / Hãng', trichXuat: (sp) => (sp.hang_san_xuat || 'Chính hãng').toUpperCase(), noiBat: true },
                         { ten: 'Mức giá khuyến mãi', trichXuat: (sp) => dinhDangTienVND(sp.gia_khuyen_mai), laGia: true, noiBat: true },
-                        { ten: 'Mắt đọc cảm biến', trichXuat: (sp) => sp.thong_so?.mat_doc_cam_bien || sp.thong_so?.cpu || 'PAW3395 / Focus Pro 30K Optical Sensor', noiBat: true },
-                        { ten: 'Độ phân giải tối đa (DPI)', trichXuat: (sp) => sp.thong_so?.do_phan_giai_dpi || sp.thong_so?.card_do_hoa || 'Lên tới 26.000 - 35.000 DPI tùy chỉnh', noiBat: true },
-                        { ten: 'Tốc độ theo dõi (IPS) & Gia tốc', trichXuat: (sp) => sp.thong_so?.toc_do_ips_gia_toc || '650 - 750 IPS / 50G - 70G Max Acceleration' }
+                        { ten: 'Mắt đọc cảm biến', trichXuat: (sp) => sp.thong_so?.mat_doc_cam_bien || sp.thong_so?.cpu || 'Đang cập nhật', noiBat: true },
+                        { ten: 'Độ phân giải tối đa (DPI)', trichXuat: (sp) => sp.thong_so?.do_phan_giai_dpi || sp.thong_so?.card_do_hoa || 'Đang cập nhật', noiBat: true },
+                        { ten: 'Tốc độ theo dõi (IPS) & Gia tốc', trichXuat: (sp) => sp.thong_so?.toc_do_ips_gia_toc || 'Đang cập nhật' }
                     ]
                 },
                 {
@@ -98,10 +98,10 @@ export default function TrangSoSanh() {
                         badge: 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
                     },
                     hangs: [
-                        { ten: 'Công nghệ kết nối', trichXuat: (sp) => sp.thong_so?.ket_noi || sp.thong_so?.chuan_wifi_bluetooth || 'Không dây 2.4GHz Wireless & Bluetooth 5.3 & Type-C', noiBat: true },
-                        { ten: 'Tần số phản hồi (Polling Rate)', trichXuat: (sp) => sp.thong_so?.polling_rate || sp.thong_so?.ram || '1000Hz - 8000Hz (Độ trễ siêu thấp 0.125ms)', noiBat: true },
-                        { ten: 'Thời lượng sử dụng Pin', trichXuat: (sp) => sp.thong_so?.dung_luong_pin || 'Lên tới 80 - 100 giờ liên tục', noiBat: true },
-                        { ten: 'Cổng sạc & Dây cáp', trichXuat: (sp) => 'Type-C bọc dù siêu mềm Paracord' }
+                        { ten: 'Công nghệ kết nối', trichXuat: (sp) => sp.thong_so?.ket_noi || sp.thong_so?.chuan_wifi_bluetooth || 'Đang cập nhật', noiBat: true },
+                        { ten: 'Tần số phản hồi (Polling Rate)', trichXuat: (sp) => sp.thong_so?.polling_rate || sp.thong_so?.ram || 'Đang cập nhật', noiBat: true },
+                        { ten: 'Thời lượng sử dụng Pin', trichXuat: (sp) => sp.thong_so?.dung_luong_pin || 'Đang cập nhật', noiBat: true },
+                        { ten: 'Cổng sạc & Dây cáp', trichXuat: (sp) => sp.thong_so?.cong_sac || 'Đang cập nhật' }
                     ]
                 },
                 {
@@ -113,10 +113,10 @@ export default function TrangSoSanh() {
                         badge: 'bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300'
                     },
                     hangs: [
-                        { ten: 'Trọng lượng siêu nhẹ', trichXuat: (sp) => sp.thong_so?.trong_luong ? `${sp.thong_so.trong_luong * 1000} gram` : '49 - 59 gram siêu nhẹ', noiBat: true },
-                        { ten: 'Loại Switch chuột', trichXuat: (sp) => 'Optical Switch độ bền 90 triệu lần bấm, không double click' },
-                        { ten: 'Form dáng thiết kế', trichXuat: (sp) => 'Công thái học đối xứng chuẩn eSports' },
-                        { ten: 'Bảo hành chính hãng', trichXuat: (sp) => sp.thong_so?.che_do_bao_hanh || '24 tháng chính hãng 1 đổi 1 tại TNTP', noiBat: true }
+                        { ten: 'Trọng lượng siêu nhẹ', trichXuat: (sp) => sp.thong_so?.trong_luong ? `${sp.thong_so.trong_luong * 1000} gram` : 'Đang cập nhật', noiBat: true },
+                        { ten: 'Loại Switch chuột', trichXuat: (sp) => sp.thong_so?.loai_switch || 'Đang cập nhật' },
+                        { ten: 'Form dáng thiết kế', trichXuat: (sp) => sp.thong_so?.form_dang || 'Đang cập nhật' },
+                        { ten: 'Bảo hành chính hãng', trichXuat: (sp) => sp.thong_so?.che_do_bao_hanh || 'Đang cập nhật', noiBat: true }
                     ]
                 }
             ];
@@ -170,15 +170,15 @@ export default function TrangSoSanh() {
                     },
                     {
                         ten: 'Số nhân & Số luồng',
-                        trichXuat: (sp) => sp.thong_so?.so_nhan_luong || 'Theo kiến trúc CPU'
+                        trichXuat: (sp) => sp.thong_so?.so_nhan_luong || 'Đang cập nhật'
                     },
                     {
                         ten: 'Tốc độ xung nhịp tối đa',
-                        trichXuat: (sp) => sp.thong_so?.xung_nhip_toi_da || 'Tự động ép xung Turbo Boost'
+                        trichXuat: (sp) => sp.thong_so?.xung_nhip_toi_da || 'Đang cập nhật'
                     },
                     {
                         ten: 'Bộ nhớ đệm (Cache)',
-                        trichXuat: (sp) => sp.thong_so?.bo_nho_dem_cache || 'Smart Cache thế hệ mới'
+                        trichXuat: (sp) => sp.thong_so?.bo_nho_dem_cache || 'Đang cập nhật'
                     }
                 ]
             },
@@ -193,20 +193,20 @@ export default function TrangSoSanh() {
                 hangs: [
                     {
                         ten: 'Card đồ họa rời (GPU)',
-                        trichXuat: (sp) => sp.thong_so?.card_do_hoa || 'GPU tích hợp tiết kiệm điện',
+                        trichXuat: (sp) => sp.thong_so?.card_do_hoa || 'Đang cập nhật',
                         noiBat: true
                     },
                     {
                         ten: 'Dung lượng bộ nhớ VRAM',
-                        trichXuat: (sp) => sp.thong_so?.dung_luong_vram || (sp.thong_so?.card_do_hoa?.includes('RTX') ? '6GB - 16GB GDDR6' : 'Chia sẻ cùng RAM')
+                        trichXuat: (sp) => sp.thong_so?.dung_luong_vram || 'Đang cập nhật'
                     },
                     {
                         ten: 'Công suất đồ họa TGP',
-                        trichXuat: (sp) => sp.thong_so?.cong_suat_tgp ? `${sp.thong_so.cong_suat_tgp}W Max TGP` : 'Tự động điều chỉnh điện năng'
+                        trichXuat: (sp) => sp.thong_so?.cong_suat_tgp ? `${sp.thong_so.cong_suat_tgp}W Max TGP` : 'Đang cập nhật'
                     },
                     {
                         ten: 'Chip AI NPU & Hiệu năng TOPS',
-                        trichXuat: (sp) => sp.thong_so?.chip_ai_npu || (sp.thong_so?.hieu_nang_ai_tops ? `${sp.thong_so.hieu_nang_ai_tops} TOPS AI Boost` : 'Hỗ trợ phần mềm AI'),
+                        trichXuat: (sp) => sp.thong_so?.chip_ai_npu || (sp.thong_so?.hieu_nang_ai_tops ? `${sp.thong_so.hieu_nang_ai_tops} TOPS AI Boost` : 'Đang cập nhật'),
                         noiBat: true
                     }
                 ]
@@ -222,25 +222,25 @@ export default function TrangSoSanh() {
                 hangs: [
                     {
                         ten: 'Dung lượng RAM',
-                        trichXuat: (sp) => sp.thong_so?.ram || '16 GB',
+                        trichXuat: (sp) => sp.thong_so?.ram || 'Đang cập nhật',
                         noiBat: true
                     },
                     {
                         ten: 'Chuẩn RAM & Tốc độ Bus',
-                        trichXuat: (sp) => sp.thong_so?.loai_ram || (sp.thong_so?.toc_do_bus ? `${sp.thong_so.toc_do_bus} MHz` : 'LPDDR5X / DDR5 tốc độ cao')
+                        trichXuat: (sp) => sp.thong_so?.loai_ram || (sp.thong_so?.toc_do_bus ? `${sp.thong_so.toc_do_bus} MHz` : 'Đang cập nhật')
                     },
                     {
                         ten: 'Khả năng nâng cấp RAM',
-                        trichXuat: (sp) => sp.thong_so?.nang_cap_ram_toi_da || 'Hỗ trợ nâng cấp tối đa 64GB'
+                        trichXuat: (sp) => sp.thong_so?.nang_cap_ram_toi_da || 'Đang cập nhật'
                     },
                     {
                         ten: 'Ổ cứng SSD',
-                        trichXuat: (sp) => sp.thong_so?.o_cung || '512 GB SSD NVMe PCIe',
+                        trichXuat: (sp) => sp.thong_so?.o_cung || 'Đang cập nhật',
                         noiBat: true
                     },
                     {
                         ten: 'Số khe cắm SSD mở rộng',
-                        trichXuat: (sp) => sp.thong_so?.khe_cam_mo_rong || 'Hỗ trợ thêm 1 khe M.2 NVMe'
+                        trichXuat: (sp) => sp.thong_so?.khe_cam_mo_rong || 'Đang cập nhật'
                     }
                 ]
             },
@@ -255,26 +255,26 @@ export default function TrangSoSanh() {
                 hangs: [
                     {
                         ten: 'Kích thước màn hình',
-                        trichXuat: (sp) => sp.thong_so?.man_hinh || '15.6 inch',
+                        trichXuat: (sp) => sp.thong_so?.man_hinh || 'Đang cập nhật',
                         noiBat: true
                     },
                     {
                         ten: 'Độ phân giải',
-                        trichXuat: (sp) => sp.thong_so?.do_phan_giai || (sp.thong_so?.man_hinh?.includes('OLED') ? '3K OLED' : 'FHD / 2.5K'),
+                        trichXuat: (sp) => sp.thong_so?.do_phan_giai || 'Đang cập nhật',
                         noiBat: true
                     },
                     {
                         ten: 'Tần số quét',
-                        trichXuat: (sp) => sp.thong_so?.tan_so_quet ? `${sp.thong_so.tan_so_quet} Hz` : (sp.thong_so?.man_hinh?.includes('240Hz') ? '240 Hz' : '120Hz - 165Hz'),
+                        trichXuat: (sp) => sp.thong_so?.tan_so_quet ? `${sp.thong_so.tan_so_quet} Hz` : (sp.thong_so?.man_hinh?.includes('240Hz') ? '240 Hz' : 'Đang cập nhật'),
                         noiBat: true
                     },
                     {
                         ten: 'Tấm nền & Độ phủ màu',
-                        trichXuat: (sp) => sp.thong_so?.tam_nen || sp.thong_so?.do_phu_mau || '100% sRGB / DCI-P3 chuẩn đồ họa'
+                        trichXuat: (sp) => sp.thong_so?.tam_nen || sp.thong_so?.do_phu_mau || 'Đang cập nhật'
                     },
                     {
                         ten: 'Độ sáng tối đa',
-                        trichXuat: (sp) => sp.thong_so?.do_sang_nits ? `${sp.thong_so.do_sang_nits} nits` : '400 - 500 nits chống chói'
+                        trichXuat: (sp) => sp.thong_so?.do_sang_nits ? `${sp.thong_so.do_sang_nits} nits` : 'Đang cập nhật'
                     }
                 ]
             },
@@ -289,20 +289,20 @@ export default function TrangSoSanh() {
                 hangs: [
                     {
                         ten: 'Trọng lượng máy',
-                        trichXuat: (sp) => sp.thong_so?.trong_luong ? `${sp.thong_so.trong_luong} kg` : '1.39 - 2.2 kg',
+                        trichXuat: (sp) => sp.thong_so?.trong_luong ? `${sp.thong_so.trong_luong} kg` : 'Đang cập nhật',
                         noiBat: true
                     },
                     {
                         ten: 'Dung lượng Pin',
-                        trichXuat: (sp) => sp.thong_so?.dung_luong_pin || '70 - 90 Wh (Dùng 6-10 tiếng)'
+                        trichXuat: (sp) => sp.thong_so?.dung_luong_pin || 'Đang cập nhật'
                     },
                     {
                         ten: 'Công nghệ tản nhiệt',
-                        trichXuat: (sp) => sp.thong_so?.he_thong_tan_nhiet || '2 quạt đồng + 4 ống dẫn nhiệt đối lưu'
+                        trichXuat: (sp) => sp.thong_so?.he_thong_tan_nhiet || 'Đang cập nhật'
                     },
                     {
                         ten: 'Chất liệu thân vỏ',
-                        trichXuat: (sp) => sp.thong_so?.chat_lieu_vo || 'Hợp kim nhôm nguyên khối cao cấp'
+                        trichXuat: (sp) => sp.thong_so?.chat_lieu_vo || 'Đang cập nhật'
                     }
                 ]
             },
@@ -317,25 +317,25 @@ export default function TrangSoSanh() {
                 hangs: [
                     {
                         ten: 'Hệ điều hành',
-                        trichXuat: (sp) => sp.thong_so?.he_dieu_hanh || 'Windows 11 Home bản quyền trọn đời'
+                        trichXuat: (sp) => sp.thong_so?.he_dieu_hanh || 'Đang cập nhật'
                     },
                     {
                         ten: 'Cổng giao tiếp ngoại vi',
-                        trichXuat: (sp) => Array.isArray(sp.thong_so?.cong_ket_noi) ? sp.thong_so.cong_ket_noi.join(' • ') : (sp.thong_so?.cong_ket_noi || 'Thunderbolt 4, USB-C, USB-A, HDMI 2.1')
+                        trichXuat: (sp) => Array.isArray(sp.thong_so?.cong_ket_noi) ? sp.thong_so.cong_ket_noi.join(' • ') : (sp.thong_so?.cong_ket_noi || 'Đang cập nhật')
                     },
                     {
                         ten: 'Bàn phím & Đèn nền',
-                        trichXuat: (sp) => sp.thong_so?.ban_phim || 'Bàn phím LED RGB từng phím / Đèn nền trắng'
+                        trichXuat: (sp) => sp.thong_so?.ban_phim || 'Đang cập nhật'
                     },
                     {
                         ten: 'Bảo hành chính hãng',
-                        trichXuat: (sp) => sp.thong_so?.che_do_bao_hanh || '24 tháng chính hãng tại TNTP LAPTOP',
+                        trichXuat: (sp) => sp.thong_so?.che_do_bao_hanh || 'Đang cập nhật',
                         noiBat: true
                     }
                 ]
             }
         ];
-    }, []);
+    }, [loaiHienTai]);
 
     // Kiểm tra hàng có sự khác biệt giữa các sản phẩm không
     const kiemTraHangKhacBiet = (hang) => {
@@ -567,11 +567,13 @@ export default function TrangSoSanh() {
                                             </button>
 
                                             {/* Huy hiệu ưu đãi */}
-                                            <div className="pr-6">
-                                                <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 text-[10px] font-black">
-                                                    Trả chậm 0% trả trước 0đ
-                                                </span>
-                                            </div>
+                                            {sp.ho_tro_tra_gop_0_phan_tram && (
+                                                <div className="pr-6">
+                                                    <span className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 text-[10px] font-black">
+                                                        Trả chậm 0% trả trước 0đ
+                                                    </span>
+                                                </div>
+                                            )}
 
                                             {/* Ảnh Sản Phẩm */}
                                             <div className="relative w-full aspect-[16/10] bg-white dark:bg-slate-800/40 rounded-xl overflow-hidden p-2 flex items-center justify-center">

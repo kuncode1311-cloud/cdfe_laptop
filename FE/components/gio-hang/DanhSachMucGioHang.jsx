@@ -6,6 +6,7 @@ import { Trash2, Plus, Minus, Gift, Cpu, Sparkles, Check, ArrowRight } from 'luc
 import { useGioHang } from '@/contexts/CartContext';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import { slugSanPham } from '@/utils/taoSlug';
+import { toast } from 'sonner';
 
 export default function DanhSachMucGioHang() {
     const { gio_hang, capNhatSoLuong, xoaKhoiGioHang } = useGioHang();
@@ -18,6 +19,8 @@ export default function DanhSachMucGioHang() {
                 const giaGocDonVi = Number(muc.san_pham?.gia_goc || 0) + Number(muc.tuy_chon_chon?.chenh_lech_gia || 0);
                 const coGiamGia = giaGocDonVi > muc.gia_hien_tai;
                 const phanTramGiam = muc.san_pham?.phan_tram_giam_gia || (coGiamGia ? Math.round(((giaGocDonVi - muc.gia_hien_tai) / giaGocDonVi) * 100) : 0);
+                const tonKho = Number(muc.san_pham?.so_luong_ton_kho);
+                const daDatToiDaTonKho = Number.isFinite(tonKho) && tonKho > 0 && muc.so_luong >= tonKho;
 
                 return (
                     <div
@@ -133,9 +136,16 @@ export default function DanhSachMucGioHang() {
 
                                         <button
                                             type="button"
-                                            onClick={() => capNhatSoLuong(muc.id_muc, muc.so_luong + 1)}
-                                            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white font-black hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-300 border border-slate-200 dark:border-slate-600 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-2xs"
-                                            title="Tăng số lượng"
+                                            onClick={() => {
+                                                if (daDatToiDaTonKho) {
+                                                    toast.warning(`Chỉ còn ${tonKho} sản phẩm trong kho, không thể tăng thêm.`);
+                                                    return;
+                                                }
+                                                capNhatSoLuong(muc.id_muc, muc.so_luong + 1);
+                                            }}
+                                            disabled={daDatToiDaTonKho}
+                                            className="w-8 h-8 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-white font-black hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-300 border border-slate-200 dark:border-slate-600 flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-slate-800"
+                                            title={daDatToiDaTonKho ? 'Đã đạt số lượng tồn kho tối đa' : 'Tăng số lượng'}
                                         >
                                             <Plus className="w-4 h-4 stroke-[2.5]" />
                                         </button>

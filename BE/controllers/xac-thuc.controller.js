@@ -316,10 +316,7 @@ const dangNhap = async (req, res) => {
             });
         }
 
-        // Tìm người dùng theo email hoặc username 'admin'
-        const nguoiDung = await NguoiDung.findOne({
-            $or: [{ email: emailChuan }, ...(emailChuan === 'admin' ? [{ email: 'admin@laptopnew.vn' }] : [])]
-        });
+        const nguoiDung = await NguoiDung.findOne({ email: emailChuan });
 
         if (!nguoiDung) {
             // Vẫn chạy bcrypt với hash giả để thời gian phản hồi giống trường hợp sai mật khẩu

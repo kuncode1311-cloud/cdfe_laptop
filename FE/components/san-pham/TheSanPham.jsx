@@ -33,11 +33,11 @@ function layThongSoNhanh(sanPham) {
         if (tenSp.includes('keo tản nhiệt') || tenSp.includes('thermal grizzly') || thongSo.do_dan_nhiet) {
             if (thongSo.do_dan_nhiet) {
                 const match = thongSo.do_dan_nhiet.match(/[\d.]+\s*W\/mK/i);
-                ketQua.push(match ? match[0] : '14.2 W/mK');
+                ketQua.push(match ? match[0] : thongSo.do_dan_nhiet);
             }
             if (thongSo.trong_luong) {
                 const match = thongSo.trong_luong.match(/\d+[\.,\d]*\s*(g|gram)/i);
-                ketQua.push(match ? match[0] : '2g');
+                ketQua.push(match ? match[0] : thongSo.trong_luong);
             } else {
                 ketQua.push('Keo tản nhiệt');
             }
@@ -58,40 +58,40 @@ function layThongSoNhanh(sanPham) {
         }
         // 3. Lót chuột & Bàn di chuột
         else if (tenSp.includes('lót chuột') || tenSp.includes('mousepad') || tenSp.includes('deskmat') || tenSp.includes('bàn di chuột')) {
-            ketQua.push(thongSo.kich_thuoc || '900x400mm');
-            ketQua.push(thongSo.chat_lieu_be_mat || 'Vải Micro-weave');
-            ketQua.push(thongSo.che_do_led || 'Chống trượt');
+            ketQua.push(thongSo.kich_thuoc || 'Đang cập nhật');
+            ketQua.push(thongSo.chat_lieu_be_mat || 'Đang cập nhật');
+            ketQua.push(thongSo.che_do_led || 'Đang cập nhật');
         }
         // 4. Giá đỡ & Đế tản nhiệt laptop
         else if (tenSp.includes('giá đỡ') || tenSp.includes('đế tản nhiệt') || tenSp.includes('sò lạnh') || tenSp.includes('gt500')) {
             ketQua.push(thongSo.loai_linh_kien ? thongSo.loai_linh_kien.split(' ')[0] + ' ' + (thongSo.loai_linh_kien.split(' ')[1] || '') : 'Đế tản nhiệt');
             if (thongSo.toc_do_quat) ketQua.push(thongSo.toc_do_quat.match(/\d+\s*RPM/i)?.[0] || thongSo.toc_do_quat);
-            else if (thongSo.chat_lieu) ketQua.push('Nhôm CNC');
-            ketQua.push(thongSo.hieu_qua_giam_nhiet || thongSo.tinh_nang_dac_biet || 'Làm mát cực nhanh');
+            else if (thongSo.chat_lieu) ketQua.push(thongSo.chat_lieu);
+            ketQua.push(thongSo.hieu_qua_giam_nhiet || thongSo.tinh_nang_dac_biet || 'Đang cập nhật');
         }
         // 5. Hub & Cáp Type-C / Thunderbolt
         else if (tenSp.includes('hub') || tenSp.includes('dock') || tenSp.includes('cáp chuyển') || tenSp.includes('thunderbolt')) {
-            ketQua.push(thongSo.bang_thong_truyen_du_lieu ? thongSo.bang_thong_truyen_du_lieu.match(/\d+Gbps/i)?.[0] || 'Tốc độ cao' : '40Gbps');
+            ketQua.push(thongSo.bang_thong_truyen_du_lieu ? thongSo.bang_thong_truyen_du_lieu.match(/\d+Gbps/i)?.[0] || thongSo.bang_thong_truyen_du_lieu : 'Đang cập nhật');
             ketQua.push(Array.isArray(thongSo.so_cong_dau_ra) ? `${thongSo.so_cong_dau_ra.length} Cổng` : (thongSo.so_cong_dau_ra?.match(/\d+\s*cổng/i)?.[0] || 'Đa cổng'));
-            ketQua.push(thongSo.cong_suat_sac_pass_through ? thongSo.cong_suat_sac_pass_through.match(/\d+W/i)?.[0] || 'PD 100W' : 'Sạc PD');
+            ketQua.push(thongSo.cong_suat_sac_pass_through ? thongSo.cong_suat_sac_pass_through.match(/\d+W/i)?.[0] || thongSo.cong_suat_sac_pass_through : 'Đang cập nhật');
         }
         // 4. Balo & Túi chống sốc
         else if (tenSp.includes('túi chống sốc') || tenSp.includes('balo') || tenSp.includes('backpack') || tenSp.includes('tomtoc') || tenSp.includes('sling')) {
-            ketQua.push(thongSo.kich_co_laptop_phu_hop ? (thongSo.kich_co_laptop_phu_hop.match(/\d+[\.\d]*\s*(inch|\")/i)?.[0] || 'Vừa laptop') : 'Laptop');
-            ketQua.push(thongSo.dung_tich ? (thongSo.dung_tich.match(/\d+\s*Lít/i)?.[0] || 'Dung tích lớn') : 'Chống sốc');
+            ketQua.push(thongSo.kich_co_laptop_phu_hop ? (thongSo.kich_co_laptop_phu_hop.match(/\d+[\.\d]*\s*(inch|\")/i)?.[0] || thongSo.kich_co_laptop_phu_hop) : 'Laptop');
+            ketQua.push(thongSo.dung_tich ? (thongSo.dung_tich.match(/\d+\s*Lít/i)?.[0] || thongSo.dung_tich) : 'Chống sốc');
             ketQua.push(thongSo.khang_nuoc ? 'Kháng nước' : 'Chống sốc');
         }
         // 5. Củ sạc & Pin sạc dự phòng
         else if (tenSp.includes('sạc') || tenSp.includes('gan') || tenSp.includes('charger') || tenSp.includes('powerbank')) {
-            ketQua.push(thongSo.cong_suat_toi_da ? thongSo.cong_suat_toi_da.match(/\d+W/i)?.[0] || 'GaN' : 'GaN Fast');
-            ketQua.push(thongSo.dung_luong_pin ? (thongSo.dung_luong_pin.match(/\d+[\.,\d]*\s*mAh/i)?.[0] || 'Pin sạc') : 'PD 3.1');
+            ketQua.push(thongSo.cong_suat_toi_da ? thongSo.cong_suat_toi_da.match(/\d+W/i)?.[0] || thongSo.cong_suat_toi_da : 'Đang cập nhật');
+            ketQua.push(thongSo.dung_luong_pin ? (thongSo.dung_luong_pin.match(/\d+[\.,\d]*\s*mAh/i)?.[0] || thongSo.dung_luong_pin) : 'Đang cập nhật');
             ketQua.push(Array.isArray(thongSo.so_cong_dau_ra) ? `${thongSo.so_cong_dau_ra.length} Cổng` : (thongSo.so_cong_dau_ra?.match(/\d+\s*cổng/i)?.[0] || 'Đa cổng'));
         }
         // 6. Tai nghe & Loa
         else if (tenSp.includes('tai nghe') || tenSp.includes('headphone') || tenSp.includes('headset') || tenSp.includes('loa') || tenSp.includes('speaker')) {
-            ketQua.push(thongSo.mang_loa_driver ? thongSo.mang_loa_driver.match(/\d+mm/i)?.[0] || 'Hi-Res Audio' : 'Âm vòm');
-            ketQua.push(thongSo.chong_on_anc ? 'Chống ồn ANC' : (thongSo.cong_nghe_am_thanh?.includes('7.1') ? 'Âm vòm 7.1' : 'Spatial Audio'));
-            ketQua.push(thongSo.dung_luong_pin ? (thongSo.dung_luong_pin.match(/\d+\s*(giờ|h)/i)?.[0] || 'Pin trâu') : 'Bluetooth 5.3');
+            ketQua.push(thongSo.mang_loa_driver ? thongSo.mang_loa_driver.match(/\d+mm/i)?.[0] || thongSo.mang_loa_driver : 'Đang cập nhật');
+            ketQua.push(thongSo.chong_on_anc ? 'Chống ồn ANC' : (thongSo.cong_nghe_am_thanh?.includes('7.1') ? 'Âm vòm 7.1' : 'Đang cập nhật'));
+            ketQua.push(thongSo.dung_luong_pin ? (thongSo.dung_luong_pin.match(/\d+\s*(giờ|h)/i)?.[0] || thongSo.dung_luong_pin) : 'Đang cập nhật');
         }
         // 7. Chuột Gaming & Chuột văn phòng
         else if (tenSp.includes('chuột') || tenSp.includes('mouse')) {
@@ -103,7 +103,7 @@ function layThongSoNhanh(sanPham) {
                 const dpiMatch = thongSo.do_phan_giai_dpi.match(/[\d.]+\s*DPI/i);
                 if (dpiMatch) ketQua.push(dpiMatch[0]);
             } else if (thongSo.mat_doc_cam_bien) {
-                ketQua.push('PAW3395');
+                ketQua.push(thongSo.mat_doc_cam_bien);
             }
 
             if (thongSo.polling_rate) {
@@ -116,15 +116,15 @@ function layThongSoNhanh(sanPham) {
         }
         // 8. Bàn phím cơ
         else if (tenSp.includes('bàn phím') || tenSp.includes('keyboard')) {
-            ketQua.push(thongSo.layout ? thongSo.layout.split(' ')[0] || '75%' : 'Layout 75%');
+            ketQua.push(thongSo.layout ? thongSo.layout.split(' ')[0] : 'Đang cập nhật');
             if (thongSo.tinh_nang_dac_biet?.includes('Rapid Trigger') || thongSo.loai_switch?.includes('từ tính')) {
                 ketQua.push('Rapid Trigger');
             } else if (thongSo.cau_truc_mount?.includes('Gasket')) {
                 ketQua.push('Gasket Mount');
             } else {
-                ketQua.push('Hot-swap');
+                ketQua.push('Đang cập nhật');
             }
-            ketQua.push(thongSo.ket_noi?.includes('Không dây') || thongSo.ket_noi?.includes('3 Mode') ? '3 Chế Độ' : 'RGB Per-Key');
+            ketQua.push(thongSo.ket_noi?.includes('Không dây') || thongSo.ket_noi?.includes('3 Mode') ? '3 Chế Độ' : 'Đang cập nhật');
         }
         // 9. Linh kiện nâng cấp (SSD, RAM, CPU)
         else {
@@ -132,16 +132,16 @@ function layThongSoNhanh(sanPham) {
             if (thongSo.toc_do) ketQua.push(thongSo.toc_do.match(/\d+[\.,\d]*\s*MB\/s/i)?.[0] || thongSo.toc_do.substring(0, 15));
             else if (thongSo.toc_do_bus) ketQua.push(thongSo.toc_do_bus);
             else if (thongSo.do_dan_nhiet) ketQua.push(thongSo.do_dan_nhiet);
-            else if (thongSo.xung_nhip_toi_da) ketQua.push(thongSo.xung_nhip_toi_da.match(/\d+[\.,\d]*\s*GHz/i)?.[0] || '6.2 GHz');
-            if (thongSo.chuan_giao_tiep) ketQua.push(thongSo.chuan_giao_tiep.includes('M.2') ? 'M.2 NVMe' : 'DDR5');
+            else if (thongSo.xung_nhip_toi_da) ketQua.push(thongSo.xung_nhip_toi_da.match(/\d+[\.,\d]*\s*GHz/i)?.[0] || thongSo.xung_nhip_toi_da);
+            if (thongSo.chuan_giao_tiep) ketQua.push(thongSo.chuan_giao_tiep.includes('M.2') ? 'M.2 NVMe' : thongSo.chuan_giao_tiep);
             else if (thongSo.che_do_bao_hanh) ketQua.push('BH Chính Hãng');
         }
 
         if (ketQua.length > 0) return ketQua.filter(Boolean).slice(0, 3);
 
-        const muc1 = thongSo.loai_linh_kien || 'Chính hãng';
-        const muc2 = thongSo.dung_luong || thongSo.toc_do || 'Cao cấp';
-        const muc3 = thongSo.che_do_bao_hanh ? thongSo.che_do_bao_hanh.split('(')[0].trim() : 'BH 24-36T';
+        const muc1 = thongSo.loai_linh_kien || 'Đang cập nhật';
+        const muc2 = thongSo.dung_luong || thongSo.toc_do || 'Đang cập nhật';
+        const muc3 = thongSo.che_do_bao_hanh ? thongSo.che_do_bao_hanh.split('(')[0].trim() : 'Đang cập nhật';
         return [muc1, muc2, muc3].filter(Boolean).slice(0, 3);
     }
 

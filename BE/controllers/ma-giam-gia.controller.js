@@ -1,4 +1,5 @@
 const MaGiamGia = require('../models/ma-giam-gia.model');
+const { voucherConHieuLuc } = require('../utils/ma-giam-gia.util');
 
 /**
  * Controller xử lý nghiệp vụ cho Mã giảm giá (Voucher)
@@ -42,7 +43,7 @@ const kiemTraMaGiamGia = async (req, res) => {
             kich_hoat: true
         });
 
-        if (!voucher) {
+        if (!voucher || !voucherConHieuLuc(voucher)) {
             return res.status(404).json({
                 hop_le: false,
                 thong_diep: 'Mã giảm giá không tồn tại hoặc đã hết hạn sử dụng.',
@@ -169,7 +170,7 @@ const luuMaVoucherVaoVi = async (req, res) => {
 
         const maChuan = ma_code.trim().toUpperCase();
         const voucher = await MaGiamGia.findOne({ ma_code: maChuan, kich_hoat: true });
-        if (!voucher) {
+        if (!voucher || !voucherConHieuLuc(voucher)) {
             return res.status(404).json({
                 thanhCong: false,
                 thanh_cong: false,

@@ -442,7 +442,7 @@ QUY TẮC BẮT BUỘC:
         gia_goc: sp.gia_goc || 0,
         gia_khuyen_mai: sp.gia_khuyen_mai || 0,
         phan_tram_giam_gia: sp.phan_tram_giam_gia || 0,
-        hinh_anh_chinh: sp.hinh_anh_chinh || '/images/sp/macbook_pro_16_m3max.jpg',
+        hinh_anh_chinh: sp.hinh_anh_chinh || '/images/khong-co-anh.svg',
         thong_so: {
             cpu: sp.thong_so?.cpu || '',
             ram: sp.thong_so?.ram || '',

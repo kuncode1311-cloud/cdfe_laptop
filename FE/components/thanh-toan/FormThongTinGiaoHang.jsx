@@ -24,6 +24,7 @@ import {
     timTinhV2TheoTen,
     DANH_SACH_34_TINH_THANH_SAU_SAP_NHAP
 } from '@/services/dia-gioi-hanh-chinh.service';
+import { laSoDienThoaiHopLe } from '@/utils/validators';
 
 // Helper chuẩn hóa tiếng Việt không dấu để tìm kiếm gõ nhanh
 const xoaDauTiengViet = (str = '') => {
@@ -286,8 +287,8 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
     const kiemTraHopLe = {
         ho_va_ten: Boolean(thongTin.ho_va_ten && thongTin.ho_va_ten.trim().length >= 2),
         so_dien_thoai: Boolean(
-            thongTin.so_dien_thoai && 
-            /^(0[3|5|7|8|9])[0-9]{8}$/.test(thongTin.so_dien_thoai.replace(/\D/g, ''))
+            thongTin.so_dien_thoai &&
+            laSoDienThoaiHopLe(thongTin.so_dien_thoai)
         ),
         email: Boolean(
             thongTin.email && 
@@ -518,7 +519,7 @@ export default function FormThongTinGiaoHang({ thongTin, onThayDoi, onValidation
                                     </span>
                                 </div>
                                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                    SĐT: <strong className="font-mono">{nguoiDung?.soDienThoai || '0988888888'}</strong> • Email: <strong className="font-mono">{nguoiDung?.email || 'admin@laptopnew.vn'}</strong>
+                                    SĐT: <strong className="font-mono">{nguoiDung?.soDienThoai || 'Chưa cập nhật'}</strong> • Email: <strong className="font-mono">{nguoiDung?.email || 'Chưa cập nhật'}</strong>
                                 </p>
                             </div>
                             <span className="text-[11px] font-bold text-[#0052cc] dark:text-cyan-400">

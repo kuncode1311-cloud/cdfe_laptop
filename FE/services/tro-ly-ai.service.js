@@ -7,30 +7,32 @@ import { apiFetch, layApiBaseUrl } from './api-client';
 
 function inThongTinKetNoiConsole(thongTin) {
     if (!thongTin || typeof window === 'undefined') return;
-    const provider = thongTin.provider || 'AI';
-    const model = thongTin.model || 'N/A';
-    const keyMask = thongTin.key_mask || 'N/A';
-    const timeAi = thongTin.thoi_gian_ai_ms || 0;
-    const timeTotal = thongTin.thoi_gian_tong_ms || timeAi;
+    if (process.env.NODE_ENV !== 'production') {
+        const provider = thongTin.provider || 'AI';
+        const model = thongTin.model || 'N/A';
+        const keyMask = thongTin.key_mask || 'N/A';
+        const timeAi = thongTin.thoi_gian_ai_ms || 0;
+        const timeTotal = thongTin.thoi_gian_tong_ms || timeAi;
 
-    console.log(
-        `%c🤖 [Trợ lý AI TNTP] %c${provider}%c | Model: %c${model}%c | Key: %c${keyMask}%c | Thời gian: %c${timeAi}ms`,
-        'background: #1e1b4b; color: #38bdf8; font-weight: bold; padding: 4px 6px; border-radius: 4px 0 0 4px;',
-        'background: #0284c7; color: #ffffff; font-weight: bold; padding: 4px 6px;',
-        'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
-        'background: #0f172a; color: #a855f7; font-weight: bold; padding: 4px 6px;',
-        'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
-        'background: #0f172a; color: #f59e0b; font-weight: bold; padding: 4px 6px;',
-        'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
-        'background: #065f46; color: #34d399; font-weight: bold; padding: 4px 6px; border-radius: 0 4px 4px 0;'
-    );
-    console.table([{
-        'Nhà cung cấp': provider,
-        'Mô hình (Model)': model,
-        'API Key': keyMask,
-        'Thời gian AI': `${timeAi}ms`,
-        'Tổng thời gian': `${timeTotal}ms`
-    }]);
+        console.log(
+            `%c🤖 [Trợ lý AI TNTP] %c${provider}%c | Model: %c${model}%c | Key: %c${keyMask}%c | Thời gian: %c${timeAi}ms`,
+            'background: #1e1b4b; color: #38bdf8; font-weight: bold; padding: 4px 6px; border-radius: 4px 0 0 4px;',
+            'background: #0284c7; color: #ffffff; font-weight: bold; padding: 4px 6px;',
+            'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
+            'background: #0f172a; color: #a855f7; font-weight: bold; padding: 4px 6px;',
+            'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
+            'background: #0f172a; color: #f59e0b; font-weight: bold; padding: 4px 6px;',
+            'background: #0f172a; color: #94a3b8; padding: 4px 6px;',
+            'background: #065f46; color: #34d399; font-weight: bold; padding: 4px 6px; border-radius: 0 4px 4px 0;'
+        );
+        console.table([{
+            'Nhà cung cấp': provider,
+            'Mô hình (Model)': model,
+            'API Key': keyMask,
+            'Thời gian AI': `${timeAi}ms`,
+            'Tổng thời gian': `${timeTotal}ms`
+        }]);
+    }
 }
 
 export const TroLyAiService = {

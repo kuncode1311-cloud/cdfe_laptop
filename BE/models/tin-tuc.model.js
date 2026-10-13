@@ -34,7 +34,7 @@ const TinTucSchema = new mongoose.Schema(
         hinh_anh: {
             type: String,
             required: true,
-            default: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=800&q=80'
+            default: '/images/khong-co-anh.svg'
         },
         ngay_dang: {
             type: String,

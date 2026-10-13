@@ -1,5 +1,6 @@
 const boDemTheoIp = new Map();
 let soThuTuBoGioiHan = 0;
+const SO_LUONG_TOI_DA = 50_000;
 
 const layIp = (req) => {
     return req.ip || req.socket?.remoteAddress || 'unknown';
@@ -17,6 +18,9 @@ const gioiHanRequest = ({ windowMs = 60_000, max = 60, message } = {}) => {
     return (req, res, next) => {
         const key = `${tenBoGioiHan}:${layIp(req)}`;
         const bayGio = Date.now();
+        if (boDemTheoIp.size >= SO_LUONG_TOI_DA) {
+            boDemTheoIp.clear();
+        }
         const hienTai = boDemTheoIp.get(key);
 
         if (!hienTai || bayGio > hienTai.resetAt) {

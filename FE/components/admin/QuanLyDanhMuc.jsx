@@ -1,0 +1,253 @@
+'use client';
+import {
+    Search,
+    Plus,
+    Tag,
+    Loader2,
+    Edit3,
+    Trash2
+} from 'lucide-react';
+import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+
+// Component Tab "Danh Mục / Thương Hiệu" của trang quản trị: tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
+export default function QuanLyDanhMuc({
+    danhMucHienThi,
+    danhSachSanPham,
+    tuKhoaDanhMuc,
+    setTuKhoaDanhMuc,
+    moModalThemDanhMuc,
+    dangTai,
+    dangLocDanhMuc,
+    dangXuLyDmId,
+    dangLuuDanhMuc,
+    xuLyToggleDanhMuc,
+    moModalSuaDanhMuc,
+    xuLyXoaDanhMuc
+}) {
+    return (
+        <div className="space-y-4 animate-in fade-in duration-200">
+            {/* 3 KPI Cards Thương Hiệu Gradient 3D */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="p-4 rounded-3xl bg-gradient-to-br from-purple-50/90 via-fuchsia-50/40 to-white dark:from-[#180924] dark:via-purple-950/30 dark:to-[#0b1120] border-2 border-purple-200/90 dark:border-purple-800/80 shadow-md shadow-purple-500/5 hover:shadow-xl hover:shadow-purple-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                    <div className="flex items-center gap-3 relative z-10">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-600 via-fuchsia-600 to-indigo-600 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-purple-500/35 ring-4 ring-white/80 dark:ring-purple-900/40 group-hover:scale-110 transition-transform">
+                            🏷️
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-black text-purple-900 dark:text-purple-200 uppercase tracking-wider">Tổng Thương Hiệu</div>
+                            <div className="text-base sm:text-lg font-black font-mono text-purple-950 dark:text-white leading-tight">
+                                {danhMucHienThi.length} <span className="text-xs font-bold text-purple-600/80 dark:text-purple-400">Hãng Đối Tác</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 rounded-3xl bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white dark:from-[#0a1526] dark:via-blue-950/30 dark:to-[#0b1120] border-2 border-blue-200/90 dark:border-blue-800/80 shadow-md shadow-blue-500/5 hover:shadow-xl hover:shadow-blue-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                    <div className="flex items-center gap-3 relative z-10">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 via-sky-500 to-cyan-600 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-blue-500/35 ring-4 ring-white/80 dark:ring-blue-900/40 group-hover:scale-110 transition-transform">
+                            💻
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-black text-blue-900 dark:text-blue-200 uppercase tracking-wider">Hãng Laptop Chính Hãng</div>
+                            <div className="text-base sm:text-lg font-black font-mono text-blue-700 dark:text-blue-400 leading-tight">
+                                7 <span className="text-xs font-bold text-blue-500/80">ASUS, Acer, Dell, HP, Lenovo, MSI, Apple</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="p-4 rounded-3xl bg-gradient-to-br from-amber-50/95 via-orange-50/60 to-rose-50/40 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-[#0d1527] border-2 border-amber-300 dark:border-amber-700/80 shadow-md shadow-orange-500/10 hover:shadow-xl hover:shadow-orange-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
+                    <div className="flex items-center gap-3 relative z-10">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 text-white flex items-center justify-center text-base shrink-0 shadow-lg shadow-orange-500/35 ring-4 ring-white/80 dark:ring-amber-900/40 group-hover:scale-110 transition-transform">
+                            🎮
+                        </div>
+                        <div>
+                            <div className="text-[10px] font-black text-amber-900 dark:text-amber-200 uppercase tracking-wider">Phụ Kiện & Custom Gear</div>
+                            <div className="text-base sm:text-lg font-black font-mono text-amber-700 dark:text-amber-400 leading-tight">
+                                Logitech, Razer, Akko...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-50/90 via-white to-purple-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#1a0f2b] p-5 rounded-3xl border-2 border-purple-100/90 dark:border-slate-800 shadow-md shadow-purple-500/5">
+                <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-6 bg-purple-600 rounded-full" />
+                    <div>
+                        <h2 className="text-base font-black text-slate-900 dark:text-white">Thương Hiệu & Hãng Sản Xuất ({danhMucHienThi.length})</h2>
+                        <p className="text-xs text-slate-500 font-semibold">Quản lý danh sách thương hiệu đối tác trên website</p>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="relative w-full sm:w-64">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            value={tuKhoaDanhMuc}
+                            onChange={(e) => setTuKhoaDanhMuc(e.target.value)}
+                            placeholder="Tìm kiếm thương hiệu..."
+                            className="w-full pl-9 pr-3 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                        />
+                    </div>
+
+                    <button
+                        onClick={moModalThemDanhMuc}
+                        className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 !text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-purple-500/25 cursor-pointer whitespace-nowrap shrink-0 transition-all hover:scale-105 active:scale-95"
+                    >
+                        <Plus className="w-4 h-4 !text-white" />
+                        <span className="!text-white">Thêm Thương Hiệu</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Bảng Danh Mục / Thương Hiệu (Excel-Style Grid Sắc Nét) */}
+            <div className="relative bg-white dark:bg-[#0d1527] rounded-3xl border-2 border-slate-300 dark:border-slate-700 shadow-md shadow-slate-900/5 overflow-hidden min-h-[380px]">
+                {/* Banner Tiêu Đề Bảng Đồng Bộ Chuẩn Đơn Hàng */}
+                <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-800 text-white px-4 py-3 flex flex-wrap items-center justify-between gap-2 shadow-md">
+                    <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-purple-200" />
+                        <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
+                            Danh Sách Thương Hiệu & Hãng Sản Xuất
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black">
+                            {danhMucHienThi.length} thương hiệu
+                        </span>
+                    </div>
+                    <div className="text-[11px] text-blue-100 font-bold flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Cập nhật trực tiếp</span>
+                    </div>
+                </div>
+
+                <KhuVucDangTaiTable
+                    dangTai={dangTai || dangLocDanhMuc}
+                    tieuDe={dangLocDanhMuc ? "Đang lọc thương hiệu..." : "Đang tải danh sách thương hiệu..."}
+                    moTa={dangLocDanhMuc ? `Tìm thấy ${danhMucHienThi.length} thương hiệu phù hợp` : "Đồng bộ danh sách thương hiệu đối tác trên hệ thống"}
+                />
+
+                <div className={`overflow-x-auto transition-opacity duration-300 ${dangTai || dangLocDanhMuc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                    <table className="w-full min-w-[950px] text-left text-xs border-collapse">
+                        <thead>
+                            <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
+                                <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
+                                <th className="py-2.5 px-2.5 min-w-[130px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">THƯƠNG HIỆU</th>
+                                <th className="py-2.5 px-2 w-20 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÃ CODE</th>
+                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">XUẤT XỨ</th>
+                                <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÔ TẢ CHI TIẾT</th>
+                                <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">SỐ LƯỢNG</th>
+                                <th className="py-2.5 px-2 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
+                                <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {danhMucHienThi.length === 0 ? (
+                                <tr>
+                                    <td colSpan={8} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                        <div className="flex flex-col items-center justify-center gap-2">
+                                            <Tag className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                                            <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy thương hiệu nào</div>
+                                            <div className="text-xs">Vui lòng thử tìm kiếm với từ khóa khác</div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : (
+                                danhMucHienThi.map((dm, idx) => {
+                                    const soMauCuaHang = danhSachSanPham.filter(s => s.hang_san_xuat?.toLowerCase() === dm.ma_danh_muc?.toLowerCase() || s.danh_muc?.includes(dm.ma_danh_muc)).length;
+                                    const laNhuCau = dm.loai === 'nhu_cau';
+                                    const dmId = dm.id || dm._id || dm.ma_danh_muc;
+                                    const dangXuLyItem = dangXuLyDmId === dmId;
+                                    const dangXuLyChung = dangXuLyDmId !== null || dangLuuDanhMuc;
+                                    const daAnDm = dm.kich_hoat === false;
+
+                                    return (
+                                        <tr
+                                            key={dmId}
+                                            className={`transition-colors duration-150 ${
+                                                daAnDm
+                                                    ? '!bg-rose-100/90 dark:!bg-rose-950/60 hover:!bg-rose-200/90 dark:hover:!bg-rose-900/70 border-l-4 border-l-rose-600 shadow-xs'
+                                                    : 'odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50'
+                                            }`}
+                                        >
+                                            <td className={`py-2 px-2 text-center font-bold border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 font-black' : 'border-slate-200 dark:border-slate-800 text-slate-400'}`}>
+                                                #{idx + 1}
+                                            </td>
+                                            <td className={`py-2 px-2.5 border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-md bg-purple-50 dark:bg-slate-800 flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">
+                                                        {dm.logo || '💻'}
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        {daAnDm && (
+                                                            <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-2xs shrink-0">
+                                                                ĐÃ ẨN
+                                                            </span>
+                                                        )}
+                                                        <span className={`font-black text-xs whitespace-nowrap ${daAnDm ? 'text-rose-950 dark:text-rose-100' : 'text-slate-900 dark:text-white'}`}>{dm.ten_danh_muc}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className={`py-2 px-2 font-mono font-black text-xs border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300' : 'border-slate-200 dark:border-slate-800 text-blue-600 dark:text-cyan-400'}`}>
+                                                @{dm.ma_danh_muc}
+                                            </td>
+                                            <td className={`py-2 px-2 border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px] whitespace-nowrap">
+                                                    {dm.xuat_xu || 'Chính Hãng'}
+                                                </span>
+                                            </td>
+                                            <td className={`py-2 px-2.5 border-b border-r ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`} title={dm.mo_ta}>
+                                                <div className={`truncate max-w-[130px] lg:max-w-[190px] xl:max-w-[280px] font-medium text-xs ${daAnDm ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-600 dark:text-slate-400'}`}>
+                                                    {dm.mo_ta || '—'}
+                                                </div>
+                                            </td>
+                                            <td className={`py-2 px-2 text-center border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                <span className="inline-block px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-black text-xs whitespace-nowrap">
+                                                    {soMauCuaHang} sản phẩm
+                                                </span>
+                                            </td>
+                                            <td className={`py-2 px-2 text-center border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                <button
+                                                    onClick={() => xuLyToggleDanhMuc(dm)}
+                                                    disabled={dangXuLyChung}
+                                                    className={`px-2.5 py-0.5 rounded-full text-xs font-black inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-all ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-xs'} ${dm.kich_hoat !== false ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200 border border-rose-300 dark:border-rose-800'}`}
+                                                >
+                                                    {dangXuLyItem ? (
+                                                        <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+                                                    ) : (
+                                                        <span className={`w-2 h-2 rounded-full shrink-0 ${dm.kich_hoat !== false ? 'bg-emerald-500' : 'bg-rose-600'}`} />
+                                                    )}
+                                                    <span className="whitespace-nowrap">{dm.kich_hoat !== false ? 'Kinh doanh' : 'Tạm ngưng (Đã ẩn)'}</span>
+                                                </button>
+                                            </td>
+                                            <td className={`py-2 px-1.5 text-center border-b whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                                                    <button
+                                                        onClick={() => moModalSuaDanhMuc(dm)}
+                                                        disabled={dangXuLyChung}
+                                                        className={`p-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                        title="Sửa thương hiệu"
+                                                    >
+                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => xuLyXoaDanhMuc(dm)}
+                                                        disabled={dangXuLyChung}
+                                                        className={`p-1.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-400 transition-colors ${dangXuLyChung ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                        title="Xóa thương hiệu"
+                                                    >
+                                                        {dangXuLyItem ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}

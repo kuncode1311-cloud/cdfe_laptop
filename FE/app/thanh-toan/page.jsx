@@ -24,6 +24,7 @@ import PhuongThucThanhToanComponent from '@/components/thanh-toan/PhuongThucThan
 import ModalThanhToanQR from '@/components/thanh-toan/ModalThanhToanQR';
 import ModalDatHangThanhCong from '@/components/thanh-toan/ModalDatHangThanhCong';
 import { useNguoiDung } from '@/contexts/AuthContext';
+import { laSoDienThoaiHopLe } from '@/utils/validators';
 import { toast } from 'sonner';
 
 function NoiDungTrangThanhToan() {
@@ -137,8 +138,7 @@ function NoiDungTrangThanhToan() {
         }
 
         // Validate SĐT
-        const sdtClean = thongTinGiaoHang.so_dien_thoai.replace(/\D/g, '');
-        if (!/^(0[3|5|7|8|9])[0-9]{8}$/.test(sdtClean)) {
+        if (!laSoDienThoaiHopLe(thongTinGiaoHang.so_dien_thoai)) {
             toast.error('Số điện thoại không hợp lệ! Vui lòng nhập đúng 10 số di động Việt Nam.');
             return;
         }

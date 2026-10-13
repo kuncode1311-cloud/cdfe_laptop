@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { LienHeService } from '@/services/lien-he.service';
 import { CaiDatService } from '@/services/cai-dat.service';
 import { useDuLieuMoi } from '@/services/dong-bo.service';
+import { laSoDienThoaiHopLe } from '@/utils/validators';
 
 // Danh sách các chủ đề tư vấn thông dụng để khách chọn nhanh
 const DANH_SACH_CHU_DE = [
@@ -257,8 +258,7 @@ export default function TrangLienHe() {
         }
 
         const sdtChuan = soDienThoai.trim().replace(/\s+/g, '');
-        const regexSDT = /^(0|\+84)[3|5|7|8|9][0-9]{8}$/;
-        if (!regexSDT.test(sdtChuan)) {
+        if (!laSoDienThoaiHopLe(sdtChuan)) {
             toast.error('Số điện thoại không hợp lệ (cần đủ 10 số)');
             return;
         }

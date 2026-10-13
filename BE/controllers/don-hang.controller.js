@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const { guiMailXacNhanDonHang } = require('../services/email.service');
 const { guiThongBaoDonHangTelegram } = require('../services/telegram-bot.service');
+const { capNhatTonKhoTheoDonHang } = require('../services/kho-hang.service');
+const { voucherConHieuLuc } = require('../utils/ma-giam-gia.util');
 
 /**
  * Controller xử lý nghiệp vụ cho Đơn hàng & Tồn kho
@@ -110,175 +112,6 @@ const dieuKienDonCuaToi = (user) => {
         });
     }
     return dieuKien;
-};
-
-/**
- * LUỒNG 2: Xử lý Tồn kho nguyên tử (Atomic Inventory Update)
- * - Mục đích: Ngăn chặn tuyệt đối lỗi bán vượt số lượng tồn (Oversell) khi nhiều khách cùng mua đồng thời.
- * - Cơ chế: Sử dụng lệnh `findOneAndUpdate` của MongoDB với điều kiện `{ so_luong_ton_kho: { $gte: soLuong } }`
- *   và toán tử `$inc: { so_luong_ton_kho: -soLuong }`. Nếu tồn kho không đủ, thao tác thất bại tức thì.
- * - Rollback: Nếu bất kỳ sản phẩm nào trong giỏ không đủ hàng, tự động hoàn trả số lượng các món đã trừ trước đó.
- *
- * @param {Array} danhSachSanPham - Danh sách mặt hàng trong đơn
- * @param {'tru' | 'hoan'} thaoTac - 'tru' khi tạo đơn/kích hoạt đơn, 'hoan' khi hủy đơn/xóa đơn
- * @returns {Promise<{ thanh_cong: boolean, loi?: string }>}
- */
-const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
-    if (!Array.isArray(danhSachSanPham) || danhSachSanPham.length === 0) {
-        return { thanh_cong: true };
-    }
-
-    const daThaoTacThanhCong = [];
-
-    for (const item of danhSachSanPham) {
-        try {
-            const soLuong = Math.max(1, Number(item.so_luong) || 1);
-            const spId =
-                item.san_pham_id ||
-                item.san_pham?.id ||
-                item.san_pham?._id ||
-                item.san_pham?.ma_san_pham ||
-                item.id_muc ||
-                (typeof item.san_pham === 'string' ? item.san_pham : null);
-
-            if (!spId && !item.ten_san_pham) continue;
-
-            const candidateIds = new Set();
-            if (spId) {
-                const strId = String(spId).trim();
-                candidateIds.add(strId);
-                // Nếu id_muc có dạng "sp-123-mac-dinh" hoặc "sp-123-option", bóc tách phần id chính
-                if (strId.includes('-')) {
-                    const stripped = strId.replace(/-[^-]+$/, '');
-                    if (stripped) candidateIds.add(stripped);
-                }
-            }
-
-            const orConditions = [];
-            for (const cand of candidateIds) {
-                orConditions.push({ id: cand });
-                orConditions.push({ ma_san_pham: cand });
-                orConditions.push({ slug: cand });
-                if (mongoose.Types.ObjectId.isValid(cand)) {
-                    orConditions.push({ _id: cand });
-                }
-            }
-
-            let sp = orConditions.length > 0 ? await SanPham.findOne({ $or: orConditions }) : null;
-
-            if (!sp && item.ten_san_pham) {
-                sp = await SanPham.findOne({ ten_san_pham: item.ten_san_pham.trim() });
-            }
-
-            if (!sp) {
-                console.warn(
-                    `⚠️ [Kho] Không tìm thấy sản phẩm trong DB để cập nhật tồn kho:`,
-                    spId || item.ten_san_pham
-                );
-                if (thaoTac === 'tru') {
-                    // Rollback các món đã trừ trước đó trong đơn này
-                    await capNhatTonKhoTheoDonHang(daThaoTacThanhCong, 'hoan');
-                    return {
-                        thanh_cong: false,
-                        loi: `Không tìm thấy thông tin sản phẩm "${item.ten_san_pham || spId}" trong kho hàng.`
-                    };
-                }
-                continue;
-            }
-
-            if (thaoTac === 'tru') {
-                // Kiểm tra và trừ nguyên tử bằng findOneAndUpdate chống oversell
-                const spDaTru = await SanPham.findOneAndUpdate(
-                    {
-                        _id: sp._id,
-                        so_luong_ton_kho: { $gte: soLuong }
-                    },
-                    {
-                        $inc: {
-                            so_luong_ton_kho: -soLuong,
-                            so_luong_da_ban: soLuong
-                        }
-                    },
-                    { returnDocument: 'after' }
-                );
-
-                if (!spDaTru) {
-                    // Tồn kho không đủ tại thời điểm đặt hàng!
-                    await capNhatTonKhoTheoDonHang(daThaoTacThanhCong, 'hoan');
-                    return {
-                        thanh_cong: false,
-                        loi: `Sản phẩm "${sp.ten_san_pham}" chỉ còn ${sp.so_luong_ton_kho || 0} sản phẩm trong kho, không đủ số lượng ${soLuong} bạn yêu cầu.`
-                    };
-                }
-
-                // Cập nhật trạng thái con_hang nếu hết kho
-                if (spDaTru.so_luong_ton_kho <= 0) {
-                    spDaTru.con_hang = false;
-                }
-
-                // Cập nhật tồn kho chi nhánh
-                if (Array.isArray(spDaTru.ton_kho) && spDaTru.ton_kho.length > 0) {
-                    let conLai = soLuong;
-                    for (const cn of spDaTru.ton_kho) {
-                        if (conLai <= 0) break;
-                        const sl = Number(cn.so_luong_con) || 0;
-                        if (sl > 0) {
-                            const tru = Math.min(sl, conLai);
-                            cn.so_luong_con = sl - tru;
-                            conLai -= tru;
-                        }
-                    }
-                }
-
-                await spDaTru.save();
-                daThaoTacThanhCong.push({
-                    san_pham_id: sp._id,
-                    so_luong: soLuong,
-                    ten_san_pham: sp.ten_san_pham
-                });
-
-                console.log(
-                    `📦 [Kho] ĐÃ TRỪ TỒN KHO NGUYÊN TỬ: "${spDaTru.ten_san_pham}" (-${soLuong}) | Còn lại: ${spDaTru.so_luong_ton_kho} | Đã bán: ${spDaTru.so_luong_da_ban}`
-                );
-            } else if (thaoTac === 'hoan') {
-                // Hoàn lại tồn kho, giảm số lượng đã bán
-                const spDaHoan = await SanPham.findByIdAndUpdate(
-                    sp._id,
-                    {
-                        $inc: {
-                            so_luong_ton_kho: soLuong
-                        }
-                    },
-                    { returnDocument: 'after' }
-                );
-
-                if (spDaHoan) {
-                    spDaHoan.so_luong_da_ban = Math.max(0, (Number(spDaHoan.so_luong_da_ban) || 0) - soLuong);
-                    if (spDaHoan.so_luong_ton_kho > 0) {
-                        spDaHoan.con_hang = true;
-                    }
-
-                    // Hoàn lại tồn kho chi nhánh
-                    if (Array.isArray(spDaHoan.ton_kho) && spDaHoan.ton_kho.length > 0) {
-                        spDaHoan.ton_kho[0].so_luong_con = (Number(spDaHoan.ton_kho[0].so_luong_con) || 0) + soLuong;
-                    }
-
-                    await spDaHoan.save();
-                    console.log(
-                        `↩️ [Kho] ĐÃ HOÀN TỒN KHO: "${spDaHoan.ten_san_pham}" (+${soLuong}) | Tồn kho mới: ${spDaHoan.so_luong_ton_kho} | Đã bán: ${spDaHoan.so_luong_da_ban}`
-                    );
-                }
-            }
-        } catch (err) {
-            console.error(`❌ [Kho] Lỗi cập nhật tồn kho cho item:`, item?.ten_san_pham || item?.san_pham_id, err);
-            if (thaoTac === 'tru') {
-                await capNhatTonKhoTheoDonHang(daThaoTacThanhCong, 'hoan');
-                return { thanh_cong: false, loi: err.message };
-            }
-        }
-    }
-
-    return { thanh_cong: true };
 };
 
 /**
@@ -412,7 +245,7 @@ const taoDonHangMoi = async (req, res) => {
                 .toUpperCase();
             if (maGiamGia) {
                 const voucher = await MaGiamGia.findOne({ ma_code: maGiamGia, kich_hoat: true });
-                if (!voucher || tamTinhServer < Number(voucher.don_hang_toi_thieu || 0)) {
+                if (!voucher || !voucherConHieuLuc(voucher) || tamTinhServer < Number(voucher.don_hang_toi_thieu || 0)) {
                     return res
                         .status(400)
                         .json({ thong_diep: 'Mã giảm giá không hợp lệ hoặc đơn hàng chưa đạt giá trị tối thiểu.' });
@@ -440,6 +273,30 @@ const taoDonHangMoi = async (req, res) => {
             duLieuDonHang.da_tru_ton_kho = false;
             delete duLieuDonHang.payos_order_code;
             delete duLieuDonHang.noi_dung_chuyen_khoan;
+        } else {
+            const danhSachGuiLen = Array.isArray(duLieuDonHang.danh_sach_san_pham) ? duLieuDonHang.danh_sach_san_pham : [];
+            if (danhSachGuiLen.length === 0 || danhSachGuiLen.length > 50) {
+                return res.status(400).json({ thong_diep: 'Danh sách sản phẩm không hợp lệ.' });
+            }
+            for (const item of danhSachGuiLen) {
+                const rawId = item.san_pham_id || item.san_pham?.id || item.san_pham?._id || item.id_muc;
+                const idSanPham = String(rawId || '').trim();
+                if (!idSanPham) {
+                    return res.status(400).json({ thong_diep: 'Sản phẩm trong đơn thiếu mã định danh hợp lệ.' });
+                }
+                const soLuong = Number(item.so_luong);
+                if (!Number.isFinite(soLuong) || soLuong <= 0) {
+                    return res
+                        .status(400)
+                        .json({ thong_diep: `Số lượng sản phẩm "${item.ten_san_pham || idSanPham}" không hợp lệ.` });
+                }
+                const dieuKien = [{ id: idSanPham }, { ma_san_pham: idSanPham }, { slug: idSanPham }];
+                if (mongoose.Types.ObjectId.isValid(idSanPham)) dieuKien.push({ _id: idSanPham });
+                const tonTai = await SanPham.exists({ $or: dieuKien });
+                if (!tonTai) {
+                    return res.status(400).json({ thong_diep: `Sản phẩm ${idSanPham} không tồn tại trong hệ thống.` });
+                }
+            }
         }
 
         // Chuẩn hóa trạng thái thanh toán theo enum hợp lệ

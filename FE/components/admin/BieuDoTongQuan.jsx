@@ -125,40 +125,73 @@ export default function BieuDoTongQuan({
         return () => clearTimeout(timer);
     }, [khungThoiGian]);
 
-    // 1. Dữ liệu xu hướng doanh thu theo khung thời gian
+    // 1. Dữ liệu xu hướng doanh thu theo khung thời gian (tính thật từ danhSachDonHang, loại trừ đơn đã hủy)
     const duLieuDoanhThu = useMemo(() => {
+        const donHopLe = (danhSachDonHang || []).filter((dh) => dh.trang_thai !== 'da_huy');
+        const layThoiGian = (dh) => new Date(dh.createdAt || dh.ngay_tao || 0);
+        const layTongTien = (dh) => Number(dh.tong_tien_thanh_toan) || 0;
+
         if (khungThoiGian === '7_ngay') {
-            const cacNgay = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
-            return cacNgay.map((ngay, idx) => {
-                // Phân bổ doanh thu mẫu kết hợp đơn hàng thực tế
-                const base = Math.max(12000000, Math.floor((thongKe.tongDoanhThu || 180000000) / 10));
-                const heSo = [0.8, 1.1, 0.95, 1.35, 1.6, 2.1, 1.85][idx];
-                const doanhThuNgay = Math.round(base * heSo);
-                const soDonNgay = Math.max(1, Math.round(heSo * 2.5));
-                return {
-                    thoiGian: ngay,
-                    doanhThu: doanhThuNgay,
-                    soDon: soDonNgay
-                };
-            });
-        } else if (khungThoiGian === '4_tuan') {
-            return [
-                { thoiGian: 'Tuần 1', doanhThu: Math.round((thongKe.tongDoanhThu || 120000000) * 0.22), soDon: 4 },
-                { thoiGian: 'Tuần 2', doanhThu: Math.round((thongKe.tongDoanhThu || 120000000) * 0.26), soDon: 6 },
-                { thoiGian: 'Tuần 3', doanhThu: Math.round((thongKe.tongDoanhThu || 120000000) * 0.31), soDon: 8 },
-                { thoiGian: 'Tuần 4', doanhThu: Math.round((thongKe.tongDoanhThu || 120000000) * 0.38), soDon: 9 },
-            ];
-        } else {
-            return [
-                { thoiGian: 'Thg 4', doanhThu: 45000000, soDon: 12 },
-                { thoiGian: 'Thg 5', doanhThu: 68000000, soDon: 18 },
-                { thoiGian: 'Thg 6', doanhThu: 82000000, soDon: 22 },
-                { thoiGian: 'Thg 7', doanhThu: 94000000, soDon: 25 },
-                { thoiGian: 'Thg 8', doanhThu: 115000000, soDon: 29 },
-                { thoiGian: 'Thg 9', doanhThu: Math.max(130000000, thongKe.tongDoanhThu || 135000000), soDon: Math.max(15, danhSachDonHang.length) },
-            ];
+            const homNay = new Date();
+            homNay.setHours(0, 0, 0, 0);
+            const ketQua = [];
+            for (let i = 6; i >= 0; i--) {
+                const ngay = new Date(homNay);
+                ngay.setDate(homNay.getDate() - i);
+                const ngaySau = new Date(ngay);
+                ngaySau.setDate(ngay.getDate() + 1);
+                const donTrongNgay = donHopLe.filter((dh) => {
+                    const t = layThoiGian(dh);
+                    return t >= ngay && t < ngaySau;
+                });
+                ketQua.push({
+                    thoiGian: ngay.toLocaleDateString('vi-VN', { weekday: 'short' }),
+                    doanhThu: donTrongNgay.reduce((tong, dh) => tong + layTongTien(dh), 0),
+                    soDon: donTrongNgay.length
+                });
+            }
+            return ketQua;
         }
-    }, [khungThoiGian, thongKe.tongDoanhThu, danhSachDonHang.length]);
+
+        if (khungThoiGian === '4_tuan') {
+            const homNay = new Date();
+            homNay.setHours(0, 0, 0, 0);
+            const ketQua = [];
+            for (let i = 3; i >= 0; i--) {
+                const batDau = new Date(homNay);
+                batDau.setDate(homNay.getDate() - i * 7 - 6);
+                const ketThuc = new Date(homNay);
+                ketThuc.setDate(homNay.getDate() - i * 7 + 1);
+                const donTrongTuan = donHopLe.filter((dh) => {
+                    const t = layThoiGian(dh);
+                    return t >= batDau && t < ketThuc;
+                });
+                ketQua.push({
+                    thoiGian: `Tuần ${4 - i}`,
+                    doanhThu: donTrongTuan.reduce((tong, dh) => tong + layTongTien(dh), 0),
+                    soDon: donTrongTuan.length
+                });
+            }
+            return ketQua;
+        }
+
+        const ketQua = [];
+        const thangHienTai = new Date();
+        for (let i = 5; i >= 0; i--) {
+            const moc = new Date(thangHienTai.getFullYear(), thangHienTai.getMonth() - i, 1);
+            const mocSau = new Date(thangHienTai.getFullYear(), thangHienTai.getMonth() - i + 1, 1);
+            const donTrongThang = donHopLe.filter((dh) => {
+                const t = layThoiGian(dh);
+                return t >= moc && t < mocSau;
+            });
+            ketQua.push({
+                thoiGian: `Thg ${moc.getMonth() + 1}`,
+                doanhThu: donTrongThang.reduce((tong, dh) => tong + layTongTien(dh), 0),
+                soDon: donTrongThang.length
+            });
+        }
+        return ketQua;
+    }, [khungThoiGian, danhSachDonHang]);
 
     // 2. Dữ liệu cơ cấu 7 ngành hàng cho Biểu đồ Tròn (Donut)
     const duLieuNganhHang = useMemo(() => {

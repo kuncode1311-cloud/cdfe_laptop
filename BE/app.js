@@ -135,6 +135,7 @@ const caiDatRoutes = require('./routes/cai-dat.routes');
 const troLyAiRoutes = require('./routes/tro-ly-ai.routes');
 const dongBoRoutes = require('./routes/dong-bo.routes');
 const gioHangRoutes = require('./routes/gio-hang.routes');
+const yeuThichRoutes = require('./routes/yeu-thich.routes');
 const { xoaBoNhoDemPhienBan } = require('./controllers/dong-bo.controller');
 
 // Sau mỗi thao tác ghi (POST / PUT / PATCH / DELETE) thành công, xóa bộ nhớ đệm chữ ký phiên bản
@@ -164,6 +165,7 @@ app.use('/api/cai-dat', caiDatRoutes);
 app.use('/api/tro-ly-ai', troLyAiRoutes);
 app.use('/api/dong-bo', dongBoRoutes);
 app.use('/api/gio-hang', gioHangRoutes);
+app.use('/api/yeu-thich', yeuThichRoutes);
 
 // 5. Tuyến đường kiểm tra máy chủ
 app.get('/', (req, res) => {

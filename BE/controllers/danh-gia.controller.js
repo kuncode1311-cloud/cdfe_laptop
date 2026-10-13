@@ -14,7 +14,7 @@ const layDanhGiaTheoSanPham = async (req, res) => {
         const idSpGoc = productId || req.query.id_san_pham;
         const idSp = typeof idSpGoc === 'string' ? idSpGoc.slice(0, 200) : '';
 
-        const filter = {};
+        const filter = { hien_thi: { $ne: false } };
         if (idSp) {
             filter.id_san_pham = idSp;
         }
@@ -46,6 +46,22 @@ const layDanhGiaTheoSanPham = async (req, res) => {
         console.error('Lỗi lấy đánh giá sản phẩm:', loi);
         return res.status(500).json({ thong_diep: 'Lỗi lấy đánh giá sản phẩm', chi_tiet: loi.message });
     }
+};
+
+// Hàm nội bộ dùng chung: tính lại điểm đánh giá trung bình + số lượt đánh giá của 1 sản phẩm
+// (chỉ tính trên các đánh giá đang hiển thị, bỏ qua đánh giá đã bị Admin ẩn)
+const tinhLaiDiemDanhGia = async (idSanPham) => {
+    if (!idSanPham) return;
+    const tatCaDanhGia = await DanhGia.find({ id_san_pham: idSanPham, hien_thi: { $ne: false } });
+    const diemTB =
+        tatCaDanhGia.length > 0
+            ? Math.round((tatCaDanhGia.reduce((tong, dg) => tong + (dg.so_sao || 5), 0) / tatCaDanhGia.length) * 10) /
+              10
+            : 0;
+    await SanPham.findOneAndUpdate(
+        { id: idSanPham },
+        { $set: { diem_danh_gia_tb: diemTB, so_luong_danh_gia: tatCaDanhGia.length } }
+    );
 };
 
 // 2. Thêm đánh giá mới và tự động cập nhật lại điểm trung bình của sản phẩm
@@ -141,23 +157,7 @@ const themDanhGiaMoi = async (req, res) => {
         const ketQua = await danhGiaMoi.save();
 
         // Tự động tính toán lại điểm đánh giá trung bình của sản phẩm
-        if (duLieuDanhGia.id_san_pham) {
-            const tatCaDanhGia = await DanhGia.find({ id_san_pham: duLieuDanhGia.id_san_pham });
-            if (tatCaDanhGia.length > 0) {
-                const tongSao = tatCaDanhGia.reduce((tong, item) => tong + (item.so_sao || 5), 0);
-                const diemTB = Math.round((tongSao / tatCaDanhGia.length) * 10) / 10;
-
-                await SanPham.findOneAndUpdate(
-                    { id: duLieuDanhGia.id_san_pham },
-                    {
-                        $set: {
-                            diem_danh_gia_tb: diemTB,
-                            so_luong_danh_gia: tatCaDanhGia.length
-                        }
-                    }
-                );
-            }
-        }
+        await tinhLaiDiemDanhGia(duLieuDanhGia.id_san_pham);
 
         return res.status(201).json(ketQua);
     } catch (loi) {
@@ -184,8 +184,73 @@ const tangLuotThich = async (req, res) => {
     }
 };
 
+// 4. [Admin] Lấy TOÀN BỘ đánh giá (kể cả đã ẩn) để duyệt/kiểm soát
+const layDanhGiaChoAdmin = async (req, res) => {
+    try {
+        const danhSachDanhGia = await DanhGia.find({}).sort({ createdAt: -1 }).lean();
+        const idsSanPham = [...new Set(danhSachDanhGia.map((dg) => dg.id_san_pham).filter(Boolean))];
+        const danhSachSp = await SanPham.find(
+            { id: { $in: idsSanPham } },
+            { id: 1, ten_san_pham: 1, hinh_anh_chinh: 1 }
+        ).lean();
+        const banDoSanPham = {};
+        danhSachSp.forEach((sp) => {
+            banDoSanPham[sp.id] = sp;
+        });
+        const ketQua = danhSachDanhGia.map((dg) => ({
+            ...dg,
+            ten_san_pham: banDoSanPham[dg.id_san_pham]?.ten_san_pham || 'Sản phẩm đã gỡ',
+            hinh_anh_san_pham: banDoSanPham[dg.id_san_pham]?.hinh_anh_chinh || ''
+        }));
+        return res.status(200).json(ketQua);
+    } catch (loi) {
+        console.error('Lỗi lấy đánh giá cho admin:', loi);
+        return res.status(500).json({ thong_diep: 'Lỗi lấy danh sách đánh giá', chi_tiet: loi.message });
+    }
+};
+
+// 5. [Admin] Ẩn / hiện lại một đánh giá
+const anHienDanhGia = async (req, res) => {
+    try {
+        const id = String(req.params.id || '');
+        const hienThi = Boolean(req.body?.hien_thi);
+        const danhGia = await DanhGia.findOneAndUpdate(
+            { $or: [{ id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }] },
+            { $set: { hien_thi: hienThi } },
+            { returnDocument: 'after' }
+        );
+        if (!danhGia) {
+            return res.status(404).json({ thong_diep: 'Không tìm thấy đánh giá' });
+        }
+        await tinhLaiDiemDanhGia(danhGia.id_san_pham);
+        return res.status(200).json(danhGia);
+    } catch (loi) {
+        return res.status(500).json({ thong_diep: 'Lỗi cập nhật trạng thái hiển thị đánh giá', chi_tiet: loi.message });
+    }
+};
+
+// 6. [Admin] Xóa một đánh giá
+const xoaDanhGia = async (req, res) => {
+    try {
+        const id = String(req.params.id || '');
+        const danhGia = await DanhGia.findOneAndDelete({
+            $or: [{ id }, { _id: id.match(/^[0-9a-fA-F]{24}$/) ? id : null }]
+        });
+        if (!danhGia) {
+            return res.status(404).json({ thong_diep: 'Không tìm thấy đánh giá để xóa' });
+        }
+        await tinhLaiDiemDanhGia(danhGia.id_san_pham);
+        return res.status(200).json({ thong_diep: 'Đã xóa đánh giá thành công' });
+    } catch (loi) {
+        return res.status(500).json({ thong_diep: 'Lỗi xóa đánh giá', chi_tiet: loi.message });
+    }
+};
+
 module.exports = {
     layDanhGiaTheoSanPham,
     themDanhGiaMoi,
-    tangLuotThich
+    tangLuotThich,
+    layDanhGiaChoAdmin,
+    anHienDanhGia,
+    xoaDanhGia
 };

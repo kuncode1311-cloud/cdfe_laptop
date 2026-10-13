@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { API_BASE_URL, apiFetch, TOKEN_STORAGE_KEY } from '@/services/api-client';
+import { API_BASE_URL, apiFetch, TOKEN_STORAGE_KEY, dangKyXuLyHetHanPhien } from '@/services/api-client';
 
 export const AuthContext = createContext(undefined);
 const USER_STORAGE_KEY = 'tnt_laptop_user';
@@ -453,6 +453,12 @@ export function AuthProvider({ children }) {
             }
         }
     };
+
+    // Đăng ký callback toàn cục: bất kỳ request nào (ở mọi trang) gặp HTTP 401 giữa buổi làm việc
+    // đều tự động gọi hàm đăng xuất này để đồng bộ lại UI, thay vì âm thầm bỏ qua lỗi.
+    useEffect(() => {
+        dangKyXuLyHetHanPhien(() => dangXuat());
+    }, []);
 
     const laAdmin = nguoiDung?.vaiTro === 'admin';
 

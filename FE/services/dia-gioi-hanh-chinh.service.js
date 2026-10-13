@@ -4,6 +4,9 @@
  * Tích hợp Fallback 63 tỉnh thành đầy đủ chuẩn quốc gia.
  */
 
+// URL gốc của API địa giới hành chính bên thứ 3, cho phép ghi đè qua biến môi trường
+const BASE_URL = process.env.NEXT_PUBLIC_DIA_GIOI_API_URL || 'https://provinces.open-api.vn/api';
+
 // Danh mục 63 Tỉnh / Thành phố Việt Nam (Fallback 0ms phòng khi mất kết nối API)
 export const DANH_SACH_63_TINH_THANH_CHUAN = [
     { code: 1, name: 'Thành phố Hà Nội', codename: 'thanh_pho_ha_noi' },
@@ -247,7 +250,7 @@ export const DiaGioiHanhChinhService = {
 
         cacheTinhThanhPromise = (async () => {
             try {
-                const res = await fetch('https://provinces.open-api.vn/api/?depth=1', { cache: 'force-cache' });
+                const res = await fetch(`${BASE_URL}/?depth=1`, { cache: 'force-cache' });
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data) && data.length > 0) {
@@ -284,7 +287,7 @@ export const DiaGioiHanhChinhService = {
 
         cacheTinhThanhV2Promise = (async () => {
             try {
-                const res = await fetch('https://provinces.open-api.vn/api/v2/', { cache: 'force-cache' });
+                const res = await fetch(`${BASE_URL}/v2/`, { cache: 'force-cache' });
                 if (res.ok) {
                     const data = await res.json();
                     if (Array.isArray(data) && data.length > 0) {
@@ -326,7 +329,7 @@ export const DiaGioiHanhChinhService = {
         }
 
         try {
-            const res = await fetch(`https://provinces.open-api.vn/api/v2/p/${maTinh}?depth=2`);
+            const res = await fetch(`${BASE_URL}/v2/p/${maTinh}?depth=2`);
             if (res.ok) {
                 const data = await res.json();
                 if (data && Array.isArray(data.wards)) {
@@ -353,7 +356,7 @@ export const DiaGioiHanhChinhService = {
         }
 
         try {
-            const res = await fetch(`https://provinces.open-api.vn/api/p/${maTinh}?depth=2`);
+            const res = await fetch(`${BASE_URL}/p/${maTinh}?depth=2`);
             if (res.ok) {
                 const data = await res.json();
                 if (data && Array.isArray(data.districts)) {
@@ -380,7 +383,7 @@ export const DiaGioiHanhChinhService = {
         }
 
         try {
-            const res = await fetch(`https://provinces.open-api.vn/api/d/${maQuan}?depth=2`);
+            const res = await fetch(`${BASE_URL}/d/${maQuan}?depth=2`);
             if (res.ok) {
                 const data = await res.json();
                 if (data && Array.isArray(data.wards)) {

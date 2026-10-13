@@ -5,6 +5,30 @@ import Image from 'next/image';
 import { Home, ChevronRight, Search, PackageCheck, Truck } from 'lucide-react';
 import { DonHangService } from '@/services/don-hang.service';
 import { formatCurrency, dinhDangTienVND } from '@/utils/formatCurrency';
+
+// Helper map trạng thái đơn hàng thật sang nhãn + màu badge tiếng Việt, đồng bộ cách đặt tên với app/tai-khoan/page.jsx
+const layNhanTrangThaiDon = (trangThai) => {
+    switch (trangThai) {
+        case 'cho_xac_nhan':
+        case 'cho_duyet':
+            return { nhan: 'Chờ Xác Nhận', mau: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700/60' };
+        case 'da_xac_nhan':
+        case 'dang_dong_goi':
+        case 'dang_xu_ly':
+            return { nhan: 'Đã Xác Nhận - Đang Đóng Gói', mau: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700/60' };
+        case 'dang_giao':
+        case 'dang_van_chuyen':
+            return { nhan: 'Đang Giao Hàng', mau: 'bg-sky-100 dark:bg-sky-950/80 text-sky-700 dark:text-sky-400 border-sky-300 dark:border-sky-700/60' };
+        case 'da_giao':
+        case 'giao_thanh_cong':
+            return { nhan: 'Giao Thành Công', mau: 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700/60' };
+        case 'da_huy':
+            return { nhan: 'Đã Hủy Đơn', mau: 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-700/60' };
+        default:
+            return { nhan: 'Đang Xử Lý', mau: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700/60' };
+    }
+};
+
 export default function TrangTraCuuDonHang() {
     const [tuKhoaTraCuu, setTuKhoaTraCuu] = useState('');
     const [soDienThoaiXacMinh, setSoDienThoaiXacMinh] = useState('');
@@ -83,8 +107,8 @@ export default function TrangTraCuuDonHang() {
                     </div>
                   </div>
 
-                  <span className="px-3.5 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-400 font-bold text-xs self-start sm:self-auto border border-emerald-300 dark:border-emerald-700/60">
-                    Đã Xác Nhận - Đang Xử Lý
+                  <span className={`px-3.5 py-1.5 rounded-full font-bold text-xs self-start sm:self-auto border ${layNhanTrangThaiDon(dh.trang_thai).mau}`}>
+                    {layNhanTrangThaiDon(dh.trang_thai).nhan}
                   </span>
                 </div>
 

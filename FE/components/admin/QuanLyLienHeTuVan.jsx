@@ -60,7 +60,7 @@ const phatAmThanhThongBao = () => {
     }
 };
 
-export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy }) {
+export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan }) {
     const [danhSach, setDanhSach] = useState([]);
     const [thongKe, setThongKe] = useState({
         tong_so: 0,
@@ -177,7 +177,11 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy }) {
 
     // Xử lý Xóa phiếu
     const xuLyXoaPhieu = async (id, maPhieu) => {
-        if (!window.confirm(`Bạn có chắc chắn muốn xóa phiếu yêu cầu #${maPhieu}?`)) return;
+        const dongY = await xacNhan({
+            tieuDe: 'Xóa Phiếu Yêu Cầu',
+            noiDung: `Bạn có chắc chắn muốn xóa phiếu yêu cầu #${maPhieu}?`
+        });
+        if (!dongY) return;
         try {
             await LienHeService.xoaLienHeAsync(id);
             setDanhSach(prev => prev.filter(item => item._id !== id && item.id !== id));

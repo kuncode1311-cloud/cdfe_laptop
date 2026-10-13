@@ -1,5 +1,59 @@
 const DonHang = require('../models/don-hang.model');
+const BaoHanhGhiDe = require('../models/bao-hanh-ghi-de.model');
 require('../models/san-pham.model'); // chỉ để đăng ký model SanPham với Mongoose
+
+/**
+ * Hàm nội bộ dùng chung: tính toán thông tin bảo hành của 1 sản phẩm trong 1 đơn hàng
+ * (áp dụng ghi đè Serial / số tháng bảo hành của Admin nếu có trong banDoGhiDe).
+ */
+const tinhMotMucBaoHanh = (dh, item, ngayMua, sdtMasked, hoTen, banDoGhiDe) => {
+    const sp = item.san_pham || {};
+    const ghiDe = banDoGhiDe.get(`${dh.ma_don_hang}::${item.id_muc || ''}`);
+    const thoiGianBHThang = Number(ghiDe?.thoi_han_bao_hanh_thang) > 0 ? Number(ghiDe.thoi_han_bao_hanh_thang) : 24;
+    const ngayHetHan = new Date(ngayMua);
+    ngayHetHan.setMonth(ngayHetHan.getMonth() + thoiGianBHThang);
+
+    const now = new Date();
+    const conHieuLuc = now <= ngayHetHan;
+    const diffTime = ngayHetHan.getTime() - now.getTime();
+    const soThangConLai = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30)));
+
+    const serialMay =
+        ghiDe?.so_serial ||
+        item.so_serial ||
+        `${sp.ma_san_pham || 'LPN'}-${dh.ma_don_hang?.replace('LPN-', '') || '8899'}`;
+
+    return {
+        hop_le: true,
+        loai_tra_cuu: 'don_hang',
+        ma_don_hang: dh.ma_don_hang,
+        id_don_hang: dh.id,
+        id_muc: item.id_muc || '',
+        so_serial: serialMay,
+        ma_san_pham: sp.ma_san_pham || 'CHÍNH HÃNG',
+        ten_san_pham: item.ten_san_pham || sp.ten_san_pham || 'Laptop Chính Hãng',
+        hinh_anh:
+            item.hinh_anh ||
+            sp.hinh_anh_chinh ||
+            (Array.isArray(sp.hinh_anh) ? sp.hinh_anh[0] : '/images/asus_rog_scar18.jpg'),
+        hang_san_xuat: (sp.hang_san_xuat || 'TNTP').toUpperCase(),
+        khach_hang: hoTen,
+        so_dien_thoai: sdtMasked,
+        ngay_kich_hoat: ngayMua.toLocaleDateString('vi-VN'),
+        ngay_het_han: ngayHetHan.toLocaleDateString('vi-VN'),
+        thoi_gian_bao_hanh: `${thoiGianBHThang} Tháng Chính Hãng`,
+        con_hieu_luc: conHieuLuc,
+        so_thang_con_lai: soThangConLai,
+        trang_thai: conHieuLuc
+            ? `Còn hiệu lực bảo hành chính hãng (${soThangConLai} tháng còn lại)`
+            : 'Đã hết thời hạn bảo hành chính hãng',
+        goi_dich_vu: 'Bảo hành vàng On-site tận nơi 24 tháng chính hãng tại hệ thống TNTP Laptop',
+        trung_tam_bao_hanh: [
+            'Chi nhánh 1: 29 Tân Phước, P.8, Q.10, TP.HCM (Hotline: 0948.37.79.79)',
+            'Chi nhánh 2: 12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM (Trường ITC)'
+        ]
+    };
+};
 
 /**
  * Tra cứu thời hạn bảo hành điện tử theo:
@@ -61,6 +115,13 @@ const traCuuBaoHanh = async (req, res) => {
         if (donHangKhop && donHangKhop.length > 0) {
             const danhSachKetQua = [];
 
+            // Lấy toàn bộ ghi đè Serial/số tháng bảo hành (do Admin nhập tay) liên quan các đơn hàng khớp
+            const maDonHangLienQuan = donHangKhop.map((dh) => dh.ma_don_hang).filter(Boolean);
+            const dsGhiDe = maDonHangLienQuan.length
+                ? await BaoHanhGhiDe.find({ ma_don_hang: { $in: maDonHangLienQuan } }).lean()
+                : [];
+            const banDoGhiDe = new Map(dsGhiDe.map((gd) => [`${gd.ma_don_hang}::${gd.id_muc}`, gd]));
+
             for (const dh of donHangKhop) {
                 // Parse ngày mua hàng
                 let ngayMua = new Date(dh.createdAt || Date.now());
@@ -80,48 +141,7 @@ const traCuuBaoHanh = async (req, res) => {
                 const hoTen = dh.thong_tin_giao_hang?.ho_ten || dh.thong_tin_giao_hang?.ho_va_ten || 'Khách Hàng';
 
                 for (const item of dh.danh_sach_san_pham || []) {
-                    const sp = item.san_pham || {};
-                    const thoiGianBHThang = 24; // Mặc định 24 tháng cho Laptop chính hãng
-                    const ngayHetHan = new Date(ngayMua);
-                    ngayHetHan.setMonth(ngayHetHan.getMonth() + thoiGianBHThang);
-
-                    const now = new Date();
-                    const conHieuLuc = now <= ngayHetHan;
-                    const diffTime = ngayHetHan.getTime() - now.getTime();
-                    const soThangConLai = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30)));
-
-                    const serialMay =
-                        item.so_serial || `${sp.ma_san_pham || 'LPN'}-${dh.ma_don_hang?.replace('LPN-', '') || '8899'}`;
-
-                    danhSachKetQua.push({
-                        hop_le: true,
-                        loai_tra_cuu: 'don_hang',
-                        ma_don_hang: dh.ma_don_hang,
-                        id_don_hang: dh.id,
-                        so_serial: serialMay,
-                        ma_san_pham: sp.ma_san_pham || 'CHÍNH HÃNG',
-                        ten_san_pham: item.ten_san_pham || sp.ten_san_pham || 'Laptop Chính Hãng',
-                        hinh_anh:
-                            item.hinh_anh ||
-                            sp.hinh_anh_chinh ||
-                            (Array.isArray(sp.hinh_anh) ? sp.hinh_anh[0] : '/images/asus_rog_scar18.jpg'),
-                        hang_san_xuat: (sp.hang_san_xuat || 'TNTP').toUpperCase(),
-                        khach_hang: hoTen,
-                        so_dien_thoai: sdtMasked,
-                        ngay_kich_hoat: ngayMua.toLocaleDateString('vi-VN'),
-                        ngay_het_han: ngayHetHan.toLocaleDateString('vi-VN'),
-                        thoi_gian_bao_hanh: `${thoiGianBHThang} Tháng Chính Hãng`,
-                        con_hieu_luc: conHieuLuc,
-                        so_thang_con_lai: soThangConLai,
-                        trang_thai: conHieuLuc
-                            ? `Còn hiệu lực bảo hành chính hãng (${soThangConLai} tháng còn lại)`
-                            : 'Đã hết thời hạn bảo hành chính hãng',
-                        goi_dich_vu: 'Bảo hành vàng On-site tận nơi 24 tháng chính hãng tại hệ thống TNTP Laptop',
-                        trung_tam_bao_hanh: [
-                            'Chi nhánh 1: 29 Tân Phước, P.8, Q.10, TP.HCM (Hotline: 0948.37.79.79)',
-                            'Chi nhánh 2: 12 Trịnh Đình Thảo, P. Hòa Thạnh, Q. Tân Phú, TP.HCM (Trường ITC)'
-                        ]
-                    });
+                    danhSachKetQua.push(tinhMotMucBaoHanh(dh, item, ngayMua, sdtMasked, hoTen, banDoGhiDe));
                 }
             }
 
@@ -150,6 +170,70 @@ const traCuuBaoHanh = async (req, res) => {
     }
 };
 
+// [Admin] Lấy danh sách bảo hành của toàn bộ đơn hàng đã giao (phục vụ trang quản trị)
+const layDanhSachBaoHanhAdmin = async (req, res) => {
+    try {
+        const gioiHan = Math.min(500, Math.max(1, Number(req.query.gioi_han) || 300));
+        const donHangDaGiao = await DonHang.find({ trang_thai: 'da_giao' }).sort({ createdAt: -1 }).limit(gioiHan);
+
+        const maDonHangLienQuan = donHangDaGiao.map((dh) => dh.ma_don_hang).filter(Boolean);
+        const dsGhiDe = maDonHangLienQuan.length
+            ? await BaoHanhGhiDe.find({ ma_don_hang: { $in: maDonHangLienQuan } }).lean()
+            : [];
+        const banDoGhiDe = new Map(dsGhiDe.map((gd) => [`${gd.ma_don_hang}::${gd.id_muc}`, gd]));
+
+        const danhSach = [];
+        for (const dh of donHangDaGiao) {
+            const ngayMua = new Date(dh.createdAt || Date.now());
+            const sdtMasked = dh.thong_tin_giao_hang?.so_dien_thoai || '';
+            const hoTen = dh.thong_tin_giao_hang?.ho_ten || dh.thong_tin_giao_hang?.ho_va_ten || 'Khách Hàng';
+            for (const item of dh.danh_sach_san_pham || []) {
+                danhSach.push(tinhMotMucBaoHanh(dh, item, ngayMua, sdtMasked, hoTen, banDoGhiDe));
+            }
+        }
+
+        return res.status(200).json({ tong_so: danhSach.length, danh_sach: danhSach });
+    } catch (loi) {
+        console.error('Lỗi lấy danh sách bảo hành cho admin:', loi);
+        return res.status(500).json({ thong_diep: 'Lỗi lấy danh sách bảo hành', chi_tiet: loi.message });
+    }
+};
+
+// [Admin] Ghi đè Serial / số tháng bảo hành cho 1 sản phẩm trong 1 đơn hàng
+const capNhatGhiDeBaoHanh = async (req, res) => {
+    try {
+        const ma_don_hang = String(req.body.ma_don_hang || '').trim();
+        const id_muc = String(req.body.id_muc || '').trim();
+        if (!ma_don_hang || !id_muc) {
+            return res.status(400).json({ thong_diep: 'Thiếu mã đơn hàng hoặc mã mục sản phẩm.' });
+        }
+        const donHangTonTai = await DonHang.exists({ ma_don_hang });
+        if (!donHangTonTai) {
+            return res.status(404).json({ thong_diep: `Không tìm thấy đơn hàng ${ma_don_hang}` });
+        }
+        const soSerial = typeof req.body.so_serial === 'string' ? req.body.so_serial.trim().slice(0, 100) : '';
+        const thoiHan = Number(req.body.thoi_han_bao_hanh_thang);
+
+        const ghiDe = await BaoHanhGhiDe.findOneAndUpdate(
+            { ma_don_hang, id_muc },
+            {
+                $set: {
+                    so_serial: soSerial,
+                    thoi_han_bao_hanh_thang: Number.isFinite(thoiHan) && thoiHan > 0 ? thoiHan : null
+                }
+            },
+            { upsert: true, returnDocument: 'after' }
+        );
+
+        return res.status(200).json({ thong_diep: 'Đã lưu thông tin bảo hành', ghi_de: ghiDe });
+    } catch (loi) {
+        console.error('Lỗi ghi đè thông tin bảo hành:', loi);
+        return res.status(500).json({ thong_diep: 'Lỗi lưu thông tin bảo hành', chi_tiet: loi.message });
+    }
+};
+
 module.exports = {
-    traCuuBaoHanh
+    traCuuBaoHanh,
+    layDanhSachBaoHanhAdmin,
+    capNhatGhiDeBaoHanh
 };

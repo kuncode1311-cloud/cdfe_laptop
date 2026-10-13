@@ -22,11 +22,11 @@ export const ThanhToanService = {
             const data = await apiFetch('/thanh-toan/tao-link', {
                 method: 'POST',
                 body: JSON.stringify(thongTinDon),
-                timeoutMs: 3000
+                timeoutMs: 10000
             });
             if (data.success) return data;
         } catch (err) {
-            console.warn('⚠️ Backend PayOS phản hồi chậm (>3s), lập tức kích hoạt VietQR tức thì:', err.message);
+            console.warn('⚠️ Backend PayOS phản hồi chậm (>10s), lập tức kích hoạt VietQR tức thì:', err.message);
         }
 
         if (!PAYMENT_BANK_BIN || !PAYMENT_BANK_ACCOUNT_NO || !PAYMENT_BANK_ACCOUNT_NAME) {

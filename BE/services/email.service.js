@@ -1,5 +1,5 @@
 // Biến môi trường đã được nạp một lần duy nhất tại server.js
-const emailUser = process.env.EMAIL_USER || 'kun.code.1311@gmail.com';
+const emailUser = process.env.EMAIL_USER || '';
 const brevoApiKey = process.env.BREVO_API_KEY;
 const brevoSenderEmail = process.env.BREVO_SENDER_EMAIL || emailUser;
 

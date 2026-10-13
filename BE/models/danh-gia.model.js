@@ -67,6 +67,10 @@ const DanhGiaSchema = new mongoose.Schema(
             type: Number,
             default: 0
         },
+        hien_thi: {
+            type: Boolean,
+            default: true
+        },
         ngay_danh_gia: {
             type: String,
             default: () => new Date().toLocaleDateString('vi-VN')

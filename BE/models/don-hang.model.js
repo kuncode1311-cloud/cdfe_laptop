@@ -54,7 +54,8 @@ const DonHangSchema = new mongoose.Schema(
                 gia_hien_tai: { type: Number },
                 tong_tien_muc: { type: Number },
                 gia: { type: Number },
-                tuy_chon_chon: { type: mongoose.Schema.Types.Mixed }
+                tuy_chon_chon: { type: mongoose.Schema.Types.Mixed },
+                phan_bo_kho: { type: mongoose.Schema.Types.Mixed }
             }
         ],
         tam_tinh: {

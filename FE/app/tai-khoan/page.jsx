@@ -379,13 +379,38 @@ const layCacBuocDonHang = (dh) => {
     if (!dh) return [];
     const laDaGiao = dh.trang_thai === 'da_giao';
     const laDangGiao = dh.trang_thai === 'dang_giao';
-    const laDangXuLy = !laDaGiao && !laDangGiao;
+    const laDaHuy = dh.trang_thai === 'da_huy';
+    const laDangXuLy = !laDaGiao && !laDangGiao && !laDaHuy;
 
     const lichTrinh = Array.isArray(dh.lich_trinh_giao_hang) ? dh.lich_trinh_giao_hang : [];
     const tgDatHang = lichTrinh[0]?.thoi_gian || layThoiGianDonHang(dh) || 'Đã ghi nhận';
     const tgDongGoi = lichTrinh[1]?.thoi_gian || (laDangXuLy ? 'Đang xử lý' : 'Đã niêm phong');
     const tgVanChuyen = lichTrinh[2]?.thoi_gian || (laDangGiao ? 'Đang giao máy' : laDaGiao ? 'Đã vận chuyển' : 'Chờ xuất kho');
     const tgHoanThanh = lichTrinh[3]?.thoi_gian || (laDaGiao ? 'Đã nhận máy' : 'Dự kiến 1-2 ngày');
+
+    if (laDaHuy) {
+        return [
+            {
+                buoc: 1,
+                ten: 'Đặt Hàng',
+                moTa: 'Hệ thống tiếp nhận đơn',
+                icon: ShoppingBag,
+                xong: true,
+                hienTai: false,
+                thoiGian: tgDatHang
+            },
+            {
+                buoc: 2,
+                ten: 'Đã Hủy Đơn',
+                moTa: 'Đơn hàng không được tiếp tục xử lý',
+                icon: AlertCircle,
+                xong: false,
+                hienTai: true,
+                huy: true,
+                thoiGian: lichTrinh[1]?.thoi_gian || layThoiGianDonHang(dh) || 'Đã hủy'
+            }
+        ];
+    }
 
     return [
         {
@@ -425,6 +450,15 @@ const layCacBuocDonHang = (dh) => {
             thoiGian: tgHoanThanh
         }
     ];
+};
+
+// Helper tính % tiến độ giao hàng DUY NHẤT, dùng chung cho badge và thanh progress để luôn khớp nhau
+const tinhTienDoPhanTramDonHang = (dh) => {
+    if (!dh) return 0;
+    if (dh.trang_thai === 'da_giao') return 100;
+    if (dh.trang_thai === 'dang_giao') return 75;
+    if (dh.trang_thai === 'da_xac_nhan' || dh.trang_thai === 'dang_dong_goi' || dh.trang_thai === 'dang_xu_ly') return 50;
+    return 25;
 };
 
 // Cấu hình các tab trạng thái đơn hàng & bộ lọc tinh gọn 6 tab chuẩn
@@ -2105,11 +2139,13 @@ function NoiDungTrangTaiKhoan() {
                                                                 {/* 1. Thanh trạng thái & Mã vận đơn Viettel Post */}
                                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b-2 border-blue-200/80">
                                                                     <div className="flex items-center gap-3 min-w-0">
-                                                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/30">
+                                                                        <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center shrink-0 shadow-md ${dh.trang_thai === 'da_huy' ? 'bg-gradient-to-br from-rose-600 to-rose-700 shadow-rose-500/30' : 'bg-gradient-to-br from-blue-600 to-indigo-700 shadow-blue-500/30'}`}>
                                                                             {dh.trang_thai === 'da_giao' ? (
                                                                                 <CheckCircle2 className="w-5 h-5" />
                                                                             ) : dh.trang_thai === 'dang_giao' ? (
                                                                                 <Truck className="w-5 h-5 animate-pulse" />
+                                                                            ) : dh.trang_thai === 'da_huy' ? (
+                                                                                <AlertCircle className="w-5 h-5" />
                                                                             ) : (
                                                                                 <PackageCheck className="w-5 h-5" />
                                                                             )}
@@ -2120,6 +2156,8 @@ function NoiDungTrangTaiKhoan() {
                                                                                     ? 'Chặng 4/4: Giao hàng thành công trọn vẹn'
                                                                                     : dh.trang_thai === 'dang_giao'
                                                                                     ? 'Chặng 3/4: Đang vận chuyển hỏa tốc'
+                                                                                    : dh.trang_thai === 'da_huy'
+                                                                                    ? 'Đơn hàng đã bị hủy'
                                                                                     : dh.trang_thai === 'cho_xac_nhan'
                                                                                     ? 'Chặng 1/4: Hệ thống tiếp nhận đơn hàng'
                                                                                     : 'Chặng 2/4: Đang đóng gói & chuẩn bị xuất kho'}
@@ -2127,17 +2165,19 @@ function NoiDungTrangTaiKhoan() {
                                                                             <div className="flex items-center gap-2 mt-1 text-xs text-slate-600 font-bold flex-wrap">
                                                                                 <span>Viettel Post Express:</span>
                                                                                 <span className="font-mono font-black text-blue-800 bg-white px-2 py-0.5 rounded-md border border-blue-300 shadow-2xs text-[11px]">
-                                                                                    {dh.ma_van_don || `VTP-${dh.ma_don_hang?.replace(/\D/g, '') || '260922'}`}
+                                                                                    {dh.ma_van_don || 'Đang cập nhật mã vận đơn'}
                                                                                 </span>
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => saoChepMaVanDon(dh.ma_van_don || `VTP-${dh.ma_don_hang?.replace(/\D/g, '') || '260922'}`)}
-                                                                                    className="text-blue-600 hover:text-blue-800 font-black hover:underline cursor-pointer flex items-center gap-1 text-[11px] ml-0.5"
-                                                                                    title="Sao chép mã vận đơn"
-                                                                                >
-                                                                                    {daSaoChepVanDon ? <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" /> : <Copy className="w-3.5 h-3.5" />}
-                                                                                    <span>{daSaoChepVanDon ? 'Đã chép' : 'Sao chép'}</span>
-                                                                                </button>
+                                                                                {dh.ma_van_don && (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => saoChepMaVanDon(dh.ma_van_don)}
+                                                                                        className="text-blue-600 hover:text-blue-800 font-black hover:underline cursor-pointer flex items-center gap-1 text-[11px] ml-0.5"
+                                                                                        title="Sao chép mã vận đơn"
+                                                                                    >
+                                                                                        {daSaoChepVanDon ? <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" /> : <Copy className="w-3.5 h-3.5" />}
+                                                                                        <span>{daSaoChepVanDon ? 'Đã chép' : 'Sao chép'}</span>
+                                                                                    </button>
+                                                                                )}
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -2145,12 +2185,14 @@ function NoiDungTrangTaiKhoan() {
                                                                     {/* Tiến độ % badge */}
                                                                     <div className="self-start sm:self-auto shrink-0 flex items-center gap-2">
                                                                         <span className={`px-3 py-1 rounded-full text-xs font-black border-2 flex items-center gap-1.5 shadow-2xs ${
-                                                                            dh.trang_thai === 'da_giao'
+                                                                            dh.trang_thai === 'da_huy'
+                                                                                ? 'bg-rose-100 text-rose-950 border-rose-400'
+                                                                                : dh.trang_thai === 'da_giao'
                                                                                 ? 'bg-emerald-100 text-emerald-950 border-emerald-400'
                                                                                 : 'bg-blue-100 text-blue-950 border-blue-400'
                                                                         }`}>
-                                                                            <span className={`w-2 h-2 rounded-full ${dh.trang_thai === 'da_giao' ? 'bg-emerald-600' : 'bg-blue-600 animate-pulse'}`} />
-                                                                            <span>{dh.trang_thai === 'da_giao' ? 'Tiến độ: 100%' : dh.trang_thai === 'dang_giao' ? 'Tiến độ: 75%' : 'Tiến độ: 50%'}</span>
+                                                                            <span className={`w-2 h-2 rounded-full ${dh.trang_thai === 'da_huy' ? 'bg-rose-600' : dh.trang_thai === 'da_giao' ? 'bg-emerald-600' : 'bg-blue-600 animate-pulse'}`} />
+                                                                            <span>{dh.trang_thai === 'da_huy' ? 'Đã hủy' : `Tiến độ: ${tinhTienDoPhanTramDonHang(dh)}%`}</span>
                                                                         </span>
                                                                     </div>
                                                                 </div>
@@ -2160,9 +2202,9 @@ function NoiDungTrangTaiKhoan() {
                                                                     {/* Thanh ray nối tâm */}
                                                                     <div className="absolute top-6 sm:top-7 left-[12.5%] right-[12.5%] h-2 -translate-y-1/2 bg-slate-200 rounded-full z-0 overflow-hidden border border-slate-300">
                                                                         <div
-                                                                            className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-blue-600 transition-all duration-700 ease-out rounded-full"
+                                                                            className={`h-full transition-all duration-700 ease-out rounded-full ${dh.trang_thai === 'da_huy' ? 'bg-rose-500' : 'bg-gradient-to-r from-emerald-500 via-teal-400 to-blue-600'}`}
                                                                             style={{
-                                                                                width: `${dh.trang_thai === 'da_giao' ? 100 : dh.trang_thai === 'dang_giao' ? 66.6 : 33.3}%`
+                                                                                width: `${dh.trang_thai === 'da_huy' ? 25 : tinhTienDoPhanTramDonHang(dh)}%`
                                                                             }}
                                                                         />
                                                                     </div>
@@ -2176,7 +2218,9 @@ function NoiDungTrangTaiKhoan() {
                                                                                     {/* Icon Box */}
                                                                                     <div
                                                                                         className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ring-4 ring-white ${
-                                                                                            st.xong
+                                                                                            st.huy
+                                                                                                ? 'bg-gradient-to-tr from-rose-600 to-rose-700 text-white shadow-lg shadow-rose-500/50 border-2 border-rose-700'
+                                                                                                : st.xong
                                                                                                 ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30 border-2 border-emerald-600'
                                                                                                 : st.hienTai
                                                                                                 ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50 border-2 border-blue-700 ring-4 ring-blue-300/60 ring-offset-2 ring-offset-white animate-pulse'
@@ -2194,21 +2238,23 @@ function NoiDungTrangTaiKhoan() {
                                                                                     <div className="mt-2">
                                                                                         <span
                                                                                             className={`inline-block px-1.5 sm:px-2 py-0.5 rounded-full text-[9.5px] sm:text-[10px] font-black border tracking-tight ${
-                                                                                                st.xong
+                                                                                                st.huy
+                                                                                                    ? 'bg-rose-100 text-rose-800 border-rose-300 shadow-xs'
+                                                                                                    : st.xong
                                                                                                     ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-2xs'
                                                                                                     : st.hienTai
                                                                                                     ? 'bg-amber-100 text-amber-900 border-amber-300 shadow-xs'
                                                                                                     : 'bg-slate-100 text-slate-500 border-slate-200'
                                                                                             }`}
                                                                                         >
-                                                                                            {st.xong ? '✓ Đã xong' : st.hienTai ? '● Đang xử lý' : 'Chờ chặng tới'}
+                                                                                            {st.huy ? '✕ Đã hủy' : st.xong ? '✓ Đã xong' : st.hienTai ? '● Đang xử lý' : 'Chờ chặng tới'}
                                                                                         </span>
                                                                                     </div>
 
                                                                                     {/* Tên bước */}
                                                                                     <div
                                                                                         className={`text-xs sm:text-[13px] font-black mt-1 truncate max-w-full ${
-                                                                                            st.hienTai ? 'text-blue-700' : st.xong ? 'text-slate-900' : 'text-slate-400'
+                                                                                            st.huy ? 'text-rose-700' : st.hienTai ? 'text-blue-700' : st.xong ? 'text-slate-900' : 'text-slate-400'
                                                                                         }`}
                                                                                     >
                                                                                         {st.ten}
@@ -2222,7 +2268,7 @@ function NoiDungTrangTaiKhoan() {
                                                                                     {/* Thời gian */}
                                                                                     <div
                                                                                         className={`text-[9.5px] sm:text-[11px] font-extrabold mt-0.5 truncate max-w-full ${
-                                                                                            st.hienTai ? 'text-blue-600 font-black' : st.xong ? 'text-slate-600' : 'text-slate-400'
+                                                                                            st.huy ? 'text-rose-600 font-black' : st.hienTai ? 'text-blue-600 font-black' : st.xong ? 'text-slate-600' : 'text-slate-400'
                                                                                         }`}
                                                                                     >
                                                                                         {st.thoiGian}
@@ -3274,9 +3320,11 @@ function NoiDungTrangTaiKhoan() {
                                                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
                                                 : donHangDangXemChiTiet.trang_thai === 'dang_giao'
                                                 ? 'bg-sky-500/20 text-sky-300 border-sky-400/40'
+                                                : donHangDangXemChiTiet.trang_thai === 'da_huy'
+                                                ? 'bg-rose-500/20 text-rose-300 border-rose-400/40'
                                                 : 'bg-amber-500/20 text-amber-300 border-amber-400/40'
                                         }`}>
-                                            {donHangDangXemChiTiet.trang_thai === 'da_giao' ? 'Giao Thành Công' : donHangDangXemChiTiet.trang_thai === 'dang_giao' ? 'Đang Vận Chuyển' : 'Đang Đóng Gói'}
+                                            {donHangDangXemChiTiet.trang_thai === 'da_giao' ? 'Giao Thành Công' : donHangDangXemChiTiet.trang_thai === 'dang_giao' ? 'Đang Vận Chuyển' : donHangDangXemChiTiet.trang_thai === 'da_huy' ? 'Đã Hủy Đơn' : 'Đang Đóng Gói'}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2 mt-0.5 text-xs">
@@ -3309,19 +3357,21 @@ function NoiDungTrangTaiKhoan() {
                                     </div>
                                     <span className="font-bold text-slate-800">Viettel Post Express:</span>
                                     <span className="font-mono font-bold text-blue-700 bg-white px-1.5 py-0.2 rounded border border-blue-200 text-[11px]">
-                                        {donHangDangXemChiTiet.ma_van_don || `VTP-${donHangDangXemChiTiet.ma_don_hang?.replace(/\D/g, '') || '20269108'}`}
+                                        {donHangDangXemChiTiet.ma_van_don || 'Đang cập nhật'}
                                     </span>
-                                    <button
-                                        type="button"
-                                        onClick={() => saoChepMaVanDon(donHangDangXemChiTiet.ma_van_don || `VTP-${donHangDangXemChiTiet.ma_don_hang?.replace(/\D/g, '') || '20269108'}`)}
-                                        className="text-[10.5px] font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-0.5"
-                                    >
-                                        {daSaoChepVanDon ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                                        <span>{daSaoChepVanDon ? 'Đã chép' : 'Chép'}</span>
-                                    </button>
+                                    {donHangDangXemChiTiet.ma_van_don && (
+                                        <button
+                                            type="button"
+                                            onClick={() => saoChepMaVanDon(donHangDangXemChiTiet.ma_van_don)}
+                                            className="text-[10.5px] font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer flex items-center gap-0.5"
+                                        >
+                                            {daSaoChepVanDon ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                                            <span>{daSaoChepVanDon ? 'Đã chép' : 'Chép'}</span>
+                                        </button>
+                                    )}
                                 </div>
                                 <span className="text-[11px] font-black text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-300">
-                                    {donHangDangXemChiTiet.trang_thai === 'da_giao' ? 'Tiến độ: 100% (Hoàn thành)' : donHangDangXemChiTiet.trang_thai === 'dang_giao' ? 'Tiến độ: 75% (Đang giao)' : 'Tiến độ: 50% (Đang đóng gói)'}
+                                    {donHangDangXemChiTiet.trang_thai === 'da_huy' ? 'Đã hủy' : `Tiến độ: ${tinhTienDoPhanTramDonHang(donHangDangXemChiTiet)}%`}
                                 </span>
                             </div>
 

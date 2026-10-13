@@ -39,7 +39,7 @@ const locKhoaNguyHiem = (giaTri, doSau = 0) => {
 };
 
 const chongNoSqlInjection = (req, res, next) => {
-    const soKhoa = locKhoaNguyHiem(req.body) + locKhoaNguyHiem(req.params);
+    const soKhoa = locKhoaNguyHiem(req.body) + locKhoaNguyHiem(req.params) + locKhoaNguyHiem(req.query);
     if (soKhoa > 0) {
         console.warn(`🛡️ [Bảo mật] Đã loại ${soKhoa} khóa nguy hiểm ($ / .) khỏi request ${req.method} ${req.path}`);
     }

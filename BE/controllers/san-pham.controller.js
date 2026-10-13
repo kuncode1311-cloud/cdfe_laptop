@@ -233,7 +233,7 @@ const themSanPham = async (req, res) => {
             duLieuMoi.slug = taoSlug(duLieuMoi.ten_san_pham);
         }
         if (!duLieuMoi.hinh_anh_chinh) {
-            duLieuMoi.hinh_anh_chinh = '/images/sp/asus_rog_scar18.jpg';
+            duLieuMoi.hinh_anh_chinh = '/images/khong-co-anh.svg';
         }
 
         const sanPhamDaCo = await SanPham.findOne({

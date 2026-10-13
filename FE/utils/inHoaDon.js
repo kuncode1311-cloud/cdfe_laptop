@@ -358,7 +358,7 @@ export function taoHtmlHoaDon(dh, danhSachSanPham = []) {
             <div>
                 <div class="brand-name">TNTP LAPTOP & PC GAMING</div>
                 <div class="store-sub">📍 85 Đại Lộ Hòa Bình, P. Tân An, Q. Ninh Kiều, TP. Cần Thơ</div>
-                <div class="store-sub">📞 Hotline: <strong>1900 8686</strong> • Website: <strong>tntplaptop.vn</strong></div>
+                <div class="store-sub">📞 Hotline: <strong>1900.8946</strong> • Website: <strong>tntplaptop.vn</strong></div>
             </div>
             <div class="invoice-title-block">
                 <div class="invoice-title">HÓA ĐƠN BÁN HÀNG</div>
@@ -484,7 +484,7 @@ export function taoHtmlHoaDon(dh, danhSachSanPham = []) {
         </div>
 
         <div class="bottom-tagline">
-            Cảm ơn Quý khách đã mua sắm tại TNTP Laptop! Hotline hỗ trợ: 1900 8686
+            Cảm ơn Quý khách đã mua sắm tại TNTP Laptop! Hotline hỗ trợ: 1900.8946
         </div>
     </div>
 </body>

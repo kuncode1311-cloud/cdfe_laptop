@@ -14,11 +14,17 @@
  */
 
 const DonHang = require('../models/don-hang.model');
-const SanPham = require('../models/san-pham.model');
-const mongoose = require('mongoose');
+const { capNhatTonKhoTheoDonHang } = require('../services/kho-hang.service');
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-let ADMIN_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '8952266086';
+const ADMIN_CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || '').split(',')[0].trim();
+const ADMIN_CHAT_IDS = new Set(
+    String(process.env.TELEGRAM_CHAT_ID || '')
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean)
+);
+const laChatIdHopLe = (chatId) => ADMIN_CHAT_IDS.has(String(chatId));
 let dangChayPolling = false;
 let updateOffset = 0;
 
@@ -68,64 +74,6 @@ function layNhanTrangThai(tt) {
         da_huy: '❌ Đã hủy đơn'
     };
     return bangTrangThai[tt] || tt || 'Chưa rõ';
-}
-
-/**
- * Cập nhật tồn kho sản phẩm trong CSDL khi đơn hàng hoàn tất hoặc bị hủy
- */
-async function xuLyCapNhatTonKho(danhSachSanPham, thaoTac = 'tru') {
-    if (!Array.isArray(danhSachSanPham) || danhSachSanPham.length === 0) return;
-
-    for (const item of danhSachSanPham) {
-        try {
-            const soLuong = Math.max(1, Number(item.so_luong) || 1);
-            const spId =
-                item.san_pham_id ||
-                item.san_pham?.id ||
-                item.san_pham?._id ||
-                item.san_pham?.ma_san_pham ||
-                item.id_muc;
-            if (!spId && !item.ten_san_pham) continue;
-
-            const orConds = [];
-            if (spId) {
-                const strId = String(spId).trim();
-                orConds.push({ id: strId }, { ma_san_pham: strId }, { slug: strId });
-                if (mongoose.Types.ObjectId.isValid(strId)) orConds.push({ _id: strId });
-            }
-
-            let sp = orConds.length > 0 ? await SanPham.findOne({ $or: orConds }) : null;
-            if (!sp && item.ten_san_pham) {
-                sp = await SanPham.findOne({ ten_san_pham: item.ten_san_pham.trim() });
-            }
-
-            if (!sp) continue;
-
-            if (thaoTac === 'tru') {
-                const tonKhoMoi = Math.max(0, (sp.so_luong_ton_kho || 0) - soLuong);
-                const daBanMoi = (sp.so_luong_da_ban || 0) + soLuong;
-                await SanPham.findByIdAndUpdate(sp._id, {
-                    $set: {
-                        so_luong_ton_kho: tonKhoMoi,
-                        so_luong_da_ban: daBanMoi,
-                        con_hang: tonKhoMoi > 0
-                    }
-                });
-            } else if (thaoTac === 'hoan') {
-                const tonKhoMoi = (sp.so_luong_ton_kho || 0) + soLuong;
-                const daBanMoi = Math.max(0, (sp.so_luong_da_ban || 0) - soLuong);
-                await SanPham.findByIdAndUpdate(sp._id, {
-                    $set: {
-                        so_luong_ton_kho: tonKhoMoi,
-                        so_luong_da_ban: daBanMoi,
-                        con_hang: tonKhoMoi > 0
-                    }
-                });
-            }
-        } catch (err) {
-            console.warn('⚠️ Lỗi cập nhật tồn kho từ Telegram Bot:', err.message);
-        }
-    }
 }
 
 /**
@@ -389,6 +337,11 @@ async function xuLyNutBamTelegram(callbackQuery) {
         const nguoiBam = callbackQuery.from?.first_name || 'Quản trị viên';
         const gioHienTai = new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
+        if (!laChatIdHopLe(chatId)) {
+            await traLoiCallback(idCallback, '⛔ Bạn không có quyền thực hiện thao tác này.', true);
+            return;
+        }
+
         // Nút thông báo Toast đơn giản
         if (duLieuNut.startsWith('toast:')) {
             const msg = duLieuNut.replace('toast:', '');
@@ -453,12 +406,12 @@ async function xuLyNutBamTelegram(callbackQuery) {
             // Xử lý trừ kho hoặc hoàn kho chuẩn xác 2 chiều theo DB
             if (trangThaiMoi === 'da_huy') {
                 if (donHang.da_tru_ton_kho) {
-                    await xuLyCapNhatTonKho(donHang.danh_sach_san_pham, 'hoan');
+                    await capNhatTonKhoTheoDonHang(donHang.danh_sach_san_pham, 'hoan');
                     donHang.da_tru_ton_kho = false;
                 }
             } else {
                 if (!donHang.da_tru_ton_kho) {
-                    await xuLyCapNhatTonKho(donHang.danh_sach_san_pham, 'tru');
+                    await capNhatTonKhoTheoDonHang(donHang.danh_sach_san_pham, 'tru');
                     donHang.da_tru_ton_kho = true;
                 }
                 if (trangThaiMoi === 'da_giao') {
@@ -494,7 +447,13 @@ async function xuLyTinNhanVanBan(tinNhan) {
         const text = (tinNhan.text || '').trim();
         const tenNguoiGui = tinNhan.from?.first_name || 'Bạn';
 
-        ADMIN_CHAT_ID = chatId.toString();
+        if (!laChatIdHopLe(chatId)) {
+            await goiTelegramApi('sendMessage', {
+                chat_id: chatId,
+                text: '⛔ Bạn không có quyền sử dụng bot quản trị này.'
+            });
+            return;
+        }
 
         // 1. Lệnh /start hoặc Bảng Điều Khiển
         if (text.startsWith('/start') || text === '⚡ Bảng Điều Khiển' || text === '/menu') {

@@ -16,16 +16,25 @@ import KhoHangChiNhanh from '@/components/san-pham/KhoHangChiNhanh';
 import DanhGiaSanPham from '@/components/san-pham/DanhGiaSanPham';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import { useDuLieuMoi } from '@/services/dong-bo.service';
+// =========================================================================
+// [BƯỚC 1 CỦA LUỒNG - FRONT-END GIAO DIỆN]
+// - Nhận param `id` (slug/mã sp) từ URL: /san-pham/[id]
+// - Gọi SanPhamService.laySanPhamTheoIdAsync(id) để lấy dữ liệu từ Backend
+// =========================================================================
 export default function TrangChiTietSanPham({ params }) {
     const router = useRouter();
     const { nguoiDung, moModalDangNhap } = useNguoiDung();
+
+    // 1.1. Lấy param "id" từ thanh địa chỉ URL Next.js Dynamic Route
     const rawParams = use(params);
     const id = rawParams?.id ? decodeURIComponent(rawParams.id).trim() : '';
 
+    // 1.2. State lưu dữ liệu sản phẩm hiển thị trên giao diện
     const [sanPham, setSanPham] = useState(() => SanPhamService.laySanPhamTheoId(id));
     const [dangTai, setDangTai] = useState(!sanPham);
     const [loiKetNoi, setLoiKetNoi] = useState(null);
 
+    // 1.3. Hàm kích hoạt luồng lấy dữ liệu sản phẩm từ Backend
     const taiLaiDuLieu = () => {
         if (!id) {
             setDangTai(false);
@@ -33,10 +42,12 @@ export default function TrangChiTietSanPham({ params }) {
         }
         setDangTai(true);
         setLoiKetNoi(null);
+
+        // Chuyển tiếp param 'id' sang TẦNG SERVICE (FE/services/san-pham.service.js)
         SanPhamService.laySanPhamTheoIdAsync(id)
             .then((sp) => {
                 if (sp) {
-                    setSanPham(sp);
+                    setSanPham(sp); // Cập nhật State để render chi tiết sản phẩm lên giao diện
                     if (sp.tuy_chon_phien_ban && sp.tuy_chon_phien_ban.length > 0) {
                         setTuyChonChon(sp.tuy_chon_phien_ban[0]);
                     }
@@ -50,7 +61,7 @@ export default function TrangChiTietSanPham({ params }) {
             });
     };
 
-    // Nạp dữ liệu sản phẩm mới nhất từ MongoDB Atlas qua RESTful API
+    // 1.4. Tự động kích hoạt luồng mỗi khi param "id" trên URL thay đổi
     useEffect(() => {
         taiLaiDuLieu();
     }, [id]);

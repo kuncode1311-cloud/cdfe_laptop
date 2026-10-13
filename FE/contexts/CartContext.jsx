@@ -355,15 +355,20 @@ export function CartProvider({ children }) {
             return;
         }
         setDanhSachMuc((danhSachCu) =>
-            danhSachCu.map((m) =>
-                m.id_muc === idMuc
-                    ? {
-                        ...m,
-                        so_luong: soLuong,
-                        tong_tien_muc: soLuong * m.gia_hien_tai
-                    }
-                    : m
-            )
+            danhSachCu.map((m) => {
+                if (m.id_muc !== idMuc) return m;
+                // Chặn ngay trên UI không cho vượt tồn kho thật (nếu dòng giỏ có kèm thông tin tồn kho sản phẩm)
+                const tonKho = Number(m.san_pham?.so_luong_ton_kho);
+                const soLuongMoi = Number.isFinite(tonKho) && tonKho > 0 ? Math.min(soLuong, tonKho) : soLuong;
+                if (soLuongMoi < soLuong) {
+                    toast.warning(`Chỉ còn ${soLuongMoi} sản phẩm trong kho, số lượng đã được điều chỉnh lại.`, TUY_CHON_THONG_BAO_GIO);
+                }
+                return {
+                    ...m,
+                    so_luong: soLuongMoi,
+                    tong_tien_muc: soLuongMoi * m.gia_hien_tai
+                };
+            })
         );
     };
 

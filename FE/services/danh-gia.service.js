@@ -44,6 +44,40 @@ export const DanhGiaService = {
             method: 'POST',
             body: JSON.stringify(duLieu)
         });
+    },
+
+    /**
+     * [ADMIN] Lấy toàn bộ đánh giá (kể cả đã ẩn) để quản trị, kiểm duyệt
+     * @returns {Promise<Array>}
+     */
+    async layDanhGiaChoAdminAsync() {
+        try {
+            const res = await apiFetch('/danh-gia/quan-tri/tat-ca');
+            return Array.isArray(res) ? res : [];
+        } catch (loi) {
+            console.warn('[DanhGiaService] Lỗi lấy đánh giá cho admin:', loi.message);
+            return [];
+        }
+    },
+
+    /**
+     * [ADMIN] Ẩn/hiện một đánh giá trên trang sản phẩm
+     * @param {string} id - Mã đánh giá
+     * @param {boolean} hienThi - true: hiện, false: ẩn
+     */
+    async anHienDanhGiaAsync(id, hienThi) {
+        return await apiFetch(`/danh-gia/${id}/an-hien`, {
+            method: 'PATCH',
+            body: JSON.stringify({ hien_thi: hienThi })
+        });
+    },
+
+    /**
+     * [ADMIN] Xóa vĩnh viễn một đánh giá
+     * @param {string} id - Mã đánh giá
+     */
+    async xoaDanhGiaAsync(id) {
+        return await apiFetch(`/danh-gia/${id}`, { method: 'DELETE' });
     }
 };
 

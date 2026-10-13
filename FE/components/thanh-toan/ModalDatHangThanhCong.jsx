@@ -18,6 +18,7 @@ import {
     X
 } from 'lucide-react';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
+import { inHoaDonBanHang } from '@/utils/inHoaDon';
 import { toast } from 'sonner';
 
 export default function ModalDatHangThanhCong({ donHang, onDong, onMoLaiQR }) {
@@ -76,7 +77,8 @@ export default function ModalDatHangThanhCong({ donHang, onDong, onMoLaiQR }) {
     };
 
     const inHoaDon = () => {
-        window.print();
+        if (!donHang) return;
+        inHoaDonBanHang(donHang);
     };
 
     const diaChiDayDu = [

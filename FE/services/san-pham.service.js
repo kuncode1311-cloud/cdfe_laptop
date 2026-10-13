@@ -67,6 +67,11 @@ export const SanPhamService = {
     /**
      * Lấy thông tin chi tiết một laptop theo ID hoặc Mã SKU từ Express API (Async)
      */
+    // =========================================================================
+    // [BƯỚC 2 CỦA LUỒNG - TẦNG SERVICE GỌI API BACK-END]
+    // - Nhận param `idHoacSku` từ Bước 1
+    // - Dùng `apiFetch` (bọc hàm fetch) để bắn HTTP GET sang /api/san-pham/:id
+    // =========================================================================
     async laySanPhamTheoIdAsync(idHoacSku) {
         if (!idHoacSku) return null;
         const decoded = decodeURIComponent(String(idHoacSku)).trim();
@@ -75,13 +80,15 @@ export const SanPhamService = {
         try {
             // Server trả 404 = sản phẩm không tồn tại / đã bị Admin ẩn hoặc xóa (khác với lỗi mạng)
             let serverBaoKhongCo = false;
+
+            // ĐÂY LÀ HÀM GỌI API (gọi hàm fetch ở api-client.js):
             const goiApi = (khoa) =>
                 apiFetch(`/san-pham/${encodeURIComponent(khoa)}`, { cache: 'no-store' }).catch((err) => {
                     if (err?.status === 404) serverBaoKhongCo = true;
                     return null;
                 });
 
-            // 1. Thử gọi API với mã gốc / decoded
+            // 2.1. Bắn request GET /api/san-pham/:id với mã sản phẩm
             let sp = await goiApi(decoded);
 
             // 2. Nếu chưa có, thử gọi bằng slug chuẩn hóa
