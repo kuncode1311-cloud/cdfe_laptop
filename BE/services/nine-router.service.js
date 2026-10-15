@@ -1,9 +1,13 @@
-// Biến môi trường đã được nạp một lần duy nhất tại server.js
 function layCauHinhNineRouter() {
+    let model = (process.env.NINE_ROUTER_MODEL || 'ag/gemini-3.8-flash-low').trim();
+    // Tự động nâng cấp nếu server vẫn còn biến môi trường cũ 3.7 đã ngừng cung cấp
+    if (!model || model === 'ag/gemini-3.7-flash-low') {
+        model = 'ag/gemini-3.8-flash-low';
+    }
     return {
         apiKey: (process.env.NINE_ROUTER_API_KEY || '').trim(),
         baseUrl: (process.env.NINE_ROUTER_BASE_URL || '').replace(/\/+$/, ''),
-        model: (process.env.NINE_ROUTER_MODEL || '').trim()
+        model
     };
 }
 

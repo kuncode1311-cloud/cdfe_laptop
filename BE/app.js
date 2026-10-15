@@ -23,13 +23,16 @@ if (process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production') {
 }
 
 // 2. Middlewares
+
+// [TỰ TẠO] Danh sách trắng (Whitelist) các domain được phép truy cập API
+// Mặc định lấy từ biến môi trường CLIENT_URL (file .env), nếu không có thì dùng 'http://localhost:3000' của Frontend
 const corsOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
     .split(',')
     .map((url) => url.trim())
     .filter(Boolean);
 
-// Request cùng tên miền với API (vd: nút "Try it out" của Swagger tại api.trikun.site/api-docs):
-// trình duyệt vẫn gửi header Origin cho POST/PUT/DELETE nên phải cho phép riêng trường hợp này.
+// [TỰ VIẾT] Hàm kiểm tra xem người gọi có cùng tên miền với Backend hay không
+// Ví dụ: Khi bấm nút test API trên trang tài liệu Swagger UI (http://localhost:5000/api-docs)
 const laCungTenMien = (origin, req) => {
     try {
         return new URL(origin).host === req.get('host');
@@ -38,13 +41,26 @@ const laCungTenMien = (origin, req) => {
     }
 };
 
+// [CÓ SẴN - THƯ VIỆN CORS] Trạm kiểm soát bảo mật CORS
+// Mọi request từ trình duyệt đều phải chạy qua đây trước khi vào các API bên trong
 app.use(
     cors((req, callback) => {
+        // [CÓ SẴN - EXPRESS] Lấy tên miền của website đang gọi API (ví dụ: http://localhost:3000)
         const origin = req.get('origin');
-        // Cho phép Postman/server-to-server (không có Origin), frontend đã khai báo và chính trang Swagger.
+
+        // KIỂM TRA ĐIỀU KIỆN CHO PHÉP (Chỉ cần thỏa mãn 1 trong 3 điều kiện sau là được qua):
+        // 1. !origin : Không có origin (khi test bằng Postman hoặc app mobile không chạy trên trình duyệt web)
+        // 2. corsOrigins.includes(origin) : Domain nằm trong danh sách trắng (Frontend của bạn)
+        // 3. laCungTenMien(origin, req)   : Cùng tên miền với Backend (chính trang Swagger UI)
         if (!origin || corsOrigins.includes(origin) || laCungTenMien(origin, req)) {
-            return callback(null, { origin: true, credentials: true, maxAge: 600 }); // trình duyệt nhớ kết quả kiểm tra CORS 10 phút, đỡ gửi OPTIONS lặp lại
+            return callback(null, { 
+                origin: true,        // Đồng ý cho phép domain này kết nối
+                credentials: true,   // Cho phép gửi kèm token JWT / cookie xác thực
+                maxAge: 600          // Trình duyệt nhớ quyền này trong 10 phút (600s), không cần hỏi lại liên tục
+            });
         }
+
+        // NẾU LÀ TRANG WEB LẠ / ĐỘC HẠI -> Chặn đứng ngay lập tức và báo lỗi
         return callback(new Error(`CORS không cho phép origin: ${origin}`));
     })
 );
