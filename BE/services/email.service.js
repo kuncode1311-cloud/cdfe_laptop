@@ -297,11 +297,25 @@ async function guiMailXacNhanDonHang(donHang) {
         donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr'
             ? 'Chuyển khoản Ngân hàng (VietQR Pro)'
             : 'Thanh toán tiền mặt khi nhận hàng (COD)';
-    const trangThaiTT = donHang?.da_thanh_toan
+    const daThanhToan = !!donHang?.da_thanh_toan;
+    const choChuyenKhoan = !daThanhToan && donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr';
+    const trangThaiTT = daThanhToan
         ? 'ĐÃ THANH TOÁN THÀNH CÔNG'
-        : donHang?.hinh_thuc_thanh_toan === 'chuyen_khoan_vietqr'
+        : choChuyenKhoan
           ? 'Chờ chuyển khoản VietQR'
           : 'Thanh toán khi nhận hàng';
+    // Nội dung mail đổi theo thời điểm: vừa đặt (chưa trả tiền) khác với đã thanh toán xong
+    const mauTrangThai = daThanhToan ? '#16a34a' : choChuyenKhoan ? '#d97706' : '#0052cc';
+    const tieuDeMail = daThanhToan
+        ? `Thanh Toán Thành Công - Đơn #${maDon}`
+        : choChuyenKhoan
+          ? `Đã Nhận Đơn Hàng #${maDon} - Chờ Thanh Toán`
+          : `Xác Nhận Đơn Hàng #${maDon}`;
+    const loiNhan = daThanhToan
+        ? 'Chúng tôi đã nhận được thanh toán của quý khách. Đơn hàng đã được xác nhận và đang được chuẩn bị đóng gói niêm phong.'
+        : choChuyenKhoan
+          ? 'Đơn hàng của quý khách đã được ghi nhận. Vui lòng hoàn tất chuyển khoản theo mã QR; chúng tôi sẽ xác nhận và gửi email ngay khi nhận được tiền.'
+          : 'Đơn hàng của quý khách đã được ghi nhận thành công và đang được chuẩn bị đóng gói niêm phong. Quý khách thanh toán khi nhận hàng.';
 
     const danhSachItemHtml = (donHang?.danh_sach_san_pham || [])
         .map((sp) => {
@@ -342,12 +356,12 @@ async function guiMailXacNhanDonHang(donHang) {
         <div class="container">
             <div class="header">
                 <div class="logo-badge">TRÍ KUN LAPTOP</div>
-                <h1 class="title">Xác Nhận Đơn Hàng #${maDon}</h1>
+                <h1 class="title">${tieuDeMail}</h1>
             </div>
             <div class="body-content">
                 <div class="greeting">Kính gửi ${tenKhach},</div>
                 <p style="font-size: 13.5px; color: #64748b; line-height: 1.5; margin: 6px 0 14px;">
-                    Cảm ơn quý khách đã tin tưởng mua sắm tại <strong>Trí Kun Laptop Store</strong>. Đơn hàng của quý khách đã được ghi nhận thành công và đang được chuẩn bị đóng gói niêm phong.
+                    Cảm ơn quý khách đã tin tưởng mua sắm tại <strong>Trí Kun Laptop Store</strong>. ${loiNhan}
                 </p>
 
                 <div style="background: #f8fafc; padding: 14px; border-radius: 12px; margin-bottom: 16px; font-size: 12.5px; line-height: 1.6; border: 1px solid #e2e8f0;">
@@ -356,7 +370,7 @@ async function guiMailXacNhanDonHang(donHang) {
                     <div><strong>Người nhận:</strong> ${tenKhach} (${sdtKhach})</div>
                     <div><strong>Địa chỉ:</strong> ${diaChiKhach}</div>
                     <div><strong>Hình thức:</strong> ${hinhThucTT}</div>
-                    <div><strong>Trạng thái thanh toán:</strong> <span style="font-weight: 800; color: #0052cc;">${trangThaiTT}</span></div>
+                    <div><strong>Trạng thái thanh toán:</strong> <span style="font-weight: 800; color: ${mauTrangThai};">${trangThaiTT}</span></div>
                 </div>
 
                 <h3 style="font-size: 14px; font-weight: 800; color: #0f172a; margin: 12px 0 8px;">Chi tiết kiện hàng:</h3>
@@ -399,7 +413,7 @@ async function guiMailXacNhanDonHang(donHang) {
         const info = await guiMailBangTransporter({
             from: `"Trí Kun" <${emailUser}>`,
             to: emailNhan,
-            subject: `[Trí Kun] Xác nhận đơn hàng #${maDon} thành công - ${tenKhach}`,
+            subject: `[Trí Kun] ${tieuDeMail} - ${tenKhach}`,
             html: htmlContent
         });
         console.log(`✉️ [Nodemailer] Đã gửi email xác nhận đơn #${maDon} đến ${emailNhan} - MsgId: ${info.messageId}`);
