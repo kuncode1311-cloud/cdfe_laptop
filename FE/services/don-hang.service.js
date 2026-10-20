@@ -316,10 +316,10 @@ export const DonHangService = {
      * Khách tự hủy đơn khi đơn còn "chờ xác nhận" (Server từ chối nếu Admin đã xác nhận).
      * Không dùng nhánh dự phòng LocalStorage: nếu Server từ chối phải báo lỗi thật cho khách.
      */
-    async huyDonHang(id) {
+    async huyDonHang(id, lyDo = '') {
         const donDaHuy = await apiFetch(`/don-hang/${id}`, {
             method: 'PUT',
-            body: JSON.stringify({ trang_thai: 'da_huy' })
+            body: JSON.stringify({ trang_thai: 'da_huy', ly_do_huy: lyDo })
         });
         if (typeof window !== 'undefined') {
             try {

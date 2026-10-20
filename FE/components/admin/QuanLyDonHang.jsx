@@ -658,6 +658,11 @@ export default function QuanLyDonHang({
                                                     {/* Right Chevron Down Arrow */}
                                                     <ChevronDown className="w-3 h-3 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 opacity-70" />
                                                 </div>
+                                                {dh.trang_thai === 'da_huy' && dh.ly_do_huy && (
+                                                    <div className="mt-1 text-[10px] font-semibold text-rose-700 dark:text-rose-300 leading-tight line-clamp-2" title={dh.ly_do_huy}>
+                                                        {dh.nguoi_huy === 'khach' ? 'Khách hủy: ' : 'Lý do: '}{dh.ly_do_huy}
+                                                    </div>
+                                                )}
                                             </td>
 
                                             {/* Cột 7: Thao tác */}

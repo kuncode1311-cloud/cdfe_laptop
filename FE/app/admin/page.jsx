@@ -9127,6 +9127,15 @@ export default function TrangQuanTriCuaHang() {
                                              donHangChiTiet.trang_thai === 'da_huy' ? 'Đã hủy đơn' : 'Chờ xác nhận'}
                                         </span>
                                     </div>
+                                    {donHangChiTiet.trang_thai === 'da_huy' && (donHangChiTiet.ly_do_huy || donHangChiTiet.nguoi_huy) && (
+                                        <div className="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-[11px] text-rose-900 dark:text-rose-200 leading-relaxed">
+                                            <div className="font-black">
+                                                {donHangChiTiet.nguoi_huy === 'khach' ? 'Khách tự hủy' : donHangChiTiet.nguoi_huy === 'admin' ? 'Admin hủy' : 'Đơn đã hủy'}
+                                                {donHangChiTiet.thoi_gian_huy ? ` lúc ${new Date(donHangChiTiet.thoi_gian_huy).toLocaleString('vi-VN')}` : ''}
+                                            </div>
+                                            {donHangChiTiet.ly_do_huy && <div className="font-semibold">Lý do: {donHangChiTiet.ly_do_huy}</div>}
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-1">
