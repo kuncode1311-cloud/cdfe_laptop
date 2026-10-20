@@ -795,6 +795,25 @@ function NoiDungTrangTaiKhoan() {
         toast.success(`Đã thêm "${sanPhamChuan.ten_san_pham.slice(0, 32)}..." vào giỏ hàng!`);
     };
 
+    // Khách tự hủy đơn khi Admin chưa xác nhận (đặt nhầm); Server tự hoàn lại tồn kho
+    const [donDangHuy, setDonDangHuy] = useState(null);
+    const xuLyKhachHuyDon = async (e, dh) => {
+        e.stopPropagation();
+        if (donDangHuy) return;
+        if (!window.confirm(`Hủy đơn #${dh.ma_don_hang}? Thao tác này không thể hoàn tác.`)) return;
+        const idDon = dh.id || dh.ma_don_hang;
+        setDonDangHuy(idDon);
+        try {
+            const donMoi = await DonHangService.huyDonHang(idDon);
+            setDanhSachDonHang((ds) => ds.map((d) => ((d.id || d.ma_don_hang) === idDon ? { ...d, ...(donMoi || {}), trang_thai: 'da_huy' } : d)));
+            toast.success(`Đã hủy đơn #${dh.ma_don_hang}`);
+        } catch (loi) {
+            toast.error(loi?.message || 'Không thể hủy đơn, đơn có thể đã được xác nhận. Vui lòng tải lại trang.');
+        } finally {
+            setDonDangHuy(null);
+        }
+    };
+
     // Xử lý mua lại toàn bộ sản phẩm của đơn hàng
     const xuLyMuaLaiToanBoDon = (e, dh) => {
         e.stopPropagation();
@@ -2325,6 +2344,20 @@ function NoiDungTrangTaiKhoan() {
                                                             <Eye className="w-3.5 h-3.5 text-slate-600 shrink-0" />
                                                             <span>Chi tiết</span>
                                                         </button>
+
+                                                        {/* Hủy đơn: chỉ khi Admin chưa xác nhận và chưa thanh toán */}
+                                                        {dh.trang_thai === 'cho_xac_nhan' && !dh.da_thanh_toan && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => xuLyKhachHuyDon(e, dh)}
+                                                                disabled={donDangHuy === (dh.id || dh.ma_don_hang)}
+                                                                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 text-xs font-black border-2 border-rose-300 hover:border-rose-500 transition-all cursor-pointer active:scale-95 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                                                                title="Hủy đơn hàng này (chỉ được hủy khi cửa hàng chưa xác nhận)"
+                                                            >
+                                                                <X className="w-3.5 h-3.5 shrink-0" />
+                                                                <span>{donDangHuy === (dh.id || dh.ma_don_hang) ? 'Đang hủy...' : 'Hủy đơn'}</span>
+                                                            </button>
+                                                        )}
 
                                                         {/* Nút 2: Nút hành động chính chuẩn xác */}
                                                         {kiemTraChuaThanhToan(dh) ? (

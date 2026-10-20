@@ -313,6 +313,28 @@ export const DonHangService = {
     },
 
     /**
+     * Khách tự hủy đơn khi đơn còn "chờ xác nhận" (Server từ chối nếu Admin đã xác nhận).
+     * Không dùng nhánh dự phòng LocalStorage: nếu Server từ chối phải báo lỗi thật cho khách.
+     */
+    async huyDonHang(id) {
+        const donDaHuy = await apiFetch(`/don-hang/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({ trang_thai: 'da_huy' })
+        });
+        if (typeof window !== 'undefined') {
+            try {
+                const ds = this.layTatCaDonHang();
+                const idx = ds.findIndex(d => d.id === id || d.ma_don_hang === id || d._id === id);
+                if (idx >= 0) {
+                    ds[idx] = donDaHuy || { ...ds[idx], trang_thai: 'da_huy' };
+                    localStorage.setItem(KHOA_LUU_TRU_DON_HANG, JSON.stringify(ds));
+                }
+            } catch { /* bộ nhớ đệm hỏng thì bỏ qua, danh sách sẽ tải lại từ Server */ }
+        }
+        return donDaHuy;
+    },
+
+    /**
      * Xóa đơn hàng (Dành cho Admin)
      */
     async xoaDonHang(id) {
