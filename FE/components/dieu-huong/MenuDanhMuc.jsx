@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Menu, ChevronDown, Gamepad2, Cpu, Feather, HardDrive, Keyboard, Mouse, Headphones, Laptop, Flame, ShieldCheck, ArrowRight, } from "lucide-react";
+import { Menu, ChevronDown, Gamepad2, Keyboard, Laptop, Flame, ShieldCheck, ArrowRight, } from "lucide-react";
 import { DanhMucService } from "@/services/danh-muc.service";
 import { useDuLieuMoi } from '@/services/dong-bo.service';
 export default function MenuDanhMuc() {
@@ -18,7 +18,21 @@ export default function MenuDanhMuc() {
         { ma_hang: 'hp', ten_hang: 'HP OMEN' }
     ]);
 
+    const [danhSachNhuCau, setDanhSachNhuCau] = useState([]);
+    const [danhSachLoaiSanPham, setDanhSachLoaiSanPham] = useState([]);
+
     const phienBanDuLieu = useDuLieuMoi('danh_muc');
+    useEffect(() => {
+        let daHuy = false;
+        const hienDuocKhong = (d) => d.kich_hoat !== false;
+        DanhMucService.layDanhSachDanhMucAsync('nhu_cau').then((data) => {
+            if (!daHuy && Array.isArray(data)) setDanhSachNhuCau(data.filter(hienDuocKhong));
+        });
+        DanhMucService.layDanhSachDanhMucAsync('loai_san_pham').then((data) => {
+            if (!daHuy && Array.isArray(data)) setDanhSachLoaiSanPham(data.filter(hienDuocKhong));
+        });
+        return () => { daHuy = true; };
+    }, [phienBanDuLieu]);
     useEffect(() => {
         let daHuy = false;
         DanhMucService.layDanhSachThuongHieuAsync().then((data) => {
@@ -44,154 +58,44 @@ export default function MenuDanhMuc() {
           </button>
 
           {/* Mega Menu Đa Cột Siêu Trực Quan (Laptop, Linh Kiện, Phụ Kiện) */}
-          {menuDanhMucMo && (<div className="absolute left-0 top-full w-[880px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-b-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 z-50 animate-in fade-in slide-in-from-top-1">
+          {menuDanhMucMo && (<div className="absolute left-0 top-full w-[760px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-b-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 z-50 animate-in fade-in slide-in-from-top-1">
               <div className="grid grid-cols-3 gap-6">
-                {/* CỘT 1: LAPTOP CHÍNH HÃNG & PHÂN KHÚC */}
-                <div className="space-y-3">
+                {/* CỘT 1: LAPTOP THEO HÃNG (từ DB: loai = thuong_hieu, nhom_hang = laptop) */}
+                <div className="space-y-2">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800 text-blue-600 dark:text-cyan-400">
                     <Laptop className="w-4 h-4"/>
-                    <h3 className="text-xs font-black uppercase tracking-wider">
-                      LAPTOP CHÍNH HÃNG
-                    </h3>
+                    <h3 className="text-xs font-black uppercase tracking-wider">Laptop theo hãng</h3>
                   </div>
-
-                  <div className="space-y-1">
-                    <div className="text-[10.5px] font-bold text-slate-400 uppercase py-1">
-                      Theo Thương Hiệu
-                    </div>
-                    <div className="grid grid-cols-2 gap-1">
-                      {danhSachThuongHieu.map((th) => (<Link key={th.ma_hang} href={`/san-pham?hang=${th.ma_hang}`} onClick={() => setMenuDanhMucMo(false)} className="px-2.5 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400"/>
-                          <span>{(th.ten_hang || '').split("/")[0].trim()}</span>
-                        </Link>))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <div className="text-[10.5px] font-bold text-slate-400 uppercase py-1">
-                      Theo Nhu Cầu
-                    </div>
-                    <Link href="/san-pham?danh_muc=gaming" onClick={() => setMenuDanhMucMo(false)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-purple-50 dark:hover:bg-slate-800 text-[11px] font-bold text-purple-700 dark:text-purple-400">
-                      <Gamepad2 className="w-3.5 h-3.5"/>
-                      <span>Gaming RTX 40 Series</span>
-                    </Link>
-                    <Link href="/san-pham?danh_muc=ai-pc" onClick={() => setMenuDanhMucMo(false)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-cyan-50 dark:hover:bg-slate-800 text-[11px] font-bold text-cyan-700 dark:text-cyan-400">
-                      <Cpu className="w-3.5 h-3.5"/>
-                      <span>Laptop AI PC 2026</span>
-                    </Link>
-                    <Link href="/san-pham?danh_muc=van-phong-mong-nhe" onClick={() => setMenuDanhMucMo(false)} className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-slate-800 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
-                      <Feather className="w-3.5 h-3.5"/>
-                      <span>Mỏng Nhẹ Cao Cấp OLED</span>
-                    </Link>
+                  <div className="grid grid-cols-2 gap-1">
+                    {danhSachThuongHieu.map((th) => (<Link key={th.ma_hang} href={`/san-pham?hang=${th.ma_hang}`} onClick={() => setMenuDanhMucMo(false)} className="px-2 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-cyan-400 shrink-0"/>
+                        <span>{(th.ten_hang || '').split("/")[0].trim()}</span>
+                      </Link>))}
                   </div>
                 </div>
 
-                {/* CỘT 2: LINH KIỆN NÂNG CẤP CHÍNH HÃNG */}
-                <div className="space-y-3">
+                {/* CỘT 2: LAPTOP THEO NHU CẦU (từ DB: loai = nhu_cau) */}
+                <div className="space-y-2">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800 text-purple-600 dark:text-purple-400">
-                    <HardDrive className="w-4 h-4"/>
-                    <h3 className="text-xs font-black uppercase tracking-wider">
-                      LINH KIỆN NÂNG CẤP
-                    </h3>
+                    <Gamepad2 className="w-4 h-4"/>
+                    <h3 className="text-xs font-black uppercase tracking-wider">Laptop theo nhu cầu</h3>
                   </div>
-
-                  <div className="space-y-2">
-                    <Link href="/san-pham?danh_muc=linh-kien-nang-cap&tu_khoa=RAM" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                      <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-cyan-400 shrink-0">
-                        <Cpu className="w-4 h-4"/>
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600">
-                          RAM Laptop DDR4 / DDR5
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          Kingston, Corsair, Crucial chính hãng
-                        </div>
-                      </div>
-                    </Link>
-
-                    <Link href="/san-pham?danh_muc=linh-kien-nang-cap&tu_khoa=SSD" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                      <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shrink-0">
-                        <HardDrive className="w-4 h-4"/>
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600">
-                          Ổ Cứng SSD NVMe PCIe Gen 5
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          Tốc độ đọc 14.000 MB/s đỉnh cao
-                        </div>
-                      </div>
-                    </Link>
-
-                    <Link href="/san-pham?danh_muc=linh-kien-nang-cap" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                      <div className="p-1.5 rounded-lg bg-amber-50 dark:bg-slate-800 text-amber-600 dark:text-amber-400 shrink-0">
-                        <ShieldCheck className="w-4 h-4"/>
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-amber-600">
-                          Dịch Vụ Nâng Cấp Miễn Phí Công
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          Hỗ trợ thay thế lấy liền 15 phút
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
+                  {danhSachNhuCau.map((nc) => (<Link key={nc.ma_danh_muc} href={`/san-pham?danh_muc=${nc.ma_danh_muc}`} onClick={() => setMenuDanhMucMo(false)} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-purple-50 dark:hover:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors">
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0"/>
+                      <span>{nc.ten_danh_muc}</span>
+                    </Link>))}
                 </div>
 
-                {/* CỘT 3: PHỤ KIỆN GAMING & VĂN PHÒNG */}
-                <div className="space-y-3">
+                {/* CỘT 3: PHỤ KIỆN & LINH KIỆN (từ DB: loai = loai_san_pham) */}
+                <div className="space-y-2">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800 text-cyan-600 dark:text-cyan-400">
                     <Keyboard className="w-4 h-4"/>
-                    <h3 className="text-xs font-black uppercase tracking-wider">
-                      PHỤ KIỆN &amp; GEAR
-                    </h3>
+                    <h3 className="text-xs font-black uppercase tracking-wider">Phụ kiện &amp; linh kiện</h3>
                   </div>
-
-                  <div className="space-y-2">
-                    <Link href="/san-pham?danh_muc=ban-phim-co" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                      <div className="p-1.5 rounded-lg bg-indigo-50 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shrink-0">
-                        <Keyboard className="w-4 h-4"/>
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-indigo-600">
-                          Bàn Phím Cơ Custom / Gaming
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          Akko, Keychron, Logitech, Razer
-                        </div>
-                      </div>
-                    </Link>
-
-                    <Link href="/san-pham?danh_muc=chuot-lot-chuot" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                      <div className="p-1.5 rounded-lg bg-rose-50 dark:bg-slate-800 text-rose-600 dark:text-rose-400 shrink-0">
-                        <Mouse className="w-4 h-4"/>
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-rose-600">
-                          Chuột Gaming Siêu Nhẹ 8K
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          Logitech G, Razer, Pulsar
-                        </div>
-                      </div>
-                    </Link>
-
-                    <Link href="/san-pham?danh_muc=tai-nghe-loa" onClick={() => setMenuDanhMucMo(false)} className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                      <div className="p-1.5 rounded-lg bg-cyan-50 dark:bg-slate-800 text-cyan-600 dark:text-cyan-400 shrink-0">
-                        <Headphones className="w-4 h-4"/>
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-white group-hover:text-cyan-600">
-                          Tai Nghe 7.1 &amp; Phụ Kiện Laptop
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          Balo chống sốc, sạc GaN, giá đỡ nhôm
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
+                  {danhSachLoaiSanPham.map((lsp) => (<Link key={lsp.ma_danh_muc} href={`/san-pham?danh_muc=${lsp.ma_danh_muc}`} onClick={() => setMenuDanhMucMo(false)} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-cyan-50 dark:hover:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 transition-colors">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0"/>
+                      <span>{lsp.ten_danh_muc}</span>
+                    </Link>))}
                 </div>
               </div>
 
