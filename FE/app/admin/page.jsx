@@ -8473,11 +8473,7 @@ export default function TrangQuanTriCuaHang() {
                         <div className="shrink-0 bg-gradient-to-r from-purple-700 via-fuchsia-700 to-pink-700 text-white p-5 sm:p-6 flex items-center justify-between shadow-sm">
                             <div className="flex items-center gap-3.5">
                                 <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl shadow-inner border border-white/30">
-                                    {formDm.logo && formDm.logo.startsWith('data:image') ? (
-                                        <img src={formDm.logo} alt="Logo" className="w-7 h-7 object-contain rounded" />
-                                    ) : (
-                                        <span>{formDm.logo || '💻'}</span>
-                                    )}
+                                    <span>🏷️</span>
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2 mb-0.5">
@@ -8489,9 +8485,8 @@ export default function TrangQuanTriCuaHang() {
                                         </span>
                                     </div>
                                     <h3 className="text-base sm:text-lg font-black !text-white leading-snug">
-                                        {dmDangSua ? 'Chỉnh Sửa Thương Hiệu' : 'Thêm Thương Hiệu Mới'}
+                                        {dmDangSua ? 'Chỉnh Sửa' : 'Thêm Mới'} {formDm.loai === 'loai_san_pham' ? 'Loại Sản Phẩm' : formDm.loai === 'nhu_cau' ? 'Nhu Cầu' : 'Thương Hiệu'}
                                     </h3>
-                                    <p className="text-xs text-purple-100 font-medium">Cấu hình hãng sản xuất và phân khúc máy</p>
                                 </div>
                             </div>
                             <button
@@ -8511,114 +8506,40 @@ export default function TrangQuanTriCuaHang() {
                                     <div className="space-y-1.5">
                                         <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
                                             <Building2 className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                                            <span>Tên Thương Hiệu / Hãng *</span>
+                                            <span>Tên *</span>
                                         </label>
                                         <input
                                             type="text"
                                             required
                                             placeholder="Ví dụ: ASUS, Dell, Lenovo, Apple, MSI, Razer..."
                                             value={formDm.ten_danh_muc}
-                                            onChange={(e) => setFormDm({ ...formDm, ten_danh_muc: e.target.value })}
+                                            onChange={(e) => {
+                                                const ten = e.target.value;
+                                                // Thêm mới: tự sinh mã từ tên (bỏ dấu, thay khoảng trắng bằng dấu gạch)
+                                                const ma = ten.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                                                setFormDm({ ...formDm, ten_danh_muc: ten, ...(dmDangSua ? {} : { ma_danh_muc: ma }) });
+                                            }}
                                             className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3.5">
-                                        <div className="space-y-1.5">
-                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
-                                                <Hash className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                                                <span>Mã Slug / Code *</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="asus / dell / lenovo"
-                                                value={formDm.ma_danh_muc}
-                                                onChange={(e) => setFormDm({ ...formDm, ma_danh_muc: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
-                                                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-purple-600 dark:text-purple-400 font-mono font-bold text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between text-xs">
-                                                <span className="flex items-center gap-1.5">
-                                                    <Smile className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                                                    <span>Biểu Tượng</span>
-                                                </span>
-                                                {/* Nút Upload Logo File */}
-                                                <label className="text-[10px] text-purple-600 hover:text-purple-700 font-bold cursor-pointer flex items-center gap-1">
-                                                    <Upload className="w-3 h-3" />
-                                                    <span>Tải logo file</span>
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*"
-                                                        className="hidden"
-                                                        onChange={xuLyUploadLogoDanhMuc}
-                                                    />
-                                                </label>
-                                            </label>
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="text"
-                                                    placeholder="💻 / 🎮 / ⚡"
-                                                    value={formDm.logo || '💻'}
-                                                    onChange={(e) => setFormDm({ ...formDm, logo: e.target.value })}
-                                                    className="w-full px-3 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-center text-sm focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* THANH CHỌN NHANH EMOJI CHO THƯƠNG HIỆU */}
-                                    <div className="p-2.5 rounded-xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/70 dark:border-purple-900/50 space-y-1.5">
-                                        <div className="text-[10.5px] font-bold text-purple-900 dark:text-purple-300 flex items-center gap-1">
-                                            <Sparkles className="w-3 h-3 text-purple-600" />
-                                            <span>Chọn nhanh biểu tượng phù hợp:</span>
-                                        </div>
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {['💻', '🖥️', '📱', '🎧', '⌨️', '🖱️', '🎮', '⚡', '🍎', '🌟', '🔥', '⚙️'].map((emo) => (
-                                                <button
-                                                    key={emo}
-                                                    type="button"
-                                                    onClick={() => setFormDm({ ...formDm, logo: emo })}
-                                                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm cursor-pointer transition-all border ${
-                                                        formDm.logo === emo
-                                                            ? 'bg-purple-600 text-white border-purple-700 shadow-sm scale-105'
-                                                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-purple-100 hover:scale-105'
-                                                    }`}
-                                                >
-                                                    {emo}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
                                     <div className="space-y-1.5">
                                         <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
-                                            <Globe className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                                            <span>Xuất Xứ / Ghi Chú Hãng</span>
+                                            <Hash className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                            <span>Mã (tự điền theo tên)</span>
                                         </label>
                                         <input
                                             type="text"
-                                            placeholder="Đài Loan, Mỹ, Nhật Bản, Chính Hãng Quốc Tế..."
-                                            value={formDm.xuat_xu}
-                                            onChange={(e) => setFormDm({ ...formDm, xuat_xu: e.target.value })}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
+                                            required
+                                            readOnly={!!dmDangSua}
+                                            placeholder="asus / logitech / ban-phim-co"
+                                            value={formDm.ma_danh_muc}
+                                            onChange={(e) => setFormDm({ ...formDm, ma_danh_muc: e.target.value.toLowerCase().replace(/s+/g, '-') })}
+                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-purple-600 dark:text-purple-400 font-mono font-bold text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all read-only:opacity-60"
                                         />
+                                        {dmDangSua && <p className="text-[11px] text-slate-500">Không đổi mã khi sửa vì sản phẩm đang dùng mã này.</p>}
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
-                                            <FileText className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                                            <span>Mô Tả Giới Thiệu Thương Hiệu</span>
-                                        </label>
-                                        <textarea
-                                            rows="2"
-                                            value={formDm.mo_ta}
-                                            onChange={(e) => setFormDm({ ...formDm, mo_ta: e.target.value })}
-                                            placeholder="Hãng sản xuất laptop gaming hàng đầu thế giới với dòng ROG và Zenbook..."
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs focus:bg-white focus:border-purple-500 focus:outline-none transition-all"
-                                        />
-                                    </div>
                                 </div>
                             </div>
 
@@ -8638,7 +8559,7 @@ export default function TrangQuanTriCuaHang() {
                                     className={`px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold flex items-center gap-2 shadow-md shadow-purple-500/25 transition-all ${dangLuuDanhMuc ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
                                 >
                                     {dangLuuDanhMuc ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                    <span>{dangLuuDanhMuc ? 'Đang lưu...' : (dmDangSua ? 'Lưu Thay Đổi' : 'Thêm Thương Hiệu')}</span>
+                                    <span>{dangLuuDanhMuc ? 'Đang lưu...' : (dmDangSua ? 'Lưu Thay Đổi' : 'Thêm Mới')}</span>
                                 </button>
                             </div>
                         </form>

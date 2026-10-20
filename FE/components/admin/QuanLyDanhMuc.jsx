@@ -161,8 +161,6 @@ export default function QuanLyDanhMuc({
                                 <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
                                 <th className="py-2.5 px-2.5 min-w-[130px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap uppercase">{tenLoai}</th>
                                 <th className="py-2.5 px-2 w-20 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÃ CODE</th>
-                                <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">XUẤT XỨ</th>
-                                <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÔ TẢ CHI TIẾT</th>
                                 <th className="py-2.5 px-2 w-24 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">SỐ LƯỢNG</th>
                                 <th className="py-2.5 px-2 w-28 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">TRẠNG THÁI</th>
                                 <th className="py-2.5 px-1.5 w-16 text-center border-b-2 border-slate-300 dark:border-slate-700 whitespace-nowrap">THAO TÁC</th>
@@ -171,7 +169,7 @@ export default function QuanLyDanhMuc({
                         <tbody>
                             {danhMucHienThi.length === 0 ? (
                                 <tr>
-                                    <td colSpan={8} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                    <td colSpan={6} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
                                         <div className="flex flex-col items-center justify-center gap-2">
                                             <Tag className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                                             <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy {tenLoai} nào</div>
@@ -182,8 +180,7 @@ export default function QuanLyDanhMuc({
                             ) : (
                                 danhMucHienThi.map((dm, idx) => {
                                     const soMauCuaHang = danhSachSanPham.filter(s => s.hang_san_xuat?.toLowerCase() === dm.ma_danh_muc?.toLowerCase() || s.danh_muc?.includes(dm.ma_danh_muc)).length;
-                                    const laNhuCau = dm.loai === 'nhu_cau';
-                                    const dmId = dm.id || dm._id || dm.ma_danh_muc;
+                                                                        const dmId = dm.id || dm._id || dm.ma_danh_muc;
                                     const dangXuLyItem = dangXuLyDmId === dmId;
                                     const dangXuLyChung = dangXuLyDmId !== null || dangLuuDanhMuc;
                                     const daAnDm = dm.kich_hoat === false;
@@ -202,9 +199,6 @@ export default function QuanLyDanhMuc({
                                             </td>
                                             <td className={`py-2 px-2.5 border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 rounded-md bg-purple-50 dark:bg-slate-800 flex items-center justify-center text-xs font-bold shrink-0 shadow-2xs">
-                                                        {dm.logo || '💻'}
-                                                    </div>
                                                     <div className="flex items-center gap-1.5 flex-wrap">
                                                         {daAnDm && (
                                                             <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-2xs shrink-0">
@@ -217,16 +211,6 @@ export default function QuanLyDanhMuc({
                                             </td>
                                             <td className={`py-2 px-2 font-mono font-black text-xs border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60 text-rose-800 dark:text-rose-300' : 'border-slate-200 dark:border-slate-800 text-blue-600 dark:text-cyan-400'}`}>
                                                 @{dm.ma_danh_muc}
-                                            </td>
-                                            <td className={`py-2 px-2 border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
-                                                <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-[11px] whitespace-nowrap">
-                                                    {dm.xuat_xu || 'Chính Hãng'}
-                                                </span>
-                                            </td>
-                                            <td className={`py-2 px-2.5 border-b border-r ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`} title={dm.mo_ta}>
-                                                <div className={`truncate max-w-[130px] lg:max-w-[190px] xl:max-w-[280px] font-medium text-xs ${daAnDm ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-600 dark:text-slate-400'}`}>
-                                                    {dm.mo_ta || '—'}
-                                                </div>
                                             </td>
                                             <td className={`py-2 px-2 text-center border-b border-r whitespace-nowrap ${daAnDm ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                 <span className="inline-block px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 font-black text-xs whitespace-nowrap">
