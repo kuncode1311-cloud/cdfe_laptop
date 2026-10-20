@@ -1269,6 +1269,23 @@ export default function TrangQuanTriCuaHang() {
         }
     }, [laAdmin]);
 
+    // Tự làm mới đơn hàng mỗi 8 giây (khi tab đang mở): khách chuyển khoản xong, webhook PayOS đổi trạng thái
+    // trong DB thì Admin thấy ngay mà không cần bấm làm mới. Chỉ cập nhật state khi dữ liệu thật sự đổi.
+    useEffect(() => {
+        if (!laAdmin) return undefined;
+        const dauVet = (ds) => ds.map((d) => `${d.id || d._id}:${d.trang_thai}:${d.trang_thai_thanh_toan}:${d.da_thanh_toan}`).join('|');
+        const lamMoiNgam = async () => {
+            if (document.visibilityState !== 'visible') return;
+            try {
+                const ds = await DonHangService.layTatCaDonHangAsync();
+                if (!Array.isArray(ds) || ds.length === 0) return;
+                setDanhSachDonHang((cu) => (dauVet(cu) === dauVet(ds) ? cu : ds));
+            } catch { /* bỏ qua, lần sau thử lại */ }
+        };
+        const timer = setInterval(lamMoiNgam, 8000);
+        return () => clearInterval(timer);
+    }, [laAdmin]);
+
     // Phím tắt Ctrl+B để thu gọn / mở rộng nhanh thanh bên
     useEffect(() => {
         const xuLyPhimTat = (e) => {
