@@ -1,4 +1,5 @@
 'use client';
+import React, { useMemo } from 'react';
 import Image from 'next/image';
 import {
     Plus,
@@ -12,7 +13,7 @@ import {
     ArrowUpRight,
     Eye
 } from 'lucide-react';
-import BieuDoTongQuan from '@/components/admin/BieuDoTongQuan';
+import BieuDoTongQuan, { layTimestampDonHang } from '@/components/admin/BieuDoTongQuan';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
 
 // Component Tab "Tổng Quan" của trang quản trị: tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
@@ -32,6 +33,13 @@ export default function TongQuanTab({
     setDonHangChiTiet,
     topSanPhamBanChay
 }) {
+    // Luôn sắp xếp 5 đơn hàng mới nhất chuẩn xác theo thời gian thực (hỗ trợ cả ISO và DD/MM/YYYY)
+    const donHangMoiNhat = useMemo(() => {
+        return [...(danhSachDonHang || [])]
+            .sort((a, b) => layTimestampDonHang(b) - layTimestampDonHang(a))
+            .slice(0, 5);
+    }, [danhSachDonHang]);
+
     return (
         <div className="space-y-6 animate-in fade-in duration-200">
             {/* Quick Action Bar: Thẻ Trắng Sáng Sang Trọng (Không Dùng Tone Tối) */}
@@ -241,7 +249,7 @@ export default function TongQuanTab({
                                 </tr>
                             </thead>
                             <tbody>
-                                {danhSachDonHang.slice(0, 5).map((dh) => (
+                                {donHangMoiNhat.map((dh) => (
                                     <tr key={dh.id || dh._id} className="odd:bg-white even:bg-slate-50/70 dark:odd:bg-[#0d1527] dark:even:bg-[#090f1d] hover:!bg-blue-50/80 dark:hover:!bg-blue-950/50 transition-colors">
                                         <td className="py-2.5 px-3 font-mono font-black text-blue-600 dark:text-cyan-400 border-b border-r border-slate-200 dark:border-slate-800">
                                              {dh.ma_don_hang}

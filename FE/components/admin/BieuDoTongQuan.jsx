@@ -458,13 +458,30 @@ export default function BieuDoTongQuan({
         }));
     }, [thongKeKyNay]);
 
+    // Helper rút gọn nhãn hãng trên trục X của BarChart để không bao giờ bị Recharts tự ẩn
+    const dinhDangNhanHang = (ten = '') => {
+        const s = String(ten).toUpperCase().trim();
+        if (s === 'THERMAL-GRIZZLY') return 'T-GRIZZLY';
+        if (s === 'WESTERN-DIGITAL') return 'WD';
+        if (s === 'STEELSERIES') return 'STEEL-S';
+        if (s.length > 9) return s.slice(0, 8) + '…';
+        return s;
+    };
+
     // 5. Dữ liệu Top Thương Hiệu (Doanh số & Tồn kho)
     const duLieuThuongHieu = useMemo(() => {
         const mapHang = {};
         (danhSachSanPham || []).forEach(sp => {
-            const hang = (sp.hang_san_xuat || 'Khác').toUpperCase();
+            const rawHang = (sp.hang_san_xuat || 'Khác').trim();
+            const hang = rawHang.toUpperCase();
             if (!mapHang[hang]) {
-                mapHang[hang] = { hang, tonKho: 0, spCount: 0 };
+                mapHang[hang] = {
+                    hang,
+                    tenGoc: rawHang,
+                    nhanHienThi: dinhDangNhanHang(hang),
+                    tonKho: 0,
+                    spCount: 0
+                };
             }
             mapHang[hang].tonKho += Number(sp.so_luong_ton_kho) || 0;
             mapHang[hang].spCount += 1;
@@ -846,9 +863,10 @@ export default function BieuDoTongQuan({
                             <BarChart data={duLieuThuongHieu} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" opacity={0.6} />
                                 <XAxis
-                                    dataKey="hang"
+                                    dataKey="nhanHienThi"
+                                    interval={0}
                                     stroke="#94a3b8"
-                                    fontSize={11}
+                                    fontSize={10}
                                     fontWeight={800}
                                     tickLine={false}
                                     axisLine={{ stroke: '#cbd5e1' }}
@@ -862,9 +880,13 @@ export default function BieuDoTongQuan({
                                 />
                                 <Tooltip
                                     formatter={(value, name) => [
-                                        `${value} ${name === 'tonKho' ? 'sản phẩm' : 'mẫu mã'}`,
-                                        name === 'tonKho' ? 'Tổng Số Lượng Tồn' : 'Số Mẫu Sản Phẩm'
+                                        `${value} chiếc`,
+                                        'Tồn kho khả dụng'
                                     ]}
+                                    labelFormatter={(label, payload) => {
+                                        const item = payload?.[0]?.payload;
+                                        return item ? `Hãng: ${item.hang} (${item.spCount} mẫu mã)` : label;
+                                    }}
                                     contentStyle={{
                                         backgroundColor: 'rgba(15, 23, 42, 0.95)',
                                         border: '1px solid rgba(51, 65, 85, 0.6)',
