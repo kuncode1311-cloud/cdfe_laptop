@@ -33,8 +33,15 @@ const DanhMucSchema = new mongoose.Schema(
         },
         loai: {
             type: String,
-            enum: ['thuong_hieu', 'nhu_cau', 'phan_khuc'],
+            // thuong_hieu: hãng | loai_san_pham: loại hàng | nhu_cau: nhãn nhu cầu laptop
+            enum: ['thuong_hieu', 'loai_san_pham', 'nhu_cau', 'phan_khuc'],
             default: 'thuong_hieu'
+        },
+        // Chỉ dùng cho loai = thuong_hieu: hãng laptop hiện ở menu, hãng phụ kiện chỉ dùng khi chọn sản phẩm
+        nhom_hang: {
+            type: String,
+            enum: ['laptop', 'phu_kien'],
+            default: 'laptop'
         },
         logo: {
             type: String,

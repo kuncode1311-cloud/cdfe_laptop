@@ -99,11 +99,14 @@ app.use(
 );
 app.get('/api-docs.json', (req, res) => res.set('Cache-Control', 'no-store').json(openapiSpec));
 
-// Bảo mật toàn cục: ẩn công nghệ server, thêm security headers, lọc NoSQL Injection
-app.disable('x-powered-by');
-app.use(datHeaderBaoMat);
-app.use(chongNoSqlInjection);
-// Giới hạn tần suất toàn cục: tối đa 300 request / phút / IP cho mọi API (chống spam, DoS mức ứng dụng)
+// =========================================================================
+// [BẢO MẬT TOÀN CỤC] 4 Lớp bảo vệ hệ thống trước khi vào các API
+// =========================================================================
+app.disable('x-powered-by');   // Lớp 1: Ẩn thông tin công nghệ Express (chống quét lỗi tự động)
+app.use(datHeaderBaoMat);      // Lớp 2: Gắn Security Headers (chống XSS, Clickjacking, MIME Sniffing)
+app.use(chongNoSqlInjection);  // Lớp 3: Lọc bỏ ký tự độc hại $ne, $gt (chống NoSQL Injection)
+
+// Lớp 4: Giới hạn tần suất gọi API (Rate Limiting) - Tối đa 300 req / phút / IP (chống spam, DoS)
 app.use(
     '/api',
     gioiHanRequest({
@@ -113,7 +116,7 @@ app.use(
     })
 );
 
-// Không trả stack/thông báo lỗi từ database hoặc SDK ra ngoài ở production.
+// Lớp 5: Che giấu mã lỗi nội bộ và stack trace khi chạy trên môi trường Production
 app.use((req, res, next) => {
     const jsonGoc = res.json.bind(res);
     res.json = (payload) => {
@@ -127,7 +130,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Log request đơn giản (tắt khi chạy kiểm thử để kết quả test gọn, dễ đọc)
+// Ghi log đường dẫn mỗi khi có request tới (tắt khi chạy test tự động để màn hình gọn)
 if (process.env.NODE_ENV !== 'test') {
     app.use((req, res, next) => {
         console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.path}`);
@@ -135,7 +138,9 @@ if (process.env.NODE_ENV !== 'test') {
     });
 }
 
-// 3. Import các Tuyến đường (Routes)
+// =========================================================================
+// 3. IMPORT CÁC TUYẾN ĐƯỜNG ROUTER (MVC ROUTES)
+// =========================================================================
 const xacThucRoutes = require('./routes/xac-thuc.routes');
 const sanPhamRoutes = require('./routes/san-pham.routes');
 const donHangRoutes = require('./routes/don-hang.routes');
@@ -154,8 +159,8 @@ const gioHangRoutes = require('./routes/gio-hang.routes');
 const yeuThichRoutes = require('./routes/yeu-thich.routes');
 const { xoaBoNhoDemPhienBan } = require('./controllers/dong-bo.controller');
 
-// Sau mỗi thao tác ghi (POST / PUT / PATCH / DELETE) thành công, xóa bộ nhớ đệm chữ ký phiên bản
-// để GET /api/dong-bo phản ánh ngay thay đổi của Admin cho các trình duyệt đang mở.
+// Tự động xóa bộ nhớ đệm phiên bản sau mỗi thao tác ghi (POST/PUT/DELETE) thành công
+// để GET /api/dong-bo lập tức báo cho Front-End biết có dữ liệu mới từ Admin
 app.use('/api', (req, res, next) => {
     if (req.method !== 'GET' && req.method !== 'OPTIONS') {
         res.on('finish', () => {
@@ -165,22 +170,61 @@ app.use('/api', (req, res, next) => {
     next();
 });
 
-// 4. Gắn các Tuyến đường REST API chuẩn (/api/...)
+// =========================================================================
+// 4. GẮN CÁC TUYẾN ĐƯỜNG RESTful API CHUẨN (/api/...)
+// Nguyên tắc RESTful & CRUD:
+//   - GET    = Đọc dữ liệu (Read)
+//   - POST   = Tạo mới (Create)
+//   - PUT    = Cập nhật/Sửa dữ liệu (Update)
+//   - DELETE = Xóa dữ liệu (Delete)
+// =========================================================================
+
+// [LUỒNG 1: XÁC THỰC] Đăng ký OTP, Đăng nhập JWT, Quên MK, Đổi MK, Lấy thông tin cá nhân
 app.use('/api/auth', xacThucRoutes);
+
+// [LUỒNG 2: SẢN PHẨM - CRUD] Khách xem & lọc laptop | Admin Thêm, Sửa, Ẩn/Xóa sản phẩm
 app.use('/api/san-pham', sanPhamRoutes);
+
+// [LUỒNG 3: ĐƠN HÀNG - CRUD] Khách đặt & tra cứu đơn | Admin xem, duyệt & hủy đơn hàng
 app.use('/api/don-hang', donHangRoutes);
+
+// [LUỒNG 4: MÃ GIẢM GIÁ - CRUD] Khách kiểm tra áp dụng voucher | Admin tạo & quản lý mã
 app.use('/api/ma-giam-gia', maGiamGiaRoutes);
+
+// [LUỒNG 5: ĐÁNH GIÁ - CRUD] Khách gửi đánh giá & bình luận sao | Admin duyệt/ẩn nhận xét
 app.use('/api/danh-gia', danhGiaRoutes);
+
+// [LUỒNG 6: NGƯỜI DÙNG - CRUD] Quản trị Admin: Xem danh sách thành viên, khóa/mở tài khoản
 app.use('/api/nguoi-dung', nguoiDungRoutes);
+
+// [LUỒNG 7: DANH MỤC - CRUD] Khách xem danh mục | Admin quản lý danh mục máy & phụ kiện
 app.use('/api/danh-muc', danhMucRoutes);
+
+// [LUỒNG 8: TIN TỨC - CRUD] Khách đọc tin công nghệ | Admin đăng bài, sửa & xóa bài viết
 app.use('/api/tin-tuc', tinTucRoutes);
+
+// [LUỒNG 9: BẢO HÀNH - CRUD] Khách tra cứu bảo hành (Serial/SĐT) | Admin quản lý sổ bảo hành
 app.use('/api/bao-hanh', baoHanhRoutes);
+
+// [LUỒNG 10: THANH TOÁN] Tạo link thanh toán VietQR / PayOS, nhận Webhook ngân hàng tự động
 app.use('/api/thanh-toan', thanhToanRoutes);
+
+// [LUỒNG 11: LIÊN HỆ - CRUD] Khách gửi form tư vấn | Admin xem & xử lý phiếu hỗ trợ khách hàng
 app.use('/api/lien-he', lienHeRoutes);
+
+// [LUỒNG 12: CÀI ĐẶT] Quản lý thông tin chuỗi showroom chi nhánh và banner khuyến mãi
 app.use('/api/cai-dat', caiDatRoutes);
+
+// [LUỒNG 13: TRỢ LÝ AI] Chatbot tư vấn cấu hình, tìm kiếm laptop RAG & Stream gõ chữ trực tiếp
 app.use('/api/tro-ly-ai', troLyAiRoutes);
+
+// [LUỒNG 14: ĐỒNG BỘ REALTIME] Cập nhật phiên bản dữ liệu ngầm tức thì giữa Admin và Khách
 app.use('/api/dong-bo', dongBoRoutes);
+
+// [LUỒNG 15: GIỎ HÀNG - CRUD] Thêm món, tăng giảm số lượng, xóa giỏ hàng (Đồng bộ MongoDB)
 app.use('/api/gio-hang', gioHangRoutes);
+
+// [LUỒNG 16: YÊU THÍCH - CRUD] Thêm/bỏ sản phẩm vào danh sách yêu thích (Wishlist) theo User
 app.use('/api/yeu-thich', yeuThichRoutes);
 
 // 5. Tuyến đường kiểm tra máy chủ

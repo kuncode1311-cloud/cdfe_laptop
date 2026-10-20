@@ -101,7 +101,7 @@ export default function TongQuanTab({
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 flex items-center gap-1.5">
                             <DollarSign className="w-4 h-4 text-blue-600" />
-                            DOANH THU
+                            DOANH THU TOÀN SÀN
                         </span>
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center text-lg shadow-md shadow-blue-500/30 group-hover:scale-110 transition-transform">
                             💰
@@ -124,7 +124,7 @@ export default function TongQuanTab({
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
                             <ShoppingBag className="w-4 h-4 text-amber-600" />
-                            ĐƠN HÀNG
+                            TỔNG ĐƠN HÀNG
                         </span>
                         <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center text-lg shadow-md shadow-orange-500/30 group-hover:scale-110 transition-transform">
                             🛍️

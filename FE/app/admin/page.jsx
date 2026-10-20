@@ -320,7 +320,7 @@ export default function TrangQuanTriCuaHang() {
 
     // Bộ lọc Danh Mục & Phân Khúc
     const [tuKhoaDanhMuc, setTuKhoaDanhMuc] = useState('');
-    const [locLoaiDanhMuc, setLocLoaiDanhMuc] = useState('tat_ca'); // 'tat_ca' | 'thuong_hieu' | 'nhu_cau'
+    const [locLoaiDanhMuc, setLocLoaiDanhMuc] = useState('thuong_hieu'); // 'thuong_hieu' | 'loai_san_pham' | 'nhu_cau'
 
     // Bộ lọc Tin Tức
     const [tuKhoaTinTuc, setTuKhoaTinTuc] = useState('');
@@ -1434,7 +1434,9 @@ export default function TrangQuanTriCuaHang() {
 
     const danhSachHangThucTe = useMemo(() => {
         const hangSet = new Map();
+        // Chỉ lấy dòng là hãng, không trộn loại sản phẩm / nhu cầu vào ô "Hãng"
         danhSachDanhMuc.forEach(dm => {
+            if (dm.loai && dm.loai !== 'thuong_hieu') return;
             hangSet.set(dm.ma_danh_muc.toLowerCase(), dm.ten_danh_muc);
         });
         danhSachSanPham.forEach(sp => {
@@ -1704,12 +1706,9 @@ export default function TrangQuanTriCuaHang() {
                 dm.ma_danh_muc?.toLowerCase().includes(key) ||
                 dm.xuat_xu?.toLowerCase().includes(key);
 
-            let matchLoai = true;
-            if (locLoaiDanhMuc === 'thuong_hieu') {
-                matchLoai = dm.loai === 'thuong_hieu' || !dm.loai;
-            } else if (locLoaiDanhMuc === 'nhu_cau') {
-                matchLoai = dm.loai === 'nhu_cau';
-            }
+            const matchLoai = locLoaiDanhMuc === 'thuong_hieu'
+                ? (dm.loai === 'thuong_hieu' || !dm.loai)
+                : dm.loai === locLoaiDanhMuc;
 
             return matchTuKhoa && matchLoai;
         });
@@ -3357,7 +3356,8 @@ export default function TrangQuanTriCuaHang() {
         setFormDm({
             ma_danh_muc: '',
             ten_danh_muc: '',
-            loai: 'thuong_hieu',
+            loai: locLoaiDanhMuc,
+            nhom_hang: 'phu_kien',
             logo: '💻',
             xuat_xu: 'Chính Hãng',
             mo_ta: '',
@@ -3962,7 +3962,7 @@ export default function TrangQuanTriCuaHang() {
     const thongSoCauHinhShowroom = { xuLyThemShowroomMoi, dangLuuShowroom, xuLyLuuShowroom, danhSachShowroomAdmin, showroomDangXemTruoc, setShowroomDangXemTruoc, xuLyXoaShowroom, xuLyThayDoiShowroom };
 
     // Props truyền cho Tab "Danh Mục / Thương Hiệu" (component tách riêng để giảm phình file admin/page.jsx)
-    const thongSoQuanLyDanhMuc = { danhMucHienThi, danhSachSanPham, tuKhoaDanhMuc, setTuKhoaDanhMuc, moModalThemDanhMuc, dangTai, dangLocDanhMuc, dangXuLyDmId, dangLuuDanhMuc, xuLyToggleDanhMuc, moModalSuaDanhMuc, xuLyXoaDanhMuc };
+    const thongSoQuanLyDanhMuc = { danhMucHienThi, locLoaiDanhMuc, setLocLoaiDanhMuc, danhSachDanhMuc, danhSachSanPham, tuKhoaDanhMuc, setTuKhoaDanhMuc, moModalThemDanhMuc, dangTai, dangLocDanhMuc, dangXuLyDmId, dangLuuDanhMuc, xuLyToggleDanhMuc, moModalSuaDanhMuc, xuLyXoaDanhMuc };
 
     // Props truyền cho Tab "Mã Khuyến Mãi & Voucher" (component tách riêng để giảm phình file admin/page.jsx)
     const thongSoQuanLyVoucher = { danhSachVoucher, voucherHienThi, tuKhoaVoucher, setTuKhoaVoucher, locTrangThaiVoucher, setLocTrangThaiVoucher, moModalThemVoucher, dangTai, dangLocVoucher, dangXuLyVoucherId, xuLyToggleVoucher, moModalSuaVoucher, xuLyXoaVoucher };

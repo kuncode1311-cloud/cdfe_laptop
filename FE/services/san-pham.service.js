@@ -2,15 +2,22 @@ import { apiFetch } from './api-client';
 import { thongBaoThayDoi } from './dong-bo.service';
 import { taoSlug } from '@/utils/taoSlug';
 
-// Bộ nhớ tạm chứa danh sách sản phẩm nạp từ MongoDB Atlas qua API
+// =========================================================================
+// [BỘ NHỚ ĐỆM (CACHE) Ở FRONT-END]:
+// - "Bộ nhớ đệm" (Cache) là một vùng nhớ RAM tạm thời trên máy tính của người dùng.
+// - Cách hoạt động: Thay vì mỗi lần xem sản phẩm phải chạy qua mạng sang MongoDB (mất 1-2 giây),
+//   hệ thống cất luôn bản sao danh sách laptop vào mảng `boNhoDemSanPham` này trên RAM.
+// - Lợi ích: Khi khách bấm chuyển trang, web lấy ngay dữ liệu từ RAM ra vẽ trong 0.001 giây,
+//   giúp màn hình mượt mà, không bị hiện tượng vòng xoay loading giật giật!
+// =========================================================================
 let boNhoDemSanPham = [];
 
-// Khi chạy trên trình duyệt, tự động gọi backend lấy danh sách từ MongoDB Atlas
+// Khi vừa mở trang web, tự động gọi ngầm sang Backend để nạp dữ liệu vào bộ nhớ đệm
 if (typeof window !== 'undefined') {
     apiFetch('/san-pham', { cache: 'default' })
         .then((data) => {
             if (Array.isArray(data) && data.length > 0) {
-                boNhoDemSanPham = data;
+                boNhoDemSanPham = data; // Cất vào RAM
             }
         })
         .catch(() => { });
@@ -49,7 +56,10 @@ export const SanPhamService = {
             endpoint += `?${queryString}`;
         }
 
+        // Gọi API lấy dữ liệu mới nhất từ máy chủ
         const data = await apiFetch(endpoint, { cache: 'no-store' });
+        
+        // CẬP NHẬT VÀO BỘ NHỚ ĐỆM: Lưu bản mới nhất vào RAM để dùng cho các trang sau
         if (Array.isArray(data) && data.length > 0 && !queryString) {
             boNhoDemSanPham = data;
         }
@@ -57,10 +67,10 @@ export const SanPhamService = {
     },
 
     /**
-     * Lấy toàn bộ danh sách laptop (Đồng bộ từ bộ nhớ đệm / Express API)
+     * [LẤY TRỰC TIẾP TỪ BỘ NHỚ ĐỆM]: Trả về ngay danh sách đang có sẵn trong RAM (0ms)
+     * Giúp trang sản phẩm hiển thị ngay lập tức trong khi chờ API chạy ngầm
      */
     layTatCaSanPham() {
-        // Lấy dữ liệu đang có trong bộ nhớ, không tạo request mới.
         return boNhoDemSanPham;
     },
 

@@ -133,27 +133,46 @@ export function AuthProvider({ children }) {
         setCheDoAuth(cheDo);
     };
 
-    // Đăng nhập với Backend Express JWT
+    // =========================================================================
+    // [HÀM ĐĂNG NHẬP VỚI BACKEND EXPRESS JWT]:
+    // - Nhận vào: email và matKhau từ người dùng gõ trên form.
+    // - Xử lý: Bắn request sang Backend, nhận Token JWT, lưu vào LocalStorage và State.
+    // - Trả về: Thông tin người dùng (cleanUser) để trang giao diện chuyển trang.
+    // =========================================================================
     const dangNhap = async (email, matKhau) => {
         try {
+            // [BƯỚC 1]: Gửi yêu cầu HTTP POST sang máy chủ Backend kèm Email và Mật khẩu
             const res = await fetch(`${API_BASE_URL}/auth/dang-nhap`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, matKhau })
+                body: JSON.stringify({ email, matKhau }) // Ép dữ liệu thành chuỗi JSON gửi đi
             });
 
+            // [BƯỚC 2]: Chuyển đổi dữ liệu máy chủ trả về từ JSON thành Object JavaScript
             const data = await res.json();
 
+            // [BƯỚC 3]: Kiểm tra nếu đăng nhập thất bại (Server trả mã 400, 401, 429...)
             if (!res.ok) {
+                // Quăng lỗi để khối catch bên dưới bắt và hiển thị thông báo đỏ ra màn hình
                 throw new Error(data.thong_diep || 'Đăng nhập thất bại, vui lòng kiểm tra lại thông tin!');
             }
 
+            // [BƯỚC 4]: Nếu đăng nhập thành công (Server trả về Token JWT và thông tin User)
             if (data.token && data.nguoiDung) {
+                // 4.1. Chuẩn hóa dữ liệu người dùng (loại bỏ trường nhạy cảm, chuẩn hóa quyền)
                 const cleanUser = lamSachDuLieuNguoiDung(data.nguoiDung);
+
+                // 4.2. CẬP NHẬT STATE REACT TRÊN RAM:
+                // Giúp giao diện toàn trang web đổi ngay lập tức sang trạng thái đã đăng nhập (0ms)
                 setToken(data.token);
                 setNguoiDung(cleanUser);
-                localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
-                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser));
+
+                // 4.3. LƯU VÀO Ổ CỨNG TRÌNH DUYỆT (LOCALSTORAGE):
+                // Duy trì phiên đăng nhập để khi người dùng bấm F5 hoặc tắt web mở lại không bị văng ra!
+                localStorage.setItem(TOKEN_STORAGE_KEY, data.token); // Lưu chuỗi Token JWT
+                localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(cleanUser)); // Lưu thông tin User
+
+                // 4.4. Trả về thông tin User để file page.jsx đọc vai trò (admin hay khách) và chuyển trang
                 return cleanUser;
             }
 

@@ -206,7 +206,7 @@ const schemas = {
         type: 'object',
         properties: {
             id: { type: 'string', example: 'dm-asus' }, slug: { type: 'string', example: 'asus' }, ma_danh_muc: { type: 'string', example: 'asus' },
-            ten_danh_muc: { type: 'string', example: 'ASUS' }, loai: { type: 'string', enum: ['thuong_hieu', 'nhu_cau', 'phan_khuc'] },
+            ten_danh_muc: { type: 'string', example: 'ASUS' }, loai: { type: 'string', enum: ['thuong_hieu', 'loai_san_pham', 'nhu_cau', 'phan_khuc'] },
             logo: { type: 'string' }, mo_ta: { type: 'string' }, xuat_xu: { type: 'string', example: 'Chính Hãng' },
             kich_hoat: { type: 'boolean' }, thu_tu_hien_thi: { type: 'integer' }
         }
@@ -718,12 +718,12 @@ const paths = {
     '/api/danh-muc': {
         get: op({
             tag: T.dm, summary: 'Danh sách danh mục / thương hiệu',
-            params: [query('loai', 'Lọc theo loại', { type: 'string', enum: ['thuong_hieu', 'nhu_cau', 'phan_khuc'] }, 'thuong_hieu')],
+            params: [query('loai', 'Lọc theo loại', { type: 'string', enum: ['thuong_hieu', 'loai_san_pham', 'nhu_cau', 'phan_khuc'] }, 'thuong_hieu')],
             responses: { 200: ok('Danh sách (sắp theo `thu_tu_hien_thi`)', { type: 'array', items: ref('DanhMuc') }) }
         }),
         post: op({
             tag: T.dm, summary: 'Thêm danh mục', auth: 'admin',
-            requestBody: body({ type: 'object', required: ['ma_danh_muc', 'ten_danh_muc'], properties: { id: { type: 'string' }, ma_danh_muc: { type: 'string' }, ten_danh_muc: { type: 'string' }, loai: { type: 'string', enum: ['thuong_hieu', 'nhu_cau', 'phan_khuc'] }, logo: { type: 'string' }, mo_ta: { type: 'string' }, thu_tu_hien_thi: { type: 'integer' } } }, { ma_danh_muc: 'acer', ten_danh_muc: 'Acer', loai: 'thuong_hieu', thu_tu_hien_thi: 5 }),
+            requestBody: body({ type: 'object', required: ['ma_danh_muc', 'ten_danh_muc'], properties: { id: { type: 'string' }, ma_danh_muc: { type: 'string' }, ten_danh_muc: { type: 'string' }, loai: { type: 'string', enum: ['thuong_hieu', 'loai_san_pham', 'nhu_cau', 'phan_khuc'] }, logo: { type: 'string' }, mo_ta: { type: 'string' }, thu_tu_hien_thi: { type: 'integer' } } }, { ma_danh_muc: 'acer', ten_danh_muc: 'Acer', loai: 'thuong_hieu', thu_tu_hien_thi: 5 }),
             responses: { 201: ok('Đã tạo', ref('DanhMuc')), 400: loi(400), 409: loi('XungDot') }
         })
     },

@@ -12,6 +12,9 @@ import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
 // Component Tab "Danh Mục / Thương Hiệu" của trang quản trị: tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
 export default function QuanLyDanhMuc({
     danhMucHienThi,
+    locLoaiDanhMuc,
+    setLocLoaiDanhMuc,
+    danhSachDanhMuc = [],
     danhSachSanPham,
     tuKhoaDanhMuc,
     setTuKhoaDanhMuc,
@@ -24,8 +27,32 @@ export default function QuanLyDanhMuc({
     moModalSuaDanhMuc,
     xuLyXoaDanhMuc
 }) {
+    const hangLaptop = danhSachDanhMuc.filter(d => d.loai === 'thuong_hieu' && d.nhom_hang !== 'phu_kien');
+    const hangPhuKien = danhSachDanhMuc.filter(d => d.loai === 'thuong_hieu' && d.nhom_hang === 'phu_kien');
+    const TAB_LOAI = [
+        { ma: 'thuong_hieu', nhan: 'Thương hiệu', moTa: 'Hãng sản xuất: ASUS, Logitech...', soLuong: hangLaptop.length + hangPhuKien.length },
+        { ma: 'loai_san_pham', nhan: 'Loại sản phẩm', moTa: 'Bàn phím, Chuột, Balo...', soLuong: danhSachDanhMuc.filter(d => d.loai === 'loai_san_pham').length },
+        { ma: 'nhu_cau', nhan: 'Nhu cầu laptop', moTa: 'Gaming, Sinh viên, Doanh nhân...', soLuong: danhSachDanhMuc.filter(d => d.loai === 'nhu_cau').length }
+    ];
+    const tabHienTai = TAB_LOAI.find(t => t.ma === locLoaiDanhMuc) || TAB_LOAI[0];
+    const tenLoai = locLoaiDanhMuc === 'loai_san_pham' ? 'loại sản phẩm' : locLoaiDanhMuc === 'nhu_cau' ? 'nhu cầu' : 'thương hiệu';
+
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Chọn nhóm: Thương hiệu / Loại sản phẩm / Nhu cầu */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {TAB_LOAI.map(t => (
+                    <button
+                        key={t.ma}
+                        onClick={() => setLocLoaiDanhMuc(t.ma)}
+                        className={`text-left px-4 py-2.5 rounded-2xl border-2 transition-all cursor-pointer ${locLoaiDanhMuc === t.ma ? 'bg-purple-600 border-purple-600 !text-white shadow-lg shadow-purple-500/25' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-purple-400'}`}
+                    >
+                        <div className="font-black text-sm">{t.nhan} ({t.soLuong})</div>
+                        <div className={`text-[11px] font-semibold ${locLoaiDanhMuc === t.ma ? 'text-purple-100' : 'text-slate-500'}`}>{t.moTa}</div>
+                    </button>
+                ))}
+            </div>
+
             {/* 3 KPI Cards Thương Hiệu Gradient 3D */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
                 <div className="p-4 rounded-3xl bg-gradient-to-br from-purple-50/90 via-fuchsia-50/40 to-white dark:from-[#180924] dark:via-purple-950/30 dark:to-[#0b1120] border-2 border-purple-200/90 dark:border-purple-800/80 shadow-md shadow-purple-500/5 hover:shadow-xl hover:shadow-purple-500/10 transition-all flex items-center justify-between group relative overflow-hidden">
@@ -36,7 +63,7 @@ export default function QuanLyDanhMuc({
                         <div>
                             <div className="text-[10px] font-black text-purple-900 dark:text-purple-200 uppercase tracking-wider">Tổng Thương Hiệu</div>
                             <div className="text-base sm:text-lg font-black font-mono text-purple-950 dark:text-white leading-tight">
-                                {danhMucHienThi.length} <span className="text-xs font-bold text-purple-600/80 dark:text-purple-400">Hãng Đối Tác</span>
+                                {hangLaptop.length + hangPhuKien.length} <span className="text-xs font-bold text-purple-600/80 dark:text-purple-400">Hãng Đối Tác</span>
                             </div>
                         </div>
                     </div>
@@ -50,7 +77,7 @@ export default function QuanLyDanhMuc({
                         <div>
                             <div className="text-[10px] font-black text-blue-900 dark:text-blue-200 uppercase tracking-wider">Hãng Laptop Chính Hãng</div>
                             <div className="text-base sm:text-lg font-black font-mono text-blue-700 dark:text-blue-400 leading-tight">
-                                7 <span className="text-xs font-bold text-blue-500/80">ASUS, Acer, Dell, HP, Lenovo, MSI, Apple</span>
+                                {hangLaptop.length} <span className="text-xs font-bold text-blue-500/80">{hangLaptop.slice(0, 7).map(h => h.ten_danh_muc).join(', ')}</span>
                             </div>
                         </div>
                     </div>
@@ -64,7 +91,7 @@ export default function QuanLyDanhMuc({
                         <div>
                             <div className="text-[10px] font-black text-amber-900 dark:text-amber-200 uppercase tracking-wider">Phụ Kiện & Custom Gear</div>
                             <div className="text-base sm:text-lg font-black font-mono text-amber-700 dark:text-amber-400 leading-tight">
-                                Logitech, Razer, Akko...
+                                {hangPhuKien.length} <span className="text-xs font-bold text-amber-600/80">{hangPhuKien.slice(0, 3).map(h => h.ten_danh_muc).join(', ')}...</span>
                             </div>
                         </div>
                     </div>
@@ -75,8 +102,8 @@ export default function QuanLyDanhMuc({
                 <div className="flex items-center gap-2.5">
                     <span className="w-2.5 h-6 bg-purple-600 rounded-full" />
                     <div>
-                        <h2 className="text-base font-black text-slate-900 dark:text-white">Thương Hiệu & Hãng Sản Xuất ({danhMucHienThi.length})</h2>
-                        <p className="text-xs text-slate-500 font-semibold">Quản lý danh sách thương hiệu đối tác trên website</p>
+                        <h2 className="text-base font-black text-slate-900 dark:text-white">{tabHienTai.nhan} ({danhMucHienThi.length})</h2>
+                        <p className="text-xs text-slate-500 font-semibold">{tabHienTai.moTa}</p>
                     </div>
                 </div>
 
@@ -87,7 +114,7 @@ export default function QuanLyDanhMuc({
                             type="text"
                             value={tuKhoaDanhMuc}
                             onChange={(e) => setTuKhoaDanhMuc(e.target.value)}
-                            placeholder="Tìm kiếm thương hiệu..."
+                            placeholder={`Tìm ${tenLoai}...`}
                             className="w-full pl-9 pr-3 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/30"
                         />
                     </div>
@@ -97,7 +124,7 @@ export default function QuanLyDanhMuc({
                         className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 via-fuchsia-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 !text-white font-black text-xs flex items-center gap-2 shadow-lg shadow-purple-500/25 cursor-pointer whitespace-nowrap shrink-0 transition-all hover:scale-105 active:scale-95"
                     >
                         <Plus className="w-4 h-4 !text-white" />
-                        <span className="!text-white">Thêm Thương Hiệu</span>
+                        <span className="!text-white capitalize">Thêm {tenLoai}</span>
                     </button>
                 </div>
             </div>
@@ -109,10 +136,10 @@ export default function QuanLyDanhMuc({
                     <div className="flex items-center gap-2">
                         <Tag className="w-4 h-4 text-purple-200" />
                         <h3 className="font-black text-xs sm:text-sm uppercase tracking-wider text-white">
-                            Danh Sách Thương Hiệu & Hãng Sản Xuất
+                            Danh sách {tenLoai}
                         </h3>
                         <span className="px-2 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-black">
-                            {danhMucHienThi.length} thương hiệu
+                            {danhMucHienThi.length} mục
                         </span>
                     </div>
                     <div className="text-[11px] text-blue-100 font-bold flex items-center gap-1.5">
@@ -132,7 +159,7 @@ export default function QuanLyDanhMuc({
                         <thead>
                             <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                 <th className="py-2.5 px-2 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">#</th>
-                                <th className="py-2.5 px-2.5 min-w-[130px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">THƯƠNG HIỆU</th>
+                                <th className="py-2.5 px-2.5 min-w-[130px] border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap uppercase">{tenLoai}</th>
                                 <th className="py-2.5 px-2 w-20 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÃ CODE</th>
                                 <th className="py-2.5 px-2 w-28 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">XUẤT XỨ</th>
                                 <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700 whitespace-nowrap">MÔ TẢ CHI TIẾT</th>
@@ -147,7 +174,7 @@ export default function QuanLyDanhMuc({
                                     <td colSpan={8} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
                                         <div className="flex flex-col items-center justify-center gap-2">
                                             <Tag className="w-10 h-10 text-slate-300 dark:text-slate-600" />
-                                            <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy thương hiệu nào</div>
+                                            <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy {tenLoai} nào</div>
                                             <div className="text-xs">Vui lòng thử tìm kiếm với từ khóa khác</div>
                                         </div>
                                     </td>

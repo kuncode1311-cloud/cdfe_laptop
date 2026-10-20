@@ -12,20 +12,15 @@ import {
     YAxis,
     CartesianGrid,
     Tooltip,
-    ResponsiveContainer,
-    Legend
+    ResponsiveContainer
 } from 'recharts';
 import {
     TrendingUp,
-    TrendingDown,
     Calendar,
     PieChart as PieIcon,
     BarChart3,
-    Layers,
-    DollarSign,
     ShoppingBag,
-    PackageCheck,
-    AlertCircle,
+    Info,
     CheckCircle2
 } from 'lucide-react';
 
@@ -49,14 +44,44 @@ const TEN_NGANH_HANG = {
     linh_kien: 'Linh Kiện RAM / SSD',
 };
 
-// Tooltip Tùy Chỉnh Sang Trọng
+// Helper chuẩn hóa timestamp từ đơn hàng (hỗ trợ ISO, chuỗi DD/MM/YYYY, HH:mm DD/MM/YYYY, HH:mm:ss DD/M/YYYY...)
+export const layTimestampDonHang = (dh) => {
+    if (!dh) return 0;
+    const val = dh.createdAt || dh.ngay_tao || dh.ngayTao || dh.updatedAt;
+    if (!val) return 0;
+    if (typeof val === 'number') return val;
+    if (val instanceof Date) return isNaN(val.getTime()) ? 0 : val.getTime();
+    if (typeof val === 'string') {
+        const parsedIso = new Date(val);
+        if (!isNaN(parsedIso.getTime()) && val.includes('-')) {
+            return parsedIso.getTime();
+        }
+        const dateMatch = val.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (dateMatch) {
+            const day = parseInt(dateMatch[1], 10);
+            const month = parseInt(dateMatch[2], 10) - 1;
+            const year = parseInt(dateMatch[3], 10);
+            const timeMatch = val.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
+            const hour = timeMatch ? parseInt(timeMatch[1], 10) : 0;
+            const minute = timeMatch ? parseInt(timeMatch[2], 10) : 0;
+            const second = timeMatch && timeMatch[3] ? parseInt(timeMatch[3], 10) : 0;
+            const d = new Date(year, month, day, hour, minute, second);
+            if (!isNaN(d.getTime())) return d.getTime();
+        }
+        if (!isNaN(parsedIso.getTime())) return parsedIso.getTime();
+    }
+    return 0;
+};
+
+// Tooltip Tùy Chỉnh Cho Biểu Đồ Doanh Thu & Đơn Hàng
 const CustomTooltipDoanhThu = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+        const itemInfo = payload[0]?.payload;
         return (
-            <div className="p-3.5 rounded-2xl bg-slate-900/95 text-white dark:bg-slate-950/95 border border-slate-700/60 shadow-2xl backdrop-blur-md text-xs space-y-1.5 min-w-[190px]">
+            <div className="p-3.5 rounded-2xl bg-slate-900/95 text-white dark:bg-slate-950/95 border border-slate-700/60 shadow-2xl backdrop-blur-md text-xs space-y-1.5 min-w-[200px]">
                 <div className="font-extrabold text-slate-300 pb-1 border-b border-slate-800 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-blue-400" />
-                    <span>{label}</span>
+                    <span>{itemInfo?.ngayHienThi || label}</span>
                 </div>
                 {payload.map((entry, idx) => (
                     <div key={idx} className="flex items-center justify-between gap-3">
@@ -77,8 +102,8 @@ const CustomTooltipDoanhThu = ({ active, payload, label }) => {
     return null;
 };
 
-// Tooltip Cho Biểu Đồ Tròn
-const CustomTooltipTron = ({ active, payload }) => {
+// Tooltip Cho Biểu Đồ Tròn (Hỗ trợ cả chế độ Mẫu hàng & Doanh số theo kỳ)
+const CustomTooltipTron = ({ active, payload, kieuXem = 'kho' }) => {
     if (active && payload && payload.length) {
         const item = payload[0];
         return (
@@ -88,10 +113,14 @@ const CustomTooltipTron = ({ active, payload }) => {
                     {item.name}
                 </div>
                 <div className="text-slate-300 text-[11px]">
-                    Số lượng mẫu: <span className="font-bold text-white">{item.value} sản phẩm</span>
+                    {kieuXem === 'doanh_thu' ? (
+                        <>Doanh thu: <span className="font-bold text-white">{Number(item.value || 0).toLocaleString('vi-VN')} ₫</span></>
+                    ) : (
+                        <>Số lượng mẫu: <span className="font-bold text-white">{item.value} sản phẩm</span></>
+                    )}
                 </div>
                 <div className="text-slate-300 text-[11px]">
-                    Tỷ lệ thị phần: <span className="font-bold text-emerald-400">{item.payload.phanTram}%</span>
+                    Tỷ lệ: <span className="font-bold text-emerald-400">{item.payload.phanTram}%</span>
                 </div>
             </div>
         );
@@ -104,12 +133,22 @@ export default function BieuDoTongQuan({
     danhSachSanPham = [],
     thongKe = {},
     dinhDangTienVND = (v) => v,
-    xacDinhLoaiSanPham = () => 'laptop'
+    xacDinhLoaiSanPham = () => 'laptop',
+    khungThoiGian: propKhungThoiGian,
+    setKhungThoiGian: propSetKhungThoiGian
 }) {
     const [daMount, setDaMount] = useState(false);
-    const [khungThoiGian, setKhungThoiGian] = useState('7_ngay'); // '7_ngay' | '4_tuan' | '6_thang'
+    const [khungThoiGianLocal, setKhungThoiGianLocal] = useState('7_ngay'); // '7_ngay' | '4_tuan' | '6_thang' | 'tat_ca'
+    const [kieuXemNganhHang, setKieuXemNganhHang] = useState('kho'); // 'kho' | 'doanh_thu'
     const [dangLocKhungThoiGian, setDangLocKhungThoiGian] = useState(false);
     const daMountKhungThoiGianRef = React.useRef(false);
+
+    // Đồng bộ khung thời gian từ props nếu có hoặc dùng local state
+    const khungThoiGian = propKhungThoiGian !== undefined ? propKhungThoiGian : khungThoiGianLocal;
+    const thayDoiKhungThoiGian = (gt) => {
+        if (propSetKhungThoiGian) propSetKhungThoiGian(gt);
+        else setKhungThoiGianLocal(gt);
+    };
 
     useEffect(() => {
         setDaMount(true);
@@ -121,31 +160,111 @@ export default function BieuDoTongQuan({
             return;
         }
         setDangLocKhungThoiGian(true);
-        const timer = setTimeout(() => setDangLocKhungThoiGian(false), 300);
+        const timer = setTimeout(() => setDangLocKhungThoiGian(false), 250);
         return () => clearTimeout(timer);
     }, [khungThoiGian]);
 
-    // 1. Dữ liệu xu hướng doanh thu theo khung thời gian (tính thật từ danhSachDonHang, loại trừ đơn đã hủy)
-    const duLieuDoanhThu = useMemo(() => {
-        const donHopLe = (danhSachDonHang || []).filter((dh) => dh.trang_thai !== 'da_huy');
-        const layThoiGian = (dh) => new Date(dh.createdAt || dh.ngay_tao || 0);
-        const layTongTien = (dh) => Number(dh.tong_tien_thanh_toan) || 0;
+    // Nhãn hiển thị của khung thời gian
+    const tenKhungThoiGian = useMemo(() => {
+        switch (khungThoiGian) {
+            case '7_ngay':
+                return '7 Ngày';
+            case '4_tuan':
+                return '4 Tuần';
+            case '6_thang':
+                return '6 Tháng';
+            case 'tat_ca':
+                return 'Tất Cả';
+            default:
+                return 'Kỳ này';
+        }
+    }, [khungThoiGian]);
+
+    // Mốc thời gian chính xác theo khung được chọn
+    const khoangThoiGian = useMemo(() => {
+        const homNay = new Date();
+        const mocKetThuc = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate(), 23, 59, 59, 999);
 
         if (khungThoiGian === '7_ngay') {
-            const homNay = new Date();
-            homNay.setHours(0, 0, 0, 0);
+            const mocBatDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - 6, 0, 0, 0, 0);
+            return { mocBatDau, mocKetThuc };
+        }
+
+        if (khungThoiGian === '4_tuan') {
+            const mocBatDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - 27, 0, 0, 0, 0);
+            return { mocBatDau, mocKetThuc };
+        }
+
+        if (khungThoiGian === '6_thang') {
+            const mocBatDau = new Date(homNay.getFullYear(), homNay.getMonth() - 5, 1, 0, 0, 0, 0);
+            return { mocBatDau, mocKetThuc };
+        }
+
+        // 'tat_ca': Toàn bộ lịch sử
+        return { mocBatDau: new Date(0), mocKetThuc: new Date(3000, 0, 1) };
+    }, [khungThoiGian]);
+
+    // 1. Thống kê realtime toàn bộ số liệu theo đúng kỳ lọc (Doanh thu kỳ này, Đã thực thu, Tỷ lệ thành công, v.v.)
+    const thongKeKyNay = useMemo(() => {
+        const { mocBatDau, mocKetThuc } = khoangThoiGian;
+        const batDauTs = mocBatDau.getTime();
+        const ketThucTs = mocKetThuc.getTime();
+
+        const donTrongKy = (danhSachDonHang || []).filter((dh) => {
+            if (khungThoiGian === 'tat_ca') return true;
+            const ts = layTimestampDonHang(dh);
+            return ts >= batDauTs && ts <= ketThucTs;
+        });
+
+        const donHopLe = donTrongKy.filter(dh => dh.trang_thai !== 'da_huy');
+        const tongDoanhThu = donHopLe.reduce((sum, dh) => sum + (Number(dh.tong_tien_thanh_toan) || 0), 0);
+
+        const donThanhCong = donTrongKy.filter(dh => dh.trang_thai === 'da_giao');
+        const doanhThuThanhCong = donThanhCong.reduce((sum, dh) => sum + (Number(dh.tong_tien_thanh_toan) || 0), 0);
+
+        const tongDon = donTrongKy.length;
+        const soDonThanhCong = donThanhCong.length;
+        const tyLeThanhCong = tongDon > 0 ? Math.round((soDonThanhCong / tongDon) * 100) : 0;
+
+        const donChoXacNhan = donTrongKy.filter(dh => dh.trang_thai === 'cho_xac_nhan').length;
+        const donDaXacNhan = donTrongKy.filter(dh => dh.trang_thai === 'da_xac_nhan').length;
+        const donDangGiao = donTrongKy.filter(dh => dh.trang_thai === 'dang_giao').length;
+        const donDaHuy = donTrongKy.filter(dh => dh.trang_thai === 'da_huy').length;
+
+        return {
+            donTrongKy,
+            tongDon,
+            tongDoanhThu,
+            doanhThuThanhCong,
+            soDonThanhCong,
+            tyLeThanhCong,
+            donChoXacNhan,
+            donDaXacNhan,
+            donDangGiao,
+            donDaHuy
+        };
+    }, [danhSachDonHang, khoangThoiGian, khungThoiGian]);
+
+    // 2. Dữ liệu các điểm vẽ trên biểu đồ sóng theo khung thời gian
+    const duLieuDoanhThu = useMemo(() => {
+        const donHopLe = (danhSachDonHang || []).filter((dh) => dh.trang_thai !== 'da_huy');
+        const layTongTien = (dh) => Number(dh.tong_tien_thanh_toan) || 0;
+        const homNay = new Date();
+
+        if (khungThoiGian === '7_ngay') {
             const ketQua = [];
             for (let i = 6; i >= 0; i--) {
-                const ngay = new Date(homNay);
-                ngay.setDate(homNay.getDate() - i);
-                const ngaySau = new Date(ngay);
-                ngaySau.setDate(ngay.getDate() + 1);
+                const ngayDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - i, 0, 0, 0, 0);
+                const ngayCuoi = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - i, 23, 59, 59, 999);
                 const donTrongNgay = donHopLe.filter((dh) => {
-                    const t = layThoiGian(dh);
-                    return t >= ngay && t < ngaySau;
+                    const t = layTimestampDonHang(dh);
+                    return t >= ngayDau.getTime() && t <= ngayCuoi.getTime();
                 });
+                const thu = ngayDau.toLocaleDateString('vi-VN', { weekday: 'short' });
+                const ngayThang = `${String(ngayDau.getDate()).padStart(2, '0')}/${String(ngayDau.getMonth() + 1).padStart(2, '0')}`;
                 ketQua.push({
-                    thoiGian: ngay.toLocaleDateString('vi-VN', { weekday: 'short' }),
+                    thoiGian: ngayThang,
+                    ngayHienThi: `${thu}, ${ngayThang}/${ngayDau.getFullYear()}`,
                     doanhThu: donTrongNgay.reduce((tong, dh) => tong + layTongTien(dh), 0),
                     soDon: donTrongNgay.length
                 });
@@ -154,20 +273,19 @@ export default function BieuDoTongQuan({
         }
 
         if (khungThoiGian === '4_tuan') {
-            const homNay = new Date();
-            homNay.setHours(0, 0, 0, 0);
             const ketQua = [];
             for (let i = 3; i >= 0; i--) {
-                const batDau = new Date(homNay);
-                batDau.setDate(homNay.getDate() - i * 7 - 6);
-                const ketThuc = new Date(homNay);
-                ketThuc.setDate(homNay.getDate() - i * 7 + 1);
+                const tuanDau = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - i * 7 - 6, 0, 0, 0, 0);
+                const tuanCuoi = new Date(homNay.getFullYear(), homNay.getMonth(), homNay.getDate() - i * 7, 23, 59, 59, 999);
                 const donTrongTuan = donHopLe.filter((dh) => {
-                    const t = layThoiGian(dh);
-                    return t >= batDau && t < ketThuc;
+                    const t = layTimestampDonHang(dh);
+                    return t >= tuanDau.getTime() && t <= tuanCuoi.getTime();
                 });
+                const nhanDau = `${String(tuanDau.getDate()).padStart(2, '0')}/${String(tuanDau.getMonth() + 1).padStart(2, '0')}`;
+                const nhanCuoi = `${String(tuanCuoi.getDate()).padStart(2, '0')}/${String(tuanCuoi.getMonth() + 1).padStart(2, '0')}`;
                 ketQua.push({
                     thoiGian: `Tuần ${4 - i}`,
+                    ngayHienThi: `Tuần ${4 - i} (${nhanDau} - ${nhanCuoi})`,
                     doanhThu: donTrongTuan.reduce((tong, dh) => tong + layTongTien(dh), 0),
                     soDon: donTrongTuan.length
                 });
@@ -175,26 +293,104 @@ export default function BieuDoTongQuan({
             return ketQua;
         }
 
+        if (khungThoiGian === '6_thang') {
+            const ketQua = [];
+            for (let i = 5; i >= 0; i--) {
+                const thangDau = new Date(homNay.getFullYear(), homNay.getMonth() - i, 1, 0, 0, 0, 0);
+                const thangCuoi = new Date(homNay.getFullYear(), homNay.getMonth() - i + 1, 0, 23, 59, 59, 999);
+                const donTrongThang = donHopLe.filter((dh) => {
+                    const t = layTimestampDonHang(dh);
+                    return t >= thangDau.getTime() && t <= thangCuoi.getTime();
+                });
+                ketQua.push({
+                    thoiGian: `Thg ${thangDau.getMonth() + 1}`,
+                    ngayHienThi: `Tháng ${thangDau.getMonth() + 1}/${thangDau.getFullYear()}`,
+                    doanhThu: donTrongThang.reduce((tong, dh) => tong + layTongTien(dh), 0),
+                    soDon: donTrongThang.length
+                });
+            }
+            return ketQua;
+        }
+
+        // 'tat_ca': Lịch sử từ đơn đầu tiên đến nay theo tháng
+        let minTs = homNay.getTime();
+        donHopLe.forEach(dh => {
+            const t = layTimestampDonHang(dh);
+            if (t > 0 && t < minTs) minTs = t;
+        });
+        const minDate = new Date(minTs);
+        const batDauThang = new Date(minDate.getFullYear(), minDate.getMonth(), 1, 0, 0, 0, 0);
         const ketQua = [];
-        const thangHienTai = new Date();
-        for (let i = 5; i >= 0; i--) {
-            const moc = new Date(thangHienTai.getFullYear(), thangHienTai.getMonth() - i, 1);
-            const mocSau = new Date(thangHienTai.getFullYear(), thangHienTai.getMonth() - i + 1, 1);
+        let cur = new Date(batDauThang);
+        while (cur <= homNay) {
+            const thangDau = new Date(cur.getFullYear(), cur.getMonth(), 1, 0, 0, 0, 0);
+            const thangCuoi = new Date(cur.getFullYear(), cur.getMonth() + 1, 0, 23, 59, 59, 999);
             const donTrongThang = donHopLe.filter((dh) => {
-                const t = layThoiGian(dh);
-                return t >= moc && t < mocSau;
+                const t = layTimestampDonHang(dh);
+                return t >= thangDau.getTime() && t <= thangCuoi.getTime();
             });
             ketQua.push({
-                thoiGian: `Thg ${moc.getMonth() + 1}`,
+                thoiGian: `T${thangDau.getMonth() + 1}/${String(thangDau.getFullYear()).slice(-2)}`,
+                ngayHienThi: `Tháng ${thangDau.getMonth() + 1}/${thangDau.getFullYear()}`,
                 doanhThu: donTrongThang.reduce((tong, dh) => tong + layTongTien(dh), 0),
                 soDon: donTrongThang.length
             });
+            cur.setMonth(cur.getMonth() + 1);
         }
-        return ketQua;
+        return ketQua.length > 0 ? ketQua : [{
+            thoiGian: 'Hiện tại',
+            ngayHienThi: 'Toàn thời gian',
+            doanhThu: 0,
+            soDon: 0
+        }];
     }, [khungThoiGian, danhSachDonHang]);
 
-    // 2. Dữ liệu cơ cấu 7 ngành hàng cho Biểu đồ Tròn (Donut)
+    // 3. Dữ liệu cơ cấu 7 ngành hàng: hỗ trợ cả xem theo Mẫu hàng trong kho HOẶC Doanh số theo kỳ lọc
     const duLieuNganhHang = useMemo(() => {
+        if (kieuXemNganhHang === 'doanh_thu') {
+            const doanhThuTheoNganh = {
+                laptop: 0,
+                ban_phim: 0,
+                chuot: 0,
+                balo: 0,
+                tai_nghe: 0,
+                sac_hub: 0,
+                linh_kien: 0,
+            };
+
+            const donHopLe = (thongKeKyNay.donTrongKy || []).filter(dh => dh.trang_thai !== 'da_huy');
+            donHopLe.forEach(dh => {
+                (dh.danh_sach_san_pham || []).forEach(item => {
+                    const sp = item.san_pham || (danhSachSanPham || []).find(s => (s.id || s._id) === (item.san_pham_id || item.id_muc)) || {};
+                    const loai = xacDinhLoaiSanPham(sp);
+                    const gia = Number(item.tong_tien_muc || (item.gia || item.gia_hien_tai || 0) * (item.so_luong || 1)) || 0;
+                    if (doanhThuTheoNganh[loai] !== undefined) {
+                        doanhThuTheoNganh[loai] += gia;
+                    } else {
+                        doanhThuTheoNganh.laptop += gia;
+                    }
+                });
+            });
+
+            const tongDoanhThuNganh = Object.values(doanhThuTheoNganh).reduce((a, b) => a + b, 0) || 1;
+            const items = Object.entries(doanhThuTheoNganh).map(([key, val]) => ({
+                key,
+                name: TEN_NGANH_HANG[key] || key,
+                value: val,
+                phanTram: Math.round((val / tongDoanhThuNganh) * 100),
+                fill: MAU_NGANH_HANG[key] || '#94a3b8'
+            })).filter(i => i.value > 0);
+
+            return items.length > 0 ? items : [{
+                key: 'chua_co',
+                name: 'Chưa có doanh thu',
+                value: 1,
+                phanTram: 100,
+                fill: '#94a3b8'
+            }];
+        }
+
+        // Mặc định: cơ cấu mẫu sản phẩm trong kho
         const counts = {
             laptop: 0,
             ban_phim: 0,
@@ -205,13 +401,13 @@ export default function BieuDoTongQuan({
             linh_kien: 0,
         };
 
-        danhSachSanPham.forEach(sp => {
+        (danhSachSanPham || []).forEach(sp => {
             const loai = xacDinhLoaiSanPham(sp);
             if (counts[loai] !== undefined) counts[loai]++;
             else counts.laptop++;
         });
 
-        const tong = danhSachSanPham.length || 1;
+        const tong = (danhSachSanPham || []).length || 1;
         return Object.entries(counts).map(([key, val]) => ({
             key,
             name: TEN_NGANH_HANG[key] || key,
@@ -219,53 +415,53 @@ export default function BieuDoTongQuan({
             phanTram: Math.round((val / tong) * 100),
             fill: MAU_NGANH_HANG[key] || '#94a3b8'
         })).filter(i => i.value > 0);
-    }, [danhSachSanPham, xacDinhLoaiSanPham]);
+    }, [kieuXemNganhHang, danhSachSanPham, thongKeKyNay.donTrongKy, xacDinhLoaiSanPham]);
 
-    // 3. Dữ liệu phân phối trạng thái đơn hàng
+    // 4. Dữ liệu phân phối trạng thái đơn hàng (tính chuẩn xác theo kỳ lọc hiện tại)
     const duLieuTrangThaiDon = useMemo(() => {
-        const tongDon = danhSachDonHang.length || 1;
+        const tongDon = thongKeKyNay.tongDon || 1;
         const tt = [
             {
                 ten: 'Chờ xác nhận',
-                soLuong: thongKe.donChoXacNhan || 0,
+                soLuong: thongKeKyNay.donChoXacNhan || 0,
                 mau: '#f59e0b',
                 bg: 'bg-amber-500'
             },
             {
                 ten: 'Đã xác nhận',
-                soLuong: thongKe.donDaXacNhan || 0,
+                soLuong: thongKeKyNay.donDaXacNhan || 0,
                 mau: '#3b82f6',
                 bg: 'bg-blue-500'
             },
             {
                 ten: 'Đang giao hàng',
-                soLuong: thongKe.donDangGiao || 0,
+                soLuong: thongKeKyNay.donDangGiao || 0,
                 mau: '#8b5cf6',
                 bg: 'bg-purple-500'
             },
             {
                 ten: 'Giao thành công',
-                soLuong: thongKe.donThanhCong || 0,
+                soLuong: thongKeKyNay.soDonThanhCong || 0,
                 mau: '#10b981',
                 bg: 'bg-emerald-500'
             },
             {
                 ten: 'Đã hủy đơn',
-                soLuong: thongKe.donDaHuy || 0,
+                soLuong: thongKeKyNay.donDaHuy || 0,
                 mau: '#ef4444',
                 bg: 'bg-red-500'
             },
         ];
         return tt.map(item => ({
             ...item,
-            phanTram: Math.round((item.soLuong / tongDon) * 100)
+            phanTram: thongKeKyNay.tongDon > 0 ? Math.round((item.soLuong / tongDon) * 100) : 0
         }));
-    }, [danhSachDonHang.length, thongKe]);
+    }, [thongKeKyNay]);
 
-    // 4. Dữ liệu Top Thương Hiệu (Doanh số & Tồn kho)
+    // 5. Dữ liệu Top Thương Hiệu (Doanh số & Tồn kho)
     const duLieuThuongHieu = useMemo(() => {
         const mapHang = {};
-        danhSachSanPham.forEach(sp => {
+        (danhSachSanPham || []).forEach(sp => {
             const hang = (sp.hang_san_xuat || 'Khác').toUpperCase();
             if (!mapHang[hang]) {
                 mapHang[hang] = { hang, tonKho: 0, spCount: 0 };
@@ -306,54 +502,100 @@ export default function BieuDoTongQuan({
                                     </h3>
                                 </div>
                                 <p className="text-xs text-slate-500 font-semibold mt-0.5 ml-11">
-                                    Biểu đồ trực quan theo dõi lượng tiền về và số đơn hàng phát sinh
+                                    Theo dõi thời gian thực dòng tiền và số lượng đơn hàng phát sinh
                                 </p>
                             </div>
 
-                            {/* Bộ Lọc Khung Thời Gian */}
+                            {/* Bộ Lọc Khung Thời Gian Realtime */}
                             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border-2 border-slate-200 dark:border-slate-700 text-xs font-black shadow-2xs">
                                 <button
-                                    onClick={() => setKhungThoiGian('7_ngay')}
+                                    onClick={() => thayDoiKhungThoiGian('7_ngay')}
                                     className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '7_ngay' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                 >
                                     7 Ngày
                                 </button>
                                 <button
-                                    onClick={() => setKhungThoiGian('4_tuan')}
+                                    onClick={() => thayDoiKhungThoiGian('4_tuan')}
                                     className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '4_tuan' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                 >
                                     4 Tuần
                                 </button>
                                 <button
-                                    onClick={() => setKhungThoiGian('6_thang')}
+                                    onClick={() => thayDoiKhungThoiGian('6_thang')}
                                     className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '6_thang' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
                                 >
                                     6 Tháng
                                 </button>
+                                <button
+                                    onClick={() => thayDoiKhungThoiGian('tat_ca')}
+                                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === 'tat_ca' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                                >
+                                    Tất Cả
+                                </button>
                             </div>
                         </div>
 
-                        {/* Thông số nhanh đầu biểu đồ (3 Hộp Thống Kê Đậm Màu Sắc Nét) */}
+                        {/* Thông số nhanh đầu biểu đồ (3 Hộp Thống Kê Realtime Đậm Màu Sắc Nét theo đúng Bộ Lọc) */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 my-4">
                             <div className="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/50 border-2 border-blue-300 dark:border-blue-700 shadow-2xs">
-                                <div className="text-[11px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-wider">Doanh thu kỳ này</div>
-                                <div className="text-base sm:text-xl font-black text-blue-700 dark:text-cyan-300 mt-0.5">
-                                    {dinhDangTienVND(thongKe.tongDoanhThu || 0)}
+                                <div className="flex items-center justify-between">
+                                    <div className="text-[11px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-wider">
+                                        Doanh thu kỳ này
+                                    </div>
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-200/80 dark:bg-blue-900 text-blue-900 dark:text-blue-200 font-black">
+                                        {tenKhungThoiGian}
+                                    </span>
+                                </div>
+                                <div className="text-base sm:text-xl font-black text-blue-700 dark:text-cyan-300 mt-1">
+                                    {dinhDangTienVND(thongKeKyNay.tongDoanhThu)}
+                                </div>
+                                <div className="text-[11px] text-blue-900/80 dark:text-cyan-400 font-semibold mt-1">
+                                    {thongKeKyNay.tongDon} đơn hàng phát sinh
                                 </div>
                             </div>
+
                             <div className="p-3.5 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/50 border-2 border-emerald-300 dark:border-emerald-700 shadow-2xs">
-                                <div className="text-[11px] font-black text-emerald-900 dark:text-emerald-300 uppercase tracking-wider">Đã thu thực tế</div>
-                                <div className="text-base sm:text-xl font-black text-emerald-700 dark:text-emerald-300 mt-0.5">
-                                    {dinhDangTienVND(thongKe.doanhThuThanhCong || 0)}
+                                <div className="flex items-center justify-between">
+                                    <div className="text-[11px] font-black text-emerald-900 dark:text-emerald-300 uppercase tracking-wider">
+                                        Đã thu thực tế
+                                    </div>
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 font-black">
+                                        {tenKhungThoiGian}
+                                    </span>
+                                </div>
+                                <div className="text-base sm:text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1">
+                                    {dinhDangTienVND(thongKeKyNay.doanhThuThanhCong)}
+                                </div>
+                                <div className="text-[11px] text-emerald-900/80 dark:text-emerald-400 font-semibold mt-1">
+                                    {thongKeKyNay.soDonThanhCong} đơn giao thành công
                                 </div>
                             </div>
+
                             <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/50 border-2 border-amber-300 dark:border-amber-700 shadow-2xs">
-                                <div className="text-[11px] font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">Tỷ lệ thành công</div>
-                                <div className="text-base sm:text-xl font-black text-amber-700 dark:text-amber-400 mt-0.5">
-                                    {Math.round(((thongKe.donThanhCong || 0) / Math.max(1, thongKe.tongDonHang || 1)) * 100)}%
+                                <div className="flex items-center justify-between">
+                                    <div className="text-[11px] font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">
+                                        Tỷ lệ thành công
+                                    </div>
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900 text-amber-900 dark:text-amber-200 font-black">
+                                        {tenKhungThoiGian}
+                                    </span>
+                                </div>
+                                <div className="text-base sm:text-xl font-black text-amber-700 dark:text-amber-400 mt-1">
+                                    {thongKeKyNay.tyLeThanhCong}%
+                                </div>
+                                <div className="text-[11px] text-amber-900/80 dark:text-amber-400 font-semibold mt-1">
+                                    {thongKeKyNay.soDonThanhCong}/{thongKeKyNay.tongDon || 0} đơn hoàn tất
                                 </div>
                             </div>
                         </div>
+
+                        {/* Ghi chú trực quan khi kỳ lọc hiện tại chưa phát sinh đơn mới */}
+                        {thongKeKyNay.tongDon === 0 && (
+                            <div className="mb-2 p-2.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 flex items-center gap-2 text-xs text-amber-900 dark:text-amber-300">
+                                <Info className="w-4 h-4 text-amber-600 shrink-0" />
+                                <span>Chưa có đơn hàng trong <strong>{tenKhungThoiGian}</strong> gần nhất. Hãy chọn <strong>4 Tuần</strong>, <strong>6 Tháng</strong> hoặc <strong>Tất Cả</strong> để đối chiếu dữ liệu giao dịch.</span>
+                            </div>
+                        )}
                     </div>
 
                     {/* VÙNG VẼ RECHARTS AREA */}
@@ -362,7 +604,7 @@ export default function BieuDoTongQuan({
                             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 dark:bg-[#0d1527]/85 backdrop-blur-[2px] rounded-2xl animate-in fade-in duration-150">
                                 <div className="w-10 h-10 rounded-full border-[3px] border-blue-600/20 border-t-blue-600 animate-spin" />
                                 <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 mt-2">
-                                    Đang tính toán lại xu hướng...
+                                    Đang tính toán lại xu hướng ({tenKhungThoiGian})...
                                 </span>
                             </div>
                         )}
@@ -438,15 +680,37 @@ export default function BieuDoTongQuan({
                 {/* 1.2 BIỂU ĐỒ TRÒN CƠ CẤU 7 NGÀNH HÀNG */}
                 <div className="lg:col-span-4 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 flex flex-col justify-between">
                     <div>
-                        <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
-                            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/25">
-                                <PieIcon className="w-4 h-4 text-white" />
+                        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/25">
+                                    <PieIcon className="w-4 h-4 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">
+                                        CƠ CẤU 7 NGÀNH HÀNG
+                                    </h3>
+                                    <p className="text-[11px] text-slate-500 font-semibold">
+                                        {kieuXemNganhHang === 'kho' ? 'Tỷ trọng mẫu hàng trong kho' : `Doanh số theo kỳ (${tenKhungThoiGian})`}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">
-                                    CƠ CẤU 7 NGÀNH HÀNG
-                                </h3>
-                                <p className="text-[11px] text-slate-500 font-semibold">Tỷ trọng mẫu hàng trong kho</p>
+
+                            {/* Tab chuyển đổi xem Mẫu kho vs Doanh số kỳ này */}
+                            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-black">
+                                <button
+                                    onClick={() => setKieuXemNganhHang('kho')}
+                                    className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${kieuXemNganhHang === 'kho' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400'}`}
+                                    title="Xem tỷ trọng số lượng mẫu hàng"
+                                >
+                                    Kho
+                                </button>
+                                <button
+                                    onClick={() => setKieuXemNganhHang('doanh_thu')}
+                                    className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${kieuXemNganhHang === 'doanh_thu' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400'}`}
+                                    title="Xem doanh thu theo ngành hàng trong kỳ lọc"
+                                >
+                                    Doanh Số
+                                </button>
                             </div>
                         </div>
 
@@ -467,15 +731,19 @@ export default function BieuDoTongQuan({
                                             <Cell key={`cell-${index}`} fill={entry.fill} stroke="transparent" />
                                         ))}
                                     </Pie>
-                                    <Tooltip content={<CustomTooltipTron />} />
+                                    <Tooltip content={<CustomTooltipTron kieuXem={kieuXemNganhHang} />} />
                                 </PieChart>
                             </ResponsiveContainer>
                             {/* Trung tâm biểu đồ tròn */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                <span className="text-xl font-black text-slate-900 dark:text-white">
-                                    {danhSachSanPham.length}
+                            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-2">
+                                <span className="text-lg font-black text-slate-900 dark:text-white truncate max-w-[120px]">
+                                    {kieuXemNganhHang === 'kho'
+                                        ? (danhSachSanPham || []).length
+                                        : `${Math.round(thongKeKyNay.tongDoanhThu / 1000000)}Tr`}
                                 </span>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mẫu Hàng</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    {kieuXemNganhHang === 'kho' ? 'Mẫu Hàng' : 'Doanh Thu Kỳ'}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -489,7 +757,11 @@ export default function BieuDoTongQuan({
                                     <span className="text-slate-700 dark:text-slate-300 truncate">{item.name}</span>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
-                                    <span className="text-slate-500 font-semibold">{item.value} sp</span>
+                                    <span className="text-slate-500 font-semibold">
+                                        {kieuXemNganhHang === 'doanh_thu'
+                                            ? dinhDangTienVND(item.value)
+                                            : `${item.value} sp`}
+                                    </span>
                                     <span className="text-slate-900 dark:text-white font-extrabold w-8 text-right">{item.phanTram}%</span>
                                 </div>
                             </div>
@@ -500,7 +772,7 @@ export default function BieuDoTongQuan({
 
             {/* HÀNG 2: TIẾN ĐỘ XỬ LÝ ĐƠN HÀNG & TỒN KHO THEO THƯƠNG HIỆU */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* 2.1 TRẠNG THÁI XỬ LÝ ĐƠN HÀNG (TIẾN ĐỘ & PHỄU) */}
+                {/* 2.1 TRẠNG THÁI XỬ LÝ ĐƠN HÀNG (TIẾN ĐỘ & PHỄU CẬP NHẬT REALTIME THEO KỲ) */}
                 <div className="lg:col-span-6 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 space-y-4">
                     <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2.5">
@@ -511,15 +783,22 @@ export default function BieuDoTongQuan({
                                 <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">
                                     TIẾN ĐỘ XỬ LÝ ĐƠN HÀNG
                                 </h3>
-                                <p className="text-[11px] text-slate-500 font-semibold">Tỷ lệ hoàn tất và phân luồng trạng thái</p>
+                                <p className="text-[11px] text-slate-500 font-semibold">
+                                    Phân luồng trạng thái đơn hàng trong kỳ ({tenKhungThoiGian})
+                                </p>
                             </div>
                         </div>
-                        <span className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                            Tổng: {thongKe.tongDonHang || 0} đơn
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 rounded-xl bg-blue-100 dark:bg-blue-950/80 text-blue-900 dark:text-cyan-300 text-xs font-black border border-blue-200 dark:border-blue-800">
+                                Kỳ này: {thongKeKyNay.tongDon} đơn
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-semibold hidden sm:inline">
+                                (Toàn sàn: {thongKe.tongDonHang || 0})
+                            </span>
+                        </div>
                     </div>
 
-                    {/* Danh Sách Thanh Tiến Độ Đẹp Mắt */}
+                    {/* Danh Sách Thanh Tiến Độ Đẹp Mắt Cập Nhật Theo Kỳ Lọc */}
                     <div className="space-y-3">
                         {duLieuTrangThaiDon.map((tt, idx) => (
                             <div key={idx} className="space-y-1">
@@ -536,7 +815,7 @@ export default function BieuDoTongQuan({
                                 <div className="w-full h-2.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                                     <div
                                         className={`h-full rounded-full transition-all duration-500 ${tt.bg}`}
-                                        style={{ width: `${Math.max(4, tt.phanTram)}%` }}
+                                        style={{ width: `${Math.max(tt.soLuong > 0 ? 6 : 0, tt.phanTram)}%` }}
                                     />
                                 </div>
                             </div>

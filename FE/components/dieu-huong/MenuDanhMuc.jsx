@@ -23,7 +23,8 @@ export default function MenuDanhMuc() {
         let daHuy = false;
         DanhMucService.layDanhSachThuongHieuAsync().then((data) => {
             if (!daHuy && Array.isArray(data) && data.length > 0) {
-                const chuanHoa = data.map(item => ({
+                // Menu chỉ hiện hãng laptop; hãng phụ kiện (Logitech, Razer...) chỉ dùng khi chọn sản phẩm
+                const chuanHoa = data.filter(item => item.nhom_hang !== 'phu_kien' && item.kich_hoat !== false).map(item => ({
                     ma_hang: item.ma_danh_muc || item.ma_hang || item.slug,
                     ten_hang: item.ten_danh_muc || item.ten_hang
                 }));
