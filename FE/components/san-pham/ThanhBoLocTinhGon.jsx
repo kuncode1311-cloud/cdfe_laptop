@@ -5,7 +5,7 @@ import {
     Cpu, Layers, ArrowUpDown, X, RotateCcw, LayoutGrid,
     ListFilter, ChevronDown, Tag
 } from 'lucide-react';
-import BrandLogo from './BrandLogo';
+import { useThongKeBoLoc } from './useThongKeBoLoc';
 
 /**
  * Thanh Bộ Lọc Tinh Gọn 1 Dòng (Single Row Smart Filter Bar)
@@ -38,71 +38,11 @@ export default function ThanhBoLocTinhGon({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Thống kê số lượng
-    const thongKe = useMemo(() => {
-        const demHang = {};
-        const demCpu = {};
-        const demGpu = {};
-
-        (tatCaSanPham || []).forEach(sp => {
-            if (!sp) return;
-            if (sp.hang_san_xuat) {
-                const h = sp.hang_san_xuat.toLowerCase();
-                demHang[h] = (demHang[h] || 0) + 1;
-            }
-            const cpuStr = (sp.thong_so?.cpu || '').toLowerCase();
-            if (cpuStr.includes('ultra')) demCpu['core_ultra'] = (demCpu['core_ultra'] || 0) + 1;
-            else if (cpuStr.includes('i9')) demCpu['core_i9'] = (demCpu['core_i9'] || 0) + 1;
-            else if (cpuStr.includes('i7')) demCpu['core_i7'] = (demCpu['core_i7'] || 0) + 1;
-            else if (cpuStr.includes('i5')) demCpu['core_i5'] = (demCpu['core_i5'] || 0) + 1;
-            else if (cpuStr.includes('ryzen') || cpuStr.includes('amd')) demCpu['ryzen'] = (demCpu['ryzen'] || 0) + 1;
-            else if (cpuStr.includes('apple') || cpuStr.includes('m3') || cpuStr.includes('m2') || cpuStr.includes('m1')) {
-                demCpu['apple_m'] = (demCpu['apple_m'] || 0) + 1;
-            }
-
-            const gpuStr = (sp.thong_so?.card_do_hoa || '').toLowerCase();
-            if (gpuStr.includes('4090')) demGpu['rtx_4090'] = (demGpu['rtx_4090'] || 0) + 1;
-            else if (gpuStr.includes('4080')) demGpu['rtx_4080'] = (demGpu['rtx_4080'] || 0) + 1;
-            else if (gpuStr.includes('4070')) demGpu['rtx_4070'] = (demGpu['rtx_4070'] || 0) + 1;
-            else if (gpuStr.includes('4060')) demGpu['rtx_4060'] = (demGpu['rtx_4060'] || 0) + 1;
-            else if (gpuStr.includes('4050')) demGpu['rtx_4050'] = (demGpu['rtx_4050'] || 0) + 1;
-            else if (gpuStr.includes('arc') || gpuStr.includes('intel') || gpuStr.includes('gpu')) {
-                demGpu['card_onboard'] = (demGpu['card_onboard'] || 0) + 1;
-            }
-        });
-
-        return { demHang, demCpu, demGpu };
-    }, [tatCaSanPham]);
-
-    // Nhận diện đang xem Phụ kiện hay Laptop
-    const laDangXemPhuKien = boLocHienTai.danh_muc?.some(d =>
-        ['balo-tui-chong-soc', 'ban-phim-co', 'chuot-lot-chuot', 'tai-nghe-loa', 'sac-cap-hub', 'linh-kien-nang-cap'].includes(d)
-    );
-
-    // Danh sách Hãng tương ứng
-    const danhSachHang = useMemo(() => {
-        if (laDangXemPhuKien) {
-            return [
-                { ma: 'logitech', ten: 'Logitech', count: thongKe.demHang['logitech'] || 0 },
-                { ma: 'razer', ten: 'Razer', count: thongKe.demHang['razer'] || 0 },
-                { ma: 'keychron', ten: 'Keychron', count: thongKe.demHang['keychron'] || 0 },
-                { ma: 'anker', ten: 'Anker', count: thongKe.demHang['anker'] || 0 },
-                { ma: 'samsung', ten: 'Samsung', count: thongKe.demHang['samsung'] || 0 },
-                { ma: 'kingston', ten: 'Kingston', count: thongKe.demHang['kingston'] || 0 },
-                { ma: 'tomtoc', ten: 'Tomtoc', count: thongKe.demHang['tomtoc'] || 0 }
-            ];
-        }
-        return [
-            { ma: 'asus', ten: 'ASUS', count: thongKe.demHang['asus'] || 0 },
-            { ma: 'apple', ten: 'MacBook', count: thongKe.demHang['apple'] || 0 },
-            { ma: 'hp', ten: 'HP', count: thongKe.demHang['hp'] || 0 },
-            { ma: 'dell', ten: 'DELL', count: thongKe.demHang['dell'] || 0 },
-            { ma: 'lenovo', ten: 'Lenovo', count: thongKe.demHang['lenovo'] || 0 },
-            { ma: 'acer', ten: 'Acer', count: thongKe.demHang['acer'] || 0 },
-            { ma: 'msi', ten: 'MSI', count: thongKe.demHang['msi'] || 0 },
-            { ma: 'gigabyte', ten: 'GIGABYTE', count: thongKe.demHang['gigabyte'] || 0 }
-        ];
-    }, [laDangXemPhuKien, thongKe.demHang]);
+    // Thống kê lấy từ DB, đếm theo bộ lọc đang chọn, mục hết hàng tự ẩn
+    const thongKe = useThongKeBoLoc(boLocHienTai, tatCaSanPham);
+    const danhSachHang = thongKe.danhSachHang;
+    const cacDongCPU = thongKe.cpu;
+    const cacDongGPU = thongKe.gpu;
 
     // Các khoảng giá
     const cacKhoangGia = [
@@ -111,25 +51,6 @@ export default function ThanhBoLocTinhGon({
         { nhan: 'Từ 15 - 25 Triệu', min: 15000000, max: 25000000 },
         { nhan: 'Từ 25 - 50 Triệu', min: 25000000, max: 50000000 },
         { nhan: 'Trên 50 Triệu', min: 50000000, max: undefined }
-    ];
-
-    // CPU & GPU
-    const cacDongCPU = [
-        { ma: 'core_ultra', nhan: 'Intel Core Ultra', count: thongKe.demCpu['core_ultra'] || 0 },
-        { ma: 'core_i9', nhan: 'Intel Core i9', count: thongKe.demCpu['core_i9'] || 0 },
-        { ma: 'core_i7', nhan: 'Intel Core i7', count: thongKe.demCpu['core_i7'] || 0 },
-        { ma: 'core_i5', nhan: 'Intel Core i5', count: thongKe.demCpu['core_i5'] || 0 },
-        { ma: 'ryzen', nhan: 'AMD Ryzen', count: thongKe.demCpu['ryzen'] || 0 },
-        { ma: 'apple_m', nhan: 'Apple Silicon (M)', count: thongKe.demCpu['apple_m'] || 0 }
-    ];
-
-    const cacDongGPU = [
-        { ma: 'rtx_4090', nhan: 'NVIDIA RTX 4090', count: thongKe.demGpu['rtx_4090'] || 0 },
-        { ma: 'rtx_4080', nhan: 'NVIDIA RTX 4080', count: thongKe.demGpu['rtx_4080'] || 0 },
-        { ma: 'rtx_4070', nhan: 'NVIDIA RTX 4070', count: thongKe.demGpu['rtx_4070'] || 0 },
-        { ma: 'rtx_4060', nhan: 'NVIDIA RTX 4060', count: thongKe.demGpu['rtx_4060'] || 0 },
-        { ma: 'rtx_4050', nhan: 'NVIDIA RTX 4050', count: thongKe.demGpu['rtx_4050'] || 0 },
-        { ma: 'card_onboard', nhan: 'Card Onboard/Iris', count: thongKe.demGpu['card_onboard'] || 0 }
     ];
 
     // Toggle Hãng
@@ -211,7 +132,7 @@ export default function ThanhBoLocTinhGon({
                             <Tag className="w-3.5 h-3.5 text-blue-600" />
                             <span>
                                 {boLocHienTai.hang_san_xuat?.length > 0
-                                    ? `Hãng: ${boLocHienTai.hang_san_xuat.map(h => h.toUpperCase()).join(', ')}`
+                                    ? `Hãng: ${boLocHienTai.hang_san_xuat.map(h => thongKe.tenHang(h)).join(', ')}`
                                     : 'Thương hiệu'}
                             </span>
                             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownMo === 'hang' ? 'rotate-180' : ''}`} />
@@ -243,11 +164,8 @@ export default function ThanhBoLocTinhGon({
                                                         : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
                                                 }`}
                                             >
-                                                <div className="flex items-center gap-1.5 truncate">
-                                                    <BrandLogo brand={th.ma} className="h-3.5 w-auto" active={dangChon} />
-                                                    <span className="truncate text-[11px]">{th.ten}</span>
-                                                </div>
-                                                {dangChon && <Check className="w-3 h-3 text-blue-600 stroke-[3]" />}
+                                                <span className="truncate text-[12px]">{th.ten}</span>
+                                                <span className="text-[10px] text-slate-400 ml-1 shrink-0">{dangChon ? <Check className="w-3 h-3 text-blue-600 stroke-[3]" /> : th.soLuong}</span>
                                             </button>
                                         );
                                     })}
@@ -295,7 +213,7 @@ export default function ThanhBoLocTinhGon({
                     </div>
 
                     {/* SELECT 3: DÒNG CPU (Ẩn khi xem phụ kiện) */}
-                    {!laDangXemPhuKien && (
+                    {cacDongCPU.length > 0 && (
                         <div className="relative">
                             <button
                                 onClick={() => setDropdownMo(dropdownMo === 'cpu' ? null : 'cpu')}
@@ -329,7 +247,7 @@ export default function ThanhBoLocTinhGon({
                                                 }`}
                                             >
                                                 <span>{cpu.nhan}</span>
-                                                <span className="text-[10px] opacity-80">({cpu.count})</span>
+                                                <span className="text-[10px] opacity-80">({cpu.soLuong})</span>
                                             </button>
                                         );
                                     })}
@@ -339,7 +257,7 @@ export default function ThanhBoLocTinhGon({
                     )}
 
                     {/* SELECT 4: CARD ĐỒ HỌA GPU (Ẩn khi xem phụ kiện) */}
-                    {!laDangXemPhuKien && (
+                    {cacDongGPU.length > 0 && (
                         <div className="relative">
                             <button
                                 onClick={() => setDropdownMo(dropdownMo === 'gpu' ? null : 'gpu')}
@@ -373,7 +291,7 @@ export default function ThanhBoLocTinhGon({
                                                 }`}
                                             >
                                                 <span>{gpu.nhan}</span>
-                                                <span className="text-[10px] opacity-80">({gpu.count})</span>
+                                                <span className="text-[10px] opacity-80">({gpu.soLuong})</span>
                                             </button>
                                         );
                                     })}
@@ -457,8 +375,8 @@ export default function ThanhBoLocTinhGon({
                     )}
 
                     {boLocHienTai.hang_san_xuat?.map(h => (
-                        <span key={h} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-black uppercase text-[11px] border border-blue-200">
-                            {h}
+                        <span key={h} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-black text-[11px] border border-blue-200">
+                            {thongKe.tenHang(h)}
                             <X className="w-3 h-3 hover:text-red-500 cursor-pointer" onClick={() => toggleHang(h)} />
                         </span>
                     ))}

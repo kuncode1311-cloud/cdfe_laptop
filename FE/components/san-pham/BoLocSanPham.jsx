@@ -2,9 +2,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
     RotateCcw, X, SlidersHorizontal, Laptop, Cpu,
-    Tag, DollarSign, ShieldCheck, Layers, Search
+    Tag, DollarSign, ShieldCheck, Layers, Search, Package
 } from 'lucide-react';
-import BrandLogo from './BrandLogo';
+import { useThongKeBoLoc } from './useThongKeBoLoc';
 
 export default function BoLocSanPhamComponent({
     mo = false,
@@ -41,87 +41,12 @@ export default function BoLocSanPhamComponent({
         };
     }, [mo]);
 
-    // Tính toán số lượng sản phẩm theo từng tiêu chí
-    const thongKe = useMemo(() => {
-        const dem = {
-            hang: {},
-            danh_muc: {},
-            gpu: {},
-            cpu: {}
-        };
-
-        (tatCaSanPham || []).forEach(sp => {
-            if (!sp) return;
-            // Đếm hãng
-            if (sp.hang_san_xuat) {
-                const h = sp.hang_san_xuat.toLowerCase();
-                dem.hang[h] = (dem.hang[h] || 0) + 1;
-            }
-            // Đếm danh mục
-            const dsDm = Array.isArray(sp.danh_muc) ? sp.danh_muc : (typeof sp.danh_muc === 'string' ? [sp.danh_muc] : []);
-            dsDm.forEach(dm => {
-                dem.danh_muc[dm] = (dem.danh_muc[dm] || 0) + 1;
-            });
-            // Đếm GPU
-            const gpuStr = (sp.thong_so?.card_do_hoa || '').toLowerCase();
-            if (gpuStr.includes('4090')) dem.gpu['rtx_4090'] = (dem.gpu['rtx_4090'] || 0) + 1;
-            else if (gpuStr.includes('4080')) dem.gpu['rtx_4080'] = (dem.gpu['rtx_4080'] || 0) + 1;
-            else if (gpuStr.includes('4070')) dem.gpu['rtx_4070'] = (dem.gpu['rtx_4070'] || 0) + 1;
-            else if (gpuStr.includes('4060')) dem.gpu['rtx_4060'] = (dem.gpu['rtx_4060'] || 0) + 1;
-            else if (gpuStr.includes('4050')) dem.gpu['rtx_4050'] = (dem.gpu['rtx_4050'] || 0) + 1;
-            else if (gpuStr.includes('arc') || gpuStr.includes('intel') || gpuStr.includes('gpu')) {
-                dem.gpu['card_onboard'] = (dem.gpu['card_onboard'] || 0) + 1;
-            }
-            // Đếm CPU
-            const cpuStr = (sp.thong_so?.cpu || '').toLowerCase();
-            if (cpuStr.includes('ultra')) dem.cpu['core_ultra'] = (dem.cpu['core_ultra'] || 0) + 1;
-            else if (cpuStr.includes('i9')) dem.cpu['core_i9'] = (dem.cpu['core_i9'] || 0) + 1;
-            else if (cpuStr.includes('i7')) dem.cpu['core_i7'] = (dem.cpu['core_i7'] || 0) + 1;
-            else if (cpuStr.includes('i5')) dem.cpu['core_i5'] = (dem.cpu['core_i5'] || 0) + 1;
-            else if (cpuStr.includes('ryzen') || cpuStr.includes('amd')) dem.cpu['ryzen'] = (dem.cpu['ryzen'] || 0) + 1;
-            else if (cpuStr.includes('apple') || cpuStr.includes('m3') || cpuStr.includes('m2') || cpuStr.includes('m1')) {
-                dem.cpu['apple_m'] = (dem.cpu['apple_m'] || 0) + 1;
-            }
-        });
-
-        return dem;
-    }, [tatCaSanPham]);
-
-    // Danh sách các hãng máy tính & phụ kiện
+    // Thống kê theo DB + theo bộ lọc đang chọn (mục hết hàng tự ẩn)
+    const thongKe = useThongKeBoLoc(boLocHienTai, tatCaSanPham);
     const danhSachHang = useMemo(() => {
-        const tenGoi = {
-            asus: 'ASUS / ROG',
-            apple: 'Apple MacBook',
-            dell: 'Dell / Alienware',
-            hp: 'HP OMEN / Pavilion',
-            lenovo: 'Lenovo Legion',
-            acer: 'Acer Predator',
-            msi: 'MSI Gaming',
-            gigabyte: 'GIGABYTE AORUS',
-            logitech: 'Logitech G',
-            razer: 'Razer Blade/Gear',
-            keychron: 'Keychron Custom',
-            anker: 'Anker Prime',
-            samsung: 'Samsung PRO',
-            kingston: 'Kingston FURY',
-            tomtoc: 'Tomtoc',
-            moft: 'MOFT Ergo',
-            deepcool: 'Deepcool ICE'
-        };
-
-        const list = Object.keys(thongKe.hang).map(k => ({
-            ma: k,
-            ten: tenGoi[k] || k.toUpperCase(),
-            soLuong: thongKe.hang[k] || 0
-        }));
-
-        if (tuKhoaHang.trim()) {
-            const kw = tuKhoaHang.toLowerCase().trim();
-            return list.filter(item => item.ten.toLowerCase().includes(kw) || item.ma.includes(kw));
-        }
-
-        return list;
-    }, [thongKe.hang, tuKhoaHang]);
+        const kw = tuKhoaHang.toLowerCase().trim();
+        return kw ? thongKe.danhSachHang.filter((h) => h.ten.toLowerCase().includes(kw) || h.ma.includes(kw)) : thongKe.danhSachHang;
+    }, [thongKe.danhSachHang, tuKhoaHang]);
 
     // Helper toggle mảng
     const togglePhanTu = (khoa, giaTri) => {
@@ -164,7 +89,7 @@ export default function BoLocSanPhamComponent({
                                 Tất Cả Bộ Lọc
                             </h2>
                             <p className="text-xs text-slate-400">
-                                Tìm kiếm chuẩn xác theo cấu hình &amp; nhu cầu
+                                Chỉ hiện lựa chọn còn sản phẩm phù hợp
                             </p>
                         </div>
                     </div>
@@ -246,7 +171,8 @@ export default function BoLocSanPhamComponent({
                         </div>
 
                         {/* Lưới các hãng kèm logo */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
+                            {danhSachHang.length === 0 && <div className="col-span-full text-xs text-slate-400 py-2">Không có thương hiệu phù hợp với bộ lọc hiện tại</div>}
                             {danhSachHang.map((th) => {
                                 const dangChon = boLocHienTai.hang_san_xuat?.includes(th.ma);
                                 return (
@@ -259,10 +185,7 @@ export default function BoLocSanPhamComponent({
                                                 : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-blue-300'
                                         }`}
                                     >
-                                        <div className="flex items-center gap-2 truncate">
-                                            <BrandLogo brand={th.ma} className="h-3.5 w-auto shrink-0" active={dangChon} />
-                                            <span className="truncate text-[11px]">{th.ten.split('/')[0].trim()}</span>
-                                        </div>
+                                        <span className="truncate text-[12px]">{th.ten}</span>
                                         <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ml-1 shrink-0 ${
                                             dangChon ? 'bg-blue-600 text-white' : 'text-slate-400'
                                         }`}>
@@ -274,117 +197,126 @@ export default function BoLocSanPhamComponent({
                         </div>
                     </div>
 
-                    {/* Mục 3: Dòng Laptop Nhu Cầu & Linh Kiện */}
-                    <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                            <Laptop className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                            <span>Dòng Sản Phẩm &amp; Nhu Cầu</span>
+                    {/* Mục 3: Laptop theo nhu cầu (DB: nhu_cau) */}
+                    {thongKe.nhuCau.length > 0 && (
+                        <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                <Laptop className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                <span>Laptop theo nhu cầu</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {thongKe.nhuCau.map((dm) => {
+                                    const dangChon = boLocHienTai.danh_muc?.includes(dm.ma);
+                                    return (
+                                        <button
+                                            key={dm.ma}
+                                            onClick={() => onThayDoiBoLoc({ ...boLocHienTai, danh_muc: dangChon ? [] : [dm.ma] })}
+                                            className={`p-2.5 rounded-xl border flex items-center justify-between gap-1 text-xs font-bold transition-all cursor-pointer ${
+                                                dangChon
+                                                    ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-600 text-purple-700 dark:text-purple-300 shadow-2xs'
+                                                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-purple-300'
+                                            }`}
+                                        >
+                                            <span className="text-[12px] text-left leading-tight">{dm.ten}</span>
+                                            <span className={`text-[10px] px-1.5 rounded font-bold shrink-0 ${dangChon ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>
+                                                {dm.soLuong}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-2 gap-2">
-                            {[
-                                { ma: 'ai-pc', nhan: '⚡ Laptop AI 2026', count: thongKe.danh_muc['ai-pc'] || 0 },
-                                { ma: 'gaming', nhan: '🎮 Laptop Gaming RTX', count: thongKe.danh_muc['gaming'] || 0 },
-                                { ma: 'van-phong-mong-nhe', nhan: '✨ Mỏng Nhẹ - Doanh Nhân', count: thongKe.danh_muc['van-phong-mong-nhe'] || 0 },
-                                { ma: 'do-hoa-sang-tao', nhan: '🎨 Đồ Họa 3D & Sáng Tạo', count: thongKe.danh_muc['do-hoa-sang-tao'] || 0 },
-                                { ma: 'balo-tui-chong-soc', nhan: '🎒 Balo & Túi Chống Sốc', count: thongKe.danh_muc['balo-tui-chong-soc'] || 0 },
-                                { ma: 'tai-nghe-loa', nhan: '🎧 Tai Nghe & Âm Thanh', count: thongKe.danh_muc['tai-nghe-loa'] || 0 },
-                                { ma: 'chuot-lot-chuot', nhan: '🖱️ Chuột & Lót Chuột', count: thongKe.danh_muc['chuot-lot-chuot'] || 0 },
-                                { ma: 'ban-phim-co', nhan: '⌨️ Bàn Phím Cơ Custom', count: thongKe.danh_muc['ban-phim-co'] || 0 },
-                                { ma: 'sac-cap-hub', nhan: '⚡ Sạc GaN & Hub Chuyển', count: thongKe.danh_muc['sac-cap-hub'] || 0 },
-                                { ma: 'linh-kien-nang-cap', nhan: '💾 Linh Kiện SSD / RAM', count: thongKe.danh_muc['linh-kien-nang-cap'] || 0 }
-                            ].map((dm) => {
-                                const dangChon = boLocHienTai.danh_muc?.includes(dm.ma);
-                                return (
-                                    <button
-                                        key={dm.ma}
-                                        onClick={() => togglePhanTu('danh_muc', dm.ma)}
-                                        className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition-all cursor-pointer ${
-                                            dangChon
-                                                ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-600 text-purple-700 dark:text-purple-300 shadow-2xs'
-                                                : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-purple-300'
-                                        }`}
-                                    >
-                                        <span className="truncate text-[11px]">{dm.nhan}</span>
-                                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ml-1 shrink-0 ${
-                                            dangChon ? 'bg-purple-600 text-white' : 'text-slate-400'
-                                        }`}>
-                                            {dm.count}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    )}
 
-                    {/* Mục 4: Vi Xử Lý (CPU) */}
-                    <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                            <Cpu className="w-4 h-4 text-indigo-500" />
-                            <span>Dòng Vi Xử Lý (CPU)</span>
+                    {/* Mục 3b: Phụ kiện & linh kiện (DB: loai_san_pham) */}
+                    {thongKe.loaiSanPham.length > 0 && (
+                        <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                <Package className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                                <span>Phụ kiện &amp; linh kiện</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {thongKe.loaiSanPham.map((dm) => {
+                                    const dangChon = boLocHienTai.danh_muc?.includes(dm.ma);
+                                    return (
+                                        <button
+                                            key={dm.ma}
+                                            onClick={() => onThayDoiBoLoc({ ...boLocHienTai, danh_muc: dangChon ? [] : [dm.ma] })}
+                                            className={`p-2.5 rounded-xl border flex items-center justify-between gap-1 text-xs font-bold transition-all cursor-pointer ${
+                                                dangChon
+                                                    ? 'bg-cyan-50 dark:bg-cyan-950/60 border-cyan-600 text-cyan-700 dark:text-cyan-300 shadow-2xs'
+                                                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-cyan-300'
+                                            }`}
+                                        >
+                                            <span className="text-[12px] text-left leading-tight">{dm.ten}</span>
+                                            <span className={`text-[10px] px-1.5 rounded font-bold shrink-0 ${dangChon ? 'bg-cyan-600 text-white' : 'text-slate-400'}`}>
+                                                {dm.soLuong}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {[
-                                { ma: 'core_ultra', nhan: 'Intel Core Ultra', count: thongKe.cpu['core_ultra'] || 0 },
-                                { ma: 'core_i9', nhan: 'Intel Core i9', count: thongKe.cpu['core_i9'] || 0 },
-                                { ma: 'core_i7', nhan: 'Intel Core i7', count: thongKe.cpu['core_i7'] || 0 },
-                                { ma: 'core_i5', nhan: 'Intel Core i5', count: thongKe.cpu['core_i5'] || 0 },
-                                { ma: 'ryzen', nhan: 'AMD Ryzen', count: thongKe.cpu['ryzen'] || 0 },
-                                { ma: 'apple_m', nhan: 'Apple M-Series', count: thongKe.cpu['apple_m'] || 0 }
-                            ].map((cpu) => {
-                                const dangChon = boLocHienTai.cpu_dong?.includes(cpu.ma);
-                                return (
-                                    <button
-                                        key={cpu.ma}
-                                        onClick={() => togglePhanTu('cpu_dong', cpu.ma)}
-                                        className={`py-2 px-2 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
-                                            dangChon
-                                                ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300'
-                                                : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                                        }`}
-                                    >
-                                        <div className="text-[11px] truncate">{cpu.nhan}</div>
-                                        {cpu.count > 0 && <span className="text-[9.5px] text-slate-400">({cpu.count})</span>}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    )}
 
-                    {/* Mục 5: Card Đồ Họa (GPU) */}
-                    <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                            <Layers className="w-4 h-4 text-emerald-500" />
-                            <span>Card Đồ Họa (GPU)</span>
+                    {thongKe.cpu.length > 0 && (
+                        <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                <Cpu className="w-4 h-4 text-indigo-500" />
+                                <span>Vi xử lý (CPU)</span>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {thongKe.cpu.map((x) => {
+                                    const dangChon = boLocHienTai.cpu_dong?.includes(x.ma);
+                                    return (
+                                        <button
+                                            key={x.ma}
+                                            onClick={() => togglePhanTu('cpu_dong', x.ma)}
+                                            className={`py-2 px-1.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
+                                                dangChon
+                                                    ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300'
+                                                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-300'
+                                            }`}
+                                        >
+                                            <div className="text-[12px] truncate">{x.nhan}</div>
+                                            <span className="text-[10px] text-slate-400">({x.soLuong})</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                            {[
-                                { ma: 'rtx_4090', nhan: 'RTX 4090', count: thongKe.gpu['rtx_4090'] || 0 },
-                                { ma: 'rtx_4080', nhan: 'RTX 4080', count: thongKe.gpu['rtx_4080'] || 0 },
-                                { ma: 'rtx_4070', nhan: 'RTX 4070', count: thongKe.gpu['rtx_4070'] || 0 },
-                                { ma: 'rtx_4060', nhan: 'RTX 4060', count: thongKe.gpu['rtx_4060'] || 0 },
-                                { ma: 'rtx_4050', nhan: 'RTX 4050', count: thongKe.gpu['rtx_4050'] || 0 },
-                                { ma: 'card_onboard', nhan: 'Onboard/Iris', count: thongKe.gpu['card_onboard'] || 0 }
-                            ].map((gpu) => {
-                                const dangChon = boLocHienTai.card_do_hoa?.includes(gpu.ma);
-                                return (
-                                    <button
-                                        key={gpu.ma}
-                                        onClick={() => togglePhanTu('card_do_hoa', gpu.ma)}
-                                        className={`py-2 px-1 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
-                                            dangChon
-                                                ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300'
-                                                : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                                        }`}
-                                    >
-                                        <div className="text-[11px] truncate">{gpu.nhan}</div>
-                                        {gpu.count > 0 && <span className="text-[9.5px] text-slate-400">({gpu.count})</span>}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
+                    )}
 
-                    {/* Mục 6: Dung lượng RAM */}
+                    {thongKe.gpu.length > 0 && (
+                        <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                                <Layers className="w-4 h-4 text-emerald-500" />
+                                <span>Card đồ họa (GPU)</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                {thongKe.gpu.map((x) => {
+                                    const dangChon = boLocHienTai.card_do_hoa?.includes(x.ma);
+                                    return (
+                                        <button
+                                            key={x.ma}
+                                            onClick={() => togglePhanTu('card_do_hoa', x.ma)}
+                                            className={`py-2 px-1.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
+                                                dangChon
+                                                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300'
+                                                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-300'
+                                            }`}
+                                        >
+                                            <div className="text-[12px] truncate">{x.nhan}</div>
+                                            <span className="text-[10px] text-slate-400">({x.soLuong})</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Mục 6: Dung lượng RAM (chỉ khi có laptop) */}
+                    {thongKe.coLaptop && (
                     <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
                             <span>Dung Lượng RAM</span>
@@ -412,6 +344,8 @@ export default function BoLocSanPhamComponent({
                             })}
                         </div>
                     </div>
+
+                    )}
 
                     {/* Mục 7: Tiện ích & Ưu đãi */}
                     <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
