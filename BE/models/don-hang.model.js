@@ -104,6 +104,22 @@ const DonHangSchema = new mongoose.Schema(
             type: Boolean,
             default: false
         },
+        // Thông tin hủy đơn: lý do khách chọn, ai hủy, hủy lúc nào (Admin xem để cải thiện dịch vụ)
+        ly_do_huy: {
+            type: String,
+            default: '',
+            maxlength: 300,
+            trim: true
+        },
+        nguoi_huy: {
+            type: String,
+            enum: ['', 'khach', 'admin'],
+            default: ''
+        },
+        thoi_gian_huy: {
+            type: Date,
+            default: null
+        },
         lich_trinh_giao_hang: [
             {
                 thoi_gian: { type: String },

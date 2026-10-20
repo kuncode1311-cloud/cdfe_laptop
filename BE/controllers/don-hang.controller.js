@@ -505,10 +505,13 @@ const capNhatTrangThaiDonHang = async (req, res) => {
         // Trạng thái thanh toán chỉ được cập nhật bởi Admin hoặc webhook/PayOS backend.
         if (!laAdmin && laChuDon) {
             if (duLieuCapNhat.trang_thai === 'da_huy' && donHangHienTai.trang_thai === 'cho_xac_nhan') {
+                // Chỉ nhận lý do dạng chuỗi ngắn, khách không được ghi đè trường nào khác
+                const lyDoHuy = typeof duLieuCapNhat.ly_do_huy === 'string' ? duLieuCapNhat.ly_do_huy.trim().slice(0, 300) : '';
+                const thongTinHuy = { trang_thai: 'da_huy', ly_do_huy: lyDoHuy, nguoi_huy: 'khach', thoi_gian_huy: new Date() };
                 // Hoàn lại tồn kho bằng thao tác giành cờ nguyên tử nếu đơn đã trừ kho
                 const daGianhCo = await DonHang.findOneAndUpdate(
                     { _id: donHangHienTai._id, da_tru_ton_kho: true },
-                    { $set: { da_tru_ton_kho: false, trang_thai: 'da_huy' } },
+                    { $set: { da_tru_ton_kho: false, ...thongTinHuy } },
                     { returnDocument: 'after' }
                 );
                 if (daGianhCo) {
@@ -518,7 +521,7 @@ const capNhatTrangThaiDonHang = async (req, res) => {
 
                 const donHang = await DonHang.findByIdAndUpdate(
                     donHangHienTai._id,
-                    { $set: { trang_thai: 'da_huy' } },
+                    { $set: thongTinHuy },
                     { returnDocument: 'after', runValidators: true }
                 );
                 return res.status(200).json(donHang);
