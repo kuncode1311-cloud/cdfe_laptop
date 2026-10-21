@@ -67,7 +67,6 @@ LAPTOP_NEW/
     │   ├── gio-hang/       # Giỏ hàng
     │   ├── thanh-toan/     # Đặt hàng & thanh toán
     │   ├── so-sanh/        # So sánh 2-3 mẫu laptop
-    │   ├── yeu-thich/      # Sản phẩm đã lưu
     │   ├── don-hang/       # Tra cứu lịch sử đơn hàng
     │   ├── tin-tuc/        # Blog công nghệ
     │   └── ...             # Các trang giới thiệu, bảo hành, liên hệ...
@@ -159,7 +158,7 @@ npm run test:coverage  # kèm báo cáo độ phủ (BE/coverage/)
 2. **Bộ lọc & Tìm kiếm:** Lọc theo hãng, mức giá, nhu cầu, CPU, RAM, card đồ họa.
 3. **Chi tiết sản phẩm:** Thông số kỹ thuật chi tiết, hình ảnh thực tế, đánh giá và nhận xét.
 4. **So sánh cấu hình:** Cho phép chọn và đối chiếu chi tiết thông số giữa các sản phẩm.
-5. **Yêu thích & Giỏ hàng:** Lưu sản phẩm yêu thích, quản lý số lượng giỏ hàng theo thời gian thực (LocalStorage + State).
+5. **Giỏ hàng:** Quản lý số lượng giỏ hàng theo thời gian thực (LocalStorage + State).
 6. **Mã giảm giá (Coupon):** Nhập mã voucher và tự động tính toán chiết khấu đơn hàng.
 7. **Đặt hàng & Tra cứu:** Điền thông tin giao hàng, chọn hình thức thanh toán và tra cứu tình trạng đơn hàng.
 8. **Tin tức công nghệ:** Xem bài viết, mẹo thủ thuật và tin tức laptop mới nhất.

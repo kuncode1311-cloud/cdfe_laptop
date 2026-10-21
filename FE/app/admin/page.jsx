@@ -403,6 +403,7 @@ export default function TrangQuanTriCuaHang() {
     };
 
     const xuLyThemShowroomMoi = () => {
+        // eslint-disable-next-line react-hooks/purity -- chạy trong handler click, không phải lúc render
         const idMoi = `showroom-${Date.now()}`;
         const srMoi = {
             id: idMoi,
@@ -477,7 +478,6 @@ export default function TrangQuanTriCuaHang() {
     const [anhXemTruocChiTiet, setAnhXemTruocChiTiet] = useState('');
     const [tuyChonXemTruoc, setTuyChonXemTruoc] = useState(null);
     const [tabChiTietXemTruoc, setTabChiTietXemTruoc] = useState('tong_quan'); // 'tong_quan' | 'thong_so' | 'danh_gia'
-    const [daThichXemTruoc, setDaThichXemTruoc] = useState(false);
     const [daSoSanhXemTruoc, setDaSoSanhXemTruoc] = useState(false);
     const [formSpGoc, setFormSpGoc] = useState(null);
     const [hienOUrlAnhChinh, setHienOUrlAnhChinh] = useState(false);
@@ -2132,6 +2132,7 @@ export default function TrangQuanTriCuaHang() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
+        // eslint-disable-next-line react-hooks/purity -- chạy trong handler click xuất file, không phải lúc render
         const tenFile = `Bao_Cao_Ke_Toan_Don_Hang_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${Date.now().toString().slice(-4)}.xls`;
         link.download = tenFile;
         document.body.appendChild(link);
@@ -2151,6 +2152,7 @@ export default function TrangQuanTriCuaHang() {
         setLoaiFormSanPham('laptop');
         setThongSoTuyChinh([]);
         setFormSp({
+            // eslint-disable-next-line react-hooks/purity -- chạy trong handler click mở form thêm sản phẩm, không phải lúc render
             ma_san_pham: `SKU-${Date.now().toString().slice(-5)}`,
             ten_san_pham: '',
             hang_san_xuat: 'asus',
@@ -3307,11 +3309,19 @@ export default function TrangQuanTriCuaHang() {
     };
 
     const xuLyDoiTrangThaiDonHang = async (id, trangThaiMoi) => {
+        let lyDoHuy;
+        if (trangThaiMoi === 'da_huy') {
+            // Bắt buộc xác nhận qua prompt để tránh hủy nhầm khi chọn lố trong dropdown;
+            // bấm Cancel (trả về null) sẽ hủy bỏ thao tác, không gọi API.
+            lyDoHuy = window.prompt('Hủy đơn hàng này? Nhập lý do hủy (có thể để trống), bấm Cancel để không hủy:', '');
+            if (lyDoHuy === null) return;
+        }
         setDangXuLyDonHangId(id);
         try {
             await DonHangService.capNhatDonHang(id, {
                 trang_thai: trangThaiMoi,
-                da_thanh_toan: trangThaiMoi === 'da_giao' ? true : undefined
+                da_thanh_toan: trangThaiMoi === 'da_giao' ? true : undefined,
+                ...(trangThaiMoi === 'da_huy' ? { ly_do_huy: lyDoHuy, nguoi_huy: 'admin' } : {})
             });
             const thongBaoText = trangThaiMoi === 'da_giao'
                 ? 'Giao hàng thành công! Đơn hàng đã hoàn tất.'
@@ -3861,6 +3871,7 @@ export default function TrangQuanTriCuaHang() {
     const moModalThemTinTuc = () => {
         setTinTucDangSua(null);
         setFormTinTuc({
+            // eslint-disable-next-line react-hooks/purity -- chạy trong handler click mở modal thêm tin tức, không phải lúc render
             id: `tin-${Date.now().toString().slice(-6)}`,
             tieu_de: '',
             tom_tat: '',
@@ -7975,12 +7986,12 @@ export default function TrangQuanTriCuaHang() {
                                                     </div>
                                                 </div>
 
-                                                {/* Nút So Sánh & Yêu Thích Nhanh */}
+                                                {/* Nút So Sánh Nhanh */}
                                                 <div className="flex items-center gap-2.5 pt-0.5">
                                                     <button
                                                         type="button"
                                                         onClick={() => setDaSoSanhXemTruoc(!daSoSanhXemTruoc)}
-                                                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                                                        className={`w-full py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
                                                             daSoSanhXemTruoc
                                                                 ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-[#0052cc] dark:text-cyan-400'
                                                                 : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
@@ -7988,19 +7999,6 @@ export default function TrangQuanTriCuaHang() {
                                                     >
                                                         <GitCompare className="w-3.5 h-3.5 text-[#0052cc] dark:text-cyan-400" />
                                                         <span>{daSoSanhXemTruoc ? 'Đã Trong So Sánh' : 'So Sánh Sản Phẩm'}</span>
-                                                    </button>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setDaThichXemTruoc(!daThichXemTruoc)}
-                                                        className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
-                                                            daThichXemTruoc
-                                                                ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-600 dark:text-rose-400'
-                                                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                                                        }`}
-                                                    >
-                                                        <Heart className={`w-3.5 h-3.5 text-rose-500 ${daThichXemTruoc ? 'fill-current' : ''}`} />
-                                                        <span>{daThichXemTruoc ? 'Đã Lưu Yêu Thích' : 'Lưu Vào Yêu Thích'}</span>
                                                     </button>
                                                 </div>
                                             </div>

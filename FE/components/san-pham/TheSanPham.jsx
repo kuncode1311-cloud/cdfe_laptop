@@ -3,12 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, GitCompare, Heart, Star, Gift, ShieldCheck, Flame, Plus, Check } from 'lucide-react';
+import { ShoppingCart, GitCompare, Star, Gift, ShieldCheck, Flame, Plus, Check } from 'lucide-react';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import { slugSanPham } from '@/utils/taoSlug';
 import { useGioHang } from '@/contexts/CartContext';
 import { useSoSanh, coTheSoSanh } from '@/contexts/CompareContext';
-import { useYeuThich } from '@/contexts/WishlistContext';
 
 /**
  * Trích xuất 3-4 thông số kỹ thuật cốt lõi chuẩn e-commerce
@@ -203,12 +202,10 @@ function layThongSoNhanh(sanPham) {
 export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThanhFlashSale = false }) {
     const { themVaoGioHang } = useGioHang();
     const { themVaoSoSanh, kiemTraDaCoTrongSoSanh } = useSoSanh();
-    const { chuyenDoiYeuThich, kiemTraDaThich } = useYeuThich();
 
     if (!sanPham) return null;
 
     const daTrongSoSanh = kiemTraDaCoTrongSoSanh(sanPham.id || sanPham._id);
-    const daYeuThich = kiemTraDaThich(sanPham.id || sanPham._id);
     const hoTroSoSanh = coTheSoSanh(sanPham);
     const cacThongSo = layThongSoNhanh(sanPham);
 
@@ -377,22 +374,6 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                         </span>
                     )}
                 </div>
-
-                {/* Nút yêu thích góc trên phải (Heart icon viên kính tròn gọn) */}
-                <button
-                    onClick={(e) => {
-                        e.preventDefault();
-                        chuyenDoiYeuThich(sanPham);
-                    }}
-                    className={`absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-white/95 dark:bg-slate-800/90 backdrop-blur-md flex items-center justify-center shadow-sm border border-slate-200/80 dark:border-slate-700 transition-all hover:scale-110 active:scale-95 cursor-pointer z-10 ${
-                        daYeuThich
-                            ? 'text-[#EA1E2C]'
-                            : 'text-slate-400 hover:text-[#EA1E2C]'
-                    }`}
-                    title={daYeuThich ? 'Đã thích' : 'Yêu thích'}
-                >
-                    <Heart className={`w-3.5 h-3.5 transition-transform ${daYeuThich ? 'fill-current text-[#EA1E2C]' : ''}`} />
-                </button>
             </div>
 
             {/* 2. BODY KHU VỰC THÔNG TIN (Tối giản, ngay hàng thẳng lối 100%, không bị che chữ) */}

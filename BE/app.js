@@ -156,7 +156,6 @@ const caiDatRoutes = require('./routes/cai-dat.routes');
 const troLyAiRoutes = require('./routes/tro-ly-ai.routes');
 const dongBoRoutes = require('./routes/dong-bo.routes');
 const gioHangRoutes = require('./routes/gio-hang.routes');
-const yeuThichRoutes = require('./routes/yeu-thich.routes');
 const { xoaBoNhoDemPhienBan } = require('./controllers/dong-bo.controller');
 
 // Tự động xóa bộ nhớ đệm phiên bản sau mỗi thao tác ghi (POST/PUT/DELETE) thành công
@@ -223,9 +222,6 @@ app.use('/api/dong-bo', dongBoRoutes);
 
 // [LUỒNG 15: GIỎ HÀNG - CRUD] Thêm món, tăng giảm số lượng, xóa giỏ hàng (Đồng bộ MongoDB)
 app.use('/api/gio-hang', gioHangRoutes);
-
-// [LUỒNG 16: YÊU THÍCH - CRUD] Thêm/bỏ sản phẩm vào danh sách yêu thích (Wishlist) theo User
-app.use('/api/yeu-thich', yeuThichRoutes);
 
 // 5. Tuyến đường kiểm tra máy chủ
 app.get('/', (req, res) => {

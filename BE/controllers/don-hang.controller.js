@@ -535,6 +535,16 @@ const capNhatTrangThaiDonHang = async (req, res) => {
 
         // Admin: Cho phép cập nhật toàn quyền, bao gồm trạng thái giao hàng và tồn kho
         const trangThaiMoi = duLieuCapNhat.trang_thai;
+
+        // Admin hủy đơn: tự gán người hủy + thời điểm hủy nếu client chưa gửi (đồng bộ với luồng khách tự hủy)
+        if (trangThaiMoi === 'da_huy') {
+            if (typeof duLieuCapNhat.ly_do_huy === 'string') {
+                duLieuCapNhat.ly_do_huy = duLieuCapNhat.ly_do_huy.trim().slice(0, 300);
+            }
+            if (!duLieuCapNhat.nguoi_huy) duLieuCapNhat.nguoi_huy = 'admin';
+            if (!duLieuCapNhat.thoi_gian_huy) duLieuCapNhat.thoi_gian_huy = new Date();
+        }
+
         const danhSachSp =
             Array.isArray(duLieuCapNhat.danh_sach_san_pham) && duLieuCapNhat.danh_sach_san_pham.length > 0
                 ? duLieuCapNhat.danh_sach_san_pham

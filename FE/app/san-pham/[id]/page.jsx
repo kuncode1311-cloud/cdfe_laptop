@@ -2,12 +2,11 @@
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { notFound, useRouter } from 'next/navigation';
-import { Home, ChevronRight, Star, ShieldCheck, Truck, RotateCcw, Gift, ShoppingCart, GitCompare, Heart, Check, CreditCard, Sparkles, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Home, ChevronRight, Star, ShieldCheck, Truck, RotateCcw, Gift, ShoppingCart, GitCompare, Check, CreditCard, Sparkles, AlertTriangle, RefreshCw } from 'lucide-react';
 import { SanPhamService } from '@/services/san-pham.service';
 import { formatCurrency, dinhDangTienVND, calculateSavings, tinhTienTietKiem } from '@/utils/formatCurrency';
 import { useCart, useGioHang } from '@/contexts/CartContext';
 import { useCompare, useSoSanh } from '@/contexts/CompareContext';
-import { useWishlist, useYeuThich } from '@/contexts/WishlistContext';
 import { useNguoiDung } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import ThuVienAnhSanPham from '@/components/san-pham/ThuVienAnhSanPham';
@@ -84,7 +83,6 @@ export default function TrangChiTietSanPham({ params }) {
 
     const { themVaoGioHang } = useGioHang();
     const { themVaoSoSanh, kiemTraDaCoTrongSoSanh } = useSoSanh();
-    const { chuyenDoiYeuThich, kiemTraDaThich } = useYeuThich();
     const [tuyChonChon, setTuyChonChon] = useState(sanPham?.tuy_chon_phien_ban && sanPham.tuy_chon_phien_ban.length > 0
         ? sanPham.tuy_chon_phien_ban[0]
         : undefined);
@@ -200,7 +198,6 @@ export default function TrangChiTietSanPham({ params }) {
     const giaGocHienTai = (sanPham.gia_goc || sanPham.gia_khuyen_mai || 0) + (tuyChonChon ? tuyChonChon.chenh_lech_gia : 0);
     const tienTietKiem = tinhTienTietKiem(giaGocHienTai, giaHienTai);
     const daTrongSoSanh = kiemTraDaCoTrongSoSanh(sanPham.id);
-    const daYeuThich = kiemTraDaThich(sanPham.id);
     // Mua ngay: Bắt buộc đăng nhập trước khi tiến hành thanh toán
     const xuLyMuaNgay = () => {
         themVaoGioHang(sanPham, tuyChonChon, 1);
@@ -452,11 +449,11 @@ export default function TrangChiTietSanPham({ params }) {
               </button>
             </div>
 
-            {/* Nút So Sánh & Yêu Thích Nhanh */}
+            {/* Nút So Sánh Nhanh */}
             <div className="flex items-center gap-2.5 pt-0.5">
               <button
                 onClick={() => themVaoSoSanh(sanPham)}
-                className={`flex-1 py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+                className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
                   daTrongSoSanh
                     ? 'bg-blue-50 border-blue-500 text-[#0052cc]'
                     : 'bg-white hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300/80 dark:border-slate-700'
@@ -464,18 +461,6 @@ export default function TrangChiTietSanPham({ params }) {
               >
                 <GitCompare className="w-3.5 h-3.5 text-[#0052cc]"/>
                 <span>{daTrongSoSanh ? 'Đã Trong So Sánh' : 'So Sánh Sản Phẩm'}</span>
-              </button>
-
-              <button
-                onClick={() => chuyenDoiYeuThich(sanPham)}
-                className={`flex-1 py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
-                  daYeuThich
-                    ? 'bg-rose-50 border-rose-500 text-rose-600'
-                    : 'bg-white hover:bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300/80 dark:border-slate-700'
-                }`}
-              >
-                <Heart className={`w-3.5 h-3.5 text-rose-500 ${daYeuThich ? 'fill-current' : ''}`}/>
-                <span>{daYeuThich ? 'Đã Lưu Yêu Thích' : 'Lưu Vào Yêu Thích'}</span>
               </button>
             </div>
           </div>

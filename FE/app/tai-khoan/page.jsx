@@ -3751,13 +3751,13 @@ function NoiDungTrangTaiKhoan() {
             )}
 
             {/* HỘP XÁC NHẬN HỦY ĐƠN (thay cho hộp thoại mặc định của trình duyệt) */}
-            {donCanXacNhanHuy && (
+            {daGanKetDOM && typeof document !== 'undefined' && donCanXacNhanHuy && createPortal(
                 <div
-                    className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150"
+                    className="fixed inset-0 z-[10000] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-150"
                     onClick={() => !donDangHuy && setDonCanXacNhanHuy(null)}
                 >
                     <div
-                        className="w-full max-w-sm rounded-3xl bg-white shadow-2xl border border-slate-200 p-6 text-center animate-in zoom-in-95 duration-150"
+                        className="w-full max-w-sm max-h-[92vh] overflow-y-auto rounded-3xl bg-white shadow-2xl border border-slate-200 p-5 sm:p-6 text-center animate-in zoom-in-95 duration-150"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="w-14 h-14 mx-auto rounded-full bg-rose-100 text-rose-600 flex items-center justify-center">
@@ -3824,6 +3824,7 @@ function NoiDungTrangTaiKhoan() {
                         </div>
                     </div>
                 </div>
+                , document.body
             )}
 
             {/* MODAL QUÉT MÃ QR TIẾP TỤC THANH TOÁN CHO ĐƠN VIETQR CHƯA THANH TOÁN */}

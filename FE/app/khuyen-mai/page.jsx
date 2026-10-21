@@ -13,7 +13,6 @@ import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 import { SanPhamService } from '@/services/san-pham.service';
 import { useNguoiDung } from '@/contexts/AuthContext';
 import { useGioHang } from '@/contexts/CartContext';
-import { useWishlist } from '@/contexts/WishlistContext';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
@@ -25,7 +24,6 @@ import { useDuLieuMoi } from '@/services/dong-bo.service';
 export default function TrangKhuyenMai() {
     const { daDangNhap, nguoiDung, moModalDangNhap, capNhatViVoucher } = useNguoiDung();
     const { themVaoGioHang } = useGioHang();
-    const { chuyenDoiYeuThich, kiemTraDaThich } = useWishlist();
 
     const [danhSachVoucher, setDanhSachVoucher] = useState([]);
     const [danhSachGiamSau, setDanhSachGiamSau] = useState([]);
