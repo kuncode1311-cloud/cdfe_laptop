@@ -3798,8 +3798,8 @@ export default function TrangQuanTriCuaHang() {
             giam_toi_da: vc.giam_toi_da || 0,
             don_hang_toi_thieu: vc.don_hang_toi_thieu || 0,
             so_luong_phat_hanh: vc.so_luong_phat_hanh || 20,
-            ngay_bat_dau: vc.ngay_bat_dau || '2026-08-01',
-            ngay_het_han: vc.ngay_het_han || '2026-12-31',
+            ngay_bat_dau: vc.ngay_bat_dau || '',
+            ngay_het_han: vc.ngay_het_han_chuan || '',
             chuyen_muc: vc.chuyen_muc || 'toan_san',
             mau_sac: vc.mau_sac || 'rose',
             badge: vc.badge || 'HOT DEAL',
@@ -8946,7 +8946,7 @@ export default function TrangQuanTriCuaHang() {
                                             </label>
                                             <input
                                                 type="date"
-                                                value={formVoucher.ngay_het_han || '2026-12-31'}
+                                                value={formVoucher.ngay_het_han || ''}
                                                 onChange={(e) => setFormVoucher({ ...formVoucher, ngay_het_han: e.target.value })}
                                                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-blue-500 focus:outline-none transition-all"
                                             />

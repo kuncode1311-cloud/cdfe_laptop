@@ -1,4 +1,5 @@
 'use client';
+import { thoiHanVoucher } from '@/utils/voucherDate';
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { createPortal } from 'react-dom';
@@ -2581,7 +2582,7 @@ function NoiDungTrangTaiKhoan() {
                                                             Ưu Đãi
                                                         </span>
                                                         <span className="text-[10px] font-bold bg-white/20 backdrop-blur-xs border border-white/30 px-2 py-0.5 rounded-full text-white shadow-2xs">
-                                                            {vc.ngay_het_han || 'Còn 15 ngày'}
+                                                            {thoiHanVoucher(vc)}
                                                         </span>
                                                     </div>
 

@@ -1,3 +1,4 @@
+import { voucherConHan } from '@/utils/voucherDate';
 import { apiFetch } from './api-client';
 import { thongBaoThayDoi } from './dong-bo.service';
 
@@ -6,7 +7,7 @@ let boNhoDemVoucher = [];
 if (typeof window !== 'undefined') {
     apiFetch('/ma-giam-gia', { cache: 'no-store' })
         .then((data) => {
-            if (Array.isArray(data) && data.length > 0) {
+            if (Array.isArray(data)) {
                 boNhoDemVoucher = data;
             }
         })
@@ -18,7 +19,7 @@ export const MaGiamGiaService = {
      * Lấy toàn bộ danh sách mã giảm giá còn hiệu lực
      */
     layDanhSachMaGiamGia() {
-        return boNhoDemVoucher.filter((m) => m.kich_hoat);
+        return boNhoDemVoucher.filter((m) => m.kich_hoat && voucherConHan(m));
     },
 
     /**
@@ -28,13 +29,13 @@ export const MaGiamGiaService = {
     async layDanhSachMaGiamGiaAsync(tatCa = false) {
         const url = tatCa ? '/ma-giam-gia' : '/ma-giam-gia?kich_hoat=true';
         const data = await apiFetch(url, { cache: 'no-store' });
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
             boNhoDemVoucher = data;
         }
         if (tatCa) {
             return boNhoDemVoucher;
         }
-        return boNhoDemVoucher.filter((m) => m.kich_hoat);
+        return boNhoDemVoucher.filter((m) => m.kich_hoat && voucherConHan(m));
     },
 
     /**
@@ -72,7 +73,7 @@ export const MaGiamGiaService = {
             return { hop_le: false, thong_diep: 'Vui lòng nhập mã giảm giá.', so_tien_giam: 0 };
         }
         const codeChuan = maCode.trim().toUpperCase();
-        const maTimThay = boNhoDemVoucher.find((m) => m.ma_code.toUpperCase() === codeChuan && m.kich_hoat);
+        const maTimThay = boNhoDemVoucher.find((m) => m.ma_code.toUpperCase() === codeChuan && m.kich_hoat && voucherConHan(m));
         if (!maTimThay) {
             return {
                 hop_le: false,
