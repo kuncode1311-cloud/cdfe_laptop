@@ -15,18 +15,29 @@ import {
 import { toast } from 'sonner';
 import { BaoHanhService } from '@/services/bao-hanh.service';
 
-// Helper format ngày
-const dinhDangNgay = (isoString) => {
-    if (!isoString) return '--/--/----';
+// Helper format ngày: hỗ trợ cả ISO string, đối tượng Date lẫn chuỗi dd/mm/yyyy từ Backend
+const dinhDangNgay = (giaTri) => {
+    if (!giaTri || giaTri === 'Invalid Date') return '--/--/----';
+    if (typeof giaTri === 'string') {
+        const str = giaTri.trim();
+        if (str === 'Invalid Date') return '--/--/----';
+        // Nếu Backend đã định dạng sẵn dạng d/m/yyyy hoặc dd/mm/yyyy thì trả về luôn
+        if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+            return str;
+        }
+    }
     try {
-        const d = new Date(isoString);
+        const d = new Date(giaTri);
+        if (Number.isNaN(d.getTime())) {
+            return typeof giaTri === 'string' && giaTri !== 'Invalid Date' ? giaTri : '--/--/----';
+        }
         return d.toLocaleDateString('vi-VN', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
         });
-    } catch (e) {
-        return isoString;
+    } catch {
+        return typeof giaTri === 'string' && giaTri !== 'Invalid Date' ? giaTri : '--/--/----';
     }
 };
 
