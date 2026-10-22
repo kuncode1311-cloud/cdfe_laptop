@@ -17,7 +17,9 @@ const DonHang = require('../models/don-hang.model');
 const { capNhatTonKhoTheoDonHang } = require('../services/kho-hang.service');
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const ADMIN_CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || '').split(',')[0].trim();
+const ADMIN_CHAT_ID = String(process.env.TELEGRAM_CHAT_ID || '')
+    .split(',')[0]
+    .trim();
 const ADMIN_CHAT_IDS = new Set(
     String(process.env.TELEGRAM_CHAT_ID || '')
         .split(',')

@@ -52,7 +52,8 @@ const gioiHanRequest = ({ windowMs = 60_000, max = 60, message } = {}) => {
         // NẾU GỌI QUÁ SỐ LẦN CHO PHÉP (Ví dụ quá 30 lần) -> CHẶN ĐỨNG NGAY!
         if (hienTai.count > max) {
             res.setHeader('Retry-After', Math.ceil((hienTai.resetAt - bayGio) / 1000));
-            return res.status(429).json({ // 429 = Too Many Requests (Quá nhiều yêu cầu)
+            return res.status(429).json({
+                // 429 = Too Many Requests (Quá nhiều yêu cầu)
                 thong_diep: message || 'Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.'
             });
         }

@@ -53,10 +53,10 @@ app.use(
         // 2. corsOrigins.includes(origin) : Domain nằm trong danh sách trắng (Frontend của bạn)
         // 3. laCungTenMien(origin, req)   : Cùng tên miền với Backend (chính trang Swagger UI)
         if (!origin || corsOrigins.includes(origin) || laCungTenMien(origin, req)) {
-            return callback(null, { 
-                origin: true,        // Đồng ý cho phép domain này kết nối
-                credentials: true,   // Cho phép gửi kèm token JWT / cookie xác thực
-                maxAge: 600          // Trình duyệt nhớ quyền này trong 10 phút (600s), không cần hỏi lại liên tục
+            return callback(null, {
+                origin: true, // Đồng ý cho phép domain này kết nối
+                credentials: true, // Cho phép gửi kèm token JWT / cookie xác thực
+                maxAge: 600 // Trình duyệt nhớ quyền này trong 10 phút (600s), không cần hỏi lại liên tục
             });
         }
 
@@ -102,9 +102,9 @@ app.get('/api-docs.json', (req, res) => res.set('Cache-Control', 'no-store').jso
 // =========================================================================
 // [BẢO MẬT TOÀN CỤC] 4 Lớp bảo vệ hệ thống trước khi vào các API
 // =========================================================================
-app.disable('x-powered-by');   // Lớp 1: Ẩn thông tin công nghệ Express (chống quét lỗi tự động)
-app.use(datHeaderBaoMat);      // Lớp 2: Gắn Security Headers (chống XSS, Clickjacking, MIME Sniffing)
-app.use(chongNoSqlInjection);  // Lớp 3: Lọc bỏ ký tự độc hại $ne, $gt (chống NoSQL Injection)
+app.disable('x-powered-by'); // Lớp 1: Ẩn thông tin công nghệ Express (chống quét lỗi tự động)
+app.use(datHeaderBaoMat); // Lớp 2: Gắn Security Headers (chống XSS, Clickjacking, MIME Sniffing)
+app.use(chongNoSqlInjection); // Lớp 3: Lọc bỏ ký tự độc hại $ne, $gt (chống NoSQL Injection)
 
 // Lớp 4: Giới hạn tần suất gọi API (Rate Limiting) - Tối đa 300 req / phút / IP (chống spam, DoS)
 app.use(

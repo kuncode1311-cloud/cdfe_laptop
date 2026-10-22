@@ -150,7 +150,8 @@ const capNhatTonKhoTheoDonHang = async (danhSachSanPham, thaoTac = 'tru') => {
                                     (Number(spDaHoan.ton_kho[0].so_luong_con) || 0) + conLaiChuaHoan;
                             }
                         } else {
-                            spDaHoan.ton_kho[0].so_luong_con = (Number(spDaHoan.ton_kho[0].so_luong_con) || 0) + soLuong;
+                            spDaHoan.ton_kho[0].so_luong_con =
+                                (Number(spDaHoan.ton_kho[0].so_luong_con) || 0) + soLuong;
                         }
                     }
 

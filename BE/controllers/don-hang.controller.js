@@ -245,7 +245,11 @@ const taoDonHangMoi = async (req, res) => {
                 .toUpperCase();
             if (maGiamGia) {
                 const voucher = await MaGiamGia.findOne({ ma_code: maGiamGia, kich_hoat: true });
-                if (!voucher || !voucherConHieuLuc(voucher) || tamTinhServer < Number(voucher.don_hang_toi_thieu || 0)) {
+                if (
+                    !voucher ||
+                    !voucherConHieuLuc(voucher) ||
+                    tamTinhServer < Number(voucher.don_hang_toi_thieu || 0)
+                ) {
                     return res
                         .status(400)
                         .json({ thong_diep: 'Mã giảm giá không hợp lệ hoặc đơn hàng chưa đạt giá trị tối thiểu.' });
@@ -274,7 +278,9 @@ const taoDonHangMoi = async (req, res) => {
             delete duLieuDonHang.payos_order_code;
             delete duLieuDonHang.noi_dung_chuyen_khoan;
         } else {
-            const danhSachGuiLen = Array.isArray(duLieuDonHang.danh_sach_san_pham) ? duLieuDonHang.danh_sach_san_pham : [];
+            const danhSachGuiLen = Array.isArray(duLieuDonHang.danh_sach_san_pham)
+                ? duLieuDonHang.danh_sach_san_pham
+                : [];
             if (danhSachGuiLen.length === 0 || danhSachGuiLen.length > 50) {
                 return res.status(400).json({ thong_diep: 'Danh sách sản phẩm không hợp lệ.' });
             }
@@ -506,8 +512,14 @@ const capNhatTrangThaiDonHang = async (req, res) => {
         if (!laAdmin && laChuDon) {
             if (duLieuCapNhat.trang_thai === 'da_huy' && donHangHienTai.trang_thai === 'cho_xac_nhan') {
                 // Chỉ nhận lý do dạng chuỗi ngắn, khách không được ghi đè trường nào khác
-                const lyDoHuy = typeof duLieuCapNhat.ly_do_huy === 'string' ? duLieuCapNhat.ly_do_huy.trim().slice(0, 300) : '';
-                const thongTinHuy = { trang_thai: 'da_huy', ly_do_huy: lyDoHuy, nguoi_huy: 'khach', thoi_gian_huy: new Date() };
+                const lyDoHuy =
+                    typeof duLieuCapNhat.ly_do_huy === 'string' ? duLieuCapNhat.ly_do_huy.trim().slice(0, 300) : '';
+                const thongTinHuy = {
+                    trang_thai: 'da_huy',
+                    ly_do_huy: lyDoHuy,
+                    nguoi_huy: 'khach',
+                    thoi_gian_huy: new Date()
+                };
                 // Hoàn lại tồn kho bằng thao tác giành cờ nguyên tử nếu đơn đã trừ kho
                 const daGianhCo = await DonHang.findOneAndUpdate(
                     { _id: donHangHienTai._id, da_tru_ton_kho: true },
