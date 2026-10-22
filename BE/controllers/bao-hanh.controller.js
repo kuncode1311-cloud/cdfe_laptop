@@ -79,7 +79,9 @@ const traCuuBaoHanh = async (req, res) => {
         const tuKhoaRaw = (req.query.tu_khoa || req.query.q || '').trim();
         // Bỏ ký hiệu # nếu người dùng copy từ bảng Admin (ví dụ #LPN-...)
         const tuKhoa = tuKhoaRaw.replace(/^#/, '').trim();
-        const maDonXacMinh = String(req.query.ma_don_hang || req.query.maDonHang || '').replace(/^#/, '').trim();
+        const maDonXacMinh = String(req.query.ma_don_hang || req.query.maDonHang || '')
+            .replace(/^#/, '')
+            .trim();
 
         // 1. Kiểm tra tính hợp lệ: Tối thiểu 3 ký tự
         if (!tuKhoa || tuKhoa.length < 3) {
