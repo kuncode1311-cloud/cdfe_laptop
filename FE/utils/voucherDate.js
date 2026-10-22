@@ -1,6 +1,9 @@
 // API trả về thời điểm cố định; tính lại khi render để bộ nhớ đệm không giữ nhãn "Còn N ngày".
 export function thoiHanVoucher(voucher, now = Date.now()) {
     let expiry = voucher.het_han_luc ? new Date(voucher.het_han_luc) : null;
+    if (!expiry && /^\d{4}-\d{2}-\d{2}$/.test(String(voucher.ngay_het_han || ''))) {
+        expiry = new Date(`${voucher.ngay_het_han}T23:59:59.999+07:00`);
+    }
     const old = String(voucher.ngay_het_han || '').match(/^Còn\s+(\d+)\s+ngày$/iu);
     if (!expiry && old && voucher.ngay_bat_dau) {
         const start = new Date(`${voucher.ngay_bat_dau}T00:00:00+07:00`);

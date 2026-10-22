@@ -282,7 +282,7 @@ export default function QuanLyVoucher({
                                             <td className={`py-2 px-2 border-b border-r whitespace-nowrap ${daAn ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                 <div className={`font-bold text-[11px] flex items-center gap-1 whitespace-nowrap ${daAn ? 'text-rose-900 dark:text-rose-200' : 'text-slate-700 dark:text-slate-300'}`}>
                                                     <Calendar className={`w-3 h-3 ${daAn ? 'text-rose-500' : 'text-slate-400'}`} />
-                                                    <span>{ngayVoucher(vc.ngay_het_han_chuan)}</span>
+                                                    <span>{ngayVoucher(vc.ngay_bat_dau)}</span>
                                                 </div>
                                                 <div className={`text-[10px] pl-4 font-semibold whitespace-nowrap ${daAn ? 'text-rose-700/80 dark:text-rose-300/80' : 'text-slate-400'}`}>
                                                     {thoiHanVoucher(vc)}
