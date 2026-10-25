@@ -207,8 +207,8 @@ export default function BoLocSanPhamComponent({
                                     anNhan: HANG_CO_LOGO.has(String(h.ma).toLowerCase())
                                 }))}
                                 renderTruoc={(x, dangChon) => HANG_CO_LOGO.has(String(x.ma).toLowerCase()) ? (
-                                    <span className="w-11 h-6 flex items-center justify-start shrink-0 overflow-visible" aria-hidden="true">
-                                        <BrandLogo brand={x.ma} className={`max-w-11 h-4 ${dangChon ? 'text-blue-700' : 'text-slate-700'}`} active={dangChon} />
+                                    <span className="w-14 h-6 flex items-center justify-start shrink-0 overflow-hidden [&>span]:block [&>span]:max-w-full [&>span]:overflow-hidden [&>span]:text-ellipsis [&>span]:whitespace-nowrap [&>div]:max-w-full [&>div]:overflow-hidden [&>div_span]:whitespace-nowrap" aria-hidden="true">
+                                        <BrandLogo brand={x.ma} className={`max-w-14 h-4 ${dangChon ? 'text-blue-700' : 'text-slate-700'}`} active={dangChon} />
                                     </span>
                                 ) : (
                                     <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 ${mauOHang(x.nhan)}`}>
