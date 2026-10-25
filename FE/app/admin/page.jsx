@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -152,6 +152,87 @@ import { toast } from 'sonner';
 // Helper an toàn tránh runtime ReferenceError khi format tiền tệ
 const dinhDangVND = (so) => dinhDangTienVND(Number(so) || 0);
 
+// Ánh xạ thông số sản phẩm từ nhãn tiếng Việt về khóa chuẩn lưu trong database.
+const TU_DIEN_REVERSE_SLUG = {
+    'chất liệu vỏ máy': 'chat_lieu_vo',
+    'chất liệu vỏ': 'chat_lieu_vo',
+    'bàn phím & đèn nền': 'ban_phim',
+    'bàn phím': 'ban_phim',
+    'chuẩn wi-fi & bluetooth': 'chuan_wifi_bluetooth',
+    'chuẩn wifi & bluetooth': 'chuan_wifi_bluetooth',
+    'chuẩn wi-fi': 'chuan_wifi_bluetooth',
+    'chuẩn wifi': 'chuan_wifi_bluetooth',
+    'công nghệ âm thanh': 'am_thanh',
+    'âm thanh': 'am_thanh',
+    'hệ điều hành tích hợp': 'he_dieu_hanh',
+    'hệ điều hành': 'he_dieu_hanh',
+    'cổng kết nối ngoại vi': 'cong_ket_noi',
+    'cổng kết nối': 'cong_ket_noi',
+    'tốc độ bus ram': 'toc_do_bus',
+    'tốc độ bus': 'toc_do_bus',
+    'khả năng nâng cấp ram': 'nang_cap_ram_toi_da',
+    'nâng cấp ram': 'nang_cap_ram_toi_da',
+    'khe cắm mở rộng ssd/m.2': 'khe_cam_mo_rong',
+    'khe cắm mở rộng': 'khe_cam_mo_rong',
+    'độ phân giải chuẩn': 'do_phan_giai',
+    'độ phân giải': 'do_phan_giai',
+    'công nghệ tấm nền': 'tam_nen',
+    'tấm nền': 'tam_nen',
+    'độ phủ gam màu': 'do_phu_mau',
+    'độ phủ màu': 'do_phu_mau',
+    'hệ thống tản nhiệt': 'chi_tiet_tan_nhiet',
+    'tản nhiệt': 'chi_tiet_tan_nhiet',
+    'tần số quét màn hình': 'tan_so_quet',
+    'tần số quét': 'tan_so_quet',
+    'độ sáng cực đại': 'do_sang_nits',
+    'độ sáng': 'do_sang_nits',
+    'công suất card đồ họa tgp': 'cong_suat_tgp',
+    'công suất tgp': 'cong_suat_tgp',
+    'công suất bộ sạc đi kèm': 'bo_sac_cong_suat',
+    'công suất bộ sạc': 'bo_sac_cong_suat',
+    'chế độ bảo hành chính hãng': 'che_do_bao_hanh',
+    'chế độ bảo hành': 'che_do_bao_hanh',
+    'bảo hành': 'che_do_bao_hanh'
+};
+
+const chuyenKeySangSlug = (rawKey) => {
+    if (!rawKey) return '';
+    const clean = rawKey.trim().toLowerCase();
+    if (TU_DIEN_REVERSE_SLUG[clean]) return TU_DIEN_REVERSE_SLUG[clean];
+    if (/^[a-z0-9_]+$/.test(clean)) return clean;
+    return taoSlug(rawKey).replace(/-/g, '_');
+};
+
+const layTimestampDonHang = (donHang) => {
+    if (!donHang) return 0;
+    const giaTri = donHang.ngay_tao || donHang.createdAt || donHang.ngayTao;
+    if (!giaTri) return 0;
+    if (typeof giaTri === 'number') return giaTri;
+    if (giaTri instanceof Date) return giaTri.getTime();
+    if (typeof giaTri === 'string') {
+        const ngayThang = giaTri.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (ngayThang) {
+            const gioPhut = giaTri.match(/(\d{1,2}):(\d{1,2})/);
+            const ngay = new Date(
+                Number(ngayThang[3]),
+                Number(ngayThang[2]) - 1,
+                Number(ngayThang[1]),
+                gioPhut ? Number(gioPhut[1]) : 0,
+                gioPhut ? Number(gioPhut[2]) : 0
+            );
+            if (!Number.isNaN(ngay.getTime())) return ngay.getTime();
+        }
+        const ngay = new Date(giaTri);
+        if (!Number.isNaN(ngay.getTime())) return ngay.getTime();
+    }
+    return 0;
+};
+
+const layDateDonHang = (donHang) => {
+    const timestamp = layTimestampDonHang(donHang);
+    return timestamp > 0 ? new Date(timestamp) : null;
+};
+
 export default function TrangQuanTriCuaHang() {
     const { nguoiDung, laAdmin, dangXuat } = useNguoiDung();
     const { chu_de, chuyenDoiChuDe } = useGiaoDien();
@@ -173,34 +254,15 @@ export default function TrangQuanTriCuaHang() {
         return 'tong_quan';
     });
 
-    // Đồng bộ Tab hiện tại với URL query params và LocalStorage
+    // Cập nhật tab khi người dùng quay lại/đi tới bằng nút trình duyệt.
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tabUrl = urlParams.get('tab');
-            const tabStorage = localStorage.getItem('admin_active_tab');
-            const validTabs = ['tong_quan', 'don_hang', 'san_pham', 'danh_muc', 'khach_hang', 'voucher', 'tin_tuc', 'khuyen_mai', 'showroom', 'lien_he', 'danh_gia', 'bao_hanh'];
-
-            const tabTarget = validTabs.includes(tabUrl)
-                ? tabUrl
-                : validTabs.includes(tabStorage)
-                ? tabStorage
-                : 'tong_quan';
-
-            if (tabTarget && tabTarget !== tabHienTai) {
-                setTabHienTai(tabTarget);
-            }
-
-            const handlePopState = () => {
-                const params = new URLSearchParams(window.location.search);
-                const t = params.get('tab');
-                if (validTabs.includes(t)) {
-                    setTabHienTai(t);
-                }
-            };
-            window.addEventListener('popstate', handlePopState);
-            return () => window.removeEventListener('popstate', handlePopState);
-        }
+        const validTabs = ['tong_quan', 'don_hang', 'san_pham', 'danh_muc', 'khach_hang', 'voucher', 'tin_tuc', 'khuyen_mai', 'showroom', 'lien_he', 'danh_gia', 'bao_hanh'];
+        const handlePopState = () => {
+            const tab = new URLSearchParams(window.location.search).get('tab');
+            if (validTabs.includes(tab)) setTabHienTai(tab);
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
     }, []);
 
     useEffect(() => {
@@ -334,7 +396,6 @@ export default function TrangQuanTriCuaHang() {
     };
 
     const xuLyThemShowroomMoi = () => {
-        // eslint-disable-next-line react-hooks/purity -- chạy trong handler click, không phải lúc render
         const idMoi = `showroom-${Date.now()}`;
         const srMoi = {
             id: idMoi,
@@ -564,61 +625,6 @@ export default function TrangQuanTriCuaHang() {
         'che_do_bao_hanh': 'Chế độ bảo hành chính hãng',
         'ban_phim': 'Bàn phím & Đèn nền',
         'am_thanh': 'Công nghệ âm thanh'
-    };
-
-    // Ánh xạ ngược từ Tiếng Việt (có dấu hoặc không dấu) sang slug chuẩn lưu MongoDB
-    const TU_DIEN_REVERSE_SLUG = {
-        'chất liệu vỏ máy': 'chat_lieu_vo',
-        'chất liệu vỏ': 'chat_lieu_vo',
-        'bàn phím & đèn nền': 'ban_phim',
-        'bàn phím': 'ban_phim',
-        'chuẩn wi-fi & bluetooth': 'chuan_wifi_bluetooth',
-        'chuẩn wifi & bluetooth': 'chuan_wifi_bluetooth',
-        'chuẩn wi-fi': 'chuan_wifi_bluetooth',
-        'chuẩn wifi': 'chuan_wifi_bluetooth',
-        'công nghệ âm thanh': 'am_thanh',
-        'âm thanh': 'am_thanh',
-        'hệ điều hành tích hợp': 'he_dieu_hanh',
-        'hệ điều hành': 'he_dieu_hanh',
-        'cổng kết nối ngoại vi': 'cong_ket_noi',
-        'cổng kết nối': 'cong_ket_noi',
-        'tốc độ bus ram': 'toc_do_bus',
-        'tốc độ bus': 'toc_do_bus',
-        'khả năng nâng cấp ram': 'nang_cap_ram_toi_da',
-        'nâng cấp ram': 'nang_cap_ram_toi_da',
-        'khe cắm mở rộng ssd/m.2': 'khe_cam_mo_rong',
-        'khe cắm mở rộng': 'khe_cam_mo_rong',
-        'độ phân giải chuẩn': 'do_phan_giai',
-        'độ phân giải': 'do_phan_giai',
-        'công nghệ tấm nền': 'tam_nen',
-        'tấm nền': 'tam_nen',
-        'độ phủ gam màu': 'do_phu_mau',
-        'độ phủ màu': 'do_phu_mau',
-        'hệ thống tản nhiệt': 'chi_tiet_tan_nhiet',
-        'tản nhiệt': 'chi_tiet_tan_nhiet',
-        'tần số quét màn hình': 'tan_so_quet',
-        'tần số quét': 'tan_so_quet',
-        'độ sáng cực đại': 'do_sang_nits',
-        'độ sáng': 'do_sang_nits',
-        'công suất card đồ họa tgp': 'cong_suat_tgp',
-        'công suất tgp': 'cong_suat_tgp',
-        'công suất bộ sạc đi kèm': 'bo_sac_cong_suat',
-        'công suất bộ sạc': 'bo_sac_cong_suat',
-        'chế độ bảo hành chính hãng': 'che_do_bao_hanh',
-        'chế độ bảo hành': 'che_do_bao_hanh',
-        'bảo hành': 'che_do_bao_hanh'
-    };
-
-    const chuyenKeySangSlug = (rawKey) => {
-        if (!rawKey) return '';
-        const clean = rawKey.trim().toLowerCase();
-        if (TU_DIEN_REVERSE_SLUG[clean]) {
-            return TU_DIEN_REVERSE_SLUG[clean];
-        }
-        if (/^[a-z0-9_]+$/.test(clean)) {
-            return clean;
-        }
-        return taoSlug(rawKey).replace(/-/g, '_');
     };
 
     const layTenHienThiKey = (rawKey) => {
@@ -908,7 +914,8 @@ export default function TrangQuanTriCuaHang() {
         kich_co_laptop_linh_kien: '',
         trong_luong_linh_kien: '',
 
-        che_do_bao_hanh: '24 tháng chính hãng'
+        che_do_bao_hanh: '24 tháng chính hãng',
+        thoi_han_bao_hanh_thang: 24
     });
 
     const [dangMoModalDonHang, setDangMoModalDonHang] = useState(false);
@@ -1387,36 +1394,6 @@ export default function TrangQuanTriCuaHang() {
         });
         return Array.from(hangSet.entries()).map(([ma, ten]) => ({ ma, ten }));
     }, [danhSachDanhMuc, danhSachSanPham]);
-
-    // Helper trích xuất timestamp chuẩn xác từ mọi dạng ngày tháng của đơn hàng (kể cả vi-VN "HH:mm DD/MM/YYYY")
-    const layTimestampDonHang = (dh) => {
-        if (!dh) return 0;
-        const val = dh.ngay_tao || dh.createdAt || dh.ngayTao;
-        if (!val) return 0;
-        if (typeof val === 'number') return val;
-        if (val instanceof Date) return val.getTime();
-        if (typeof val === 'string') {
-            const dateMatch = val.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-            if (dateMatch) {
-                const day = parseInt(dateMatch[1], 10);
-                const month = parseInt(dateMatch[2], 10) - 1;
-                const year = parseInt(dateMatch[3], 10);
-                const timeMatch = val.match(/(\d{1,2}):(\d{1,2})/);
-                const hour = timeMatch ? parseInt(timeMatch[1], 10) : 0;
-                const minute = timeMatch ? parseInt(timeMatch[2], 10) : 0;
-                const d = new Date(year, month, day, hour, minute);
-                if (!isNaN(d.getTime())) return d.getTime();
-            }
-            const parsed = new Date(val);
-            if (!isNaN(parsed.getTime())) return parsed.getTime();
-        }
-        return 0;
-    };
-
-    const layDateDonHang = (dh) => {
-        const ts = layTimestampDonHang(dh);
-        return ts > 0 ? new Date(ts) : null;
-    };
 
     const donHangHienThi = useMemo(() => {
         let list = danhSachDonHang.filter(dh => {
@@ -2053,7 +2030,6 @@ export default function TrangQuanTriCuaHang() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        // eslint-disable-next-line react-hooks/purity -- chạy trong handler click xuất file, không phải lúc render
         const tenFile = `Bao_Cao_Ke_Toan_Don_Hang_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${Date.now().toString().slice(-4)}.xls`;
         link.download = tenFile;
         document.body.appendChild(link);
@@ -2073,7 +2049,6 @@ export default function TrangQuanTriCuaHang() {
         setLoaiFormSanPham('laptop');
         setThongSoTuyChinh([]);
         setFormSp({
-            // eslint-disable-next-line react-hooks/purity -- chạy trong handler click mở form thêm sản phẩm, không phải lúc render
             ma_san_pham: `SKU-${Date.now().toString().slice(-5)}`,
             ten_san_pham: '',
             hang_san_xuat: 'asus',
@@ -2492,7 +2467,8 @@ export default function TrangQuanTriCuaHang() {
             kich_co_laptop_linh_kien: specs.kich_co_laptop_phu_hop || '',
             trong_luong_linh_kien: typeof specs.trong_luong === 'number' ? `${specs.trong_luong}g` : (specs.trong_luong || ''),
 
-            che_do_bao_hanh: specs.che_do_bao_hanh || '24 tháng chính hãng'
+            che_do_bao_hanh: specs.che_do_bao_hanh || '24 tháng chính hãng',
+            thoi_han_bao_hanh_thang: specs.thoi_han_bao_hanh_thang || Number(String(specs.che_do_bao_hanh || '').match(/(\d+)\s*tháng/i)?.[1]) || 24
         };
         setFormSp(formSuaMoi);
         setFormSpGoc(JSON.parse(JSON.stringify(formSuaMoi)));
@@ -2862,7 +2838,8 @@ export default function TrangQuanTriCuaHang() {
                 : {};
             let thongSoPayload = {
                 ...thongSoGoc,
-                ...xayThongSoTheoLoai(formSp, loaiFormSanPham, { chuanHoa: true })
+                ...xayThongSoTheoLoai(formSp, loaiFormSanPham, { chuanHoa: true }),
+                thoi_han_bao_hanh_thang: Math.max(1, Number(formSp.thoi_han_bao_hanh_thang) || 24)
             };
 
             // Đính kèm các tiêu đề nhóm tùy chỉnh vào payload MongoDB
@@ -3799,7 +3776,6 @@ export default function TrangQuanTriCuaHang() {
     const moModalThemTinTuc = () => {
         setTinTucDangSua(null);
         setFormTinTuc({
-            // eslint-disable-next-line react-hooks/purity -- chạy trong handler click mở modal thêm tin tức, không phải lúc render
             id: `tin-${Date.now().toString().slice(-6)}`,
             tieu_de: '',
             tom_tat: '',
@@ -4628,3 +4604,4 @@ export default function TrangQuanTriCuaHang() {
         </div>
     );
 }
+

@@ -20,7 +20,11 @@ const dinhDangNgayVN = (d) => {
 const tinhMotMucBaoHanh = (dh, item, ngayMua, sdtMasked, hoTen, banDoGhiDe) => {
     const sp = item.san_pham || {};
     const ghiDe = banDoGhiDe.get(`${dh.ma_don_hang}::${item.id_muc || ''}`);
-    const thoiGianBHThang = Number(ghiDe?.thoi_han_bao_hanh_thang) > 0 ? Number(ghiDe.thoi_han_bao_hanh_thang) : 24;
+    const thoiHanTuMoTa = Number(String(sp.thong_so?.che_do_bao_hanh || '').match(/(\d+)\s*tháng/i)?.[1]);
+    const thoiHanTheoSanPham = Number(sp.thong_so?.thoi_han_bao_hanh_thang) || thoiHanTuMoTa || 24;
+    const thoiGianBHThang = Number(ghiDe?.thoi_han_bao_hanh_thang) > 0
+        ? Number(ghiDe.thoi_han_bao_hanh_thang)
+        : thoiHanTheoSanPham;
     const ngayMuaChuan = ngayMua && !isNaN(new Date(ngayMua).getTime()) ? new Date(ngayMua) : new Date();
     const ngayHetHan = new Date(ngayMuaChuan);
     ngayHetHan.setMonth(ngayHetHan.getMonth() + thoiGianBHThang);
