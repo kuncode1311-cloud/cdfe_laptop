@@ -217,7 +217,7 @@ export function DanhSachTuyChon({
                                 {dangChon && (chonMotMuc ? <span className="w-1.5 h-1.5 rounded-full bg-white" /> : <Check className="w-3 h-3 stroke-[3.5]" />)}
                             </span>
                         )}
-                        <span className="truncate flex-1 text-[12px]">{x.nhan}</span>
+                        <span className={`${x.anNhan ? 'sr-only' : 'truncate flex-1'} text-[12px]`}>{x.nhan}</span>
                         {x.soLuong !== undefined && (
                             <span className={`text-[10px] font-black shrink-0 px-1.5 rounded-md ${
                                 dangChon ? `${m.dem}` : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
