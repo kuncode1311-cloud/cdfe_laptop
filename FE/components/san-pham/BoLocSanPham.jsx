@@ -1,11 +1,40 @@
 'use client';
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
-    RotateCcw, X, SlidersHorizontal, Laptop, Cpu,
-    Tag, DollarSign, ShieldCheck, Layers, Search, Package
+    RotateCcw, X, SlidersHorizontal, Laptop, Tag, DollarSign,
+    ShieldCheck, Search, Package, BadgePercent, Check
 } from 'lucide-react';
 import { useThongKeBoLoc } from './useThongKeBoLoc';
+import { DanhSachTuyChon, KhoiLoc, CongTacGat, BIEU_TUONG_LOC } from './ThanhPhanBoLoc';
+import { demSoTieuChi, nhanGiaDangChon } from '@/utils/bo-loc';
 
+const ICON_CONG_TAC = { ho_tro_tra_gop_0: ShieldCheck, dang_giam_gia: BadgePercent, con_hang_san: Check };
+const MO_TA_CONG_TAC = {
+    ho_tro_tra_gop_0: 'Mua trước trả sau, lãi suất 0%',
+    dang_giam_gia: 'Sản phẩm có giá khuyến mãi hoặc Flash Sale',
+    con_hang_san: 'Ẩn sản phẩm tạm hết hàng'
+};
+
+// Màu ô chữ cái đại diện cho thương hiệu (viết đủ class để Tailwind nhận diện)
+const MAU_O_HANG = [
+    'bg-blue-100 text-blue-700', 'bg-rose-100 text-rose-700', 'bg-emerald-100 text-emerald-700', 'bg-amber-100 text-amber-700',
+    'bg-violet-100 text-violet-700', 'bg-cyan-100 text-cyan-700', 'bg-pink-100 text-pink-700', 'bg-indigo-100 text-indigo-700'
+];
+const mauOHang = (ten) => MAU_O_HANG[[...String(ten)].reduce((t, c) => t + c.charCodeAt(0), 0) % MAU_O_HANG.length];
+
+// Gom tên các mục đã chọn thành một dòng ngắn để hiện ngay cả khi khối đang gập
+const tomTatDaChon = (tuyChon, daChon) => {
+    const ten = tuyChon.filter((x) => daChon.includes(x.ma)).map((x) => x.nhan);
+    return ten.length ? ten.join(', ') : '';
+};
+
+/**
+ * Drawer "Tất cả bộ lọc" (trượt từ phải).
+ * - Vẽ qua portal ngay dưới <body> để luôn nằm trên nút chat, Zalo và thanh điều hướng.
+ * - Mỗi nhóm là một khối có màu riêng, gập/mở được; chỉ mở sẵn Giá và Thương hiệu cho đỡ rối.
+ * - Nhóm cấu hình máy và công tắc đọc từ utils/bo-loc.js nên thêm nhóm mới tự có mặt ở đây.
+ */
 export default function BoLocSanPhamComponent({
     mo = false,
     onDong = () => { },
@@ -15,15 +44,16 @@ export default function BoLocSanPhamComponent({
     tatCaSanPham = [],
     tongKetQua = 0
 }) {
-    // Tìm kiếm nhanh hãng trong bảng lọc
     const [tuKhoaHang, setTuKhoaHang] = useState('');
+    const [daGan, setDaGan] = useState(false);
 
-    // Đóng khi nhấn phím ESC
+    // Portal chỉ chạy được sau khi đã có document (tránh lỗi khi render trên server)
+    useEffect(() => { setDaGan(true); }, []);
+
+    // Đóng khi nhấn ESC
     useEffect(() => {
         const handleKeyDown = (e) => {
-            if (e.key === 'Escape' && mo) {
-                onDong();
-            }
+            if (e.key === 'Escape' && mo) onDong();
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
@@ -31,14 +61,8 @@ export default function BoLocSanPhamComponent({
 
     // Khóa cuộn trang khi drawer đang mở
     useEffect(() => {
-        if (mo) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-        };
+        document.body.style.overflow = mo ? 'hidden' : '';
+        return () => { document.body.style.overflow = ''; };
     }, [mo]);
 
     // Thống kê theo DB + theo bộ lọc đang chọn (mục hết hàng tự ẩn)
@@ -48,340 +72,257 @@ export default function BoLocSanPhamComponent({
         return kw ? thongKe.danhSachHang.filter((h) => h.ten.toLowerCase().includes(kw) || h.ma.includes(kw)) : thongKe.danhSachHang;
     }, [thongKe.danhSachHang, tuKhoaHang]);
 
-    // Helper toggle mảng
+    // Bật/tắt một mã trong nhóm chọn nhiều
     const togglePhanTu = (khoa, giaTri) => {
         const hienTai = boLocHienTai[khoa] || [];
-        const moi = hienTai.includes(giaTri)
-            ? hienTai.filter(v => v !== giaTri)
-            : [...hienTai, giaTri];
-        onThayDoiBoLoc({ ...boLocHienTai, [khoa]: moi });
+        onThayDoiBoLoc({
+            ...boLocHienTai,
+            [khoa]: hienTai.includes(giaTri) ? hienTai.filter((v) => v !== giaTri) : [...hienTai, giaTri]
+        });
     };
 
-    // Chọn giá
+    // Nhu cầu / loại phụ kiện chỉ chọn 1 mục: bấm lại để bỏ chọn
+    const chonDanhMuc = (ma) => {
+        const dangChon = boLocHienTai.danh_muc?.includes(ma);
+        onThayDoiBoLoc({ ...boLocHienTai, danh_muc: dangChon ? [] : [ma] });
+    };
+
     const chonGia = (min, max) => {
-        if (boLocHienTai.muc_gia_toi_thieu === min && boLocHienTai.muc_gia_toi_da === max) {
-            onThayDoiBoLoc({ ...boLocHienTai, muc_gia_toi_thieu: undefined, muc_gia_toi_da: undefined });
-        } else {
-            onThayDoiBoLoc({ ...boLocHienTai, muc_gia_toi_thieu: min, muc_gia_toi_da: max });
-        }
+        const dangChon = boLocHienTai.muc_gia_toi_thieu === min && boLocHienTai.muc_gia_toi_da === max;
+        onThayDoiBoLoc({
+            ...boLocHienTai,
+            muc_gia_toi_thieu: dangChon ? undefined : min,
+            muc_gia_toi_da: dangChon ? undefined : max
+        });
     };
 
-    if (!mo) return null;
+    if (!mo || !daGan) return null;
 
-    return (
-        <div className="fixed inset-0 z-[999] flex justify-end animate-in fade-in duration-200">
-            {/* Backdrop làm mờ */}
-            <div
-                onClick={onDong}
-                className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
-            />
+    const soTieuChi = demSoTieuChi(boLocHienTai);
+    const hangDaChon = boLocHienTai.hang_san_xuat || [];
+    const danhMucDaChon = boLocHienTai.danh_muc || [];
+    const nhanGia = nhanGiaDangChon(boLocHienTai);
+    const nhuCauDaChon = thongKe.nhuCau.filter((x) => danhMucDaChon.includes(x.ma));
+    const loaiDaChon = thongKe.loaiSanPham.filter((x) => danhMucDaChon.includes(x.ma));
+    const congTacDangBat = thongKe.congTac.filter((t) => t.dangBat);
 
-            {/* Khung Drawer Trượt Phải */}
-            <div className="relative w-full max-w-xl h-full bg-white dark:bg-slate-900 shadow-2xl flex flex-col z-10 border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-300">
-                {/* 1. Header Drawer */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-cyan-400 flex items-center justify-center">
-                            <SlidersHorizontal className="w-4 h-4" />
-                        </div>
-                        <div>
-                            <h2 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-wide">
-                                Tất Cả Bộ Lọc
-                            </h2>
-                            <p className="text-xs text-slate-400">
-                                Chỉ hiện lựa chọn còn sản phẩm phù hợp
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex justify-end animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-label="Tất cả bộ lọc">
+            {/* Nền mờ: bấm để đóng */}
+            <div onClick={onDong} className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" />
+
+            <div className="relative w-full max-w-md sm:max-w-lg h-full bg-slate-50 dark:bg-slate-950 shadow-2xl flex flex-col z-10 border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-300">
+                {/* 1. Tiêu đề */}
+                <div className="flex items-center justify-between gap-3 px-4 py-3.5 shrink-0 bg-gradient-to-r from-[#0052cc] to-[#0a7cff] text-white">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                            <SlidersHorizontal className="w-5 h-5" />
+                        </span>
+                        <div className="min-w-0">
+                            <h2 className="text-base font-black uppercase tracking-wide leading-tight">Tất cả bộ lọc</h2>
+                            <p className="text-[11px] font-semibold text-white/80 truncate">
+                                {soTieuChi > 0 ? `Đang chọn ${soTieuChi} tiêu chí` : 'Chọn tiêu chí để thu hẹp kết quả'}
                             </p>
                         </div>
                     </div>
-
                     <button
+                        type="button"
                         onClick={onDong}
-                        className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
                         title="Đóng bộ lọc"
+                        className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors cursor-pointer shrink-0"
                     >
                         <X className="w-4 h-4" />
                     </button>
                 </div>
 
-                {/* 2. Body Cuộn Chứa Toàn Bộ Tiêu Chí Lọc */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-thin">
-                    {/* Mục 1: Mức Giá Phù Hợp */}
-                    <div className="space-y-2.5">
-                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                            <DollarSign className="w-4 h-4 text-amber-500" />
-                            <span>Mức Giá Phù Hợp</span>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                            {[
-                                { nhan: 'Tất cả giá', min: undefined, max: undefined },
-                                { nhan: 'Dưới 15 Triệu', min: 0, max: 15000000 },
-                                { nhan: '15 - 25 Triệu', min: 15000000, max: 25000000 },
-                                { nhan: '25 - 50 Triệu', min: 25000000, max: 50000000 },
-                                { nhan: '50 - 80 Triệu', min: 50000000, max: 80000000 },
-                                { nhan: 'Trên 80 Triệu', min: 80000000, max: undefined }
-                            ].map((g, idx) => {
-                                const laChon = boLocHienTai.muc_gia_toi_thieu === g.min && boLocHienTai.muc_gia_toi_da === g.max;
-                                return (
-                                    <button
-                                        key={idx}
-                                        onClick={() => chonGia(g.min, g.max)}
-                                        className={`py-2 px-2.5 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer truncate ${
-                                            laChon
-                                                ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-500 text-amber-700 dark:text-amber-400 shadow-2xs'
-                                                : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-amber-300'
-                                        }`}
-                                    >
-                                        {g.nhan}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
+                {/* 2. Thân cuộn: các khối lọc */}
+                <div className="flex-1 overflow-y-auto p-3.5 space-y-3 scrollbar-thin">
+                    {/* Mức giá */}
+                    <KhoiLoc
+                        tieuDe="Mức giá"
+                        Icon={DollarSign}
+                        mau="amber"
+                        moMacDinh
+                        soDaChon={nhanGia ? 1 : 0}
+                        ghiChu={nhanGia || 'Tất cả mức giá'}
+                        onBoChon={() => onThayDoiBoLoc({ ...boLocHienTai, muc_gia_toi_thieu: undefined, muc_gia_toi_da: undefined })}
+                    >
+                        <DanhSachTuyChon
+                            kieu="luoi"
+                            soCot={2}
+                            mau="amber"
+                            chonMotMuc
+                            daChon={thongKe.khoangGia
+                                .filter((k) => k.nhanNgan !== null && k.min === boLocHienTai.muc_gia_toi_thieu && k.max === boLocHienTai.muc_gia_toi_da)
+                                .map((k) => k.nhan)}
+                            onToggle={(nhan) => {
+                                const k = thongKe.khoangGia.find((x) => x.nhan === nhan);
+                                chonGia(k.min, k.max);
+                            }}
+                            tuyChon={thongKe.khoangGia.filter((k) => k.nhanNgan !== null).map((k) => ({ ma: k.nhan, nhan: k.nhan, soLuong: k.soLuong }))}
+                        />
+                    </KhoiLoc>
 
-                    {/* Mục 2: Thương Hiệu Có Logo Nhận Diện */}
-                    <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                                <Tag className="w-4 h-4 text-blue-600 dark:text-cyan-400" />
-                                <span>Thương Hiệu Sản Phẩm ({danhSachHang.length})</span>
-                            </div>
-                            {boLocHienTai.hang_san_xuat?.length > 0 && (
-                                <span className="text-[11px] font-bold text-blue-600">
-                                    Đã chọn ({boLocHienTai.hang_san_xuat.length})
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Ô tìm hãng */}
+                    {/* Thương hiệu */}
+                    <KhoiLoc
+                        tieuDe="Thương hiệu"
+                        Icon={Tag}
+                        mau="blue"
+                        moMacDinh
+                        soDaChon={hangDaChon.length}
+                        ghiChu={tomTatDaChon(thongKe.danhSachHang.map((h) => ({ ma: h.ma, nhan: h.ten })), hangDaChon) || `${thongKe.danhSachHang.length} thương hiệu`}
+                        onBoChon={() => onThayDoiBoLoc({ ...boLocHienTai, hang_san_xuat: [] })}
+                    >
                         <div className="relative">
                             <input
                                 type="text"
                                 value={tuKhoaHang}
                                 onChange={(e) => setTuKhoaHang(e.target.value)}
                                 placeholder="Tìm nhanh thương hiệu..."
-                                className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-blue-500"
+                                className="w-full pl-8 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:border-blue-500"
                             />
                             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                             {tuKhoaHang && (
-                                <X
-                                    className="w-3.5 h-3.5 text-slate-400 hover:text-red-500 absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer"
-                                    onClick={() => setTuKhoaHang('')}
-                                />
+                                <button type="button" onClick={() => setTuKhoaHang('')} aria-label="Xóa từ khóa" className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 cursor-pointer">
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
                             )}
                         </div>
-
-                        {/* Lưới các hãng kèm logo */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-52 overflow-y-auto pr-1 scrollbar-thin">
-                            {danhSachHang.length === 0 && <div className="col-span-full text-xs text-slate-400 py-2">Không có thương hiệu phù hợp với bộ lọc hiện tại</div>}
-                            {danhSachHang.map((th) => {
-                                const dangChon = boLocHienTai.hang_san_xuat?.includes(th.ma);
-                                return (
-                                    <button
-                                        key={th.ma}
-                                        onClick={() => togglePhanTu('hang_san_xuat', th.ma)}
-                                        className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-bold transition-all cursor-pointer ${
-                                            dangChon
-                                                ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-cyan-300 shadow-2xs'
-                                                : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-blue-300'
-                                        }`}
-                                    >
-                                        <span className="truncate text-[12px]">{th.ten}</span>
-                                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-bold ml-1 shrink-0 ${
-                                            dangChon ? 'bg-blue-600 text-white' : 'text-slate-400'
-                                        }`}>
-                                            {th.soLuong}
-                                        </span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Mục 3: Laptop theo nhu cầu (DB: nhu_cau) */}
-                    {thongKe.nhuCau.length > 0 && (
-                        <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                                <Laptop className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                <span>Laptop theo nhu cầu</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                {thongKe.nhuCau.map((dm) => {
-                                    const dangChon = boLocHienTai.danh_muc?.includes(dm.ma);
-                                    return (
-                                        <button
-                                            key={dm.ma}
-                                            onClick={() => onThayDoiBoLoc({ ...boLocHienTai, danh_muc: dangChon ? [] : [dm.ma] })}
-                                            className={`p-2.5 rounded-xl border flex items-center justify-between gap-1 text-xs font-bold transition-all cursor-pointer ${
-                                                dangChon
-                                                    ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-600 text-purple-700 dark:text-purple-300 shadow-2xs'
-                                                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-purple-300'
-                                            }`}
-                                        >
-                                            <span className="text-[12px] text-left leading-tight">{dm.ten}</span>
-                                            <span className={`text-[10px] px-1.5 rounded font-bold shrink-0 ${dangChon ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>
-                                                {dm.soLuong}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Mục 3b: Phụ kiện & linh kiện (DB: loai_san_pham) */}
-                    {thongKe.loaiSanPham.length > 0 && (
-                        <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                                <Package className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
-                                <span>Phụ kiện &amp; linh kiện</span>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                                {thongKe.loaiSanPham.map((dm) => {
-                                    const dangChon = boLocHienTai.danh_muc?.includes(dm.ma);
-                                    return (
-                                        <button
-                                            key={dm.ma}
-                                            onClick={() => onThayDoiBoLoc({ ...boLocHienTai, danh_muc: dangChon ? [] : [dm.ma] })}
-                                            className={`p-2.5 rounded-xl border flex items-center justify-between gap-1 text-xs font-bold transition-all cursor-pointer ${
-                                                dangChon
-                                                    ? 'bg-cyan-50 dark:bg-cyan-950/60 border-cyan-600 text-cyan-700 dark:text-cyan-300 shadow-2xs'
-                                                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-cyan-300'
-                                            }`}
-                                        >
-                                            <span className="text-[12px] text-left leading-tight">{dm.ten}</span>
-                                            <span className={`text-[10px] px-1.5 rounded font-bold shrink-0 ${dangChon ? 'bg-cyan-600 text-white' : 'text-slate-400'}`}>
-                                                {dm.soLuong}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {thongKe.cpu.length > 0 && (
-                        <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                                <Cpu className="w-4 h-4 text-indigo-500" />
-                                <span>Vi xử lý (CPU)</span>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {thongKe.cpu.map((x) => {
-                                    const dangChon = boLocHienTai.cpu_dong?.includes(x.ma);
-                                    return (
-                                        <button
-                                            key={x.ma}
-                                            onClick={() => togglePhanTu('cpu_dong', x.ma)}
-                                            className={`py-2 px-1.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
-                                                dangChon
-                                                    ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300'
-                                                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-indigo-300'
-                                            }`}
-                                        >
-                                            <div className="text-[12px] truncate">{x.nhan}</div>
-                                            <span className="text-[10px] text-slate-400">({x.soLuong})</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {thongKe.gpu.length > 0 && (
-                        <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                                <Layers className="w-4 h-4 text-emerald-500" />
-                                <span>Card đồ họa (GPU)</span>
-                            </div>
-                            <div className="grid grid-cols-3 gap-2">
-                                {thongKe.gpu.map((x) => {
-                                    const dangChon = boLocHienTai.card_do_hoa?.includes(x.ma);
-                                    return (
-                                        <button
-                                            key={x.ma}
-                                            onClick={() => togglePhanTu('card_do_hoa', x.ma)}
-                                            className={`py-2 px-1.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
-                                                dangChon
-                                                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-700 dark:text-emerald-300'
-                                                    : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-300'
-                                            }`}
-                                        >
-                                            <div className="text-[12px] truncate">{x.nhan}</div>
-                                            <span className="text-[10px] text-slate-400">({x.soLuong})</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Mục 6: Dung lượng RAM (chỉ khi có laptop) */}
-                    {thongKe.coLaptop && (
-                    <div className="space-y-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                            <span>Dung Lượng RAM</span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2">
-                            {[
-                                { ma: '16gb', nhan: '16 GB' },
-                                { ma: '32gb', nhan: '32 GB - 48 GB' },
-                                { ma: '64gb', nhan: '64 GB - 128 GB' }
-                            ].map((r) => {
-                                const dangChon = boLocHienTai.ram_dung_luong?.includes(r.ma);
-                                return (
-                                    <button
-                                        key={r.ma}
-                                        onClick={() => togglePhanTu('ram_dung_luong', r.ma)}
-                                        className={`py-2 px-2 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer ${
-                                            dangChon
-                                                ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-600 text-blue-700 dark:text-cyan-300'
-                                                : 'bg-slate-50/70 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                                        }`}
-                                    >
-                                        {r.nhan}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    )}
-
-                    {/* Mục 7: Tiện ích & Ưu đãi */}
-                    <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                        <label className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 cursor-pointer select-none">
-                            <span className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
-                                <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                                <span>Ưu tiên sản phẩm hỗ trợ Trả Góp 0%</span>
-                            </span>
-                            <input
-                                type="checkbox"
-                                checked={!!boLocHienTai.ho_tro_tra_gop_0}
-                                onChange={(e) => onThayDoiBoLoc({ ...boLocHienTai, ho_tro_tra_gop_0: e.target.checked })}
-                                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        {danhSachHang.length === 0 ? (
+                            <div className="text-xs text-slate-400 py-1">Không có thương hiệu phù hợp</div>
+                        ) : (
+                            <DanhSachTuyChon
+                                kieu="luoi"
+                                soCot={2}
+                                cao="max-h-60"
+                                mau="blue"
+                                daChon={hangDaChon}
+                                onToggle={(ma) => togglePhanTu('hang_san_xuat', ma)}
+                                tuyChon={danhSachHang.map((h) => ({ ma: h.ma, nhan: h.ten, soLuong: h.soLuong }))}
+                                renderTruoc={(x) => (
+                                    <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 ${mauOHang(x.nhan)}`}>
+                                        {String(x.nhan).charAt(0).toUpperCase()}
+                                    </span>
+                                )}
                             />
-                        </label>
-                    </div>
+                        )}
+                    </KhoiLoc>
+
+                    {/* Laptop theo nhu cầu (DB: nhu_cau) */}
+                    {thongKe.nhuCau.length > 0 && (
+                        <KhoiLoc
+                            tieuDe="Laptop theo nhu cầu"
+                            Icon={Laptop}
+                            mau="purple"
+                            soDaChon={nhuCauDaChon.length}
+                            ghiChu={nhuCauDaChon.map((x) => x.ten).join(', ') || `${thongKe.nhuCau.length} nhóm`}
+                            onBoChon={() => onThayDoiBoLoc({ ...boLocHienTai, danh_muc: [] })}
+                        >
+                            <DanhSachTuyChon
+                                kieu="luoi"
+                                mau="purple"
+                                chonMotMuc
+                                daChon={danhMucDaChon}
+                                onToggle={chonDanhMuc}
+                                tuyChon={thongKe.nhuCau.map((x) => ({ ma: x.ma, nhan: x.ten, soLuong: x.soLuong }))}
+                            />
+                        </KhoiLoc>
+                    )}
+
+                    {/* Phụ kiện & linh kiện (DB: loai_san_pham) */}
+                    {thongKe.loaiSanPham.length > 0 && (
+                        <KhoiLoc
+                            tieuDe="Phụ kiện & linh kiện"
+                            Icon={Package}
+                            mau="teal"
+                            soDaChon={loaiDaChon.length}
+                            ghiChu={loaiDaChon.map((x) => x.ten).join(', ') || `${thongKe.loaiSanPham.length} loại`}
+                            onBoChon={() => onThayDoiBoLoc({ ...boLocHienTai, danh_muc: [] })}
+                        >
+                            <DanhSachTuyChon
+                                kieu="luoi"
+                                mau="teal"
+                                chonMotMuc
+                                daChon={danhMucDaChon}
+                                onToggle={chonDanhMuc}
+                                tuyChon={thongKe.loaiSanPham.map((x) => ({ ma: x.ma, nhan: x.ten, soLuong: x.soLuong }))}
+                            />
+                        </KhoiLoc>
+                    )}
+
+                    {/* Cấu hình máy: CPU, RAM, ổ cứng, card, màn hình, tần số quét, tấm nền (chỉ hiện nhóm còn sản phẩm) */}
+                    {thongKe.nhomMay.map((nhom) => {
+                        const daChon = boLocHienTai[nhom.khoa] || [];
+                        return (
+                            <KhoiLoc
+                                key={nhom.khoa}
+                                tieuDe={nhom.nhan}
+                                Icon={BIEU_TUONG_LOC[nhom.bieuTuong]}
+                                mau={nhom.mau}
+                                soDaChon={daChon.length}
+                                ghiChu={tomTatDaChon(nhom.tuyChon, daChon) || `${nhom.tuyChon.length} lựa chọn`}
+                                onBoChon={() => onThayDoiBoLoc({ ...boLocHienTai, [nhom.khoa]: [] })}
+                            >
+                                <DanhSachTuyChon
+                                    kieu="luoi"
+                                    soCot={nhom.tuyChon.length > 4 ? 3 : 2}
+                                    mau={nhom.mau}
+                                    daChon={daChon}
+                                    onToggle={(ma) => togglePhanTu(nhom.khoa, ma)}
+                                    tuyChon={nhom.tuyChon}
+                                />
+                            </KhoiLoc>
+                        );
+                    })}
+
+                    {/* Ưu đãi & tình trạng */}
+                    {thongKe.congTac.length > 0 && (
+                        <KhoiLoc
+                            tieuDe="Ưu đãi & tình trạng"
+                            Icon={BadgePercent}
+                            mau="emerald"
+                            soDaChon={congTacDangBat.length}
+                            ghiChu={congTacDangBat.map((t) => t.nhan).join(', ') || 'Trả góp, giảm giá, còn hàng'}
+                        >
+                            <div className="space-y-2">
+                                {thongKe.congTac.map((t) => (
+                                    <CongTacGat
+                                        key={t.khoa}
+                                        nhan={t.nhanDai}
+                                        moTa={MO_TA_CONG_TAC[t.khoa]}
+                                        soLuong={t.soLuong}
+                                        dangBat={t.dangBat}
+                                        Icon={ICON_CONG_TAC[t.khoa]}
+                                        onDoi={() => onThayDoiBoLoc({ ...boLocHienTai, [t.khoa]: !t.dangBat })}
+                                    />
+                                ))}
+                            </div>
+                        </KhoiLoc>
+                    )}
                 </div>
 
-                {/* 3. Footer Sticky: Đặt lại + Xem kết quả */}
-                <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 flex items-center gap-3 shrink-0">
+                {/* 3. Chân drawer: thiết lập lại + xem kết quả */}
+                <div className="p-3.5 border-t-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3 shrink-0">
                     <button
+                        type="button"
                         onClick={onDatLaiBoLoc}
-                        className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        disabled={soTieuChi === 0}
+                        className="h-11 px-4 rounded-xl border-2 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-red-400 hover:text-red-600 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-300 disabled:hover:text-slate-700"
                     >
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span>Thiết lập lại</span>
                     </button>
 
                     <button
+                        type="button"
                         onClick={onDong}
-                        className="flex-1 py-2.5 px-4 rounded-xl bg-[#0052cc] hover:bg-[#003da5] text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-[0.98]"
+                        className="flex-1 h-11 px-4 rounded-xl bg-gradient-to-r from-[#0052cc] to-[#0a7cff] hover:from-[#003da5] hover:to-[#0052cc] text-white text-sm font-extrabold flex items-center justify-center gap-2 shadow-md shadow-blue-600/30 transition-all cursor-pointer active:scale-[0.98]"
                     >
                         <span>Xem {tongKetQua} sản phẩm</span>
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

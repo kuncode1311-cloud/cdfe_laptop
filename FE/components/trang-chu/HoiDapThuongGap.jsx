@@ -76,39 +76,39 @@ export default function HoiDapThuongGap() {
         return (
             <div
                 key={faq.id}
-                className={`relative bg-white dark:bg-slate-800 rounded-2xl border transition-all duration-300 overflow-hidden ${
+                className={`relative bg-white dark:bg-slate-800 rounded-xl border-[1.5px] transition-all duration-300 ease-in-out overflow-hidden ${
                     dangMo
-                        ? 'border-blue-400 dark:border-blue-500 shadow-[0_12px_32px_-8px_rgba(0,82,204,0.22)]'
-                        : 'border-blue-100/90 dark:border-slate-700 shadow-[0_4px_20px_rgba(0,82,204,0.06)] hover:shadow-[0_10px_28px_-8px_rgba(0,82,204,0.18)] hover:border-blue-300 dark:hover:border-blue-500'
+                        ? 'border-blue-600 dark:border-blue-400 shadow-[0_10px_26px_-8px_rgba(0,82,204,0.35)]'
+                        : 'border-blue-300 dark:border-slate-600 shadow-sm hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-[0_8px_20px_-8px_rgba(0,82,204,0.28)]'
                 }`}
             >
                 {/* Vạch màu bên trái báo hiệu câu đang mở */}
-                <span className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-blue-500 to-sky-400 transition-opacity duration-300 ${dangMo ? 'opacity-100' : 'opacity-0'}`} />
+                <span className={`absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 to-sky-400 transition-opacity duration-300 ${dangMo ? 'opacity-100' : 'opacity-0'}`} />
 
                 {/* Tiêu đề câu hỏi & Nút toggle */}
                 <button
                     type="button"
                     onClick={() => toggleCauHoi(faq.id)}
                     aria-expanded={dangMo}
-                    className="w-full px-4 py-4 sm:px-6 sm:py-5 flex items-center justify-between gap-4 text-left cursor-pointer select-none group"
+                    className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 flex items-center justify-between gap-3 text-left cursor-pointer select-none group"
                 >
-                    <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                        {/* Số thứ tự lớn mờ */}
-                        <span className={`hidden sm:block w-9 text-3xl font-black tabular-nums leading-none transition-colors ${dangMo ? 'text-blue-500' : 'text-slate-200 dark:text-slate-600 group-hover:text-blue-300'}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                        {/* Số thứ tự nhỏ gọn, đủ đậm để nhìn rõ */}
+                        <span className={`hidden sm:block w-6 text-base font-black tabular-nums leading-none transition-colors ${dangMo ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-blue-500'}`}>
                             {String(viTri + 1).padStart(2, '0')}
                         </span>
 
                         {/* Icon hình vuông bo góc mềm */}
-                        <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${faq.iconBg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
-                            <IconComponent className="w-6 h-6 sm:w-7 sm:h-7" />
+                        <div className={`w-10 h-10 rounded-xl ${faq.iconBg} flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300`}>
+                            <IconComponent className="w-5 h-5" />
                         </div>
 
                         {/* Tag & Câu hỏi */}
-                        <div className="space-y-1.5 min-w-0">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wide ${faq.tagBg}`}>
+                        <div className="space-y-0.5 min-w-0">
+                            <span className={`inline-block px-2 py-px rounded text-[9.5px] font-extrabold uppercase tracking-wide ${faq.tagBg}`}>
                                 {faq.tag}
                             </span>
-                            <h3 className={`font-bold text-sm sm:text-base leading-snug transition-colors ${
+                            <h3 className={`font-bold text-[13px] sm:text-sm leading-snug transition-colors ${
                                 dangMo ? 'text-blue-600 dark:text-blue-400' : 'text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400'
                             }`}>
                                 {faq.cauHoi}
@@ -117,25 +117,25 @@ export default function HoiDapThuongGap() {
                     </div>
 
                     {/* Nút mũi tên tròn xoay khi mở */}
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ease-in-out ${
                         dangMo
                             ? 'rotate-180 bg-blue-600 text-white shadow-md'
                             : 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 group-hover:bg-blue-100 dark:group-hover:bg-blue-900'
                     }`}>
-                        <ChevronDown className="w-5 h-5 stroke-[2.5]" />
+                        <ChevronDown className="w-4 h-4 stroke-[2.5]" />
                     </div>
                 </button>
 
                 {/* Nội dung câu trả lời: bung mượt bằng grid-rows */}
-                <div className={`grid transition-all duration-300 ease-out ${dangMo ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                <div className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${dangMo ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                     <div className="overflow-hidden">
-                        <div className="mx-4 sm:mx-6 mb-5 pt-4 border-t border-slate-100 dark:border-slate-700/60 sm:pl-[5.75rem] text-slate-600 dark:text-slate-300 text-[13px] sm:text-sm leading-relaxed space-y-3">
+                        <div className={`mx-3.5 sm:mx-4 mb-3 pt-3 border-t border-blue-100 dark:border-slate-700/60 sm:pl-[3.25rem] text-slate-600 dark:text-slate-300 text-[12.5px] leading-relaxed space-y-2 transition-transform duration-500 ease-in-out ${dangMo ? 'translate-y-0' : '-translate-y-2'}`}>
                             <p className="font-semibold text-slate-800 dark:text-slate-200">
                                 {faq.traLoi}
                             </p>
-                            <ul className="space-y-2.5">
+                            <ul className="space-y-1.5">
                                 {faq.diemNoiBat.map((diem, i) => (
-                                    <li key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60">
+                                    <li key={i} className="flex items-start gap-2 px-2.5 py-2 rounded-lg bg-blue-50/70 dark:bg-slate-900/60 border border-blue-100/80 dark:border-slate-700">
                                         <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                                         <span>{diem}</span>
                                     </li>
@@ -149,7 +149,7 @@ export default function HoiDapThuongGap() {
     };
 
     return (
-        <section className="relative rounded-3xl p-6 sm:p-8 lg:p-10 bg-gradient-to-b from-[#dbeafe]/90 via-[#ebf4fe] to-[#dff0fd] dark:from-[#0b1329] dark:via-[#0f172a] dark:to-[#0a1022] border-2 border-blue-200 dark:border-blue-900/70 shadow-[0_16px_45px_-12px_rgba(0,82,204,0.15)] space-y-6 sm:space-y-8 overflow-hidden transition-all">
+        <section className="relative rounded-3xl p-4 sm:p-6 lg:p-7 bg-gradient-to-b from-[#dbeafe]/90 via-[#ebf4fe] to-[#dff0fd] dark:from-[#0b1329] dark:via-[#0f172a] dark:to-[#0a1022] border-2 border-blue-300 dark:border-blue-900/70 shadow-[0_16px_45px_-12px_rgba(0,82,204,0.15)] space-y-4 sm:space-y-5 overflow-hidden transition-all">
             {/* Họa tiết lưới chấm trang trí bên trái rõ nét như ảnh mẫu */}
             <div className="absolute top-1/4 -left-3 w-32 h-44 bg-[radial-gradient(#3b82f6_1.5px,transparent_1.5px)] [background-size:12px_12px] opacity-35 dark:opacity-25 pointer-events-none" />
 
@@ -167,7 +167,7 @@ export default function HoiDapThuongGap() {
                     </div>
 
                     {/* Tiêu đề chính */}
-                    <h2 className="text-2xl sm:text-[28px] lg:text-[30px] font-black text-slate-900 dark:text-white tracking-tight">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                         CÂU HỎI THƯỜNG GẶP KHI MUA LAPTOP TẠI <span className="text-[#0066cc] dark:text-[#38bdf8]">TNTP LAPTOP</span>
                     </h2>
 
@@ -195,7 +195,7 @@ export default function HoiDapThuongGap() {
             </div>
 
             {/* 2. Danh sách câu hỏi: mỗi hàng 1 câu, dùng chung cho mọi kích thước màn hình */}
-            <div className="relative z-10 flex flex-col gap-3.5 sm:gap-4">
+            <div className="relative z-10 flex flex-col gap-2.5">
                 {DANH_SACH_FAQ.map(renderTheFaq)}
             </div>
 

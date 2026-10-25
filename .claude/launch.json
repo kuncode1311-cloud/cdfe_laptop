@@ -1,0 +1,7 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "be", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "BE", "start"], "port": 5000 },
+    { "name": "fe", "runtimeExecutable": "npm", "runtimeArgs": ["--prefix", "FE", "run", "dev"], "port": 3000 }
+  ]
+}

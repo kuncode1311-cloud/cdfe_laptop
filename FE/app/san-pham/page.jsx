@@ -12,6 +12,7 @@ import BoLocSanPhamComponent from '@/components/san-pham/BoLocSanPham';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
 import { useDuLieuMoi } from '@/services/dong-bo.service';
+import { taoBoLocMacDinh, demSoTieuChi } from '@/utils/bo-loc';
 
 function NoiDungDanhSachSanPham() {
     const searchParams = useSearchParams();
@@ -21,18 +22,13 @@ function NoiDungDanhSachSanPham() {
     const danhMucParam = searchParams.get('danh_muc');
     const tuKhoaParam = searchParams.get('tu_khoa') || '';
 
-    const [boLoc, setBoLoc] = useState({
-        tu_khoa: tuKhoaParam,
-        hang_san_xuat: hangParam ? [hangParam] : [],
-        danh_muc: danhMucParam ? [danhMucParam] : [],
-        card_do_hoa: [],
-        cpu_dong: [],
-        ram_dung_luong: [],
-        muc_gia_toi_thieu: undefined,
-        muc_gia_toi_da: undefined,
-        ho_tro_tra_gop_0: false,
-        sap_xep: 'moi_nhat'
-    });
+    const [boLoc, setBoLoc] = useState(() =>
+        taoBoLocMacDinh({
+            tu_khoa: tuKhoaParam,
+            hang_san_xuat: hangParam ? [hangParam] : [],
+            danh_muc: danhMucParam ? [danhMucParam] : []
+        })
+    );
 
     const [dangLoc, setDangLoc] = useState(false);
     const daMountBoLocRef = React.useRef(false);
@@ -155,31 +151,10 @@ function NoiDungDanhSachSanPham() {
     }, [boLoc, tatCaSanPham]);
 
     // Đặt lại toàn bộ bộ lọc
-    const datLaiBoLoc = () => {
-        setBoLoc({
-            tu_khoa: '',
-            hang_san_xuat: [],
-            danh_muc: [],
-            card_do_hoa: [],
-            cpu_dong: [],
-            ram_dung_luong: [],
-            muc_gia_toi_thieu: undefined,
-            muc_gia_toi_da: undefined,
-            tam_nen: [],
-            ho_tro_tra_gop_0: false,
-            sap_xep: 'moi_nhat'
-        });
-    };
+    const datLaiBoLoc = () => setBoLoc(taoBoLocMacDinh());
 
     // Đếm số lượng tiêu chí đang chọn
-    const soLuongDangLoc =
-        (boLoc.hang_san_xuat?.length || 0) +
-        (boLoc.card_do_hoa?.length || 0) +
-        (boLoc.cpu_dong?.length || 0) +
-        (boLoc.ram_dung_luong?.length || 0) +
-        (boLoc.muc_gia_toi_thieu !== undefined || boLoc.muc_gia_toi_da !== undefined ? 1 : 0) +
-        (boLoc.ho_tro_tra_gop_0 ? 1 : 0) +
-        (boLoc.tu_khoa?.trim() ? 1 : 0);
+    const soLuongDangLoc = demSoTieuChi(boLoc);
 
     return (
         <div className="space-y-3 sm:space-y-3.5">

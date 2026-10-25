@@ -1,6 +1,7 @@
 import { apiFetch } from './api-client';
 import { thongBaoThayDoi } from './dong-bo.service';
 import { taoSlug } from '@/utils/taoSlug';
+import { khopBoLocThongSo } from '@/utils/bo-loc';
 
 // =========================================================================
 // [BỘ NHỚ ĐỆM (CACHE) Ở FRONT-END]:
@@ -292,74 +293,10 @@ export const SanPhamService = {
         if (boLoc.muc_gia_toi_da !== undefined) {
             ketQua = ketQua.filter((sp) => sp.gia_khuyen_mai <= boLoc.muc_gia_toi_da);
         }
-        // 5. Lọc theo Card đồ họa
-        if (boLoc.card_do_hoa && boLoc.card_do_hoa.length > 0) {
-            ketQua = ketQua.filter((sp) => {
-                const gpuStr = (sp.thong_so?.card_do_hoa || '').toLowerCase();
-                return boLoc.card_do_hoa.some((gpu) => {
-                    if (gpu === 'rtx_4090')
-                        return gpuStr.includes('4090');
-                    if (gpu === 'rtx_4080')
-                        return gpuStr.includes('4080');
-                    if (gpu === 'rtx_4070')
-                        return gpuStr.includes('4070');
-                    if (gpu === 'rtx_4060')
-                        return gpuStr.includes('4060');
-                    if (gpu === 'rtx_4050')
-                        return gpuStr.includes('4050');
-                    if (gpu === 'card_onboard')
-                        return gpuStr.includes('arc') || gpuStr.includes('intel') || gpuStr.includes('gpu');
-                    return true;
-                });
-            });
-        }
-        // 6. Lọc theo CPU
-        if (boLoc.cpu_dong && boLoc.cpu_dong.length > 0) {
-            ketQua = ketQua.filter((sp) => {
-                const cpuStr = (sp.thong_so?.cpu || '').toLowerCase();
-                return boLoc.cpu_dong.some((c) => {
-                    if (c === 'core_ultra') return cpuStr.includes('ultra');
-                    if (c === 'core_i9') return cpuStr.includes('i9');
-                    if (c === 'core_i7') return cpuStr.includes('i7');
-                    if (c === 'core_i5') return cpuStr.includes('i5');
-                    if (c === 'ryzen') return cpuStr.includes('ryzen') || cpuStr.includes('amd');
-                    if (c === 'apple_m') return cpuStr.includes('apple') || cpuStr.includes('m3') || cpuStr.includes('m2') || cpuStr.includes('m1');
-                    return true;
-                });
-            });
-        }
-        // 7. Lọc theo RAM
-        if (boLoc.ram_dung_luong && boLoc.ram_dung_luong.length > 0) {
-            ketQua = ketQua.filter((sp) => {
-                const ramStr = (sp.thong_so?.ram || '').toLowerCase();
-                return boLoc.ram_dung_luong.some((r) => {
-                    if (r === '16gb')
-                        return ramStr.includes('16gb');
-                    if (r === '32gb')
-                        return ramStr.includes('32gb') || ramStr.includes('48gb');
-                    if (r === '64gb')
-                        return ramStr.includes('64gb') || ramStr.includes('128gb');
-                    return true;
-                });
-            });
-        }
-        // 8. Lọc theo Tấm nền
-        if (boLoc.tam_nen && boLoc.tam_nen.length > 0) {
-            ketQua = ketQua.filter((sp) => sp.thong_so?.tam_nen && boLoc.tam_nen.includes(sp.thong_so.tam_nen));
-        }
-        // 9. Lọc theo Tần số quét
-        if (boLoc.tan_so_quet && boLoc.tan_so_quet.length > 0) {
-            ketQua = ketQua.filter((sp) => boLoc.tan_so_quet.includes(sp.thong_so?.tan_so_quet));
-        }
-        // 10. Lọc Trả góp 0%
-        if (boLoc.ho_tro_tra_gop_0) {
-            ketQua = ketQua.filter((sp) => sp.ho_tro_tra_gop_0_phan_tram);
-        }
-        // 11. Lọc Còn hàng
-        if (boLoc.con_hang_san) {
-            ketQua = ketQua.filter((sp) => sp.con_hang && sp.so_luong_ton_kho > 0);
-        }
-        // 11. Sắp xếp kết quả
+        // 5. Lọc theo cấu hình máy (CPU, RAM, ổ cứng, card, màn hình, tần số quét, tấm nền) và các công tắc
+        //    (trả góp 0%, giảm giá, còn hàng): luật lọc khai báo tập trung ở utils/bo-loc.js
+        ketQua = ketQua.filter((sp) => khopBoLocThongSo(sp, boLoc));
+        // 6. Sắp xếp kết quả
         if (boLoc.sap_xep) {
             switch (boLoc.sap_xep) {
                 case 'gia_tang_dan':

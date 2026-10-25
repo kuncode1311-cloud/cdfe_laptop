@@ -1,17 +1,23 @@
 'use client';
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-    SlidersHorizontal, Check, ShieldCheck, DollarSign,
-    Cpu, Layers, ArrowUpDown, X, RotateCcw, LayoutGrid,
-    ListFilter, ChevronDown, Tag
+    SlidersHorizontal, DollarSign, Tag, ShieldCheck, BadgePercent,
+    ArrowUpDown, RotateCcw, LayoutGrid, ListFilter, Check
 } from 'lucide-react';
 import { useThongKeBoLoc } from './useThongKeBoLoc';
+import {
+    NhomLocDropdown, DanhSachTuyChon, NutCongTac, TheTagLoc, BIEU_TUONG_LOC
+} from './ThanhPhanBoLoc';
+import { NHOM_LOC_MAY, TOGGLE_LOC, nhanGiaDangChon } from '@/utils/bo-loc';
+
+const ICON_CONG_TAC = { ho_tro_tra_gop_0: ShieldCheck, dang_giam_gia: BadgePercent, con_hang_san: Check };
 
 /**
- * Thanh Bộ Lọc Tinh Gọn 1 Dòng (Single Row Smart Filter Bar)
- * - Không bị trùng lặp danh mục
- * - Tự động lọc thương hiệu phù hợp (Laptop hoặc Phụ kiện)
- * - Đầy đủ các bộ lọc Dropdown nhanh: Hãng, Giá, CPU, GPU, Trả góp 0%, Sắp xếp
+ * Thanh Bộ Lọc Nhanh 1 Dòng
+ * - Chỉ hiện các nhóm lọc phổ biến (hãng, giá, CPU, RAM, ổ cứng, card, trả góp, giảm giá);
+ *   các tiêu chí còn lại (màn hình, tần số quét, tấm nền, còn hàng...) nằm trong nút "Bộ lọc".
+ * - Nhóm nào không còn sản phẩm phù hợp (ví dụ đang xem phụ kiện) sẽ tự ẩn.
+ * - Các nhóm đọc từ utils/bo-loc.js nên thêm nhóm mới không cần sửa file này.
  */
 export default function ThanhBoLocTinhGon({
     boLocHienTai,
@@ -19,99 +25,70 @@ export default function ThanhBoLocTinhGon({
     onMoBoLocToanDien,
     soLuongDangLoc = 0,
     tatCaSanPham = [],
-    tongKetQua = 0,
     cheDoHienThi = 'luoi',
     onThayDoiCheDoHienThi = () => { },
     onDatLaiBoLoc = () => { }
 }) {
     const [dropdownMo, setDropdownMo] = useState(null);
-    const dropdownRef = useRef(null);
+    const khungRef = useRef(null);
 
-    // Đóng dropdown khi click ra ngoài
+    // Đóng dropdown khi bấm ra ngoài hoặc nhấn ESC
     useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setDropdownMo(null);
-            }
+        const dongKhiBamNgoai = (e) => {
+            if (khungRef.current && !khungRef.current.contains(e.target)) setDropdownMo(null);
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        const dongKhiNhanEsc = (e) => e.key === 'Escape' && setDropdownMo(null);
+        document.addEventListener('mousedown', dongKhiBamNgoai);
+        document.addEventListener('keydown', dongKhiNhanEsc);
+        return () => {
+            document.removeEventListener('mousedown', dongKhiBamNgoai);
+            document.removeEventListener('keydown', dongKhiNhanEsc);
+        };
     }, []);
 
     // Thống kê lấy từ DB, đếm theo bộ lọc đang chọn, mục hết hàng tự ẩn
     const thongKe = useThongKeBoLoc(boLocHienTai, tatCaSanPham);
-    const danhSachHang = thongKe.danhSachHang;
-    const cacDongCPU = thongKe.cpu;
-    const cacDongGPU = thongKe.gpu;
+    const moDong = (id) => setDropdownMo((truoc) => (truoc === id ? null : id));
 
-    // Các khoảng giá
-    const cacKhoangGia = [
-        { nhan: 'Tất cả mức giá', min: undefined, max: undefined },
-        { nhan: 'Dưới 15 Triệu', min: 0, max: 15000000 },
-        { nhan: 'Từ 15 - 25 Triệu', min: 15000000, max: 25000000 },
-        { nhan: 'Từ 25 - 50 Triệu', min: 25000000, max: 50000000 },
-        { nhan: 'Trên 50 Triệu', min: 50000000, max: undefined }
-    ];
+    // Bật/tắt một mã trong nhóm chọn nhiều (hãng, CPU, RAM...)
+    const toggleMa = (khoa, ma) => {
+        const ds = boLocHienTai[khoa] || [];
+        onThayDoiBoLoc({ ...boLocHienTai, [khoa]: ds.includes(ma) ? ds.filter((x) => x !== ma) : [...ds, ma] });
+    };
+    const xoaNhom = (khoa) => onThayDoiBoLoc({ ...boLocHienTai, [khoa]: [] });
+    const datCongTac = (khoa, giaTri) => onThayDoiBoLoc({ ...boLocHienTai, [khoa]: giaTri });
+    const xoaGia = () => onThayDoiBoLoc({ ...boLocHienTai, muc_gia_toi_thieu: undefined, muc_gia_toi_da: undefined });
 
-    // Toggle Hãng
-    const toggleHang = (maHang) => {
-        const ds = boLocHienTai.hang_san_xuat || [];
-        const moi = ds.includes(maHang) ? ds.filter(h => h !== maHang) : [...ds, maHang];
-        onThayDoiBoLoc({ ...boLocHienTai, hang_san_xuat: moi });
+    // Chữ tóm tắt trên nút: 1 mục -> tên mục, nhiều mục -> "Tên nhóm"
+    const tomTatNhom = (nhom, daChon) => {
+        if (!daChon.length) return null;
+        if (daChon.length > 1) return nhom.nhanNgan;
+        return `${nhom.nhanNgan}: ${nhom.tuyChon.find((x) => x.ma === daChon[0])?.nhan || daChon[0]}`;
     };
 
-    // Chọn Giá
-    const chonGia = (min, max) => {
-        onThayDoiBoLoc({
-            ...boLocHienTai,
-            muc_gia_toi_thieu: min,
-            muc_gia_toi_da: max
-        });
-        setDropdownMo(null);
-    };
-
-    // Toggle CPU & GPU
-    const toggleCPU = (maCpu) => {
-        const ds = boLocHienTai.cpu_dong || [];
-        const moi = ds.includes(maCpu) ? ds.filter(c => c !== maCpu) : [...ds, maCpu];
-        onThayDoiBoLoc({ ...boLocHienTai, cpu_dong: moi });
-    };
-
-    const toggleGPU = (maGpu) => {
-        const ds = boLocHienTai.card_do_hoa || [];
-        const moi = ds.includes(maGpu) ? ds.filter(g => g !== maGpu) : [...ds, maGpu];
-        onThayDoiBoLoc({ ...boLocHienTai, card_do_hoa: moi });
-    };
-
-    // Nhãn giá
-    const nhanGiaHienTai = useMemo(() => {
-        const min = boLocHienTai.muc_gia_toi_thieu;
-        const max = boLocHienTai.muc_gia_toi_da;
-        if (min === undefined && max === undefined) return null;
-        if (min === 0 && max === 15000000) return '< 15 Triệu';
-        if (min === 15000000 && max === 25000000) return '15 - 25 Triệu';
-        if (min === 25000000 && max === 50000000) return '25 - 50 Triệu';
-        if (min === 50000000 && max === undefined) return '> 50 Triệu';
-        return `${min ? min / 1000000 + 'Tr' : '0'} - ${max ? max / 1000000 + 'Tr' : '∞'}`;
-    }, [boLocHienTai.muc_gia_toi_thieu, boLocHienTai.muc_gia_toi_da]);
+    const nhanGia = nhanGiaDangChon(boLocHienTai);
+    const hangDaChon = boLocHienTai.hang_san_xuat || [];
+    const nhomNhanh = thongKe.nhomMay.filter((nhom) => nhom.nhanh);
+    const congTacNhanh = thongKe.congTac.filter((t) => t.nhanh);
 
     return (
-        <div ref={dropdownRef} className="w-full bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200/90 dark:border-slate-800 p-3 shadow-xs space-y-2.5">
-            {/* HÀNG BỘ LỌC CHÍNH 1 DÒNG DUY NHẤT */}
-            <div className="flex flex-wrap items-center justify-between gap-2 relative">
+        <div ref={khungRef} className="w-full bg-white dark:bg-slate-900 rounded-2xl border-2 border-slate-200/90 dark:border-slate-800 p-3 shadow-xs space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* Nút Drawer Tất Cả Bộ Lọc */}
+                    {/* Nút mở drawer: toàn bộ tiêu chí lọc */}
                     <button
+                        type="button"
                         onClick={onMoBoLocToanDien}
                         className={`h-9 px-3.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 border-2 ${
                             soLuongDangLoc > 0
                                 ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
                                 : 'bg-slate-900 text-white dark:bg-slate-800 border-slate-900 dark:border-slate-700 hover:bg-blue-600 hover:border-blue-600'
                         }`}
-                        title="Mở toàn bộ bộ lọc chuyên sâu"
+                        title="Mở tất cả tiêu chí lọc"
                     >
                         <SlidersHorizontal className="w-3.5 h-3.5" />
-                        <span>Bộ lọc</span>
+                        <span className="sm:hidden">Bộ lọc</span>
+                        <span className="hidden sm:inline">Tất cả bộ lọc</span>
                         {soLuongDangLoc > 0 && (
                             <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black flex items-center justify-center">
                                 {soLuongDangLoc}
@@ -119,212 +96,111 @@ export default function ThanhBoLocTinhGon({
                         )}
                     </button>
 
-                    {/* SELECT 1: THƯƠNG HIỆU */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setDropdownMo(dropdownMo === 'hang' ? null : 'hang')}
-                            className={`h-9 px-3 rounded-xl text-xs font-bold border-2 flex items-center gap-1.5 transition-all cursor-pointer select-none ${
-                                boLocHienTai.hang_san_xuat?.length > 0
-                                    ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-cyan-300 font-black'
-                                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-200 hover:border-blue-400'
-                            }`}
+                    {/* Các nút lọc nhanh: chỉ hiện từ màn hình lớn (lg) để điện thoại/tablet không bị rối, còn lại dùng nút Bộ lọc */}
+                    <div className="hidden lg:flex flex-wrap items-center gap-2">
+                        {/* Thương hiệu */}
+                        <NhomLocDropdown
+                            dangMo={dropdownMo === 'hang'}
+                            onBam={() => moDong('hang')}
+                            Icon={Tag}
+                            mau="blue"
+                            tieuDe="Thương hiệu"
+                            tomTat={hangDaChon.length ? (hangDaChon.length === 1 ? `Hãng: ${thongKe.tenHang(hangDaChon[0])}` : 'Thương hiệu') : null}
+                            soDaChon={hangDaChon.length}
+                            tieuDePanel={`Chọn thương hiệu (${thongKe.danhSachHang.length})`}
+                            onBoChon={() => xoaNhom('hang_san_xuat')}
+                            rong="w-72"
                         >
-                            <Tag className="w-3.5 h-3.5 text-blue-600" />
-                            <span>
-                                {boLocHienTai.hang_san_xuat?.length > 0
-                                    ? `Hãng: ${boLocHienTai.hang_san_xuat.map(h => thongKe.tenHang(h)).join(', ')}`
-                                    : 'Thương hiệu'}
-                            </span>
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownMo === 'hang' ? 'rotate-180' : ''}`} />
-                        </button>
+                            <DanhSachTuyChon
+                                kieu="luoi"
+                                cao="max-h-56"
+                                mau="blue"
+                                daChon={hangDaChon}
+                                onToggle={(ma) => toggleMa('hang_san_xuat', ma)}
+                                tuyChon={thongKe.danhSachHang.map((h) => ({ ma: h.ma, nhan: h.ten, soLuong: h.soLuong }))}
+                            />
+                        </NhomLocDropdown>
 
-                        {dropdownMo === 'hang' && (
-                            <div className="absolute left-0 top-11 z-30 w-72 p-3 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl space-y-2 animate-in fade-in zoom-in-95 duration-150">
-                                <div className="flex items-center justify-between text-xs font-black text-slate-800 dark:text-white pb-1 border-b border-slate-100 dark:border-slate-800">
-                                    <span>Chọn thương hiệu ({danhSachHang.length})</span>
-                                    {boLocHienTai.hang_san_xuat?.length > 0 && (
-                                        <button
-                                            onClick={() => onThayDoiBoLoc({ ...boLocHienTai, hang_san_xuat: [] })}
-                                            className="text-[11px] text-red-500 font-bold hover:underline cursor-pointer"
-                                        >
-                                            Bỏ chọn
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-2 gap-1.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
-                                    {danhSachHang.map((th) => {
-                                        const dangChon = boLocHienTai.hang_san_xuat?.includes(th.ma);
-                                        return (
-                                            <button
-                                                key={th.ma}
-                                                onClick={() => toggleHang(th.ma)}
-                                                className={`p-2 rounded-xl border flex items-center justify-between text-xs font-bold transition-all cursor-pointer ${
-                                                    dangChon
-                                                        ? 'bg-blue-50 border-blue-600 text-blue-700 dark:bg-blue-950 dark:text-cyan-300'
-                                                        : 'border-slate-100 dark:border-slate-800 hover:bg-slate-50 text-slate-700 dark:text-slate-300'
-                                                }`}
-                                            >
-                                                <span className="truncate text-[12px]">{th.ten}</span>
-                                                <span className="text-[10px] text-slate-400 ml-1 shrink-0">{dangChon ? <Check className="w-3 h-3 text-blue-600 stroke-[3]" /> : th.soLuong}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* SELECT 2: KHOẢNG GIÁ */}
-                    <div className="relative">
-                        <button
-                            onClick={() => setDropdownMo(dropdownMo === 'gia' ? null : 'gia')}
-                            className={`h-9 px-3 rounded-xl text-xs font-bold border-2 flex items-center gap-1.5 transition-all cursor-pointer select-none ${
-                                nhanGiaHienTai
-                                    ? 'border-amber-500 bg-amber-50 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 font-black'
-                                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-200 hover:border-amber-400'
-                            }`}
+                        {/* Khoảng giá (chọn 1 mức) */}
+                        <NhomLocDropdown
+                            dangMo={dropdownMo === 'gia'}
+                            onBam={() => moDong('gia')}
+                            Icon={DollarSign}
+                            mau="amber"
+                            tieuDe="Khoảng giá"
+                            tomTat={nhanGia ? `Giá: ${nhanGia}` : null}
+                            rong="w-60"
                         >
-                            <DollarSign className="w-3.5 h-3.5 text-amber-500" />
-                            <span>{nhanGiaHienTai ? `Giá: ${nhanGiaHienTai}` : 'Khoảng giá'}</span>
-                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownMo === 'gia' ? 'rotate-180' : ''}`} />
-                        </button>
-
-                        {dropdownMo === 'gia' && (
-                            <div className="absolute left-0 top-11 z-30 w-56 p-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl space-y-1 animate-in fade-in zoom-in-95 duration-150">
-                                {cacKhoangGia.map((kg, idx) => {
-                                    const laChon = boLocHienTai.muc_gia_toi_thieu === kg.min && boLocHienTai.muc_gia_toi_da === kg.max;
+                            <div className="space-y-1">
+                                {thongKe.khoangGia.map((k) => {
+                                    const dangChon = boLocHienTai.muc_gia_toi_thieu === k.min && boLocHienTai.muc_gia_toi_da === k.max;
                                     return (
                                         <button
-                                            key={idx}
-                                            onClick={() => chonGia(kg.min, kg.max)}
+                                            key={k.nhan}
+                                            type="button"
+                                            onClick={() => { onThayDoiBoLoc({ ...boLocHienTai, muc_gia_toi_thieu: k.min, muc_gia_toi_da: k.max }); setDropdownMo(null); }}
                                             className={`w-full py-2 px-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
-                                                laChon
-                                                    ? 'bg-amber-500 text-white font-black'
-                                                    : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
+                                                dangChon ? 'bg-amber-500 text-white font-black' : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
                                             }`}
                                         >
-                                            <span>{kg.nhan}</span>
-                                            {laChon && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                            <span>{k.nhan}</span>
+                                            {k.nhanNgan !== null && <span className="text-[10px] opacity-70">{k.soLuong}</span>}
                                         </button>
                                     );
                                 })}
                             </div>
-                        )}
+                        </NhomLocDropdown>
+
+                        {/* Các nhóm cấu hình máy phổ biến: CPU, RAM, ổ cứng, card đồ họa */}
+                        {nhomNhanh.map((nhom) => {
+                            const daChon = boLocHienTai[nhom.khoa] || [];
+                            return (
+                                <NhomLocDropdown
+                                    key={nhom.khoa}
+                                    dangMo={dropdownMo === nhom.khoa}
+                                    onBam={() => moDong(nhom.khoa)}
+                                    Icon={BIEU_TUONG_LOC[nhom.bieuTuong]}
+                                    mau={nhom.mau}
+                                    tieuDe={nhom.nhan}
+                                    tomTat={tomTatNhom(nhom, daChon)}
+                                    soDaChon={daChon.length}
+                                    tieuDePanel={nhom.nhan}
+                                    onBoChon={() => xoaNhom(nhom.khoa)}
+                                >
+                                    <DanhSachTuyChon
+                                        mau={nhom.mau}
+                                        daChon={daChon}
+                                        onToggle={(ma) => toggleMa(nhom.khoa, ma)}
+                                        tuyChon={nhom.tuyChon}
+                                    />
+                                </NhomLocDropdown>
+                            );
+                        })}
+
+                        {/* Công tắc nhanh: trả góp 0%, đang giảm giá */}
+                        {congTacNhanh.map((t) => (
+                            <NutCongTac
+                                key={t.khoa}
+                                nhan={t.nhan}
+                                dangBat={t.dangBat}
+                                soLuong={t.soLuong}
+                                Icon={ICON_CONG_TAC[t.khoa]}
+                                onBam={() => datCongTac(t.khoa, !t.dangBat)}
+                            />
+                        ))}
+
                     </div>
-
-                    {/* SELECT 3: DÒNG CPU (Ẩn khi xem phụ kiện) */}
-                    {cacDongCPU.length > 0 && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setDropdownMo(dropdownMo === 'cpu' ? null : 'cpu')}
-                                className={`h-9 px-3 rounded-xl text-xs font-bold border-2 flex items-center gap-1.5 transition-all cursor-pointer select-none ${
-                                    boLocHienTai.cpu_dong?.length > 0
-                                        ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300 font-black'
-                                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-200 hover:border-indigo-400'
-                                }`}
-                            >
-                                <Cpu className="w-3.5 h-3.5 text-indigo-500" />
-                                <span>
-                                    {boLocHienTai.cpu_dong?.length > 0
-                                        ? `CPU (${boLocHienTai.cpu_dong.length})`
-                                        : 'Vi xử lý CPU'}
-                                </span>
-                                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownMo === 'cpu' ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {dropdownMo === 'cpu' && (
-                                <div className="absolute left-0 top-11 z-30 w-64 p-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl space-y-1 animate-in fade-in zoom-in-95 duration-150">
-                                    {cacDongCPU.map((cpu) => {
-                                        const dangChon = boLocHienTai.cpu_dong?.includes(cpu.ma);
-                                        return (
-                                            <button
-                                                key={cpu.ma}
-                                                onClick={() => toggleCPU(cpu.ma)}
-                                                className={`w-full py-1.5 px-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
-                                                    dangChon
-                                                        ? 'bg-indigo-500 text-white font-black'
-                                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                                                }`}
-                                            >
-                                                <span>{cpu.nhan}</span>
-                                                <span className="text-[10px] opacity-80">({cpu.soLuong})</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* SELECT 4: CARD ĐỒ HỌA GPU (Ẩn khi xem phụ kiện) */}
-                    {cacDongGPU.length > 0 && (
-                        <div className="relative">
-                            <button
-                                onClick={() => setDropdownMo(dropdownMo === 'gpu' ? null : 'gpu')}
-                                className={`h-9 px-3 rounded-xl text-xs font-bold border-2 flex items-center gap-1.5 transition-all cursor-pointer select-none ${
-                                    boLocHienTai.card_do_hoa?.length > 0
-                                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 font-black'
-                                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-850 text-slate-700 dark:text-slate-200 hover:border-emerald-400'
-                                }`}
-                            >
-                                <Layers className="w-3.5 h-3.5 text-emerald-500" />
-                                <span>
-                                    {boLocHienTai.card_do_hoa?.length > 0
-                                        ? `GPU (${boLocHienTai.card_do_hoa.length})`
-                                        : 'Card đồ họa'}
-                                </span>
-                                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${dropdownMo === 'gpu' ? 'rotate-180' : ''}`} />
-                            </button>
-
-                            {dropdownMo === 'gpu' && (
-                                <div className="absolute left-0 top-11 z-30 w-64 p-2 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl space-y-1 animate-in fade-in zoom-in-95 duration-150">
-                                    {cacDongGPU.map((gpu) => {
-                                        const dangChon = boLocHienTai.card_do_hoa?.includes(gpu.ma);
-                                        return (
-                                            <button
-                                                key={gpu.ma}
-                                                onClick={() => toggleGPU(gpu.ma)}
-                                                className={`w-full py-1.5 px-3 rounded-xl text-left text-xs font-bold transition-all cursor-pointer flex items-center justify-between ${
-                                                    dangChon
-                                                        ? 'bg-emerald-500 text-white font-black'
-                                                        : 'hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                                                }`}
-                                            >
-                                                <span>{gpu.nhan}</span>
-                                                <span className="text-[10px] opacity-80">({gpu.soLuong})</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Toggle Trả Góp 0% */}
-                    <button
-                        onClick={() => onThayDoiBoLoc({ ...boLocHienTai, ho_tro_tra_gop_0: !boLocHienTai.ho_tro_tra_gop_0 })}
-                        className={`h-9 px-3 rounded-xl font-black text-xs border-2 transition-all cursor-pointer flex items-center gap-1.5 ${
-                            boLocHienTai.ho_tro_tra_gop_0
-                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                                : 'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-400'
-                        }`}
-                    >
-                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>Trả góp 0%</span>
-                        {boLocHienTai.ho_tro_tra_gop_0 && <Check className="w-3 h-3 stroke-[3.5]" />}
-                    </button>
                 </div>
 
-                {/* Cụm Bên Phải: Sắp xếp & Chế độ xem */}
+                {/* Cụm bên phải: sắp xếp & chế độ xem */}
                 <div className="flex items-center gap-2 ml-auto">
                     <div className="flex items-center gap-1">
-                        <span className="text-slate-400 font-bold text-xs hidden lg:inline flex items-center gap-1">
-                            <ArrowUpDown className="w-3 h-3" />
-                        </span>
+                        <ArrowUpDown className="w-3 h-3 text-slate-400 hidden lg:inline" />
                         <select
                             value={boLocHienTai.sap_xep || 'moi_nhat'}
                             onChange={(e) => onThayDoiBoLoc({ ...boLocHienTai, sap_xep: e.target.value })}
-                            className="h-8.5 pl-2.5 pr-6 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-xs font-extrabold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
+                            aria-label="Sắp xếp sản phẩm"
+                            className="h-9 pl-2.5 pr-6 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-xs font-extrabold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer"
                         >
                             <option value="moi_nhat">Mới nhất</option>
                             <option value="ban_chay_nhat">Bán chạy nhất</option>
@@ -335,86 +211,64 @@ export default function ThanhBoLocTinhGon({
                         </select>
                     </div>
 
-                    <div className="flex items-center gap-0.5 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                        <button
-                            onClick={() => onThayDoiCheDoHienThi('luoi')}
-                            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                                cheDoHienThi === 'luoi'
-                                    ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs'
-                                    : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                            title="Chế độ xem lưới"
-                        >
-                            <LayoutGrid className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                            onClick={() => onThayDoiCheDoHienThi('danh_sach')}
-                            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
-                                cheDoHienThi === 'danh_sach'
-                                    ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs'
-                                    : 'text-slate-400 hover:text-slate-600'
-                            }`}
-                            title="Chế độ xem danh sách"
-                        >
-                            <ListFilter className="w-3.5 h-3.5" />
-                        </button>
+                    <div className="hidden sm:flex items-center gap-0.5 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                        {[
+                            { che: 'luoi', Icon: LayoutGrid, tieuDe: 'Chế độ xem lưới' },
+                            { che: 'danh_sach', Icon: ListFilter, tieuDe: 'Chế độ xem danh sách' }
+                        ].map(({ che, Icon, tieuDe }) => (
+                            <button
+                                key={che}
+                                type="button"
+                                onClick={() => onThayDoiCheDoHienThi(che)}
+                                title={tieuDe}
+                                className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                                    cheDoHienThi === che ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                            >
+                                <Icon className="w-3.5 h-3.5" />
+                            </button>
+                        ))}
                     </div>
                 </div>
             </div>
 
-            {/* DẢI TAGS ĐANG LỌC */}
+            {/* Dải tiêu chí đang lọc: bấm X để bỏ từng cái */}
             {soLuongDangLoc > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+                <div className="flex flex-nowrap md:flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs overflow-x-auto md:overflow-visible scrollbar-none [&>*]:shrink-0">
                     <span className="text-slate-500 font-bold text-[11px] mr-1">Đang lọc:</span>
 
-                    {boLocHienTai.tu_khoa && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-blue-50 text-blue-800 font-bold text-[11px] border border-blue-200">
-                            &quot;{boLocHienTai.tu_khoa}&quot;
-                            <X className="w-3 h-3 hover:text-red-500 cursor-pointer" onClick={() => onThayDoiBoLoc({ ...boLocHienTai, tu_khoa: '' })} />
-                        </span>
+                    {boLocHienTai.tu_khoa?.trim() && (
+                        <TheTagLoc nhan={`"${boLocHienTai.tu_khoa}"`} onGo={() => onThayDoiBoLoc({ ...boLocHienTai, tu_khoa: '' })} />
                     )}
 
-                    {boLocHienTai.hang_san_xuat?.map(h => (
-                        <span key={h} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-black text-[11px] border border-blue-200">
-                            {thongKe.tenHang(h)}
-                            <X className="w-3 h-3 hover:text-red-500 cursor-pointer" onClick={() => toggleHang(h)} />
-                        </span>
+                    {hangDaChon.map((h) => (
+                        <TheTagLoc key={h} nhan={thongKe.tenHang(h)} onGo={() => toggleMa('hang_san_xuat', h)} />
                     ))}
 
-                    {nhanGiaHienTai && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-amber-50 text-amber-700 font-black text-[11px] border border-amber-200">
-                            Giá: {nhanGiaHienTai}
-                            <X className="w-3 h-3 hover:text-red-500 cursor-pointer" onClick={() => onThayDoiBoLoc({ ...boLocHienTai, muc_gia_toi_thieu: undefined, muc_gia_toi_da: undefined })} />
-                        </span>
+                    {nhanGia && <TheTagLoc nhan={`Giá: ${nhanGia}`} mau="amber" onGo={xoaGia} />}
+
+                    {NHOM_LOC_MAY.flatMap((nhom) =>
+                        (boLocHienTai[nhom.khoa] || []).map((ma) => (
+                            <TheTagLoc
+                                key={`${nhom.khoa}-${ma}`}
+                                nhan={`${nhom.nhanNgan}: ${nhom.tuyChon.find((x) => x.ma === ma)?.nhan || ma}`}
+                                mau={nhom.mau}
+                                onGo={() => toggleMa(nhom.khoa, ma)}
+                            />
+                        ))
                     )}
 
-                    {boLocHienTai.cpu_dong?.map(c => (
-                        <span key={c} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-black text-[11px] border border-indigo-200">
-                            CPU: {c.replace('_', ' ')}
-                            <X className="w-3 h-3 hover:text-red-500 cursor-pointer" onClick={() => toggleCPU(c)} />
-                        </span>
+                    {TOGGLE_LOC.filter((t) => boLocHienTai[t.khoa]).map((t) => (
+                        <TheTagLoc key={t.khoa} nhan={t.nhan} mau="emerald" onGo={() => datCongTac(t.khoa, false)} />
                     ))}
-
-                    {boLocHienTai.card_do_hoa?.map(g => (
-                        <span key={g} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[11px] border border-emerald-200">
-                            GPU: {g.replace('_', ' ')}
-                            <X className="w-3 h-3 hover:text-red-500 cursor-pointer" onClick={() => toggleGPU(g)} />
-                        </span>
-                    ))}
-
-                    {boLocHienTai.ho_tro_tra_gop_0 && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[11px] border border-emerald-200">
-                            Trả góp 0%
-                            <X className="w-3 h-3 hover:text-red-500 cursor-pointer" onClick={() => onThayDoiBoLoc({ ...boLocHienTai, ho_tro_tra_gop_0: false })} />
-                        </span>
-                    )}
 
                     <button
+                        type="button"
                         onClick={onDatLaiBoLoc}
                         className="text-[11px] font-bold text-red-600 hover:text-red-700 cursor-pointer flex items-center gap-1 ml-auto transition-colors"
                     >
                         <RotateCcw className="w-3 h-3" />
-                        <span>Xóa lọc ({soLuongDangLoc})</span>
+                        <span>Xóa tất cả ({soLuongDangLoc})</span>
                     </button>
                 </div>
             )}

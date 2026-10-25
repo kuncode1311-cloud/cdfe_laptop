@@ -3,25 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { DanhMucService } from '@/services/danh-muc.service';
 import { SanPhamService } from '@/services/san-pham.service';
 import { useDuLieuMoi } from '@/services/dong-bo.service';
-
-// Khai báo CPU / GPU dùng chung cho thanh lọc nhanh và drawer (mã khớp với SanPhamService.locSanPham)
-export const DONG_CPU = [
-    { ma: 'core_ultra', nhan: 'Intel Core Ultra' },
-    { ma: 'core_i9', nhan: 'Intel Core i9' },
-    { ma: 'core_i7', nhan: 'Intel Core i7' },
-    { ma: 'core_i5', nhan: 'Intel Core i5' },
-    { ma: 'ryzen', nhan: 'AMD Ryzen' },
-    { ma: 'apple_m', nhan: 'Apple Silicon (M)' }
-];
-
-export const DONG_GPU = [
-    { ma: 'rtx_4090', nhan: 'RTX 4090' },
-    { ma: 'rtx_4080', nhan: 'RTX 4080' },
-    { ma: 'rtx_4070', nhan: 'RTX 4070' },
-    { ma: 'rtx_4060', nhan: 'RTX 4060' },
-    { ma: 'rtx_4050', nhan: 'RTX 4050' },
-    { ma: 'card_onboard', nhan: 'Onboard / Iris' }
-];
+import { NHOM_LOC_MAY, TOGGLE_LOC, KHOANG_GIA } from '@/utils/bo-loc';
 
 /**
  * Thống kê cho các bộ lọc, dùng chung cho thanh lọc nhanh và drawer "Tất cả bộ lọc".
@@ -65,21 +47,35 @@ export function useThongKeBoLoc(boLoc, tatCaSanPham) {
             boLoc.danh_muc || []
         );
 
-        const taoDemMay = (dong, truong) => dong
-            .map((x) => ({ ...x, soLuong: dem({ [truong]: [x.ma] }) }))
-            .filter((x) => x.soLuong > 0 || (boLoc[truong] || []).includes(x.ma));
+        // Nhóm lọc cấu hình máy: đếm từng tuỳ chọn, tuỳ chọn hết hàng tự ẩn, nhóm rỗng không hiện
+        const nhomMay = NHOM_LOC_MAY
+            .map((nhom) => ({
+                ...nhom,
+                tuyChon: nhom.tuyChon
+                    .map((x) => ({ ...x, soLuong: dem({ [nhom.khoa]: [x.ma] }) }))
+                    .filter((x) => x.soLuong > 0 || (boLoc[nhom.khoa] || []).includes(x.ma))
+            }))
+            .filter((nhom) => nhom.tuyChon.length > 0);
 
-        const cpu = taoDemMay(DONG_CPU, 'cpu_dong');
-        const gpu = taoDemMay(DONG_GPU, 'card_do_hoa');
+        // Công tắc (trả góp, giảm giá, còn hàng): kèm số sản phẩm sẽ thấy khi bật
+        const congTac = TOGGLE_LOC
+            .map((t) => ({ ...t, soLuong: dem({ [t.khoa]: true }), dangBat: !!boLoc[t.khoa] }))
+            .filter((t) => t.soLuong > 0 || t.dangBat);
+
+        // Mức giá: kèm số sản phẩm, mức không còn sản phẩm thì ẩn (trừ "Tất cả" và mức đang chọn)
+        const khoangGia = KHOANG_GIA
+            .map((k) => ({ ...k, soLuong: dem({ muc_gia_toi_thieu: k.min, muc_gia_toi_da: k.max }) }))
+            .filter((k) => k.nhanNgan === null || k.soLuong > 0 || (k.min === boLoc.muc_gia_toi_thieu && k.max === boLoc.muc_gia_toi_da));
 
         return {
             tenHang: (ma) => tenHangDb[ma] || String(ma).toUpperCase(),
             danhSachHang,
             nhuCau: taoNhom('nhu_cau'),
             loaiSanPham: taoNhom('loai_san_pham'),
-            cpu,
-            gpu,
-            coLaptop: cpu.length > 0 || gpu.length > 0
+            khoangGia,
+            nhomMay,
+            congTac,
+            coLaptop: nhomMay.length > 0
         };
     }, [boLoc, tatCaSanPham, danhMucDb]);
 }
