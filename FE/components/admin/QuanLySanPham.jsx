@@ -286,9 +286,9 @@ export default function QuanLySanPham({
                     moTa={dangLocSanPham ? `Tìm thấy ${sanPhamHienThi.length} sản phẩm phù hợp` : "Hệ thống đang tải số lượng tồn kho, giá bán và cấu hình máy"}
                 />
 
-                <div className={`overflow-x-hidden overflow-y-auto max-h-[calc(100vh-280px)] min-h-[380px] transition-opacity duration-300 ${dangTai || dangLocSanPham ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                <div className={`min-h-[380px] transition-opacity duration-300 ${dangTai || dangLocSanPham ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
                     <table className="w-full text-left text-xs border-collapse table-fixed">
-                        <thead className="sticky top-0 z-10 bg-slate-100 dark:bg-slate-800 shadow-xs">
+                        <thead className="bg-slate-100 dark:bg-slate-800 shadow-xs">
                             <tr className="text-slate-800 dark:text-slate-200 font-black uppercase text-[11px] tracking-wider whitespace-nowrap">
                                 <th className="py-2.5 px-1 w-10 text-center border-b-2 border-r border-slate-300 dark:border-slate-700">#</th>
                                 <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700">Sản phẩm & cấu hình</th>
