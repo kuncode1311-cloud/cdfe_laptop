@@ -136,7 +136,7 @@ export default function BoLocSanPhamComponent({
                 </div>
 
                 {/* 2. Thân cuộn: các khối lọc */}
-                <div className="flex-1 overflow-y-auto p-3.5 space-y-3 scrollbar-thin">
+                <div className="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-2.5 scrollbar-thin">
                     {/* Mức giá */}
                     <KhoiLoc
                         tieuDe="Mức giá"

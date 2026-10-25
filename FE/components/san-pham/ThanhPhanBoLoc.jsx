@@ -200,9 +200,10 @@ export function DanhSachTuyChon({
                         key={x.ma}
                         type="button"
                         onClick={() => onToggle(x.ma)}
+                        title={x.nhan}
                         aria-pressed={dangChon}
                         className={`w-full rounded-xl border-2 text-left text-xs font-bold transition-all duration-150 cursor-pointer flex items-center gap-2 ${
-                            kieu === 'luoi' ? 'p-2.5' : 'py-1.5 px-2'
+                            kieu === 'luoi' ? 'p-2' : 'py-1.5 px-2'
                         } ${
                             dangChon
                                 ? `${m.chon} font-black shadow-sm`
@@ -242,14 +243,15 @@ export function KhoiLoc({ tieuDe, Icon, mau = 'blue', soDaChon = 0, ghiChu = '',
                 type="button"
                 onClick={() => setMo((v) => !v)}
                 aria-expanded={mo}
-                className={`w-full flex items-center gap-3 px-3.5 py-3 text-left cursor-pointer ${m.dau}`}
+                title={ghiChu || tieuDe}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left cursor-pointer ${m.dau}`}
             >
-                <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-md ${m.oIcon}`}>
-                    <Icon className="w-[18px] h-[18px]" />
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm ${m.oIcon}`}>
+                    <Icon className="w-4 h-4" />
                 </span>
                 <span className="flex-1 min-w-0">
-                    <span className="block text-[13px] font-black uppercase tracking-wide text-slate-800 dark:text-white">{tieuDe}</span>
-                    {ghiChu && <span className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">{ghiChu}</span>}
+                    <span className="block text-xs font-black uppercase tracking-wide text-slate-800 dark:text-white truncate">{tieuDe}</span>
+                    {ghiChu && <span className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400 truncate">{ghiChu}</span>}
                 </span>
                 {soDaChon > 0 && (
                     <span className={`min-w-5 h-5 px-1.5 rounded-full text-[11px] font-black flex items-center justify-center ${m.dem}`}>{soDaChon}</span>
@@ -259,7 +261,7 @@ export function KhoiLoc({ tieuDe, Icon, mau = 'blue', soDaChon = 0, ghiChu = '',
 
             <div className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${mo ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                 <div className="overflow-hidden">
-                    <div className="p-3.5 space-y-3 border-t border-slate-100 dark:border-slate-800">
+                    <div className="p-2.5 space-y-2.5 border-t border-slate-100 dark:border-slate-800">
                         {children}
                         {onBoChon && soDaChon > 0 && (
                             <button type="button" onClick={onBoChon} className="text-[11px] font-bold text-red-500 hover:underline cursor-pointer">
