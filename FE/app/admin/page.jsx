@@ -120,6 +120,7 @@ import { NguoiDungService } from '@/services/nguoi-dung.service';
 import { TinTucService } from '@/services/tin-tuc.service';
 import { CaiDatService } from '@/services/cai-dat.service';
 import { formatCurrency, dinhDangTienVND } from '@/utils/formatCurrency';
+import { docAnhDaNen, loiLinkAnh } from '@/utils/anh-san-pham';
 import { taoSlug, slugTinTuc } from '@/utils/taoSlug';
 import { inHoaDonBanHang } from '@/utils/inHoaDon';
 import BieuDoTongQuan from '@/components/admin/BieuDoTongQuan';
@@ -1023,6 +1024,13 @@ export default function TrangQuanTriCuaHang() {
         }
     };
 
+    // Đọc + nén ảnh; lỗi thì báo cho admin và trả về null
+    const docAnhHoacBaoLoi = (file, tuyChon) =>
+        docAnhDaNen(file, tuyChon).catch((loi) => {
+            canhBao({ tieuDe: 'Không Đọc Được Ảnh', noiDung: loi.message, loai: 'warning' });
+            return null;
+        });
+
     // Xử lý upload ảnh chính sản phẩm trực tiếp từ máy tính
     const xuLyUploadAnhChinh = (e) => {
         const file = e.target.files?.[0];
@@ -1035,18 +1043,16 @@ export default function TrangQuanTriCuaHang() {
             });
             return;
         }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            if (ev.target?.result) {
+        docAnhHoacBaoLoi(file).then((duLieuAnh) => {
+        if (duLieuAnh) {
                 setFormSp(prev => ({
                     ...prev,
-                    hinh_anh_chinh: ev.target.result,
-                    hinh_anh: ev.target.result
+                    hinh_anh_chinh: duLieuAnh,
+                    hinh_anh: duLieuAnh
                 }));
                 hienThongBao('Đã tải ảnh đại diện từ máy tính lên thành công!');
-            }
-        };
-        reader.readAsDataURL(file);
+        }
+    });
         e.target.value = '';
     };
 
@@ -1062,16 +1068,14 @@ export default function TrangQuanTriCuaHang() {
             });
             return;
         }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            if (ev.target?.result) {
+        docAnhHoacBaoLoi(file).then((duLieuAnh) => {
+        if (duLieuAnh) {
                 const updated = [...(formSp.tuy_chon_phien_ban || [])];
-                updated[bIdx] = { ...updated[bIdx], hinh_anh: ev.target.result };
+                updated[bIdx] = { ...updated[bIdx], hinh_anh: duLieuAnh };
                 setFormSp(prev => ({ ...prev, tuy_chon_phien_ban: updated }));
                 hienThongBao(`Đã tải ảnh cho biến thể #${bIdx + 1} từ máy tính thành công!`);
-            }
-        };
-        reader.readAsDataURL(file);
+        }
+    });
         e.target.value = '';
     };
 
@@ -1087,14 +1091,12 @@ export default function TrangQuanTriCuaHang() {
             });
             return;
         }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            if (ev.target?.result) {
-                setFormTinTuc(prev => ({ ...prev, hinh_anh: ev.target.result }));
+        docAnhHoacBaoLoi(file).then((duLieuAnh) => {
+        if (duLieuAnh) {
+                setFormTinTuc(prev => ({ ...prev, hinh_anh: duLieuAnh }));
                 hienThongBao('Đã tải hình ảnh bài viết từ máy tính lên thành công!');
-            }
-        };
-        reader.readAsDataURL(file);
+        }
+    });
         e.target.value = '';
     };
 
@@ -1110,14 +1112,12 @@ export default function TrangQuanTriCuaHang() {
             });
             return;
         }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            if (ev.target?.result) {
-                setFormDm(prev => ({ ...prev, logo: ev.target.result }));
+        docAnhHoacBaoLoi(file, { canhToiDa: 600 }).then((duLieuAnh) => {
+        if (duLieuAnh) {
+                setFormDm(prev => ({ ...prev, logo: duLieuAnh }));
                 hienThongBao('Đã tải logo thương hiệu từ máy tính lên thành công!');
-            }
-        };
-        reader.readAsDataURL(file);
+        }
+    });
         e.target.value = '';
     };
 
@@ -1135,24 +1135,15 @@ export default function TrangQuanTriCuaHang() {
             return;
         }
 
-        let daDoc = 0;
-        const ketQua = [];
-        validFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                if (ev.target?.result) {
-                    ketQua.push(ev.target.result);
-                }
-                daDoc++;
-                if (daDoc === validFiles.length) {
-                    setFormSp(prev => ({
-                        ...prev,
-                        thu_vien_hinh_anh: [...(prev.thu_vien_hinh_anh || []), ...ketQua]
-                    }));
-                    hienThongBao(`Đã thêm thành công ${ketQua.length} ảnh vào thư viện sản phẩm!`);
-                }
-            };
-            reader.readAsDataURL(file);
+        // Nén từng ảnh rồi thêm cả loạt vào thư viện một lần
+        Promise.all(validFiles.map((file) => docAnhHoacBaoLoi(file))).then((ketQuaDoc) => {
+            const ketQua = ketQuaDoc.filter(Boolean);
+            if (ketQua.length === 0) return;
+            setFormSp(prev => ({
+                ...prev,
+                thu_vien_hinh_anh: [...(prev.thu_vien_hinh_anh || []), ...ketQua]
+            }));
+            hienThongBao(`Đã thêm thành công ${ketQua.length} ảnh vào thư viện sản phẩm!`);
         });
         e.target.value = '';
     };
@@ -2853,6 +2844,13 @@ export default function TrangQuanTriCuaHang() {
                 noiDung: `Giá niêm yết gốc (${giaGocSo.toLocaleString('vi-VN')} đ) phải lớn hơn hoặc bằng giá khuyến mãi (${giaBanSo.toLocaleString('vi-VN')} đ). Hãy để 0 nếu không có giá niêm yết cũ!`,
                 loai: 'danger'
             });
+            return;
+        }
+
+        // Link ảnh đại diện phải đúng định dạng (https://..., /images/... hoặc ảnh tải từ máy)
+        const loiAnh = !formSp.hinh_anh_chinh?.trim() ? 'Sản phẩm cần có ảnh đại diện. Hãy dán link ảnh hoặc tải ảnh từ máy.' : loiLinkAnh(formSp.hinh_anh_chinh);
+        if (loiAnh) {
+            canhBao({ tieuDe: 'Ảnh Đại Diện Chưa Hợp Lệ', noiDung: loiAnh, loai: 'danger' });
             return;
         }
 

@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import AnhXemTruoc, { LoiLinkAnh } from '@/components/admin/AnhXemTruoc';
+import { loiLinkAnh } from '@/utils/anh-san-pham';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import {
     Barcode,
@@ -316,12 +318,7 @@ export default function ModalSanPham({
                                                     <div className="w-full sm:w-auto shrink-0 flex sm:flex-col items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80">
                                                         <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center relative overflow-hidden group shadow-2xs">
                                                             {(formSp.hinh_anh_chinh || formSp.hinh_anh) ? (
-                                                                <img
-                                                                    src={formSp.hinh_anh_chinh || formSp.hinh_anh}
-                                                                    alt=""
-                                                                    className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                                                                    onError={(e) => { e.currentTarget.src = '/images/sp/asus_rog_scar18.jpg'; }}
-                                                                />
+                                                                <AnhXemTruoc src={formSp.hinh_anh_chinh || formSp.hinh_anh} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
                                                             ) : (
                                                                 <div className="text-center p-1 text-slate-400">
                                                                     <ImageIcon className="w-6 h-6 mx-auto mb-0.5 opacity-60" />
@@ -370,6 +367,7 @@ export default function ModalSanPham({
                                                                     }}
                                                                     className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
                                                                 />
+<LoiLinkAnh loi={loiLinkAnh(formSp.hinh_anh_chinh)} />
                                                             </div>
                                                         )}
 
@@ -2832,12 +2830,7 @@ export default function ModalSanPham({
                                                 >
                                                     {(formSp.hinh_anh_chinh || formSp.hinh_anh) ? (
                                                         <>
-                                                            <img
-                                                                src={formSp.hinh_anh_chinh || formSp.hinh_anh}
-                                                                alt=""
-                                                                className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                                                                onError={(e) => { e.currentTarget.src = '/images/sp/asus_rog_scar18.jpg'; }}
-                                                            />
+                                                            <AnhXemTruoc src={formSp.hinh_anh_chinh || formSp.hinh_anh} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
                                                             <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity font-bold text-xs gap-1.5">
                                                                 <ZoomIn className="w-4 h-4" />
                                                                 <span>Xem To</span>
@@ -2921,6 +2914,7 @@ export default function ModalSanPham({
                                                                 }}
                                                                 className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-mono text-xs font-semibold focus:bg-white focus:border-emerald-500 focus:outline-none transition-all"
                                                             />
+<LoiLinkAnh loi={loiLinkAnh(formSp.hinh_anh_chinh)} />
                                                         </div>
                                                     )}
 
