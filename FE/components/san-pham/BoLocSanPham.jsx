@@ -202,8 +202,8 @@ export default function BoLocSanPhamComponent({
                                 onToggle={(ma) => togglePhanTu('hang_san_xuat', ma)}
                                 tuyChon={danhSachHang.map((h) => ({ ma: h.ma, nhan: h.ten, soLuong: h.soLuong }))}
                                 renderTruoc={(x, dangChon) => HANG_CO_LOGO.has(String(x.ma).toLowerCase()) ? (
-                                    <span className="w-7 h-6 flex items-center justify-center shrink-0 overflow-hidden" aria-hidden="true">
-                                        <BrandLogo brand={x.ma} className={`max-w-7 h-4 ${dangChon ? 'text-blue-700' : 'text-slate-700'}`} active={dangChon} />
+                                    <span className="w-11 h-6 flex items-center justify-start shrink-0 overflow-visible" aria-hidden="true">
+                                        <BrandLogo brand={x.ma} className={`max-w-11 h-4 ${dangChon ? 'text-blue-700' : 'text-slate-700'}`} active={dangChon} />
                                     </span>
                                 ) : (
                                     <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 ${mauOHang(x.nhan)}`}>

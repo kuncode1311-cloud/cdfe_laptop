@@ -98,19 +98,19 @@ export default function ThanhTopBarLocDinh({
     return (
         <nav
             aria-label="Thanh điều hướng danh mục thông minh"
-            className={`fixed top-0 left-0 right-0 z-[120] select-none transition-all duration-300 ease-out shadow-lg shadow-blue-950/20 border-b-2 border-[#003da5] ${
+            className={`fixed top-0 left-0 right-0 z-[120] select-none transition-all duration-300 ease-out shadow-lg shadow-blue-950/30 border-b border-blue-300/30 ${
                 daCuonXuong
                     ? 'translate-y-0 opacity-100 pointer-events-auto'
                     : '-translate-y-full opacity-0 pointer-events-none'
             }`}
             style={{
-                background: 'linear-gradient(90deg, #0052cc 0%, #0047b3 50%, #003da5 100%)'
+                background: 'linear-gradient(110deg, #063b9e 0%, #075bd6 48%, #0846b8 100%)'
             }}
         >
             <div className="max-w-7xl mx-auto px-2 sm:px-4 py-1.5 flex items-center justify-between gap-2">
 
                 {/* ===== BÊN TRÁI: 3 TAB CHÍNH (TẤT CẢ / LAPTOP / PHỤ KIỆN) ===== */}
-                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 bg-white/10 border border-white/20 p-0.5 rounded-xl">
+                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 bg-slate-950/15 border border-white/20 p-0.5 rounded-xl shadow-inner shadow-blue-950/20">
                     {/* Tab Tất Cả */}
                     <button
                         onClick={() => xuLyChonTab('tat-ca')}
