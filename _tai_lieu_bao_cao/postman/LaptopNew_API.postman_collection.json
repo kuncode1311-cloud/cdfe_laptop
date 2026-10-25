@@ -6271,12 +6271,70 @@
 					]
 				}
 			]
+		},
+		{
+			"name": "17. Đồng bộ dữ liệu",
+			"item": [{ "name": "Lấy phiên bản dữ liệu", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/dong-bo" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));", "pm.test('Có phiên bản dữ liệu', () => pm.expect(pm.response.json()).to.have.property('phien_ban'));" ] } }] }]
+		},
+		{
+			"name": "18. Giỏ hàng — yêu cầu token khách",
+			"item": [
+				{ "name": "Xem giỏ hàng của tôi", "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "url": "{{baseUrl}}/api/gio-hang" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));", "pm.test('Có danh sách giỏ hàng', () => pm.expect(pm.response.json()).to.have.property('danh_sach_muc'));" ] } }] },
+				{ "name": "Lưu giỏ hàng mẫu", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"danh_sach_muc\": [{ \"san_pham_id\": \"{{productId}}\", \"ma_tuy_chon\": \"\", \"so_luong\": 1 }]\n}" }, "url": "{{baseUrl}}/api/gio-hang" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] },
+				{ "name": "Xóa toàn bộ giỏ hàng", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"danh_sach_muc\": []\n}" }, "url": "{{baseUrl}}/api/gio-hang" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] }
+			]
+		},
+		{
+			"name": "19. Cài đặt hệ thống",
+			"item": [
+				{ "name": "Public — Đọc cấu hình khuyến mãi", "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/cai-dat/khuyen-mai" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] },
+				{ "name": "[Admin] Cập nhật cấu hình khuyến mãi", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"khuyen_mai\": { \"banner\": { \"tieu_de\": \"Ưu đãi tháng 10\", \"kich_hoat\": true }, \"flash_sale\": { \"kich_hoat\": false } }\n}" }, "url": "{{baseUrl}}/api/cai-dat/khuyen-mai" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] },
+				{ "name": "[Admin] Cập nhật showroom mẫu", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"danh_sach_showroom\": [{ \"ten\": \"LaptopNew Quận 1\", \"dia_chi\": \"123 Nguyễn Huệ, Quận 1, TP.HCM\", \"so_dien_thoai\": \"0901234567\" }]\n}" }, "url": "{{baseUrl}}/api/cai-dat/showroom" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] },
+				{ "name": "[Admin] Khôi phục showroom — đã ngừng hỗ trợ", "request": { "method": "POST", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "url": "{{baseUrl}}/api/cai-dat/showroom/khoi-phuc" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Route trả về 410', () => pm.expect(pm.response.code).to.eql(410));"] } }] }
+			]
+		},
+		{
+			"name": "20. Bảo hành — Admin",
+			"item": [
+				{ "name": "[Admin] Danh sách bảo hành", "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "url": "{{baseUrl}}/api/bao-hanh/quan-tri/tat-ca?gioi_han=50" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] },
+				{ "name": "[Admin] Ghi đè thông tin bảo hành", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"ma_don_hang\": \"{{maDonHang}}\",\n  \"id_muc\": \"{{warrantyItemId}}\",\n  \"so_serial\": \"SN-POSTMAN-001\",\n  \"thoi_han_bao_hanh_thang\": 24\n}" }, "url": "{{baseUrl}}/api/bao-hanh/ghi-de" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]));"] } }] }
+			]
+		},
+		{
+			"name": "21. Đánh giá — Admin",
+			"item": [
+				{ "name": "[Admin] Tất cả đánh giá", "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "url": "{{baseUrl}}/api/danh-gia/quan-tri/tat-ca" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] },
+				{ "name": "[Admin] Ẩn hoặc hiện đánh giá", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{ \"hien_thi\": false }" }, "url": "{{baseUrl}}/api/danh-gia/{{reviewId}}/an-hien" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"] } }] },
+				{ "name": "[Admin] Xóa đánh giá", "request": { "method": "DELETE", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "url": "{{baseUrl}}/api/danh-gia/{{reviewId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"] } }] }
+			]
+		},
+		{
+			"name": "22. Liên hệ CSKH",
+			"item": [
+				{ "name": "Khách gửi yêu cầu tư vấn", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"ho_ten\": \"Nguyễn Văn Test\",\n  \"so_dien_thoai\": \"0901234567\",\n  \"email\": \"postman@example.com\",\n  \"chu_de\": \"Tư vấn laptop\",\n  \"noi_dung\": \"Tôi cần tư vấn laptop cho lập trình.\"\n}" }, "url": "{{baseUrl}}/api/lien-he" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([201, 400, 429]));", "if (pm.response.code === 201) { const j = pm.response.json(); if (j.id) pm.environment.set('contactId', j.id); }"] } }] },
+				{ "name": "[Admin] Danh sách yêu cầu", "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "url": "{{baseUrl}}/api/lien-he?trang=1&gioi_han=10" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] },
+				{ "name": "[Admin] Cập nhật trạng thái yêu cầu", "request": { "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{ \"trang_thai\": \"da_xu_ly\", \"ghi_chu_noi_bo\": \"Đã gọi tư vấn.\" }" }, "url": "{{baseUrl}}/api/lien-he/{{contactId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"] } }] },
+				{ "name": "[Admin] Xóa yêu cầu", "request": { "method": "DELETE", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "url": "{{baseUrl}}/api/lien-he/{{contactId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"] } }] }
+			]
+		},
+		{
+			"name": "23. Người dùng — Admin CRUD",
+			"item": [
+				{ "name": "[Admin] Tìm người dùng theo email", "request": { "method": "GET", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "url": "{{baseUrl}}/api/nguoi-dung?email={{email}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Trả về 200', () => pm.expect(pm.response.code).to.eql(200));"] } }] },
+				{ "name": "[Admin] Tạo người dùng", "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{\n  \"hoTen\": \"Người dùng Postman\",\n  \"email\": \"user-postman@example.com\",\n  \"soDienThoai\": \"0912345678\",\n  \"matKhau\": \"Postman@2026\"\n}" }, "url": "{{baseUrl}}/api/nguoi-dung" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([201, 400, 409]));", "if (pm.response.code === 201) { const j = pm.response.json(); if (j.id) pm.environment.set('userId', j.id); }"] } }] },
+				{ "name": "[Admin] Cập nhật người dùng", "request": { "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "body": { "mode": "raw", "raw": "{ \"hoTen\": \"Người dùng Postman đã sửa\", \"trangThai\": \"hoat_dong\" }" }, "url": "{{baseUrl}}/api/nguoi-dung/{{userId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"] } }] },
+				{ "name": "[Admin] Xóa người dùng test", "request": { "method": "DELETE", "header": [], "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }] }, "url": "{{baseUrl}}/api/nguoi-dung/{{userId}}" }, "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Kết quả hợp lệ', () => pm.expect(pm.response.code).to.be.oneOf([200, 404]));"] } }] }
+			]
 		}
 	],
 	"variable": [
 		{
 			"key": "baseUrl",
 			"value": "http://localhost:5000"
+		},
+		{
+			"key": "warrantyItemId",
+			"value": ""
 		}
 	]
 }

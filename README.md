@@ -126,6 +126,10 @@ npm run dev
 
 ## 🧪 Kiểm thử tự động & CI
 
+### Postman
+
+Các collection Postman nằm trong `_tai_lieu_bao_cao/postman/`. Import `LaptopNew_API.postman_collection.json` trước, sau đó import thêm `LaptopNew_API_BoSung.postman_collection.json` để kiểm thử các route đồng bộ dữ liệu, giỏ hàng, cài đặt khuyến mãi, quản trị bảo hành/đánh giá/liên hệ và CRUD người dùng. Chọn một environment `LaptopNew_*`, điền `email`, `password`, `adminEmail`, `adminPassword`, rồi chạy các request đăng nhập để tự lưu `token` và `adminToken`.
+
 Back-End có bộ kiểm thử **Jest + Supertest** trong `BE/tests/`:
 
 | Thư mục | Loại | Nội dung |

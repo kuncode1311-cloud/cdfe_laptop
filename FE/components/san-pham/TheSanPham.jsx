@@ -197,9 +197,14 @@ function layThongSoNhanh(sanPham) {
  * Component Thẻ Sản Phẩm (TheSanPham) - Redesign Chuẩn Reference E-Commerce Cao Cấp
  * - Hierarchy rõ ràng: Ảnh -> Meta Row (Brand + Flash Sale + Rating) -> Tên -> Giá -> Specs -> Stock Progress -> Thêm Giỏ
  * - Visual cao cấp, sạch sẽ, khoảng cách và padding đồng đều
- * - Giữ nguyên 100% chức năng giỏ hàng, so sánh, yêu thích, routing và dữ liệu MongoDB
+ * - Giữ nguyên 100% chức năng giỏ hàng, so sánh, routing và dữ liệu MongoDB
  */
-export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThanhFlashSale = false }) {
+
+// Rút gọn lượt bán cho gọn thẻ: 1250 -> "1,2k"
+const dinhDangLuotBan = (soLuong = 0) =>
+    soLuong >= 1000 ? `${(soLuong / 1000).toFixed(1).replace('.', ',')}k` : soLuong;
+
+export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThanhFlashSale = false, hienThiLuotBan = false }) {
     const { themVaoGioHang } = useGioHang();
     const { themVaoSoSanh, kiemTraDaCoTrongSoSanh } = useSoSanh();
 
@@ -387,7 +392,14 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                         {sanPham.hang_san_xuat}
                     </span>
 
-                    <div className="flex items-center gap-1 text-slate-700 dark:text-slate-300 font-bold text-[11px] shrink-0">
+                    <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-bold text-[11px] shrink-0">
+                        {/* Lượt bán nổi bật (dùng cho mục Bán chạy) */}
+                        {hienThiLuotBan && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-300 border border-orange-200/70 font-extrabold text-[10px] flex items-center gap-0.5">
+                                <Flame className="w-3 h-3 fill-orange-500 text-orange-500" />
+                                Đã bán {dinhDangLuotBan(sanPham.so_luong_da_ban)}
+                            </span>
+                        )}
                         <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                         <span>{sanPham.diem_danh_gia_tb ? sanPham.diem_danh_gia_tb.toFixed(1) : '5.0'}</span>
                     </div>

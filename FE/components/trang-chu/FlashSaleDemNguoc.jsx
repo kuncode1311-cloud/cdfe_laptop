@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Flame, ArrowRight, Truck, ShieldCheck, Gift } from 'lucide-react';
 import TheSanPham from '@/components/san-pham/TheSanPham';
+import BangChuyenSanPham from '@/components/trang-chu/BangChuyenSanPham';
 import { SanPhamService } from '@/services/san-pham.service';
 
 import { CaiDatService } from '@/services/cai-dat.service';
@@ -226,25 +227,30 @@ export default function FlashSaleDemNguoc({ danhSachSanPham }) {
             {/* ========================================================================= */}
             {/* 3. 4 COMPACT PRODUCT CARDS (Gap 18px, Card height ~410-430px)             */}
             {/* ========================================================================= */}
-            <div className="mt-3.5 sm:mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px]">
+            <div className="mt-3.5 sm:mt-4">
                 {dangTai ? (
-                    [...Array(4)].map((_, i) => (
-                        <div key={i} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse space-y-3 h-[410px]">
-                            <div className="w-full h-48 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
-                            <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
-                            <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
-                            <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mt-4"></div>
-                        </div>
-                    ))
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px]">
+                        {[...Array(4)].map((_, i) => (
+                            <div key={i} className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 animate-pulse space-y-3 h-[410px]">
+                                <div className="w-full h-48 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
+                                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                                <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-1/3 mt-4"></div>
+                            </div>
+                        ))}
+                    </div>
                 ) : (
-                    danhSach.slice(0, 4).map((sp) => (
-                        <TheSanPham
-                            key={sp.id || sp._id}
-                            sanPham={sp}
-                            cheDoHienThi="luoi"
-                            hienThiThanhFlashSale={true}
-                        />
-                    ))
+                    // Băng chuyền: hiện 4 card, bấm mũi tên trượt từng card để xem hết Flash Sale
+                    <BangChuyenSanPham>
+                        {danhSach.map((sp) => (
+                            <TheSanPham
+                                key={sp.id || sp._id}
+                                sanPham={sp}
+                                cheDoHienThi="luoi"
+                                hienThiThanhFlashSale={true}
+                            />
+                        ))}
+                    </BangChuyenSanPham>
                 )}
             </div>
         </section>

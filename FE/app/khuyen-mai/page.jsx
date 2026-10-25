@@ -7,7 +7,7 @@ import Image from 'next/image';
 import {
     Home, ChevronRight, Flame, Ticket, ArrowRight,
     CheckCircle2, Copy, Check, Zap, Truck, ShieldCheck,
-    Gift, Gamepad2, Laptop, Headphones, GraduationCap, Heart, Tag,
+    Gift, Gamepad2, Laptop, Headphones, GraduationCap, Tag,
     CheckCheck, ShoppingCart, X, AlertTriangle, RefreshCw
 } from 'lucide-react';
 import { MaGiamGiaService } from '@/services/ma-giam-gia.service';

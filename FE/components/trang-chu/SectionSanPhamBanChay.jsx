@@ -107,7 +107,7 @@ export default function SectionSanPhamBanChay() {
             </div>
           ))
         ) : danhSachLoc.length > 0 ? (
-          danhSachLoc.map((sp) => (<TheSanPham key={sp.id || sp._id} sanPham={sp} cheDoHienThi="luoi"/>))
+          danhSachLoc.map((sp) => (<TheSanPham key={sp.id || sp._id} sanPham={sp} cheDoHienThi="luoi" hienThiLuotBan={true}/>))
         ) : null}
       </div>
 
