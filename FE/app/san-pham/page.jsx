@@ -10,7 +10,6 @@ import BannerDanhMucManh from '@/components/san-pham/BannerDanhMucManh';
 import ThanhBoLocTinhGon from '@/components/san-pham/ThanhBoLocTinhGon';
 import BoLocSanPhamComponent from '@/components/san-pham/BoLocSanPham';
 import TheSanPham from '@/components/san-pham/TheSanPham';
-import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
 import { useDuLieuMoi } from '@/services/dong-bo.service';
 import { taoBoLocMacDinh, demSoTieuChi } from '@/utils/bo-loc';
 
@@ -29,19 +28,6 @@ function NoiDungDanhSachSanPham() {
             danh_muc: danhMucParam ? [danhMucParam] : []
         })
     );
-
-    const [dangLoc, setDangLoc] = useState(false);
-    const daMountBoLocRef = React.useRef(false);
-
-    useEffect(() => {
-        if (!daMountBoLocRef.current) {
-            daMountBoLocRef.current = true;
-            return;
-        }
-        setDangLoc(true);
-        const timer = setTimeout(() => setDangLoc(false), 320);
-        return () => clearTimeout(timer);
-    }, [boLoc]);
 
     const [cheDoHienThi, setCheDoHienThi] = useState('luoi');
     const [moBoLocToanDien, setMoBoLocToanDien] = useState(false);
@@ -209,12 +195,7 @@ function NoiDungDanhSachSanPham() {
 
             {/* 5. LƯỚI SẢN PHẨM 4 CỘT HIỂN THỊ RỘNG RÃI NGAY TRÊN ĐẦU TRANG */}
             <div className="relative min-h-[400px]">
-                <KhuVucDangTaiTable
-                    dangTai={dangLoc}
-                    tieuDe="Đang áp dụng bộ lọc sản phẩm..."
-                    moTa={`Tìm thấy ${danhSachLoc.length} laptop & phụ kiện phù hợp`}
-                />
-                <div className={`transition-opacity duration-300 ${dangLoc ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                <div>
                     {loiKetNoi ? (
                         /* Trạng thái lỗi kết nối MongoDB Atlas thật */
                         <div className="p-12 text-center rounded-3xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 space-y-4 shadow-sm">
