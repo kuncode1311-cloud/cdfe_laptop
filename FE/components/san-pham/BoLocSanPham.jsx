@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useThongKeBoLoc } from './useThongKeBoLoc';
 import { DanhSachTuyChon, KhoiLoc, CongTacGat, BIEU_TUONG_LOC } from './ThanhPhanBoLoc';
+import BrandLogo from './BrandLogo';
 import { demSoTieuChi, nhanGiaDangChon } from '@/utils/bo-loc';
 
 const ICON_CONG_TAC = { ho_tro_tra_gop_0: ShieldCheck, dang_giam_gia: BadgePercent, con_hang_san: Check };
@@ -22,6 +23,7 @@ const MAU_O_HANG = [
     'bg-violet-100 text-violet-700', 'bg-cyan-100 text-cyan-700', 'bg-pink-100 text-pink-700', 'bg-indigo-100 text-indigo-700'
 ];
 const mauOHang = (ten) => MAU_O_HANG[[...String(ten)].reduce((t, c) => t + c.charCodeAt(0), 0) % MAU_O_HANG.length];
+const HANG_CO_LOGO = new Set(['acer', 'anker', 'asus', 'dell', 'gigabyte', 'hp', 'kingston', 'keychron', 'lenovo', 'logitech', 'msi', 'razer', 'samsung', 'apple']);
 
 // Gom tên các mục đã chọn thành một dòng ngắn để hiện ngay cả khi khối đang gập
 const tomTatDaChon = (tuyChon, daChon) => {
@@ -199,7 +201,11 @@ export default function BoLocSanPhamComponent({
                                 daChon={hangDaChon}
                                 onToggle={(ma) => togglePhanTu('hang_san_xuat', ma)}
                                 tuyChon={danhSachHang.map((h) => ({ ma: h.ma, nhan: h.ten, soLuong: h.soLuong }))}
-                                renderTruoc={(x) => (
+                                renderTruoc={(x, dangChon) => HANG_CO_LOGO.has(String(x.ma).toLowerCase()) ? (
+                                    <span className="w-7 h-6 flex items-center justify-center shrink-0 overflow-hidden" aria-hidden="true">
+                                        <BrandLogo brand={x.ma} className={`max-w-7 h-4 ${dangChon ? 'text-blue-700' : 'text-slate-700'}`} active={dangChon} />
+                                    </span>
+                                ) : (
                                     <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 ${mauOHang(x.nhan)}`}>
                                         {String(x.nhan).charAt(0).toUpperCase()}
                                     </span>
