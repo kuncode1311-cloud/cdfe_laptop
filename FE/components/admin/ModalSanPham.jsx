@@ -2432,30 +2432,6 @@ export default function ModalSanPham({
                                             </div>
                                         )}
 
-                                        {/* Chế Độ Bảo Hành Dùng Chung */}
-                                        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-400 dark:border-emerald-600 shadow-md shadow-emerald-500/5 space-y-3">
-                                            <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800">
-                                                <div className="flex items-center gap-2 font-black text-xs uppercase tracking-wider text-emerald-900 dark:text-emerald-300">
-                                                    <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
-                                                        <ShieldCheck className="w-3.5 h-3.5" />
-                                                    </span>
-                                                    <span>Chế Độ Bảo Hành Chính Hãng Cho Dòng Máy Này</span>
-                                                </div>
-                                                <NhanDaSua fieldName="che_do_bao_hanh" />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                placeholder="24 tháng chính hãng tại TNTP Store..."
-                                                value={formSp.che_do_bao_hanh}
-                                                onChange={(e) => setFormSp({ ...formSp, che_do_bao_hanh: e.target.value })}
-                                                            className={layClassInput('che_do_bao_hanh')}
-                                                        />
-                                                        <div className="flex items-center gap-2 mt-1.5">
-                                                            <input type="number" min="1" max="120" value={formSp.thoi_han_bao_hanh_thang ?? 24} onChange={(e) => setFormSp({ ...formSp, thoi_han_bao_hanh_thang: e.target.value })} className={`${layClassInput('thoi_han_bao_hanh_thang')} max-w-24`} aria-label="Thời hạn bảo hành theo tháng" />
-                                                            <span className="text-[11px] font-bold text-slate-500">tháng mặc định</span>
-                                                        </div>
-                                        </div>
-
                                         {/* Thông số tùy chỉnh động */}
                                         <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
                                             <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 gap-2">
