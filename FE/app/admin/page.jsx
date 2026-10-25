@@ -233,6 +233,21 @@ const layDateDonHang = (donHang) => {
     return timestamp > 0 ? new Date(timestamp) : null;
 };
 
+// Làm trống dữ liệu mẫu của form thêm sản phẩm: chữ/số -> rỗng, danh sách -> rỗng, bật/tắt -> tắt.
+// Giữ lại tiêu đề nhóm (tieu_de_nhom_*) vì đó là nhãn giao diện, cùng các mặc định cần thiết.
+const KHOA_GIU_MAC_DINH = { con_hang: true, la_san_pham_moi: true };
+const lamTrongFormSp = (mau) =>
+    Object.fromEntries(
+        Object.entries(mau).map(([khoa, giaTri]) => {
+            if (khoa.startsWith('tieu_de_nhom_')) return [khoa, giaTri];
+            if (khoa in KHOA_GIU_MAC_DINH) return [khoa, KHOA_GIU_MAC_DINH[khoa]];
+            if (Array.isArray(giaTri)) return [khoa, []];
+            if (typeof giaTri === 'boolean') return [khoa, false];
+            if (typeof giaTri === 'string' || typeof giaTri === 'number') return [khoa, ''];
+            return [khoa, giaTri];
+        })
+    );
+
 export default function TrangQuanTriCuaHang() {
     const { nguoiDung, laAdmin, dangXuat } = useNguoiDung();
     const { chu_de, chuyenDoiChuDe } = useGiaoDien();
@@ -2048,8 +2063,9 @@ export default function TrangQuanTriCuaHang() {
         setTabModalSp('thong_tin');
         setLoaiFormSanPham('laptop');
         setThongSoTuyChinh([]);
-        setFormSp({
-            ma_san_pham: `SKU-${Date.now().toString().slice(-5)}`,
+        // Form thêm mới luôn trống: chỉ giữ các tiêu đề nhóm và vài mặc định (còn hàng, hàng mới)
+        setFormSp(lamTrongFormSp({
+            ma_san_pham: '',
             ten_san_pham: '',
             hang_san_xuat: 'asus',
             danh_muc: ['gaming'],
@@ -2234,8 +2250,8 @@ export default function TrangQuanTriCuaHang() {
             tieu_de_nhom_sac_cong_ket_noi: '2. Cổng Kết Nối & Băng Thông Truyền Tải',
             tieu_de_nhom_sac_thiet_ke: '3. Thiết Kế, Dây Cáp & Độ Bền',
 
-            che_do_bao_hanh: '24 tháng chính hãng'
-        });
+            che_do_bao_hanh: ''
+        }));
         setDangMoModalSp(true);
     };
 
@@ -2820,6 +2836,17 @@ export default function TrangQuanTriCuaHang() {
                 noiDung: `Giá niêm yết gốc (${giaGocSo.toLocaleString('vi-VN')} đ) phải lớn hơn hoặc bằng giá khuyến mãi (${giaBanSo.toLocaleString('vi-VN')} đ). Hãy để 0 nếu không có giá niêm yết cũ!`,
                 loai: 'danger'
             });
+            return;
+        }
+
+        // Các ô bắt buộc: báo đúng ô còn thiếu để admin biết cần điền gì
+        const oBatBuocThieu = [
+            [formSp.ten_san_pham, 'Tên sản phẩm'],
+            [formSp.ma_san_pham, 'Mã SKU'],
+            [formSp.hang_san_xuat, 'Hãng sản xuất']
+        ].find(([giaTri]) => !String(giaTri || '').trim());
+        if (oBatBuocThieu) {
+            canhBao({ tieuDe: 'Thiếu Thông Tin Bắt Buộc', noiDung: `Vui lòng nhập: ${oBatBuocThieu[1]}.`, loai: 'danger' });
             return;
         }
 

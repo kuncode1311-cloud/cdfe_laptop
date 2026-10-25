@@ -157,6 +157,15 @@ export default function ModalSanPham({
 }) {
     if (!dangMoModalSp) return null;
 
+    // Các ô bắt buộc còn thiếu (hiện ở chân form để admin biết cần điền gì)
+    const oConThieu = [
+        [formSp.ten_san_pham, 'Tên sản phẩm'],
+        [formSp.ma_san_pham, 'Mã SKU'],
+        [formSp.hang_san_xuat, 'Hãng'],
+        [formSp.hinh_anh_chinh, 'Ảnh đại diện'],
+        [formSp.gia_khuyen_mai, 'Giá bán']
+    ].filter(([giaTri]) => !String(giaTri ?? '').trim()).map(([, ten]) => ten);
+
     return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
                     <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl w-full max-w-5xl border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
@@ -179,12 +188,6 @@ export default function ModalSanPham({
                                                 : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800'
                                         }`}>
                                             {spDangSua ? 'Chỉnh Sửa' : 'Thêm Mới'}
-                                        </span>
-                                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-mono font-bold tracking-wide">
-                                            SKU: {formSp.ma_san_pham || 'NEW-SKU'}
-                                        </span>
-                                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[11px] font-bold">
-                                            Hãng: {formSp.hang_san_xuat?.toUpperCase()}
                                         </span>
                                         {formSp.tuy_chon_phien_ban && formSp.tuy_chon_phien_ban.length > 0 && (
                                             <span className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800 text-[11px] font-semibold">
@@ -291,15 +294,15 @@ export default function ModalSanPham({
 
                         {/* Form Body Cuộn Độc Lập - Nền Slate-100 Đậm Hơn Giúp Tôn Card Trắng & Đệm Đáy Thoải Mái */}
                         <form onSubmit={xuLyLuuSanPham} className="flex flex-col flex-1 min-h-0">
-                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs bg-slate-100/70 dark:bg-slate-950/80 pb-28">
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 text-xs bg-slate-200/70 dark:bg-slate-950/80 pb-28">
                                 
                                 {/* TAB 1: THÔNG TIN CƠ BẢN & GIÁ BÁN */}
                                 {tabModalSp === 'thong_tin' && (
                                     <div className="space-y-4 animate-in fade-in duration-150">
                                         {/* KHỐI 1: ĐỊNH DANH & ẢNH ĐẠI DIỆN SẢN PHẨM */}
-                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-blue-300 dark:border-blue-800 shadow-sm overflow-hidden">
                                             {/* Header Khối 1 */}
-                                            <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                            <div className="px-4 py-3 bg-gradient-to-r from-blue-50 to-white dark:from-slate-800/70 dark:to-slate-900 border-b-2 border-blue-300 dark:border-blue-800 flex items-center justify-between">
                                                 <div className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                                     <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shadow-xs">
                                                         <Tag className="w-3.5 h-3.5" />
@@ -387,7 +390,7 @@ export default function ModalSanPham({
                                                                     value={formSp.ma_san_pham}
                                                                     onChange={(e) => setFormSp({ ...formSp, ma_san_pham: e.target.value })}
                                                                     placeholder="VD: G834JYR-R9054W"
-                                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all"
+                                                                    className="w-full px-3 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-mono font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all"
                                                                 />
                                                             </div>
 
@@ -400,8 +403,9 @@ export default function ModalSanPham({
                                                                 <select
                                                                     value={formSp.hang_san_xuat}
                                                                     onChange={(e) => setFormSp({ ...formSp, hang_san_xuat: e.target.value })}
-                                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold capitalize text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                                                                    className="w-full px-3 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold capitalize text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
                                                                 >
+                                                                    <option value="">-- Chọn hãng --</option>
                                                                     {danhSachHangThucTe.map(h => (
                                                                         <option key={h.ma} value={h.ma}>{h.ten}</option>
                                                                     ))}
@@ -417,7 +421,7 @@ export default function ModalSanPham({
                                                                 <select
                                                                     value={loaiFormSanPham}
                                                                     onChange={(e) => setLoaiFormSanPham(e.target.value)}
-                                                                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
+                                                                    className="w-full px-3 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
                                                                 >
                                                                     <option value="laptop">💻 Laptop Gaming & Văn Phòng</option>
                                                                     <option value="ban_phim">⌨️ Bàn Phím Cơ Custom</option>
@@ -445,7 +449,7 @@ export default function ModalSanPham({
                                                                 value={formSp.ten_san_pham}
                                                                 onChange={(e) => setFormSp({ ...formSp, ten_san_pham: e.target.value })}
                                                                 placeholder="Nhập tên sản phẩm đầy đủ và chi tiết..."
-                                                                className="w-full px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all"
+                                                                className="w-full px-3.5 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all"
                                                             />
                                                         </div>
                                                     </div>
@@ -454,9 +458,9 @@ export default function ModalSanPham({
                                         </div>
 
                                         {/* KHỐI 2: THIẾT LẬP GIÁ BÁN & TỒN KHO THỰC TẾ (Sạch sẽ, Tinh Tế, Gọn Gàng) */}
-                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-300 dark:border-emerald-800 shadow-sm overflow-hidden">
                                             {/* Header Khối 2 */}
-                                            <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                            <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-white dark:from-slate-800/70 dark:to-slate-900 border-b-2 border-emerald-300 dark:border-emerald-800 flex items-center justify-between">
                                                 <div className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                                     <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center text-xs shadow-xs">
                                                         <DollarSign className="w-3.5 h-3.5" />
@@ -486,10 +490,6 @@ export default function ModalSanPham({
                                                             placeholder="VD: 120000000"
                                                             className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-bold text-slate-800 dark:text-slate-200 text-xs focus:border-blue-500 focus:outline-none"
                                                         />
-                                                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-bold flex items-center justify-between px-1">
-                                                            <span>Gốc:</span>
-                                                            <span className="text-slate-700 dark:text-slate-300">{dinhDangTienVND(formSp.gia_goc)}</span>
-                                                        </div>
                                                     </div>
 
                                                     {/* CỘT 2: GIÁ KHUYẾN MÃI THỰC THU (Tone Rose Điểm Nhấn) */}
@@ -548,9 +548,9 @@ export default function ModalSanPham({
                                         </div>
 
                                         {/* KHỐI 3: BẢO HÀNH & TRẠNG THÁI KINH DOANH */}
-                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs overflow-hidden">
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-300 dark:border-indigo-800 shadow-sm overflow-hidden">
                                             {/* Header Khối 3 */}
-                                            <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+                                            <div className="px-4 py-3 bg-gradient-to-r from-indigo-50 to-white dark:from-slate-800/70 dark:to-slate-900 border-b-2 border-indigo-300 dark:border-indigo-800 flex items-center justify-between">
                                                 <div className="font-bold text-xs uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                                     <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-xs">
                                                         <ShieldCheck className="w-3.5 h-3.5" />
@@ -573,7 +573,7 @@ export default function ModalSanPham({
                                                             placeholder="Ví dụ: 24 tháng chính hãng tại TNTP Laptop..."
                                                             value={formSp.che_do_bao_hanh}
                                                             onChange={(e) => setFormSp({ ...formSp, che_do_bao_hanh: e.target.value })}
-                                                            className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:outline-none transition-all"
+                                                            className="w-full px-3 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-indigo-500 focus:outline-none transition-all"
                                                         />
                                                         <div className="flex items-center gap-2">
                                                             <input type="number" min="1" max="120" value={formSp.thoi_han_bao_hanh_thang ?? 24} onChange={(e) => setFormSp({ ...formSp, thoi_han_bao_hanh_thang: e.target.value })} className="w-24 px-3 py-1.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 font-black text-xs focus:border-indigo-500 focus:outline-none" aria-label="Thời hạn bảo hành theo tháng" />
@@ -3146,10 +3146,17 @@ export default function ModalSanPham({
                                             <span>Đang sửa <b>{demSoMucDaSua()}</b> mục thông tin</span>
                                         </span>
                                     ) : (
-                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                            <span>Nhấn "Lưu Sản Phẩm" để cập nhật vào kho hàng</span>
-                                        </div>
+                                        oConThieu.length > 0 ? (
+                                            <span className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-200 border-2 border-amber-300 dark:border-amber-800 flex items-center gap-2">
+                                                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                                <span>Còn thiếu: <b>{oConThieu.join(', ')}</b></span>
+                                            </span>
+                                        ) : (
+                                            <span className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-200 border-2 border-emerald-300 dark:border-emerald-800 flex items-center gap-2">
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                <span>Đã đủ thông tin bắt buộc</span>
+                                            </span>
+                                        )
                                     )}
                                 </div>
                                 <div className="flex items-center gap-2.5 ml-auto">
