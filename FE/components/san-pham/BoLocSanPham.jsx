@@ -23,7 +23,7 @@ const MAU_O_HANG = [
     'bg-violet-100 text-violet-700', 'bg-cyan-100 text-cyan-700', 'bg-pink-100 text-pink-700', 'bg-indigo-100 text-indigo-700'
 ];
 const mauOHang = (ten) => MAU_O_HANG[[...String(ten)].reduce((t, c) => t + c.charCodeAt(0), 0) % MAU_O_HANG.length];
-const HANG_CO_LOGO = new Set(['acer', 'anker', 'asus', 'dell', 'gigabyte', 'hp', 'kingston', 'keychron', 'lenovo', 'logitech', 'msi', 'razer', 'samsung', 'apple']);
+const HANG_CO_LOGO = new Set(['acer', 'anker', 'apple', 'asus', 'deepcool', 'dell', 'gigabyte', 'hp', 'intel', 'keychron', 'kingston', 'lenovo', 'logitech', 'moft', 'msi', 'razer', 'samsung', 'tomtoc']);
 
 // Gom tên các mục đã chọn thành một dòng ngắn để hiện ngay cả khi khối đang gập
 const tomTatDaChon = (tuyChon, daChon) => {

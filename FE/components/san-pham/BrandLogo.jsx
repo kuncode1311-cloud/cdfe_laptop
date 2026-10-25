@@ -135,6 +135,34 @@ export default function BrandLogo({ brand, className = "h-5 w-auto", active = fa
                 </span>
             );
 
+        case 'deepcool':
+            return (
+                <span className="text-xs font-black tracking-tight text-cyan-700 uppercase">
+                    DeepCool
+                </span>
+            );
+
+        case 'intel':
+            return (
+                <span className="text-xs font-black italic tracking-tight text-blue-600 lowercase">
+                    intel
+                </span>
+            );
+
+        case 'moft':
+            return (
+                <span className="text-xs font-black tracking-tight text-slate-700 uppercase">
+                    MOFT
+                </span>
+            );
+
+        case 'tomtoc':
+            return (
+                <span className="text-xs font-black tracking-tight text-orange-600 lowercase">
+                    tomtoc
+                </span>
+            );
+
         default:
             return (
                 <span className="text-xs font-black uppercase tracking-wider">
