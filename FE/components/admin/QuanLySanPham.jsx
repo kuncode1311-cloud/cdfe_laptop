@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import {
     Boxes,
@@ -47,6 +48,22 @@ export default function QuanLySanPham({
     moModalSuaSp,
     xuLyXoaSanPham
 }) {
+    const SO_SAN_PHAM_MOI_TRANG = 10;
+    const [trangHienTai, setTrangHienTai] = useState(1);
+    const tongSoTrang = Math.max(1, Math.ceil(sanPhamHienThi.length / SO_SAN_PHAM_MOI_TRANG));
+    const danhSachTrenTrang = useMemo(() => {
+        const batDau = (trangHienTai - 1) * SO_SAN_PHAM_MOI_TRANG;
+        return sanPhamHienThi.slice(batDau, batDau + SO_SAN_PHAM_MOI_TRANG);
+    }, [sanPhamHienThi, trangHienTai]);
+
+    useEffect(() => {
+        setTrangHienTai(1);
+    }, [tuKhoaSanPham, locNganhHang, locHangSanPham, locTonKhoSanPham, sapXepSanPham]);
+
+    useEffect(() => {
+        if (trangHienTai > tongSoTrang) setTrangHienTai(tongSoTrang);
+    }, [tongSoTrang, trangHienTai]);
+
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
             {/* 4 KPI Cards Kho Sản Phẩm Gradient 3D Hiện Đại */}
@@ -310,7 +327,7 @@ export default function QuanLySanPham({
                                     </td>
                                 </tr>
                             ) : (
-                                sanPhamHienThi.map((sp, idx) => {
+                                danhSachTrenTrang.map((sp, idx) => {
                                     const thongTin = layThongSoNhanhAdmin(sp);
                                     const idSp = sp.id || sp._id;
                                     const dangXuLyItem = dangXuLySpId === idSp;
@@ -327,7 +344,7 @@ export default function QuanLySanPham({
                                             }`}
                                         >
                                             <td className={`py-2 px-1 text-center font-bold border-b border-r whitespace-nowrap text-[11px] ${daAnSp ? 'border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 font-black' : 'border-slate-200 dark:border-slate-800 text-slate-400'}`}>
-                                                #{idx + 1}
+                                                #{(trangHienTai - 1) * SO_SAN_PHAM_MOI_TRANG + idx + 1}
                                             </td>
                                             <td className={`py-2 px-2.5 border-b border-r overflow-hidden ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                 <div className="flex items-center gap-2.5 min-w-0">
@@ -455,6 +472,20 @@ export default function QuanLySanPham({
                         </tbody>
                     </table>
                 </div>
+                {sanPhamHienThi.length > 0 && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/70 px-4 py-3">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                            Hiển thị {(trangHienTai - 1) * SO_SAN_PHAM_MOI_TRANG + 1}-{Math.min(trangHienTai * SO_SAN_PHAM_MOI_TRANG, sanPhamHienThi.length)} / {sanPhamHienThi.length} sản phẩm
+                        </span>
+                        <div className="flex items-center gap-1">
+                            <button type="button" onClick={() => setTrangHienTai((trang) => Math.max(1, trang - 1))} disabled={trangHienTai === 1} className="h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Trước</button>
+                            {Array.from({ length: tongSoTrang }, (_, index) => index + 1).map((trang) => (
+                                <button key={trang} type="button" onClick={() => setTrangHienTai(trang)} className={`h-8 min-w-8 px-2 rounded-lg text-xs font-black cursor-pointer ${trang === trangHienTai ? 'bg-blue-600 text-white shadow-sm' : 'border border-slate-200 bg-white text-slate-600 hover:border-blue-300'}`}>{trang}</button>
+                            ))}
+                            <button type="button" onClick={() => setTrangHienTai((trang) => Math.min(tongSoTrang, trang + 1))} disabled={trangHienTai === tongSoTrang} className="h-8 px-2.5 rounded-lg border border-slate-200 bg-white text-xs font-bold text-slate-600 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">Sau</button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
