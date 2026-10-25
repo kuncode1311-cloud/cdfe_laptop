@@ -601,15 +601,15 @@ export default function TrangQuanTriCuaHang() {
     const layClassInput = (fieldName, extra = '') => {
         const daSua = kiemTraDaSua(fieldName);
         if (daSua) {
-            return `w-full px-3.5 py-2.5 rounded-xl border-2 border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-950/50 text-amber-950 dark:text-amber-100 font-bold text-xs ring-2 ring-amber-400/30 focus:border-amber-600 focus:bg-amber-100/90 dark:focus:bg-amber-900/60 focus:outline-none transition-all shadow-xs ${extra}`;
+            return `w-full px-3.5 py-2.5 rounded-xl border-2 border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-950/50 text-amber-950 dark:text-amber-100 font-bold text-xs ring-2 ring-amber-400/30 focus:border-amber-600 focus:bg-amber-100/90 dark:focus:bg-amber-900/60 focus:outline-none transition-all shadow-xs cursor-text pointer-events-auto ${extra}`;
         }
-        return `w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-blue-50/60 dark:focus:bg-slate-800/80 focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all ${extra}`;
+        return `w-full px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-blue-50/60 dark:focus:bg-slate-800/80 focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all cursor-text pointer-events-auto ${extra}`;
     };
 
     // Style cho ô thông số tùy biến (Key - Value)
     const layClassInputTuyChinh = (idx, field, extra = '') => {
         if (!spDangSua || !thongSoTuyChinhGoc) {
-            return `px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-blue-50/60 dark:focus:bg-slate-800/80 focus:border-blue-600 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all ${extra}`;
+            return `px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-blue-50/60 dark:focus:bg-slate-800/80 focus:border-blue-600 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all cursor-text pointer-events-auto ${extra}`;
         }
         const goc = thongSoTuyChinhGoc[idx];
         const hienTai = thongSoTuyChinh[idx];
@@ -617,7 +617,7 @@ export default function TrangQuanTriCuaHang() {
         if (daSua) {
             return `px-3.5 py-2.5 rounded-xl border-2 border-amber-500 dark:border-amber-400 bg-amber-50 dark:bg-amber-950/50 text-amber-950 dark:text-amber-100 font-bold text-xs ring-2 ring-amber-400/30 focus:border-amber-600 focus:bg-amber-100/90 dark:focus:bg-amber-900/60 focus:outline-none transition-all shadow-xs ${extra}`;
         }
-        return `px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-blue-50/60 dark:focus:bg-slate-800/80 focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all ${extra}`;
+        return `px-3.5 py-2.5 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-slate-50/90 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-blue-50/60 dark:focus:bg-slate-800/80 focus:border-blue-600 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all cursor-text pointer-events-auto ${extra}`;
     };
 
     // Từ điển giải nghĩa slug / mã thông số sang Tiếng Việt có dấu chuẩn đẹp cho admin và khách xem
@@ -3955,7 +3955,7 @@ export default function TrangQuanTriCuaHang() {
     const thongSoQuanLyKhachHang = { danhSachNguoiDung, danhSachKhachHangKemDoanhThu, tuKhoaKhachHang, setTuKhoaKhachHang, locKhachHang, setLocKhachHang, sapXepKhachHang, setSapXepKhachHang, moModalThemUser, khachHangHienThi, dangTai, dangLocKhachHang, dangXuLyUserId, layChiTietThoiGianKhachHang, xuLyKhoaNguoiDung, xuLyDoiVaiTroNguoiDung, moModalSuaUser, xuLyXoaUser };
 
     return (
-        <div className="h-screen w-screen overflow-hidden bg-[#e8ecf4] dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex font-sans antialiased">
+        <div className="admin-shell min-h-screen w-full overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans antialiased">
             {/* Custom Dialog Box (Hộp thoại xác nhận & cảnh báo thay thế alert / confirm trình duyệt) */}
             {hopThoai.hien && (
                 <div 
@@ -4038,7 +4038,7 @@ export default function TrangQuanTriCuaHang() {
 
             {/* SIDEBAR RỰC RỠ 7 TABS ĐẲNG CẤP (PINNED 100VH - KHÔNG BỊ TRỐNG HOẶC RỚT NÚT XUỐNG ĐÁY) */}
             <aside
-                className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-[#0d1527] border-r-2 border-slate-300 dark:border-slate-800 flex flex-col h-screen md:h-full justify-between transition-all duration-300 md:static shrink-0 ${sidebarMoMobile ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full md:translate-x-0'
+                className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-[#0d1527] border-r-2 border-slate-300 dark:border-slate-800 flex flex-col h-screen justify-between transition-all duration-300 md:sticky md:top-0 shrink-0 ${sidebarMoMobile ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full md:translate-x-0'
                     } ${sidebarThuGon ? 'md:w-20' : 'md:w-64'}`}
             >
                 {/* 1. Header & Logo với nút thu gọn trực tiếp */}
@@ -4426,9 +4426,9 @@ export default function TrangQuanTriCuaHang() {
             </aside>
 
             {/* MAIN CONTENT AREA (PINNED HEADER & SCROLLABLE BODY) */}
-            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 min-h-screen">
                 {/* TOPBAR RỰC RỠ & SANG TRỌNG (LUÔN GHIM CỐ ĐỊNH Ở ĐỈNH) */}
-                <header className="h-16 bg-white dark:bg-[#0d1527] border-b-2 border-slate-300 dark:border-slate-700 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-sm z-30">
+                <header className="sticky top-0 h-16 bg-white dark:bg-[#0d1527] border-b-2 border-slate-300 dark:border-slate-700 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-sm z-30">
                     <div className="flex items-center gap-3.5">
                         <button
                             onClick={() => {
@@ -4519,7 +4519,7 @@ export default function TrangQuanTriCuaHang() {
                 </header>
 
                 {/* SCROLLABLE VIEWPORT */}
-                <main className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 pb-24 space-y-6 bg-[#e8ecf4] dark:bg-[#060a14]">
+                <main className="flex-1 min-h-0 overflow-visible p-4 sm:p-6 pb-24 space-y-6 bg-slate-100 dark:bg-slate-950">
                     {/* ========================================= */}
                     {/* TAB 1: TỔNG QUAN */}
                     {/* ========================================= */}
@@ -4631,4 +4631,3 @@ export default function TrangQuanTriCuaHang() {
         </div>
     );
 }
-
