@@ -38,9 +38,7 @@ const kiemTraPhanLoaiSanPham = async (duLieu, batBuoc = false) => {
             .select('ma_danh_muc -_id')
             .lean();
         const maHopLe = new Set(
-            danhMucDangHoatDong.length
-                ? danhMucDangHoatDong.map((item) => item.ma_danh_muc)
-                : NHU_CAU_LAPTOP_MAC_DINH
+            danhMucDangHoatDong.length ? danhMucDangHoatDong.map((item) => item.ma_danh_muc) : NHU_CAU_LAPTOP_MAC_DINH
         );
         if (!categories.length || categories.some((ma) => !maHopLe.has(ma))) {
             return 'Laptop phải có ít nhất một nhu cầu sử dụng đang hoạt động; hãy chọn nhu cầu hợp lệ trong danh sách.';

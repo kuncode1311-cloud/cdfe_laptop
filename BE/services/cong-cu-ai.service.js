@@ -137,12 +137,12 @@ async function thucThiCongCu(ten, args = {}) {
     const filter = taoBoLoc(args);
     const [items, total] = await Promise.all([
         SanPham.find(filter)
-        .select('-danh_gia -thu_vien_hinh_anh -video_demo')
-        .sort(sort[args.sap_xep] || sort.ban_chay)
-        .limit(limit)
-        .maxTimeMS(5000)
-        .lean()
-        .exec(),
+            .select('-danh_gia -thu_vien_hinh_anh -video_demo')
+            .sort(sort[args.sap_xep] || sort.ban_chay)
+            .limit(limit)
+            .maxTimeMS(5000)
+            .lean()
+            .exec(),
         SanPham.countDocuments(filter).maxTimeMS(5000).exec()
     ]);
     return { items, total, returned: items.length, limit };
