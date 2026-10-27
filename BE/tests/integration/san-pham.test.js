@@ -147,6 +147,8 @@ describe('Quản lý sản phẩm (chỉ Admin)', () => {
         ma_san_pham: 'NEW-01',
         ten_san_pham: 'Lenovo Legion Test',
         hang_san_xuat: 'lenovo',
+        loai_san_pham: 'laptop',
+        danh_muc: ['gaming'],
         gia_khuyen_mai: 30000000
     };
 

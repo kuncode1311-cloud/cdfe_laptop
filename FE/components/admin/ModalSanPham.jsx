@@ -175,7 +175,10 @@ export default function ModalSanPham({
         [formSp.ma_san_pham, 'Mã SKU'],
         [formSp.hang_san_xuat, 'Hãng'],
         [formSp.hinh_anh_chinh, 'Ảnh đại diện'],
-        [formSp.gia_khuyen_mai, 'Giá bán']
+        [formSp.gia_khuyen_mai, 'Giá bán'],
+        ...(loaiFormSanPham === 'laptop' && !(Array.isArray(formSp.danh_muc) && formSp.danh_muc.some((ma) => maNhuCauLaptop.has(ma)))
+            ? [[null, 'Nhu cầu sử dụng laptop']]
+            : [])
     ].filter(([giaTri]) => !String(giaTri ?? '').trim()).map(([, ten]) => ten);
 
     return (
@@ -440,7 +443,7 @@ export default function ModalSanPham({
                                                                                 .filter((ma) => maNhuCauLaptop.has(ma));
                                                                             setFormSp({
                                                                                 ...formSp,
-                                                                                danh_muc: nhuCauDangChon.length ? nhuCauDangChon : ['gaming']
+                                                                                danh_muc: nhuCauDangChon
                                                                             });
                                                                         }
                                                                     }}

@@ -752,7 +752,7 @@ export default function TrangQuanTriCuaHang() {
         ma_san_pham: '',
         ten_san_pham: '',
         hang_san_xuat: 'asus',
-        danh_muc: ['gaming'],
+        danh_muc: [],
         gia_goc: 30000000,
         gia_khuyen_mai: 27990000,
         phan_tram_giam_gia: 10,
@@ -2068,7 +2068,7 @@ export default function TrangQuanTriCuaHang() {
             ma_san_pham: '',
             ten_san_pham: '',
             hang_san_xuat: 'asus',
-            danh_muc: ['gaming'],
+            danh_muc: [],
             gia_goc: 30000000,
             gia_khuyen_mai: 27990000,
             phan_tram_giam_gia: 10,
@@ -2306,7 +2306,7 @@ export default function TrangQuanTriCuaHang() {
             ma_san_pham: sp.ma_san_pham || '',
             ten_san_pham: sp.ten_san_pham || '',
             hang_san_xuat: sp.hang_san_xuat || 'asus',
-            danh_muc: sp.danh_muc || ['gaming'],
+            danh_muc: Array.isArray(sp.danh_muc) ? sp.danh_muc : [],
             gia_goc: sp.gia_goc || 0,
             gia_khuyen_mai: sp.gia_khuyen_mai || 0,
             phan_tram_giam_gia: sp.phan_tram_giam_gia || 0,
@@ -2722,7 +2722,7 @@ export default function TrangQuanTriCuaHang() {
             ma_san_pham: formSp.ma_san_pham || 'SKU-SAMPLE',
             ten_san_pham: formSp.ten_san_pham || 'Tên Sản Phẩm Mẫu',
             hang_san_xuat: formSp.hang_san_xuat || 'asus',
-            danh_muc: Array.isArray(formSp.danh_muc) && formSp.danh_muc.length > 0 ? formSp.danh_muc : ['gaming'],
+            danh_muc: Array.isArray(formSp.danh_muc) ? formSp.danh_muc : [],
             gia_goc: Number(formSp.gia_goc) || 0,
             gia_khuyen_mai: Number(formSp.gia_khuyen_mai) || 0,
             phan_tram_giam_gia: Number(formSp.phan_tram_giam_gia) || 0,
@@ -2850,6 +2850,21 @@ export default function TrangQuanTriCuaHang() {
             return;
         }
 
+        const maNhuCauDangHoatDong = danhSachDanhMuc
+            .filter((dm) => dm.loai === 'nhu_cau' && dm.kich_hoat !== false)
+            .map((dm) => dm.ma_danh_muc);
+        const nhuCauHopLe = new Set(maNhuCauDangHoatDong.length
+            ? maNhuCauDangHoatDong
+            : ['gaming', 'ai-pc', 'van-phong-mong-nhe', 'do-hoa-sang-tao', 'doanh-nhan', 'sinh-vien']);
+        if (loaiFormSanPham === 'laptop' && !(Array.isArray(formSp.danh_muc) && formSp.danh_muc.some((ma) => nhuCauHopLe.has(ma)))) {
+            canhBao({
+                tieuDe: 'Thiếu Nhu Cầu Sử Dụng',
+                noiDung: 'Hãy chọn ít nhất một nhu cầu laptop đang hoạt động để sản phẩm được phân loại chính xác.',
+                loai: 'danger'
+            });
+            return;
+        }
+
         // Link ảnh đại diện phải đúng định dạng (https://..., /images/... hoặc ảnh tải từ máy)
         const loiAnh = !formSp.hinh_anh_chinh?.trim() ? 'Sản phẩm cần có ảnh đại diện. Hãy dán link ảnh hoặc tải ảnh từ máy.' : loiLinkAnh(formSp.hinh_anh_chinh);
         if (loiAnh) {
@@ -2914,8 +2929,8 @@ export default function TrangQuanTriCuaHang() {
                 danhMucChuan = ['sac-cap-hub', 'phu-kien-gear'];
             } else if (loaiFormSanPham === 'linh_kien') {
                 danhMucChuan = ['linh-kien-nang-cap', 'linh-kien'];
-            } else if (danhMucChuan.length === 0) {
-                danhMucChuan = ['gaming'];
+            } else if (loaiFormSanPham === 'laptop') {
+                danhMucChuan = danhMucChuan.filter((ma) => nhuCauHopLe.has(ma));
             }
 
             // Chuẩn hóa danh sách biến thể / màu sắc phụ
@@ -2929,6 +2944,7 @@ export default function TrangQuanTriCuaHang() {
             const payload = {
                 ma_san_pham: formSp.ma_san_pham.toUpperCase().trim(),
                 ten_san_pham: formSp.ten_san_pham.trim(),
+                loai_san_pham: loaiFormSanPham,
                 hang_san_xuat: formSp.hang_san_xuat.toLowerCase().trim(),
                 danh_muc: danhMucChuan,
                 gia_goc: Number(formSp.gia_goc) || 0,

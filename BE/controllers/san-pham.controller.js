@@ -1,4 +1,5 @@
 const SanPham = require('../models/san-pham.model');
+const DanhMuc = require('../models/danh-muc.model');
 const taoSlug = require('../utils/tao-slug');
 const { escapeRegex, chuoiAnToan } = require('../utils/bao-mat');
 
@@ -18,6 +19,35 @@ const daBiAn = (sanPham) => sanPham.con_hang === false || Number(sanPham.so_luon
 const datCacheTheoVaiTro = (req, res, cachePublic) => {
     res.vary('Authorization');
     res.set('Cache-Control', laAdmin(req) ? 'private, no-store' : cachePublic);
+};
+
+const NHU_CAU_LAPTOP_MAC_DINH = ['gaming', 'ai-pc', 'van-phong-mong-nhe', 'do-hoa-sang-tao', 'doanh-nhan', 'sinh-vien'];
+const LOAI_SAN_PHAM_HOP_LE = ['laptop', 'balo', 'ban_phim', 'chuot', 'tai_nghe', 'sac_hub', 'linh_kien'];
+
+const kiemTraPhanLoaiSanPham = async (duLieu, batBuoc = false) => {
+    const loai = duLieu.loai_san_pham;
+    if (batBuoc && !LOAI_SAN_PHAM_HOP_LE.includes(loai)) {
+        return 'Vui lòng chọn nhóm ngành hàng hợp lệ.';
+    }
+    if (loai !== undefined && !LOAI_SAN_PHAM_HOP_LE.includes(loai)) {
+        return 'Nhóm ngành hàng không hợp lệ.';
+    }
+    if (loai === 'laptop') {
+        const categories = Array.isArray(duLieu.danh_muc) ? duLieu.danh_muc : [];
+        const danhMucDangHoatDong = await DanhMuc.find({ loai: 'nhu_cau', kich_hoat: { $ne: false } })
+            .select('ma_danh_muc -_id')
+            .lean();
+        const maHopLe = new Set(
+            danhMucDangHoatDong.length
+                ? danhMucDangHoatDong.map((item) => item.ma_danh_muc)
+                : NHU_CAU_LAPTOP_MAC_DINH
+        );
+        if (!categories.length || categories.some((ma) => !maHopLe.has(ma))) {
+            return 'Laptop phải có ít nhất một nhu cầu sử dụng đang hoạt động; hãy chọn nhu cầu hợp lệ trong danh sách.';
+        }
+    }
+    delete duLieu.loai_san_pham;
+    return null;
 };
 
 /**
@@ -242,6 +272,8 @@ const kiemTraVaTinhGia = (duLieu, hienTai = {}) => {
 const themSanPham = async (req, res) => {
     const duLieuMoi = { ...req.body };
     try {
+        const loiPhanLoai = await kiemTraPhanLoaiSanPham(duLieuMoi, true);
+        if (loiPhanLoai) return res.status(400).json({ thong_diep: loiPhanLoai });
         const ketQuaGia = kiemTraVaTinhGia(duLieuMoi);
         if (ketQuaGia.loi) return res.status(400).json({ thong_diep: ketQuaGia.loi });
         duLieuMoi.phan_tram_giam_gia = ketQuaGia.phanTramGiamGia;
@@ -274,6 +306,10 @@ const capNhatSanPham = async (req, res) => {
     const { id } = req.params;
     const duLieuCapNhat = { ...req.body };
     try {
+        if (duLieuCapNhat.loai_san_pham !== undefined || duLieuCapNhat.danh_muc !== undefined) {
+            const loiPhanLoai = await kiemTraPhanLoaiSanPham(duLieuCapNhat, true);
+            if (loiPhanLoai) return res.status(400).json({ thong_diep: loiPhanLoai });
+        }
         if (duLieuCapNhat.ten_san_pham && !duLieuCapNhat.slug) {
             duLieuCapNhat.slug = taoSlug(duLieuCapNhat.ten_san_pham);
         }
