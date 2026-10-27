@@ -47,6 +47,15 @@ import {
     ZoomIn,
 } from 'lucide-react';
 
+const NHU_CAU_LAPTOP = [
+    { ma: 'gaming', ten: 'Gaming' },
+    { ma: 'ai-pc', ten: 'AI PC' },
+    { ma: 'van-phong-mong-nhe', ten: 'Văn phòng mỏng nhẹ' },
+    { ma: 'do-hoa-sang-tao', ten: 'Đồ họa & sáng tạo' },
+    { ma: 'doanh-nhan', ten: 'Doanh nhân' },
+    { ma: 'sinh-vien', ten: 'Học tập & sinh viên' }
+];
+
 // Modal Thêm/Sửa sản phẩm (4 tab: Thông tin, Thông số kỹ thuật, Biến thể, Ảnh) của trang quản trị:
 // tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện).
 
@@ -130,6 +139,7 @@ export default function ModalSanPham({
     dangLuuSp,
     dangMoModalSp,
     danhSachHangThucTe,
+    danhSachNhuCauLaptop = [],
     demSoMucDaSua,
     dongModalSpAnToan,
     formSp,
@@ -156,6 +166,8 @@ export default function ModalSanPham({
     xuLyUploadAnhGallerySp,
 }) {
     if (!dangMoModalSp) return null;
+    const cacNhuCauLaptop = danhSachNhuCauLaptop.length ? danhSachNhuCauLaptop : NHU_CAU_LAPTOP;
+    const maNhuCauLaptop = new Set(cacNhuCauLaptop.map((item) => item.ma));
 
     // Các ô bắt buộc còn thiếu (hiện ở chân form để admin biết cần điền gì)
     const oConThieu = [
@@ -420,7 +432,18 @@ export default function ModalSanPham({
                                                                 </label>
                                                                 <select
                                                                     value={loaiFormSanPham}
-                                                                    onChange={(e) => setLoaiFormSanPham(e.target.value)}
+                                                                    onChange={(e) => {
+                                                                        const loaiMoi = e.target.value;
+                                                                        setLoaiFormSanPham(loaiMoi);
+                                                                        if (loaiMoi === 'laptop') {
+                                                                            const nhuCauDangChon = (Array.isArray(formSp.danh_muc) ? formSp.danh_muc : [])
+                                                                                .filter((ma) => maNhuCauLaptop.has(ma));
+                                                                            setFormSp({
+                                                                                ...formSp,
+                                                                                danh_muc: nhuCauDangChon.length ? nhuCauDangChon : ['gaming']
+                                                                            });
+                                                                        }
+                                                                    }}
                                                                     className="w-full px-3 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white dark:focus:bg-slate-900 focus:border-blue-500 focus:outline-none transition-all cursor-pointer"
                                                                 >
                                                                     <option value="laptop">💻 Laptop Gaming & Văn Phòng</option>
@@ -433,6 +456,41 @@ export default function ModalSanPham({
                                                                 </select>
                                                             </div>
                                                         </div>
+
+                                                        {loaiFormSanPham === 'laptop' && (
+                                                            <div className="mt-3 space-y-2 rounded-xl border border-blue-200 bg-blue-50/70 p-3 dark:border-blue-900 dark:bg-blue-950/30">
+                                                                <div>
+                                                                    <p className="text-xs font-black text-slate-800 dark:text-slate-100">Nhu cầu sử dụng laptop *</p>
+                                                                    <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">Chọn một hoặc nhiều nhu cầu để khách lọc thấy sản phẩm đúng nhóm.</p>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                                                    {cacNhuCauLaptop.map((nhuCau) => {
+                                                                        const danhMucHienTai = Array.isArray(formSp.danh_muc) ? formSp.danh_muc : [];
+                                                                        const dangChon = danhMucHienTai.includes(nhuCau.ma);
+                                                                        return (
+                                                                            <button
+                                                                                key={nhuCau.ma}
+                                                                                type="button"
+                                                                                aria-pressed={dangChon}
+                                                                                disabled={dangChon && danhMucHienTai.filter((ma) => maNhuCauLaptop.has(ma)).length === 1}
+                                                                                onClick={() => {
+                                                                                    const danhMucMoi = dangChon
+                                                                                        ? danhMucHienTai.filter((ma) => ma !== nhuCau.ma)
+                                                                                        : [...danhMucHienTai.filter((ma) => maNhuCauLaptop.has(ma)), nhuCau.ma];
+                                                                                    if (danhMucMoi.length) setFormSp({ ...formSp, danh_muc: danhMucMoi });
+                                                                                }}
+                                                                                className={`rounded-lg border px-2.5 py-2 text-left text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${dangChon
+                                                                                    ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                                                                                    : 'border-slate-200 bg-white text-slate-700 hover:border-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
+                                                                                }`}
+                                                                            >
+                                                                                {nhuCau.ten}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
 
                                                         {/* Tên Đầy Đủ Của Sản Phẩm */}
                                                         <div className="space-y-1">
