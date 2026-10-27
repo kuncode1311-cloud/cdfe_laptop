@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Home, ChevronRight, Laptop, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Home, ChevronRight, Laptop, AlertTriangle, RefreshCw, LoaderCircle } from 'lucide-react';
 import { SanPhamService } from '@/services/san-pham.service';
 import { DANH_SACH_DANH_MUC_ANH } from '@/components/san-pham/BoLocThongMinhAllInOne';
 import ThanhTopBarLocDinh from '@/components/san-pham/ThanhTopBarLocDinh';
@@ -67,14 +67,22 @@ function NoiDungDanhSachSanPham() {
     // Đồng bộ sản phẩm 100% từ MongoDB Atlas qua API
     const [tatCaSanPham, setTatCaSanPham] = useState([]);
     const [dangTaiSanPham, setDangTaiSanPham] = useState(true);
+    const [dangTaiThem, setDangTaiThem] = useState(false);
+    const [tongSoSanPham, setTongSoSanPham] = useState(0);
+    const [demTheoDanhMuc, setDemTheoDanhMuc] = useState({});
+    const [trangHienTai, setTrangHienTai] = useState(1);
     const [loiKetNoi, setLoiKetNoi] = useState(null);
+    const [loiTaiThem, setLoiTaiThem] = useState(null);
 
     const taiLaiDuLieu = () => {
         setDangTaiSanPham(true);
         setLoiKetNoi(null);
-        SanPhamService.layTatCaSanPhamAsync({ ...boLoc, page: 1, limit: 24 })
+        setTrangHienTai(1);
+        SanPhamService.layTatCaSanPhamAsync({ ...boLoc, page: 1, limit: 24, with_count: true })
             .then((data) => {
-                setTatCaSanPham(Array.isArray(data) ? data : []);
+                setTatCaSanPham(Array.isArray(data?.items) ? data.items : []);
+                setTongSoSanPham(Number(data?.total) || 0);
+                setDemTheoDanhMuc(data?.category_counts || {});
                 setLoiKetNoi(null);
                 setDangTaiSanPham(false);
             })
@@ -88,10 +96,14 @@ function NoiDungDanhSachSanPham() {
     const phienBanDuLieu = useDuLieuMoi('san_pham');
     useEffect(() => {
         let daHuy = false;
-        SanPhamService.layTatCaSanPhamAsync({ ...boLoc, page: 1, limit: 24 })
+        setDangTaiSanPham(true);
+        setTrangHienTai(1);
+        SanPhamService.layTatCaSanPhamAsync({ ...boLoc, page: 1, limit: 24, with_count: true })
             .then((data) => {
                 if (!daHuy) {
-                    setTatCaSanPham(Array.isArray(data) ? data : []);
+                    setTatCaSanPham(Array.isArray(data?.items) ? data.items : []);
+                    setTongSoSanPham(Number(data?.total) || 0);
+                    setDemTheoDanhMuc(data?.category_counts || {});
                     setLoiKetNoi(null);
                     setDangTaiSanPham(false);
                 }
@@ -106,6 +118,34 @@ function NoiDungDanhSachSanPham() {
         return () => { daHuy = true; };
     }, [phienBanDuLieu, boLoc]);
 
+    const taiThemSanPham = async () => {
+        if (dangTaiThem || tatCaSanPham.length >= tongSoSanPham) return;
+        const trangTiepTheo = trangHienTai + 1;
+        setDangTaiThem(true);
+        setLoiTaiThem(null);
+        try {
+            const data = await SanPhamService.layTatCaSanPhamAsync({
+                ...boLoc,
+                page: trangTiepTheo,
+                limit: 24,
+                with_count: true
+            });
+            const items = Array.isArray(data?.items) ? data.items : [];
+            setTatCaSanPham((dangCo) => {
+                const ids = new Set(dangCo.map((sp) => sp.id || sp.slug));
+                return [...dangCo, ...items.filter((sp) => !ids.has(sp.id || sp.slug))];
+            });
+            setTongSoSanPham(Number(data?.total) || 0);
+            setDemTheoDanhMuc(data?.category_counts || {});
+            setTrangHienTai(trangTiepTheo);
+        } catch (error) {
+            console.error('Lỗi tải thêm sản phẩm:', error);
+            setLoiTaiThem('Tải thêm chưa thành công. Bạn có thể bấm thử lại.');
+        } finally {
+            setDangTaiThem(false);
+        }
+    };
+
     // Thống kê số lượng theo danh mục cho Topbar
     const danhSachDanhMucTopbar = useMemo(() => {
         const demDanhMuc = {};
@@ -118,9 +158,9 @@ function NoiDungDanhSachSanPham() {
         });
         return DANH_SACH_DANH_MUC_ANH.map(dm => ({
             ...dm,
-            count: dm.ma ? (demDanhMuc[dm.ma] || 0) : (tatCaSanPham?.length || 0)
+            count: dm.ma ? (demTheoDanhMuc[dm.ma] ?? demDanhMuc[dm.ma] ?? 0) : tongSoSanPham
         }));
-    }, [tatCaSanPham]);
+    }, [tatCaSanPham, demTheoDanhMuc, tongSoSanPham]);
 
     // Bộ lọc đã được xử lý ở server; danh sách hiện tại là kết quả từ MongoDB.
     const danhSachLoc = tatCaSanPham;
@@ -142,7 +182,7 @@ function NoiDungDanhSachSanPham() {
                 onCuonLenDauTrang={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 onMoBoLocToanDien={() => setMoBoLocToanDien(true)}
                 soLuongDangLoc={soLuongDangLoc}
-                tongKetQua={danhSachLoc.length}
+                tongKetQua={tongSoSanPham}
             />
 
             {/* 2. Breadcrumb Tinh Gọn */}
@@ -166,7 +206,7 @@ function NoiDungDanhSachSanPham() {
             {/* 3. TIÊU ĐỀ & BANNER DANH MỤC MẢNH MAI (Có ảnh đại diện, tên danh mục và mô tả ngắn) */}
             <BannerDanhMucManh
                 danhMucHienTai={boLoc.danh_muc}
-                tongSoLuong={danhSachLoc.length}
+                tongSoLuong={tongSoSanPham}
             />
 
             {/* 4. THANH BỘ LỌC 1 DÒNG TINH GỌN (Dropdown Thương hiệu, Giá, CPU, GPU, Trả góp 0%, Sắp xếp) */}
@@ -176,7 +216,7 @@ function NoiDungDanhSachSanPham() {
                 onMoBoLocToanDien={() => setMoBoLocToanDien(true)}
                 soLuongDangLoc={soLuongDangLoc}
                 tatCaSanPham={tatCaSanPham}
-                tongKetQua={danhSachLoc.length}
+                tongKetQua={tongSoSanPham}
                 cheDoHienThi={cheDoHienThi}
                 onThayDoiCheDoHienThi={setCheDoHienThi}
                 onDatLaiBoLoc={datLaiBoLoc}
@@ -248,6 +288,26 @@ function NoiDungDanhSachSanPham() {
                 </div>
             </div>
 
+            {!loiKetNoi && !dangTaiSanPham && danhSachLoc.length > 0 && (
+                <div className="flex flex-col items-center gap-3 py-6">
+                    <p className="text-sm font-semibold text-slate-500">
+                        Đang hiển thị {danhSachLoc.length} / {tongSoSanPham} sản phẩm
+                    </p>
+                    {loiTaiThem && <p className="text-sm font-semibold text-red-600">{loiTaiThem}</p>}
+                    {danhSachLoc.length < tongSoSanPham && (
+                        <button
+                            type="button"
+                            onClick={taiThemSanPham}
+                            disabled={dangTaiThem}
+                            className="inline-flex min-w-48 items-center justify-center gap-2 rounded-xl bg-[#0052cc] px-6 py-3 text-sm font-extrabold text-white shadow-md transition hover:bg-[#003da5] disabled:cursor-wait disabled:opacity-70"
+                        >
+                            {dangTaiThem ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
+                            {dangTaiThem ? 'Đang tải thêm...' : `Xem thêm ${Math.min(24, tongSoSanPham - danhSachLoc.length)} sản phẩm`}
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* 6. Drawer Bộ Lọc Toàn Diện (Mở trượt khi người dùng bấm nút "BỘ LỌC") */}
             <BoLocSanPhamComponent
                 mo={moBoLocToanDien}
@@ -256,7 +316,7 @@ function NoiDungDanhSachSanPham() {
                 onThayDoiBoLoc={setBoLoc}
                 onDatLaiBoLoc={datLaiBoLoc}
                 tatCaSanPham={tatCaSanPham}
-                tongKetQua={danhSachLoc.length}
+                tongKetQua={tongSoSanPham}
             />
         </div>
     );

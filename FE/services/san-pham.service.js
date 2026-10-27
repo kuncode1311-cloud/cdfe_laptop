@@ -52,6 +52,7 @@ export const SanPhamService = {
         if (boLoc.sap_xep) params.append('sap_xep', boLoc.sap_xep);
         if (boLoc.limit) params.append('limit', boLoc.limit);
         if (boLoc.page) params.append('page', boLoc.page);
+        if (boLoc.with_count) params.append('with_count', 'true');
 
         const queryString = params.toString();
         if (queryString) {
@@ -60,6 +61,10 @@ export const SanPhamService = {
 
         // Gọi API lấy dữ liệu mới nhất từ máy chủ
         const data = await apiFetch(endpoint, { cache: 'no-store' });
+
+        if (boLoc.with_count && data && !Array.isArray(data) && Array.isArray(data.items)) {
+            return data;
+        }
         
         // CẬP NHẬT VÀO BỘ NHỚ ĐỆM: Lưu bản mới nhất vào RAM để dùng cho các trang sau
         if (Array.isArray(data) && data.length > 0 && !queryString) {

@@ -44,7 +44,8 @@ const layTatCaSanPham = async (req, res) => {
             moi_nhat,
             sap_xep,
             limit,
-            page
+            page,
+            with_count
         } = req.query;
 
         // Xây dựng câu truy vấn MongoDB
@@ -117,6 +118,26 @@ const layTatCaSanPham = async (req, res) => {
         const soLuong = Math.min(Math.max(1, Math.floor(Number(limit)) || 24), 200);
         let query = SanPham.find(filter).sort(sortOption);
         if (coPhanTrang) query = query.skip((soTrang - 1) * soLuong).limit(soLuong);
+
+        if (with_count === 'true' || with_count === '1') {
+            const [danhSachSanPham, tongSo, nhomDanhMuc] = await Promise.all([
+                query,
+                SanPham.countDocuments(filter),
+                SanPham.aggregate([
+                    { $match: filter },
+                    { $unwind: '$danh_muc' },
+                    { $group: { _id: '$danh_muc', count: { $sum: 1 } } }
+                ])
+            ]);
+            return res.status(200).json({
+                items: danhSachSanPham,
+                total: tongSo,
+                page: soTrang,
+                limit: soLuong,
+                total_pages: Math.ceil(tongSo / soLuong),
+                category_counts: Object.fromEntries(nhomDanhMuc.map((item) => [item._id, item.count]))
+            });
+        }
 
         const danhSachSanPham = await query;
         return res.status(200).json(danhSachSanPham);
