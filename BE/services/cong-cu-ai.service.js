@@ -21,6 +21,11 @@ const moTaCongCu = [
             gioi_han: 'integer 1..10'
         }
     },
+    {
+        ten: 'thong_ke_san_pham',
+        mo_ta: 'Đếm toàn bộ sản phẩm đang bán; thống kê theo hãng, danh mục, giá và tồn kho. Có thể lọc hãng hoặc danh mục.',
+        tham_so: { hang: 'string', danh_muc: 'string[]' }
+    },
     { ten: 'showroom', mo_ta: 'Đọc địa chỉ, hotline và giờ mở cửa showroom.', tham_so: {} },
     {
         ten: 'bai_viet',
@@ -80,6 +85,37 @@ async function thucThiCongCu(ten, args = {}) {
             .exec();
     if (ten === 'showroom')
         return CaiDat.findOne({ khoa: 'he_thong' }).select('danh_sach_showroom -_id').maxTimeMS(5000).lean().exec();
+    if (ten === 'thong_ke_san_pham') {
+        const filter = taoBoLoc(args);
+        const [tong, theoHang, theoDanhMuc, gia] = await Promise.all([
+            SanPham.countDocuments(filter).maxTimeMS(5000).exec(),
+            SanPham.aggregate([
+                { $match: filter },
+                { $group: { _id: '$hang_san_xuat', so_luong: { $sum: 1 } } },
+                { $sort: { so_luong: -1, _id: 1 } },
+                { $limit: 50 }
+            ]).option({ maxTimeMS: 5000 }),
+            SanPham.aggregate([
+                { $match: filter },
+                { $unwind: '$danh_muc' },
+                { $group: { _id: '$danh_muc', so_luong: { $sum: 1 } } },
+                { $sort: { so_luong: -1, _id: 1 } },
+                { $limit: 100 }
+            ]).option({ maxTimeMS: 5000 }),
+            SanPham.aggregate([
+                { $match: filter },
+                {
+                    $group: {
+                        _id: null,
+                        gia_thap_nhat: { $min: '$gia_khuyen_mai' },
+                        gia_cao_nhat: { $max: '$gia_khuyen_mai' },
+                        ton_kho: { $sum: '$so_luong_ton_kho' }
+                    }
+                }
+            ]).option({ maxTimeMS: 5000 })
+        ]);
+        return { tong_san_pham: tong, theo_hang: theoHang, theo_danh_muc: theoDanhMuc, gia_va_ton_kho: gia[0] || null };
+    }
     if (ten === 'bai_viet') {
         const regex = new RegExp(escapeRegex(chuoi(args.tu_khoa || '')), 'i');
         return TinTuc.find({ xuat_ban: true, $or: [{ tieu_de: regex }, { tom_tat: regex }] })
