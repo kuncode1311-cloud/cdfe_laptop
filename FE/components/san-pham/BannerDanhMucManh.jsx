@@ -49,6 +49,18 @@ const THONG_TIN_DANH_MUC = {
         hinhAnh: '/images/sp/dell_xps_16.jpg',
         badge: '100% DCI-P3'
     },
+    'doanh-nhan': {
+        ten: 'LAPTOP DOANH NHÂN CAO CẤP',
+        moTa: 'Thiết kế sang trọng, gọn nhẹ, bảo mật tốt và pin bền bỉ cho công việc di động',
+        hinhAnh: '/images/sp/thinkpad_x1_carbon.jpg',
+        badge: 'Doanh Nhân'
+    },
+    'sinh-vien': {
+        ten: 'LAPTOP HỌC TẬP & SINH VIÊN',
+        moTa: 'Lựa chọn phù hợp học tập, làm bài tập và giải trí với nhiều mức giá dễ tiếp cận',
+        hinhAnh: '/images/sp/macbook_air_15_m3.jpg',
+        badge: 'Học Tập & Sinh Viên'
+    },
     'balo-tui-chong-soc': {
         ten: 'BALO & TÚI CHỐNG SỐC BẢO VỆ LAPTOP',
         moTa: 'Chống sốc CornerArmor 360 độ, vải trượt nước cao cấp, bảo vệ an toàn tuyệt đối cho thiết bị',

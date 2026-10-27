@@ -17,6 +17,8 @@ export const DANH_SACH_DANH_MUC_ANH = [
     { ma: 'gaming', ten: 'Gaming RTX', moTa: 'RTX 4090 175W', hinhAnh: '/images/sp/asus_rog_scar18.jpg' },
     { ma: 'van-phong-mong-nhe', ten: 'Mỏng Nhẹ', moTa: '1.2kg OLED Pin trâu', hinhAnh: '/images/sp/zenbook_oled.jpg' },
     { ma: 'do-hoa-sang-tao', ten: 'Đồ Họa 3D', moTa: 'Màu chuẩn Render 4K', hinhAnh: '/images/sp/dell_xps_16.jpg' },
+    { ma: 'doanh-nhan', ten: 'Doanh Nhân', moTa: 'Laptop doanh nhân cao cấp', hinhAnh: '/images/sp/thinkpad_x1_carbon.jpg' },
+    { ma: 'sinh-vien', ten: 'Sinh Viên', moTa: 'Laptop học tập, giá tốt', hinhAnh: '/images/sp/macbook_air_15_m3.jpg' },
     { ma: 'balo-tui-chong-soc', ten: 'Balo & Túi', moTa: 'Chống sốc 5 lớp', hinhAnh: '/images/sp/balo_gaming_rog.jpg' },
     { ma: 'ban-phim-co', ten: 'Phím Cơ', moTa: 'Custom Hotswap RGB', hinhAnh: '/images/sp/gaming_keyboard_rgb.jpg' },
     { ma: 'chuot-lot-chuot', ten: 'Chuột & Pad', moTa: 'Wireless 49g siêu nhẹ', hinhAnh: '/images/sp/gaming_mouse_wireless.jpg' },

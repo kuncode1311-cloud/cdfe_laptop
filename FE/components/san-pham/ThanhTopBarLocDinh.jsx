@@ -3,9 +3,10 @@ import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUp, Laptop, Package, Sparkles, SlidersHorizontal } from 'lucide-react';
+import { DANH_MUC_LAPTOP } from '@/utils/bo-loc';
 
 // Danh sách mã nhóm
-const MA_DANH_MUC_LAPTOP = ['ai-pc', 'gaming', 'van-phong-mong-nhe', 'do-hoa-sang-tao'];
+const MA_DANH_MUC_LAPTOP = DANH_MUC_LAPTOP;
 const MA_DANH_MUC_PHU_KIEN = ['balo-tui-chong-soc', 'ban-phim-co', 'chuot-lot-chuot', 'tai-nghe-loa', 'sac-cap-hub', 'linh-kien-nang-cap'];
 
 // Danh sách danh mục con Laptop
@@ -14,6 +15,8 @@ const DANH_MUC_CON_LAPTOP = [
     { ma: 'gaming',             ten: 'Gaming RTX',  hinhAnh: '/images/sp/asus_rog_scar18.jpg' },
     { ma: 'van-phong-mong-nhe', ten: 'Mỏng Nhẹ',   hinhAnh: '/images/sp/zenbook_oled.jpg' },
     { ma: 'do-hoa-sang-tao',    ten: 'Đồ Họa 3D',  hinhAnh: '/images/sp/dell_xps_16.jpg' },
+    { ma: 'doanh-nhan',        ten: 'Doanh Nhân',  hinhAnh: '/images/sp/thinkpad_x1_carbon.jpg' },
+    { ma: 'sinh-vien',         ten: 'Sinh Viên',   hinhAnh: '/images/sp/macbook_air_15_m3.jpg' },
 ];
 
 // Danh sách danh mục con Phụ Kiện
