@@ -7,7 +7,17 @@ import { DANH_MUC_LAPTOP } from '@/utils/bo-loc';
 
 // Danh sách mã nhóm
 const MA_DANH_MUC_LAPTOP = DANH_MUC_LAPTOP;
-const MA_DANH_MUC_PHU_KIEN = ['balo-tui-chong-soc', 'ban-phim-co', 'chuot-lot-chuot', 'tai-nghe-loa', 'sac-cap-hub', 'linh-kien-nang-cap'];
+const MA_DANH_MUC_PHU_KIEN = [
+    'balo-tui-chong-soc',
+    'ban-phim-co',
+    'chuot-lot-chuot',
+    'tai-nghe-loa',
+    'sac-cap-hub',
+    'linh-kien-nang-cap',
+    'de-tan-gia-do',
+    'linh-kien',
+    'phu-kien-gear'
+];
 
 // Danh sách danh mục con Laptop
 const DANH_MUC_CON_LAPTOP = [

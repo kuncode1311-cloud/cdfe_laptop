@@ -156,19 +156,18 @@ const layTatCaSanPham = async (req, res) => {
                     { $unwind: '$danh_muc' },
                     { $group: { _id: '$danh_muc', count: { $sum: 1 } } }
                 ]),
-                DanhMuc.find({ loai: { $in: ['nhu_cau', 'loai_san_pham'] }, kich_hoat: { $ne: false } })
+                DanhMuc.find({ loai: 'nhu_cau', kich_hoat: { $ne: false } })
                     .select('ma_danh_muc loai -_id')
                     .lean()
             ]);
-            const demTheoNhom = async (loai) => {
-                const maDanhMuc = danhMucPhanLoai
-                    .filter((danhMuc) => danhMuc.loai === loai)
-                    .map((danhMuc) => danhMuc.ma_danh_muc)
-                    .filter((ma) => !filter.danh_muc || filter.danh_muc.$in.includes(ma));
-                if (!maDanhMuc.length) return 0;
-                return SanPham.countDocuments({ ...filter, danh_muc: { $in: maDanhMuc } });
-            };
-            const [laptop, phu_kien] = await Promise.all([demTheoNhom('nhu_cau'), demTheoNhom('loai_san_pham')]);
+            const maDanhMucLaptop = danhMucPhanLoai
+                .map((danhMuc) => danhMuc.ma_danh_muc)
+                .filter((ma) => !filter.danh_muc || filter.danh_muc.$in.includes(ma));
+            const laptop = maDanhMucLaptop.length
+                ? await SanPham.countDocuments({ ...filter, danh_muc: { $in: maDanhMucLaptop } })
+                : 0;
+            // Danh mục phụ kiện cũ trong dữ liệu chưa đồng nhất; nhóm này là phần còn lại của kho.
+            const phu_kien = Math.max(0, tongSo - laptop);
             return res.status(200).json({
                 items: danhSachSanPham,
                 total: tongSo,
