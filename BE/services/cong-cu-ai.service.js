@@ -18,7 +18,7 @@ const moTaCongCu = [
             gia_min: 'number VND',
             gia_max: 'number VND',
             sap_xep: 'gia_tang | gia_giam | ban_chay | moi_nhat',
-            gioi_han: 'integer 1..10'
+            gioi_han: 'integer 1..20; mặc định 12'
         }
     },
     {
@@ -132,14 +132,19 @@ async function thucThiCongCu(ten, args = {}) {
         moi_nhat: { createdAt: -1, id: 1 }
     };
     if (args.sap_xep && !sort[args.sap_xep]) throw new Error('Cách sắp xếp không hợp lệ');
-    const limit = args.gioi_han === undefined ? 5 : args.gioi_han;
-    if (!Number.isInteger(limit) || limit < 1 || limit > 10) throw new Error('Giới hạn phải từ 1 đến 10');
-    return SanPham.find(taoBoLoc(args))
+    const limit = args.gioi_han === undefined ? 12 : args.gioi_han;
+    if (!Number.isInteger(limit) || limit < 1 || limit > 20) throw new Error('Giới hạn phải từ 1 đến 20');
+    const filter = taoBoLoc(args);
+    const [items, total] = await Promise.all([
+        SanPham.find(filter)
         .select('-danh_gia -thu_vien_hinh_anh -video_demo')
         .sort(sort[args.sap_xep] || sort.ban_chay)
         .limit(limit)
         .maxTimeMS(5000)
         .lean()
-        .exec();
+        .exec(),
+        SanPham.countDocuments(filter).maxTimeMS(5000).exec()
+    ]);
+    return { items, total, returned: items.length, limit };
 }
 module.exports = { moTaCongCu, thucThiCongCu, taoBoLoc };

@@ -32,7 +32,7 @@ ${JSON.stringify(moTaCongCu)}
 Mỗi lượt chỉ xuất một JSON:
 - Cần tra cứu: {"cong_cu":"tên công cụ","tham_so":{...}}
 - Đủ dữ liệu hoặc cần hỏi rõ: {"cau_tra_loi":"...","id_san_pham_phu_hop":["id"],"goi_y_tiep_theo":["..."]}
-Có thể gọi nhiều lượt để khám phá danh mục, tìm kiếm, sửa tiêu chí và so sánh. Với câu hỏi tổng số, số lượng theo hãng/danh mục, mức giá hoặc tồn kho, hãy gọi thong_ke_san_pham; không từ chối vì thiếu chức năng thống kê.
+Có thể gọi nhiều lượt để khám phá danh mục, tìm kiếm, sửa tiêu chí và so sánh. Với câu hỏi tổng số, số lượng theo hãng/danh mục, mức giá hoặc tồn kho, hãy gọi thong_ke_san_pham; không từ chối vì thiếu chức năng thống kê. Kết quả tim_san_pham có total (tổng số khớp) và items (số mẫu được trả về): luôn dùng total khi hỏi có bao nhiêu, không lấy số items làm tổng.
 Không tự áp thêm hãng, loại laptop hay ngân sách khách chưa yêu cầu. Hỏi món đắt nhất thì tìm toàn bộ sản phẩm theo giá giảm dần, giới hạn 1.
 Giá, cấu hình, tồn kho, số bán, showroom và chính sách phải dựa trên kết quả công cụ của lượt hiện tại. Không dùng trí nhớ mô hình làm dữ liệu cửa hàng.
 Xã giao hoặc kiến thức chung không cần tra cứu. Nếu chưa rõ nhu cầu hãy hỏi lại.
@@ -81,7 +81,8 @@ async function xuLyTroLyChat({ tinNhan, lichSuChat = [], onText }) {
             try {
                 const result = await thucThiCongCu(data.cong_cu, data.tham_so);
                 if (data.cong_cu === 'tim_san_pham') {
-                    for (const sp of result) products.set(String(sp.id || sp.slug || sp._id), sp);
+                    const items = Array.isArray(result) ? result : result?.items || [];
+                    for (const sp of items) products.set(String(sp.id || sp.slug || sp._id), sp);
                 }
                 results.push({ cong_cu: data.cong_cu, tham_so: data.tham_so, du_lieu: result });
             } catch (error) {
