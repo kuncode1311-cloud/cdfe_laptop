@@ -30,6 +30,22 @@ test('xã giao không bị ép tra cứu hay tự gắn sản phẩm', async () 
     expect(thucThiCongCu).not.toHaveBeenCalled();
     expect(result.san_pham_goi_y).toEqual([]);
 });
+test('câu hỏi đếm danh mục khớp rõ lấy tổng trực tiếp từ cơ sở dữ liệu', async () => {
+    thucThiCongCu
+        .mockResolvedValueOnce([
+            { loai: 'nhu_cau', ma_danh_muc: 'gaming', ten_danh_muc: 'Laptop Gaming Cực Đỉnh' },
+            { loai: 'nhu_cau', ma_danh_muc: 'van-phong-mong-nhe', ten_danh_muc: 'Mỏng Nhẹ & Sang Trọng' }
+        ])
+        .mockResolvedValueOnce({ tong_san_pham: 12 });
+
+    const result = await xuLyTroLyChat({ tinNhan: 'Gaming RTX đang có bao nhiêu sản phẩm?' });
+
+    expect(thucThiCongCu).toHaveBeenNthCalledWith(1, 'danh_muc', {});
+    expect(thucThiCongCu).toHaveBeenNthCalledWith(2, 'thong_ke_san_pham', { danh_muc: ['gaming'] });
+    expect(result.cau_tra_loi).toContain('12 sản phẩm');
+    expect(result.thong_tin_ket_noi.provider).toBe('MongoDB');
+    expect(goiNineRouter).not.toHaveBeenCalled();
+});
 test('lỗi tra cứu được đưa lại cho AI, không biến thành kết quả rỗng', async () => {
     goiNineRouter
         .mockResolvedValueOnce(reply({ cong_cu: 'showroom', tham_so: {} }))

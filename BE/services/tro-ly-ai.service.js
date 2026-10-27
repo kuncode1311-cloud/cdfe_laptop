@@ -2,6 +2,42 @@ const { goiGeminiXoayKey } = require('./gemini-xoay-key.service');
 const { goiNineRouter, layCauHinhNineRouter } = require('./nine-router.service');
 const { moTaCongCu, thucThiCongCu } = require('./cong-cu-ai.service');
 
+const chuanHoaTimKiem = (text = '') =>
+    text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+
+async function traCuuDemDanhMuc(cauHoi) {
+    const cauHoiChuan = chuanHoaTimKiem(cauHoi);
+    if (!/(bao nhieu|co may|so luong|tong so|how many|how much)/.test(cauHoiChuan)) return null;
+    // Câu đếm kèm ngân sách/giá cần giữ nguyên các điều kiện để AI phân tích đầy đủ.
+    if (/(duoi|tren|tu |khoang|ngan sach|trieu|\btr\b|\b[0-9]+\b)/.test(cauHoiChuan)) return null;
+
+    const danhMuc = await thucThiCongCu('danh_muc', {});
+    const tuTrongCauHoi = new Set(cauHoiChuan.split(/\s+/).filter((word) => word.length >= 3));
+    const ungVien = (Array.isArray(danhMuc) ? danhMuc : [])
+        .filter((item) => ['nhu_cau', 'loai_san_pham'].includes(item.loai) && item.ma_danh_muc)
+        .map((item) => {
+            const ma = chuanHoaTimKiem(String(item.ma_danh_muc).replace(/-/g, ' '));
+            const ten = chuanHoaTimKiem(item.ten_danh_muc || '');
+            const fullMatch = [ma, ten].some((value) => value && ` ${cauHoiChuan} `.includes(` ${value} `));
+            const words = `${ma} ${ten}`.split(/\s+/).filter((word) => word.length >= 4 && tuTrongCauHoi.has(word));
+            const score = (fullMatch ? 100 : 0) + words.reduce((sum, word) => sum + word.length, 0);
+            return { item, score };
+        })
+        .filter((candidate) => candidate.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+    if (!ungVien.length || (ungVien[1] && ungVien[0].score === ungVien[1].score)) return null;
+    const category = ungVien[0].item;
+    const stats = await thucThiCongCu('thong_ke_san_pham', { danh_muc: [category.ma_danh_muc] });
+    return { ten: category.ten_danh_muc, ma: category.ma_danh_muc, soLuong: stats.tong_san_pham };
+}
+
 function docJson(text) {
     const data = JSON.parse(
         String(text)
@@ -45,6 +81,29 @@ Không bịa chính sách, đặc tính. Không tự đưa thẻ sản phẩm kh
 async function xuLyTroLyChat({ tinNhan, lichSuChat = [], onText }) {
     if (typeof tinNhan !== 'string' || !tinNhan.trim()) throw new Error('Tin nhắn không được để trống.');
     const start = Date.now();
+    try {
+        const dem = await traCuuDemDanhMuc(tinNhan);
+        if (dem) {
+            const cauTraLoi = `Dạ danh mục ${dem.ten} hiện có ${dem.soLuong} sản phẩm đang mở bán ạ. Bạn muốn xem các mẫu trong danh mục này không?`;
+            if (onText) onText(cauTraLoi);
+            return {
+                cau_tra_loi: cauTraLoi,
+                san_pham_goi_y: [],
+                goi_y_tiep_theo: [
+                    `Xem sản phẩm ${dem.ten}`,
+                    `Mẫu ${dem.ten} nào bán chạy nhất?`,
+                    'Lọc sản phẩm theo ngân sách'
+                ],
+                thong_tin_ket_noi: {
+                    provider: 'MongoDB',
+                    model: 'ThongKeDanhMuc',
+                    thoi_gian_tong_ms: Date.now() - start
+                }
+            };
+        }
+    } catch (error) {
+        console.warn('[Trợ lý AI] Không tra cứu nhanh được số lượng danh mục:', error.message);
+    }
     const history = (Array.isArray(lichSuChat) ? lichSuChat : []).slice(-20).map((msg) => ({
         role: msg.role === 'assistant' || msg.role === 'model' ? 'assistant' : 'user',
         content: String(msg.content || msg.text || '').slice(0, 6000)
