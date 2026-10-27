@@ -70,6 +70,7 @@ function NoiDungDanhSachSanPham() {
     const [dangTaiThem, setDangTaiThem] = useState(false);
     const [tongSoSanPham, setTongSoSanPham] = useState(0);
     const [demTheoDanhMuc, setDemTheoDanhMuc] = useState({});
+    const [demTheoLoai, setDemTheoLoai] = useState({});
     const [trangHienTai, setTrangHienTai] = useState(1);
     const [loiKetNoi, setLoiKetNoi] = useState(null);
     const [loiTaiThem, setLoiTaiThem] = useState(null);
@@ -83,6 +84,7 @@ function NoiDungDanhSachSanPham() {
                 setTatCaSanPham(Array.isArray(data?.items) ? data.items : []);
                 setTongSoSanPham(Number(data?.total) || 0);
                 setDemTheoDanhMuc(data?.category_counts || {});
+                setDemTheoLoai(data?.type_counts || {});
                 setLoiKetNoi(null);
                 setDangTaiSanPham(false);
             })
@@ -104,6 +106,7 @@ function NoiDungDanhSachSanPham() {
                     setTatCaSanPham(Array.isArray(data?.items) ? data.items : []);
                     setTongSoSanPham(Number(data?.total) || 0);
                     setDemTheoDanhMuc(data?.category_counts || {});
+                    setDemTheoLoai(data?.type_counts || {});
                     setLoiKetNoi(null);
                     setDangTaiSanPham(false);
                 }
@@ -137,6 +140,7 @@ function NoiDungDanhSachSanPham() {
             });
             setTongSoSanPham(Number(data?.total) || 0);
             setDemTheoDanhMuc(data?.category_counts || {});
+            setDemTheoLoai(data?.type_counts || {});
             setTrangHienTai(trangTiepTheo);
         } catch (error) {
             console.error('Lỗi tải thêm sản phẩm:', error);
@@ -178,6 +182,7 @@ function NoiDungDanhSachSanPham() {
                 boLocHienTai={boLoc}
                 onThayDoiBoLoc={setBoLoc}
                 danhSachDanhMuc={danhSachDanhMucTopbar}
+                soLuongTheoLoai={demTheoLoai}
                 daCuonXuong={daCuonXuong}
                 onCuonLenDauTrang={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                 onMoBoLocToanDien={() => setMoBoLocToanDien(true)}

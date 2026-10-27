@@ -18,7 +18,13 @@ async function traCuuDemDanhMuc(cauHoi) {
     if (/(duoi|tren|tu |khoang|ngan sach|trieu|\btr\b|\b[0-9]+\b)/.test(cauHoiChuan)) return null;
 
     const danhMuc = await thucThiCongCu('danh_muc', {});
-    const tuTrongCauHoi = new Set(cauHoiChuan.split(/\s+/).filter((word) => word.length >= 3));
+    const tuTrongCauHoi = new Set(
+        cauHoiChuan
+            .split(/\s+/)
+            .filter(
+                (word) => word.length >= 3 && !['laptop', 'may', 'tinh', 'xach', 'tay', 'san', 'pham'].includes(word)
+            )
+    );
     const ungVien = (Array.isArray(danhMuc) ? danhMuc : [])
         .filter((item) => ['nhu_cau', 'loai_san_pham'].includes(item.loai) && item.ma_danh_muc)
         .map((item) => {
@@ -32,7 +38,17 @@ async function traCuuDemDanhMuc(cauHoi) {
         .filter((candidate) => candidate.score > 0)
         .sort((a, b) => b.score - a.score);
 
-    if (!ungVien.length || (ungVien[1] && ungVien[0].score === ungVien[1].score)) return null;
+    if (!ungVien.length || (ungVien[1] && ungVien[0].score === ungVien[1].score)) {
+        if (/\b(laptop|may tinh xach tay)\b/.test(cauHoiChuan)) {
+            const danhMucLaptop = danhMuc
+                .filter((item) => item.loai === 'nhu_cau' && item.ma_danh_muc)
+                .map((item) => item.ma_danh_muc);
+            if (!danhMucLaptop.length) return null;
+            const stats = await thucThiCongCu('thong_ke_san_pham', { danh_muc: danhMucLaptop });
+            return { ten: 'laptop', soLuong: stats.tong_san_pham };
+        }
+        return null;
+    }
     const category = ungVien[0].item;
     const stats = await thucThiCongCu('thong_ke_san_pham', { danh_muc: [category.ma_danh_muc] });
     return { ten: category.ten_danh_muc, ma: category.ma_danh_muc, soLuong: stats.tong_san_pham };

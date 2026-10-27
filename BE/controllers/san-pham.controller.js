@@ -148,22 +148,35 @@ const layTatCaSanPham = async (req, res) => {
         if (coPhanTrang) query = query.skip((soTrang - 1) * soLuong).limit(soLuong);
 
         if (with_count === 'true' || with_count === '1') {
-            const [danhSachSanPham, tongSo, nhomDanhMuc] = await Promise.all([
+            const [danhSachSanPham, tongSo, nhomDanhMuc, danhMucPhanLoai] = await Promise.all([
                 query,
                 SanPham.countDocuments(filter),
                 SanPham.aggregate([
                     { $match: filter },
                     { $unwind: '$danh_muc' },
                     { $group: { _id: '$danh_muc', count: { $sum: 1 } } }
-                ])
+                ]),
+                DanhMuc.find({ loai: { $in: ['nhu_cau', 'loai_san_pham'] }, kich_hoat: { $ne: false } })
+                    .select('ma_danh_muc loai -_id')
+                    .lean()
             ]);
+            const demTheoNhom = async (loai) => {
+                const maDanhMuc = danhMucPhanLoai
+                    .filter((danhMuc) => danhMuc.loai === loai)
+                    .map((danhMuc) => danhMuc.ma_danh_muc)
+                    .filter((ma) => !filter.danh_muc || filter.danh_muc.$in.includes(ma));
+                if (!maDanhMuc.length) return 0;
+                return SanPham.countDocuments({ ...filter, danh_muc: { $in: maDanhMuc } });
+            };
+            const [laptop, phu_kien] = await Promise.all([demTheoNhom('nhu_cau'), demTheoNhom('loai_san_pham')]);
             return res.status(200).json({
                 items: danhSachSanPham,
                 total: tongSo,
                 page: soTrang,
                 limit: soLuong,
                 total_pages: Math.ceil(tongSo / soLuong),
-                category_counts: Object.fromEntries(nhomDanhMuc.map((item) => [item._id, item.count]))
+                category_counts: Object.fromEntries(nhomDanhMuc.map((item) => [item._id, item.count])),
+                type_counts: { laptop, accessory: phu_kien }
             });
         }
 

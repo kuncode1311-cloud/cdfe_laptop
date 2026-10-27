@@ -5,6 +5,7 @@
 const request = require('supertest');
 const app = require('../../app');
 const SanPham = require('../../models/san-pham.model');
+const DanhMuc = require('../../models/danh-muc.model');
 const { moKetNoi, xoaDuLieu, dongKetNoi } = require('../helpers/co-so-du-lieu');
 const { taoNguoiDung, taoTokenCho, taoSanPham } = require('../helpers/du-lieu-mau');
 
@@ -37,6 +38,43 @@ describe('Xem sản phẩm (công khai)', () => {
 
         expect(theoTuKhoa.body.map((sp) => sp.id)).toEqual(['dell-xps']);
         expect(theoHang.body.map((sp) => sp.id)).toEqual(['asus-zenbook-14-test']);
+    });
+
+    test('đếm theo nhóm sản phẩm không cộng trùng laptop có nhiều nhu cầu', async () => {
+        await DanhMuc.create([
+            { id: 'nhu-cau-gaming', ma_danh_muc: 'gaming', ten_danh_muc: 'Gaming', loai: 'nhu_cau' },
+            { id: 'nhu-cau-sinh-vien', ma_danh_muc: 'sinh-vien', ten_danh_muc: 'Sinh viên', loai: 'nhu_cau' },
+            { id: 'loai-chuot', ma_danh_muc: 'chuot-lot-chuot', ten_danh_muc: 'Chuột', loai: 'loai_san_pham' }
+        ]);
+        await taoSanPham({
+            id: 'laptop-gaming-sinh-vien',
+            slug: 'laptop-gaming-sinh-vien',
+            ma_san_pham: 'LAPTOP-01',
+            ten_san_pham: 'Laptop gaming sinh vien test',
+            danh_muc: ['gaming', 'sinh-vien']
+        });
+        await taoSanPham({
+            id: 'laptop-gaming',
+            slug: 'laptop-gaming',
+            ma_san_pham: 'LAPTOP-02',
+            ten_san_pham: 'Laptop gaming test',
+            danh_muc: ['gaming']
+        });
+        await taoSanPham({
+            id: 'chuot',
+            slug: 'chuot',
+            ma_san_pham: 'CHUOT-01',
+            ten_san_pham: 'Chuot test',
+            danh_muc: ['chuot-lot-chuot']
+        });
+
+        const res = await request(app).get('/api/san-pham').query({ page: 1, limit: 1, with_count: true });
+
+        expect(res.status).toBe(200);
+        expect(res.body.total).toBe(3);
+        expect(res.body.category_counts.gaming).toBe(2);
+        expect(res.body.category_counts['sinh-vien']).toBe(1);
+        expect(res.body.type_counts).toEqual({ laptop: 2, accessory: 1 });
     });
 
     test('từ khóa chứa biểu thức ReDoS không làm lỗi server', async () => {

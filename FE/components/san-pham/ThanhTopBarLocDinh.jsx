@@ -37,7 +37,8 @@ export default function ThanhTopBarLocDinh({
     onCuonLenDauTrang = () => window.scrollTo({ top: 0, behavior: 'smooth' }),
     onMoBoLocToanDien = () => { },
     soLuongDangLoc = 0,
-    tongKetQua = 0
+    tongKetQua = 0,
+    soLuongTheoLoai = {}
 }) {
     const [tabChonThuCong, setTabChonThuCong] = useState(null);
 
@@ -60,13 +61,13 @@ export default function ThanhTopBarLocDinh({
 
     // Tổng số laptop
     const tongLaptop = useMemo(() => {
-        return MA_DANH_MUC_LAPTOP.reduce((sum, ma) => sum + (demCount[ma] || 0), 0);
-    }, [demCount]);
+        return Number(soLuongTheoLoai.laptop) || 0;
+    }, [soLuongTheoLoai]);
 
     // Tổng số phụ kiện
     const tongPhuKien = useMemo(() => {
-        return MA_DANH_MUC_PHU_KIEN.reduce((sum, ma) => sum + (demCount[ma] || 0), 0);
-    }, [demCount]);
+        return Number(soLuongTheoLoai.accessory) || 0;
+    }, [soLuongTheoLoai]);
 
     // Nhận diện tab nào đang active dựa trên bộ lọc
     const tabHienTai = useMemo(() => {
