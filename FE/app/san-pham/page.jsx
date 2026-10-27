@@ -72,7 +72,7 @@ function NoiDungDanhSachSanPham() {
     const taiLaiDuLieu = () => {
         setDangTaiSanPham(true);
         setLoiKetNoi(null);
-        SanPhamService.layTatCaSanPhamAsync()
+        SanPhamService.layTatCaSanPhamAsync({ ...boLoc, page: 1, limit: 24 })
             .then((data) => {
                 setTatCaSanPham(Array.isArray(data) ? data : []);
                 setLoiKetNoi(null);
@@ -88,19 +88,10 @@ function NoiDungDanhSachSanPham() {
     const phienBanDuLieu = useDuLieuMoi('san_pham');
     useEffect(() => {
         let daHuy = false;
-        // Kiểm tra bộ nhớ đệm nếu đã có
-        const cache = SanPhamService.layTatCaSanPham();
-        if (cache && cache.length > 0) {
-            setTatCaSanPham(cache);
-            setDangTaiSanPham(false);
-        }
-
-        SanPhamService.layTatCaSanPhamAsync()
+        SanPhamService.layTatCaSanPhamAsync({ ...boLoc, page: 1, limit: 24 })
             .then((data) => {
                 if (!daHuy) {
-                    if (Array.isArray(data) && data.length > 0) {
-                        setTatCaSanPham(data);
-                    }
+                    setTatCaSanPham(Array.isArray(data) ? data : []);
                     setLoiKetNoi(null);
                     setDangTaiSanPham(false);
                 }
@@ -113,7 +104,7 @@ function NoiDungDanhSachSanPham() {
                 }
             });
         return () => { daHuy = true; };
-    }, [phienBanDuLieu]);
+    }, [phienBanDuLieu, boLoc]);
 
     // Thống kê số lượng theo danh mục cho Topbar
     const danhSachDanhMucTopbar = useMemo(() => {
@@ -131,10 +122,8 @@ function NoiDungDanhSachSanPham() {
         }));
     }, [tatCaSanPham]);
 
-    // Thực hiện lọc dữ liệu
-    const danhSachLoc = useMemo(() => {
-        return SanPhamService.locSanPham(boLoc, tatCaSanPham);
-    }, [boLoc, tatCaSanPham]);
+    // Bộ lọc đã được xử lý ở server; danh sách hiện tại là kết quả từ MongoDB.
+    const danhSachLoc = tatCaSanPham;
 
     // Đặt lại toàn bộ bộ lọc
     const datLaiBoLoc = () => setBoLoc(taoBoLocMacDinh());

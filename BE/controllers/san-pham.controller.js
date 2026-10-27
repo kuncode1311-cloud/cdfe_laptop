@@ -43,7 +43,8 @@ const layTatCaSanPham = async (req, res) => {
             ban_chay,
             moi_nhat,
             sap_xep,
-            limit
+            limit,
+            page
         } = req.query;
 
         // Xây dựng câu truy vấn MongoDB
@@ -111,14 +112,11 @@ const layTatCaSanPham = async (req, res) => {
             sortOption = { so_luong_da_ban: -1 };
         }
 
+        const coPhanTrang = page !== undefined || limit !== undefined;
+        const soTrang = Math.max(1, Math.floor(Number(page)) || 1);
+        const soLuong = Math.min(Math.max(1, Math.floor(Number(limit)) || 24), 200);
         let query = SanPham.find(filter).sort(sortOption);
-
-        // Giới hạn số lượng
-        // Giới hạn tối đa 200 bản ghi mỗi lần gọi để tránh bị lấy dữ liệu hàng loạt
-        const soLuong = Math.floor(Number(limit));
-        if (soLuong > 0) {
-            query = query.limit(Math.min(soLuong, 200));
-        }
+        if (coPhanTrang) query = query.skip((soTrang - 1) * soLuong).limit(soLuong);
 
         const danhSachSanPham = await query;
         return res.status(200).json(danhSachSanPham);

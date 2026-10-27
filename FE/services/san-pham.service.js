@@ -51,6 +51,7 @@ export const SanPhamService = {
         if (boLoc.ban_chay) params.append('ban_chay', 'true');
         if (boLoc.sap_xep) params.append('sap_xep', boLoc.sap_xep);
         if (boLoc.limit) params.append('limit', boLoc.limit);
+        if (boLoc.page) params.append('page', boLoc.page);
 
         const queryString = params.toString();
         if (queryString) {

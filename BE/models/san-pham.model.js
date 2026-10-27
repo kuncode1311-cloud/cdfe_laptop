@@ -163,6 +163,10 @@ SanPhamSchema.pre('validate', function () {
     }
 });
 
+// Phục vụ truy vấn danh mục: lọc theo hãng/danh mục/giá và sắp xếp giá.
+SanPhamSchema.index({ hang_san_xuat: 1, danh_muc: 1, gia_khuyen_mai: 1 });
+SanPhamSchema.index({ danh_muc: 1, gia_khuyen_mai: 1 });
+
 const SanPham = mongoose.model('SanPham', SanPhamSchema, 'san_pham');
 
 module.exports = SanPham;
