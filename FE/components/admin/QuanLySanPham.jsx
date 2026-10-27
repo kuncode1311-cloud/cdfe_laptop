@@ -311,6 +311,7 @@ export default function QuanLySanPham({
                                 <th className="py-2.5 px-2.5 border-b-2 border-r border-slate-300 dark:border-slate-700">Sản phẩm & cấu hình</th>
                                 <th className="py-2.5 px-2 w-[118px] text-right border-b-2 border-r border-slate-300 dark:border-slate-700">Giá bán</th>
                                 <th className="py-2.5 px-1 w-14 text-center border-b-2 border-r border-slate-300 dark:border-slate-700">Kho</th>
+                                <th className="py-2.5 px-2 w-[88px] text-center border-b-2 border-r border-slate-300 dark:border-slate-700">Lượt bán</th>
                                 <th className="py-2.5 px-1 w-[124px] text-center border-b-2 border-r border-slate-300 dark:border-slate-700">Trạng thái</th>
                                 <th className="py-2.5 px-1 w-[104px] text-center border-b-2 border-slate-300 dark:border-slate-700">Thao tác</th>
                             </tr>
@@ -318,7 +319,7 @@ export default function QuanLySanPham({
                         <tbody>
                             {sanPhamHienThi.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                                    <td colSpan={7} className="py-12 text-center text-slate-400 border-b border-slate-200 dark:border-slate-800">
                                         <div className="flex flex-col items-center justify-center gap-2">
                                             <Package className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                                             <div className="font-bold text-sm text-slate-700 dark:text-slate-300">Không tìm thấy sản phẩm nào</div>
@@ -403,6 +404,11 @@ export default function QuanLySanPham({
                                             <td className={`py-2 px-1 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                 <span className={`inline-block min-w-[28px] px-1.5 py-0.5 rounded-full text-[11px] font-black ${sp.so_luong_ton_kho > 5 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : sp.so_luong_ton_kho > 0 ? 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300' : 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300'}`}>
                                                     {sp.so_luong_ton_kho || 0}
+                                                </span>
+                                            </td>
+                                            <td className={`py-2 px-2 text-center border-b border-r whitespace-nowrap ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
+                                                <span className="inline-block min-w-[28px] px-1.5 py-0.5 rounded-full text-[11px] font-black tabular-nums bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                                    {(sp.so_luong_da_ban ?? 0).toLocaleString('vi-VN')}
                                                 </span>
                                             </td>
                                             <td className={`py-2 px-1.5 border-b border-r ${daAnSp ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
