@@ -802,31 +802,6 @@ export default function ModalSanPham({
                                                                 className={layClassInput('bo_nho_dem_cache')}
                                                             />
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                                                                <span>Chip AI NPU & Hiệu Năng TOPS</span>
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <NhanDaSua fieldName="chip_ai_npu" />
-                                                                    <NhanDaSua fieldName="hieu_nang_ai_tops" />
-                                                                </div>
-                                                            </label>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="Intel AI Boost NPU..."
-                                                                    value={formSp.chip_ai_npu}
-                                                                    onChange={(e) => setFormSp({ ...formSp, chip_ai_npu: e.target.value })}
-                                                                    className={layClassInput('chip_ai_npu')}
-                                                                />
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="45 TOPS..."
-                                                                    value={formSp.hieu_nang_ai_tops}
-                                                                    onChange={(e) => setFormSp({ ...formSp, hieu_nang_ai_tops: e.target.value })}
-                                                                    className={layClassInput('hieu_nang_ai_tops')}
-                                                                />
-                                                            </div>
-                                                        </div>
                                                     </div>
                                                 </div>
 
