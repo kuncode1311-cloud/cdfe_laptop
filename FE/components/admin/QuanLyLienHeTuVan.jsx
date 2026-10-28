@@ -25,7 +25,8 @@ import {
     Sparkles,
     UserCheck,
     UserX,
-    FileText
+    FileText,
+    ChevronDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LienHeService } from '@/services/lien-he.service';
@@ -857,20 +858,29 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                                                 </div>
                                             </td>
 
-                                            {/* Cột 5: Trạng thái & Dropdown chuyển đổi */}
+                                            {/* Cột 5: Trạng thái CSKH - 1 Dropdown Pill đổi màu trực tiếp, không bị trùng lặp */}
                                             <td className="py-3 px-3.5 border-b border-r border-slate-200 dark:border-slate-800 align-middle text-center whitespace-nowrap">
-                                                <div className="flex flex-col items-center gap-1.5">
-                                                    {renderBadgeTrangThai(phieu.trang_thai)}
+                                                <div className="inline-flex items-center relative">
                                                     <select
                                                         value={phieu.trang_thai || 'chua_xu_ly'}
                                                         onChange={(e) => xuLyDoiTrangThaiNhanh(phieuId, e.target.value)}
-                                                        className="text-[11px] font-bold py-1 px-2.5 rounded-lg border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none focus:border-blue-500 shadow-2xs whitespace-nowrap"
+                                                        className={`appearance-none text-[11px] font-black pl-3 pr-6 py-1.5 rounded-full cursor-pointer transition-all shadow-md focus:outline-none focus:ring-2 focus:ring-offset-1 whitespace-nowrap ${
+                                                            phieu.trang_thai === 'chua_xu_ly'
+                                                                ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white shadow-orange-500/25 focus:ring-orange-400'
+                                                                : phieu.trang_thai === 'dang_xu_ly'
+                                                                ? 'bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-600 text-white shadow-blue-500/25 focus:ring-blue-400'
+                                                                : phieu.trang_thai === 'da_hoan_thanh'
+                                                                ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-green-600 text-white shadow-emerald-500/25 focus:ring-emerald-400'
+                                                                : 'bg-gradient-to-r from-rose-500 to-red-600 text-white shadow-rose-500/25 focus:ring-rose-400'
+                                                        }`}
+                                                        title="Bấm để đổi nhanh trạng thái xử lý"
                                                     >
-                                                        <option value="chua_xu_ly">Chưa tư vấn</option>
-                                                        <option value="dang_xu_ly">Đang liên hệ</option>
-                                                        <option value="da_hoan_thanh">Đã hoàn tất</option>
-                                                        <option value="da_huy">Đã hủy / Sai số</option>
+                                                        <option value="chua_xu_ly" className="bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-400 font-bold">● Chưa Tư Vấn</option>
+                                                        <option value="dang_xu_ly" className="bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 font-bold">● Đang Liên Hệ</option>
+                                                        <option value="da_hoan_thanh" className="bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 font-bold">● Đã Hoàn Tất</option>
+                                                        <option value="da_huy" className="bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-400 font-bold">● Đã Hủy / Sai Số</option>
                                                     </select>
+                                                    <ChevronDown className="w-3.5 h-3.5 text-white pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 stroke-[2.5]" />
                                                 </div>
                                             </td>
 
