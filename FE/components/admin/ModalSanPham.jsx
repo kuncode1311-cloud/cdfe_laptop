@@ -847,7 +847,7 @@ export default function ModalSanPham({
                                                         </div>
                                                         <div className="space-y-1">
                                                             <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                                                                <span>Công Suất TGP Tối Đa (W) & Ray Tracing</span>
+                                                                <span>Công suất TGP và Ray Tracing</span>
                                                                 <div className="flex items-center gap-1.5">
                                                                     <NhanDaSua fieldName="cong_suat_tgp" />
                                                                     <NhanDaSua fieldName="ho_tro_ray_tracing" />
@@ -867,7 +867,7 @@ export default function ModalSanPham({
                                                                     className={layClassInput('ho_tro_ray_tracing')}
                                                                 >
                                                                     <option value="true">✅ Có Ray Tracing & DLSS</option>
-                                                                    <option value="false">❌ Không hỗ trợ</option>
+                                                                    <option value="false">— Không áp dụng</option>
                                                                 </select>
                                                             </div>
                                                         </div>
