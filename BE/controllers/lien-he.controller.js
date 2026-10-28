@@ -1,6 +1,6 @@
 const { escapeRegex } = require('../utils/bao-mat');
 const LienHe = require('../models/lien-he.model');
-const { guiMailPhanHoiLienHe } = require('../services/email.service');
+const { guiMailPhanHoiLienHe, guiMailXacNhanLienHe } = require('../services/email.service');
 
 /**
  * Hàm sinh mã phiếu yêu cầu liên hệ định dạng: LH-YYMMDD-XXXX
@@ -57,7 +57,13 @@ exports.guiYeuCauLienHe = async (req, res) => {
         // Kiểm tra định dạng email nếu khách có điền (chống spam email rác)
         const emailChuanHoa = (email || '').trim().toLowerCase();
         const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (emailChuanHoa && !regexEmail.test(emailChuanHoa)) {
+        if (!emailChuanHoa) {
+            return res.status(400).json({
+                thanh_cong: false,
+                thong_diep: 'Vui lòng cung cấp email để nhận mã phiếu và phản hồi hỗ trợ'
+            });
+        }
+        if (!regexEmail.test(emailChuanHoa)) {
             return res.status(400).json({
                 thanh_cong: false,
                 thong_diep: 'Email không đúng định dạng, vui lòng kiểm tra lại'
@@ -84,6 +90,22 @@ exports.guiYeuCauLienHe = async (req, res) => {
             nguon_tiep_nhan: 'website_lien_he'
         });
 
+        let daGuiEmail = false;
+        if (emailChuanHoa) {
+            try {
+                await guiMailXacNhanLienHe({
+                    emailNhan: emailChuanHoa,
+                    hoTen: lienHeMoi.ho_ten,
+                    maYeuCau: lienHeMoi.ma_yeu_cau,
+                    chuDe: lienHeMoi.chu_de,
+                    noiDung: lienHeMoi.noi_dung
+                });
+                daGuiEmail = true;
+            } catch (loiGuiMail) {
+                console.warn(`[LIÊN HỆ] Đã lưu phiếu nhưng chưa gửi được email ${emailChuanHoa}:`, loiGuiMail.message);
+            }
+        }
+
         console.log(`[LIÊN HỆ] Đã tiếp nhận phiếu #${lienHeMoi.ma_yeu_cau}`);
 
         // 4. Phản hồi thành công
@@ -96,7 +118,8 @@ exports.guiYeuCauLienHe = async (req, res) => {
                 so_dien_thoai: lienHeMoi.so_dien_thoai,
                 email: lienHeMoi.email,
                 chu_de: lienHeMoi.chu_de,
-                ngay_tao: lienHeMoi.ngay_tao
+                ngay_tao: lienHeMoi.ngay_tao,
+                da_gui_email: daGuiEmail
             }
         });
     } catch (loi) {

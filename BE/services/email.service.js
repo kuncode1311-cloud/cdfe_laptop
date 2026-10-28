@@ -438,10 +438,24 @@ async function guiMailPhanHoiLienHe({ emailNhan, hoTen, maYeuCau, chuDe, noiDung
     });
 }
 
+async function guiMailXacNhanLienHe({ emailNhan, hoTen, maYeuCau, chuDe, noiDung }) {
+    const ten = escapeHtml(hoTen || 'Quý khách');
+    const ma = escapeHtml(maYeuCau || '');
+    const tieuDe = escapeHtml(chuDe || 'Yêu cầu tư vấn');
+    const noiDungHtml = escapeHtml(noiDung || '').replace(/\n/g, '<br />');
+    return guiMailBangTransporter({
+        to: emailNhan,
+        subject: `[Trí Kun Laptop] Đã tiếp nhận yêu cầu ${ma}`,
+        html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#172554"><h2>Xin chào ${ten},</h2><p>Yêu cầu hỗ trợ của bạn đã được gửi thành công đến Trí Kun Laptop.</p><p><strong>Mã phiếu:</strong> ${ma}</p><p><strong>Chủ đề:</strong> ${tieuDe}</p><div style="padding:16px;background:#eff6ff;border-radius:8px"><strong>Nội dung bạn đã gửi:</strong><br />${noiDungHtml}</div><p>Chuyên viên sẽ liên hệ qua số điện thoại hoặc email của bạn trong thời gian sớm nhất.</p><p>Trân trọng,<br />Đội ngũ Trí Kun Laptop</p></div>`,
+        text: `Xin chào ${hoTen || 'Quý khách'},\n\nYêu cầu hỗ trợ của bạn đã được gửi thành công.\nMã phiếu: ${maYeuCau || ''}\nChủ đề: ${chuDe || 'Yêu cầu tư vấn'}\n\nNội dung: ${noiDung || ''}\n\nChuyên viên sẽ phản hồi sớm qua số điện thoại hoặc email của bạn.\n\nTrân trọng,\nĐội ngũ Trí Kun Laptop`
+    });
+}
+
 module.exports = {
     guiMailOTPQuenMatKhau,
     guiMailOTPDoiMatKhau,
     guiMailKichHoatTaiKhoan,
     guiMailXacNhanDonHang,
-    guiMailPhanHoiLienHe
+    guiMailPhanHoiLienHe,
+    guiMailXacNhanLienHe
 };
