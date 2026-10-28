@@ -642,11 +642,11 @@ export default function ModalSanPham({
                                                         </div>
                                                     </div>
 
-                                                    {/* 3 Nút Huy Hiệu Trực Quan Ngoài Website */}
+                                                    {/* Nhãn nổi bật và trạng thái bán */}
                                                     <div className="space-y-1.5">
                                                         <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
                                                             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                                            <span>Huy Hiệu Trực Quan Ngoài Website</span>
+                                                            <span>Nhãn nổi bật & trạng thái bán</span>
                                                         </label>
                                                         <div className="flex flex-wrap items-center gap-2">
                                                             {/* Flash Sale Toggle */}
@@ -677,7 +677,7 @@ export default function ModalSanPham({
                                                                 <span>🔥 Bán Chạy</span>
                                                             </button>
 
-                                                            {/* Đang Mở Bán Toggle */}
+                                                            {/* Trạng thái cho phép bán: đây là quyền kinh doanh, không phải huy hiệu */}
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setFormSp({ ...formSp, con_hang: !formSp.con_hang })}
@@ -688,7 +688,7 @@ export default function ModalSanPham({
                                                                 }`}
                                                             >
                                                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                                                <span>✅ Đang Mở Bán</span>
+                                                                <span>{formSp.con_hang ? '✅ Cho Phép Bán' : '⛔ Tạm Ngưng Bán'}</span>
                                                             </button>
                                                         </div>
                                                     </div>
