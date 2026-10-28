@@ -14,7 +14,6 @@ import {
     SlidersHorizontal,
     ChevronDown,
     ArrowUpDown,
-    Filter,
     RotateCcw,
     Clock
 } from 'lucide-react';
@@ -318,113 +317,6 @@ export default function QuanLyDanhGia({ xacNhan }) {
                             </button>
                         )}
                     </div>
-                </div>
-
-                {/* Tầng 3: Dãy nút Pill Lọc Nhanh 1 Chạm Sắc Nét & Đồng Bộ */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-900/70 dark:text-amber-200/70 mr-1 flex items-center gap-1">
-                        <Filter className="w-3 h-3" />
-                        Lọc Nhanh:
-                    </span>
-
-                    {/* Nút Tất Cả */}
-                    <button
-                        type="button"
-                        onClick={() => { setLocSoSao('tat_ca'); setLocTrangThai('tat_ca'); }}
-                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                            locSoSao === 'tat_ca' && locTrangThai === 'tat_ca'
-                                ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md shadow-amber-600/30 scale-105'
-                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-amber-200/80 dark:border-slate-700 hover:border-amber-400'
-                        }`}
-                    >
-                        Tất Cả ({danhSach.length})
-                    </button>
-
-                    {/* Nút 5 Sao */}
-                    <button
-                        type="button"
-                        onClick={() => setLocSoSao(locSoSao === '5' ? 'tat_ca' : '5')}
-                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
-                            locSoSao === '5'
-                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 scale-105'
-                                : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-2 border-amber-200/80 dark:border-slate-700 hover:border-amber-400'
-                        }`}
-                    >
-                        <span>★★★★★ 5 sao</span>
-                        <span className="text-[10px] opacity-80">({thongKe.sao5})</span>
-                    </button>
-
-                    {/* Nút 4 Sao */}
-                    <button
-                        type="button"
-                        onClick={() => setLocSoSao(locSoSao === '4' ? 'tat_ca' : '4')}
-                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
-                            locSoSao === '4'
-                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 scale-105'
-                                : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-2 border-amber-200/80 dark:border-slate-700 hover:border-amber-400'
-                        }`}
-                    >
-                        <span>★★★★ 4 sao</span>
-                        <span className="text-[10px] opacity-80">({thongKe.sao4})</span>
-                    </button>
-
-                    {/* Nút 3 Sao */}
-                    <button
-                        type="button"
-                        onClick={() => setLocSoSao(locSoSao === '3' ? 'tat_ca' : '3')}
-                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
-                            locSoSao === '3'
-                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 scale-105'
-                                : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-2 border-amber-200/80 dark:border-slate-700 hover:border-amber-400'
-                        }`}
-                    >
-                        <span>★★★ 3 sao</span>
-                        <span className="text-[10px] opacity-80">({thongKe.sao3})</span>
-                    </button>
-
-                    {/* Nút 1-2 Sao */}
-                    <button
-                        type="button"
-                        onClick={() => setLocSoSao(locSoSao === '2' ? 'tat_ca' : '2')}
-                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
-                            locSoSao === '2' || locSoSao === '1'
-                                ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-600/30 scale-105'
-                                : 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-2 border-rose-200/80 dark:border-slate-700 hover:border-rose-400'
-                        }`}
-                    >
-                        <span>★ 1-2 sao</span>
-                        <span className="text-[10px] opacity-80">({thongKe.sao12})</span>
-                    </button>
-
-                    <span className="h-4 w-px bg-amber-300/80 dark:bg-slate-700 mx-1 hidden sm:inline-block" />
-
-                    {/* Nút Đang Hiển Thị */}
-                    <button
-                        type="button"
-                        onClick={() => setLocTrangThai(locTrangThai === 'hien' ? 'tat_ca' : 'hien')}
-                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
-                            locTrangThai === 'hien'
-                                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/30 scale-105'
-                                : 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200/80 dark:border-slate-700 hover:border-emerald-400'
-                        }`}
-                    >
-                        <Eye className="w-3 h-3" />
-                        <span>Đang Hiện ({thongKe.hien})</span>
-                    </button>
-
-                    {/* Nút Đã Ẩn */}
-                    <button
-                        type="button"
-                        onClick={() => setLocTrangThai(locTrangThai === 'an' ? 'tat_ca' : 'an')}
-                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
-                            locTrangThai === 'an'
-                                ? 'bg-gradient-to-r from-slate-700 to-slate-900 text-white shadow-md scale-105'
-                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-2 border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                        }`}
-                    >
-                        <EyeOff className="w-3 h-3" />
-                        <span>Đã Ẩn ({thongKe.an})</span>
-                    </button>
                 </div>
             </div>
 
