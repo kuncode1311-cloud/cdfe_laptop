@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 export { usePhanTrang } from '@/hooks/usePhanTrang';
 
 function taoDanhSachTrangHienThi(trangHienTai, tongSoTrang) {
@@ -17,10 +17,7 @@ export default function PhanTrangAdmin({
     tongSoMuc = 0,
     soMucMoiTrang = 10,
     onDoiTrang,
-    onDoiSoMucMoiTrang,
     nhanLoaiMuc = 'bản ghi',
-    tuyChonSoMuc = [10, 20, 50, 100],
-    anKiemSoatSoMuc = false,
     className = ''
 }) {
     if (tongSoMuc === 0) return null;
@@ -41,30 +38,10 @@ export default function PhanTrangAdmin({
                     {' '}{nhanLoaiMuc}
                 </span>
 
-                {onDoiSoMucMoiTrang && !anKiemSoatSoMuc && (
-                    <select
-                        value={soMucMoiTrang}
-                        onChange={(e) => onDoiSoMucMoiTrang(Number(e.target.value))}
-                        className="h-6 px-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                    >
-                        {tuyChonSoMuc.map((muc) => (
-                            <option key={muc} value={muc}>{muc} / trang</option>
-                        ))}
-                    </select>
-                )}
             </div>
 
             {/* Phải: nút điều hướng */}
             <div className="flex items-center gap-1">
-                <button
-                    type="button"
-                    onClick={() => onDoiTrang?.(1)}
-                    disabled={trangHienTai === 1}
-                    className="h-7 w-7 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
-                >
-                    <ChevronsLeft className="w-3.5 h-3.5" />
-                </button>
-
                 <button
                     type="button"
                     onClick={() => onDoiTrang?.(Math.max(1, trangHienTai - 1))}
@@ -102,15 +79,6 @@ export default function PhanTrangAdmin({
                 >
                     <span className="hidden sm:inline">Sau</span>
                     <ChevronRight className="w-3 h-3" />
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() => onDoiTrang?.(tongSoTrang)}
-                    disabled={trangHienTai === tongSoTrang}
-                    className="h-7 w-7 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-all"
-                >
-                    <ChevronsRight className="w-3.5 h-3.5" />
                 </button>
             </div>
         </div>
