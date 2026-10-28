@@ -1,5 +1,5 @@
-﻿'use client';
-import React, { useState, useEffect, useMemo } from 'react';
+'use client';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -288,6 +288,15 @@ export default function TrangQuanTriCuaHang() {
                 url.searchParams.set('tab', tabHienTai);
                 window.history.replaceState({}, '', url.toString());
             }
+        }
+    }, [tabHienTai]);
+
+    const khungNoiDungChinhRef = useRef(null);
+
+    // Tự động cuộn khung nội dung chính lên đầu khi chuyển tab
+    useEffect(() => {
+        if (khungNoiDungChinhRef.current) {
+            khungNoiDungChinhRef.current.scrollTo({ top: 0, behavior: 'instant' });
         }
     }, [tabHienTai]);
 
@@ -939,6 +948,8 @@ export default function TrangQuanTriCuaHang() {
         ho_ten: '',
         so_dien_thoai: '',
         email: '',
+        tinh_thanh: '',
+        phuong_xa: '',
         dia_chi_chi_tiet: '',
         ghi_chu: 'Khách mua trực tiếp tại quầy',
         cac_san_pham: [{ san_pham_id: '', so_luong: 1 }],
@@ -3102,6 +3113,8 @@ export default function TrangQuanTriCuaHang() {
             ho_ten: '',
             so_dien_thoai: '',
             email: '',
+            tinh_thanh: '',
+            phuong_xa: '',
             dia_chi_chi_tiet: '',
             ghi_chu: 'Khách mua trực tiếp tại quầy',
             cac_san_pham: [{ san_pham_id: danhSachSanPham[0]?.id || '', so_luong: 1 }],
@@ -3121,6 +3134,8 @@ export default function TrangQuanTriCuaHang() {
             ho_ten: dh.thong_tin_giao_hang?.ho_ten || '',
             so_dien_thoai: dh.thong_tin_giao_hang?.so_dien_thoai || '',
             email: dh.thong_tin_giao_hang?.email || '',
+            tinh_thanh: dh.thong_tin_giao_hang?.tinh_thanh || '',
+            phuong_xa: dh.thong_tin_giao_hang?.phuong_xa || '',
             dia_chi_chi_tiet: dh.thong_tin_giao_hang?.dia_chi_chi_tiet || '',
             ghi_chu: dh.thong_tin_giao_hang?.ghi_chu || '',
             cac_san_pham: Array.isArray(dh.danh_sach_san_pham) && dh.danh_sach_san_pham.length > 0
@@ -3174,6 +3189,8 @@ export default function TrangQuanTriCuaHang() {
                         ho_ten: formDonHang.ho_ten,
                         so_dien_thoai: formDonHang.so_dien_thoai,
                         email: formDonHang.email,
+                        tinh_thanh: formDonHang.tinh_thanh,
+                        phuong_xa: formDonHang.phuong_xa,
                         dia_chi_chi_tiet: formDonHang.dia_chi_chi_tiet,
                         ghi_chu: formDonHang.ghi_chu
                     },
@@ -3222,6 +3239,8 @@ export default function TrangQuanTriCuaHang() {
                         ho_ten: formDonHang.ho_ten,
                         so_dien_thoai: formDonHang.so_dien_thoai,
                         email: formDonHang.email,
+                        tinh_thanh: formDonHang.tinh_thanh,
+                        phuong_xa: formDonHang.phuong_xa,
                         dia_chi_chi_tiet: formDonHang.dia_chi_chi_tiet,
                         ghi_chu: formDonHang.ghi_chu
                     },
@@ -3971,7 +3990,7 @@ export default function TrangQuanTriCuaHang() {
     const thongSoQuanLyKhachHang = { danhSachNguoiDung, danhSachKhachHangKemDoanhThu, tuKhoaKhachHang, setTuKhoaKhachHang, locKhachHang, setLocKhachHang, sapXepKhachHang, setSapXepKhachHang, moModalThemUser, khachHangHienThi, dangTai, dangLocKhachHang, dangXuLyUserId, layChiTietThoiGianKhachHang, xuLyKhoaNguoiDung, xuLyDoiVaiTroNguoiDung, moModalSuaUser, xuLyXoaUser };
 
     return (
-        <div className="admin-shell min-h-screen w-full overflow-x-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans antialiased">
+        <div className="admin-shell h-screen w-full overflow-hidden bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans antialiased">
             {/* Custom Dialog Box (Hộp thoại xác nhận & cảnh báo thay thế alert / confirm trình duyệt) */}
             {hopThoai.hien && (
                 <div 
@@ -4052,9 +4071,18 @@ export default function TrangQuanTriCuaHang() {
                 </div>
             )}
 
-            {/* SIDEBAR RỰC RỠ 7 TABS ĐẲNG CẤP (PINNED 100VH - KHÔNG BỊ TRỐNG HOẶC RỚT NÚT XUỐNG ĐÁY) */}
+            {/* Backdrop làm mờ khi mở Sidebar trên Mobile */}
+            {sidebarMoMobile && (
+                <div
+                    className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-30 md:hidden animate-in fade-in duration-200"
+                    onClick={() => setSidebarMoMobile(false)}
+                    aria-hidden="true"
+                />
+            )}
+
+            {/* SIDEBAR ĐIỀU HƯỚNG QUẢN TRỊ (CỐ ĐỊNH 100% CHIỀU CAO - KHÔNG BỊ CUỘN THEO TRANG VÀ KHÔNG BỊ TRỐNG ĐÁY) */}
             <aside
-                className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-[#0d1527] border-r-2 border-slate-300 dark:border-slate-800 flex flex-col h-screen justify-between transition-all duration-300 md:sticky md:top-0 shrink-0 ${sidebarMoMobile ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full md:translate-x-0'
+                className={`fixed inset-y-0 left-0 z-40 bg-white dark:bg-[#0d1527] border-r-2 border-slate-300 dark:border-slate-800 flex flex-col h-full justify-between transition-all duration-300 md:static md:shrink-0 ${sidebarMoMobile ? 'translate-x-0 w-64 shadow-2xl' : '-translate-x-full md:translate-x-0'
                     } ${sidebarThuGon ? 'md:w-20' : 'md:w-64'}`}
             >
                 {/* 1. Header & Logo với nút thu gọn trực tiếp */}
@@ -4105,7 +4133,7 @@ export default function TrangQuanTriCuaHang() {
                 </div>
 
                 {/* 2. Menu Điều Hướng Cuộn Độc Lập & Nhóm Rõ Ràng */}
-                <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-4">
+                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-3 space-y-4">
                     {/* Nhóm 1: Quản lý Cửa Hàng & Kho */}
                     <div className="space-y-1">
                         {!sidebarThuGon && (
@@ -4442,7 +4470,7 @@ export default function TrangQuanTriCuaHang() {
             </aside>
 
             {/* MAIN CONTENT AREA (PINNED HEADER & SCROLLABLE BODY) */}
-            <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+            <div ref={khungNoiDungChinhRef} className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
                 {/* TOPBAR RỰC RỠ & SANG TRỌNG (LUÔN GHIM CỐ ĐỊNH Ở ĐỈNH) */}
                 <header className="sticky top-0 h-16 bg-white dark:bg-[#0d1527] border-b-2 border-slate-300 dark:border-slate-700 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-sm z-30">
                     <div className="flex items-center gap-3.5">
@@ -4535,7 +4563,7 @@ export default function TrangQuanTriCuaHang() {
                 </header>
 
                 {/* SCROLLABLE VIEWPORT */}
-                <main className="flex-1 min-h-0 overflow-visible p-4 sm:p-6 pb-24 space-y-6 bg-slate-100 dark:bg-slate-950">
+                <main className="flex-1 min-h-0 p-4 sm:p-6 pb-24 space-y-6 bg-slate-100 dark:bg-slate-950">
                     {/* ========================================= */}
                     {/* TAB 1: TỔNG QUAN */}
                     {/* ========================================= */}

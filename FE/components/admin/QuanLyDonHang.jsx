@@ -58,6 +58,8 @@ export default function QuanLyDonHang({
     moModalSuaDonHang,
     xuLyXoaDonHang
 }) {
+    const donHangThongKe = donHangHienThi;
+
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
             {/* 1. Thống Kê Nhanh Đơn Hàng (4 KPI Cards: SỐ HIỂN THỊ CỰC TO, RÕ NÉT & DỄ NHÌN) */}
@@ -75,7 +77,7 @@ export default function QuanLyDonHang({
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
                         <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-blue-700 dark:text-blue-300 drop-shadow-xs">
-                            {danhSachDonHang.length}
+                            {donHangThongKe.length}
                         </span>
                         <span className="text-xs font-extrabold text-blue-700 dark:text-blue-300">kiện hàng</span>
                     </div>
@@ -99,7 +101,7 @@ export default function QuanLyDonHang({
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
                         <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-amber-600 dark:text-amber-400 drop-shadow-xs">
-                            {danhSachDonHang.filter(d => d.trang_thai === 'cho_xac_nhan' || d.trang_thai === 'da_xac_nhan' || d.trang_thai === 'dang_giao').length}
+                            {donHangThongKe.filter(d => d.trang_thai === 'cho_xac_nhan' || d.trang_thai === 'da_xac_nhan' || d.trang_thai === 'dang_giao').length}
                         </span>
                         <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300">chờ xử lý</span>
                     </div>
@@ -123,7 +125,7 @@ export default function QuanLyDonHang({
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
                         <span className="text-4xl sm:text-5xl font-black font-mono tracking-tight text-emerald-600 dark:text-emerald-400 drop-shadow-xs">
-                            {danhSachDonHang.filter(d => d.trang_thai === 'da_giao').length}
+                            {donHangThongKe.filter(d => d.trang_thai === 'da_giao').length}
                         </span>
                         <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-300">hoàn tất</span>
                     </div>
@@ -144,13 +146,13 @@ export default function QuanLyDonHang({
                     </div>
                     <div className="mt-2 flex items-baseline gap-1">
                         <span className="text-xl sm:text-2xl lg:text-3xl font-black font-mono tracking-tight text-purple-700 dark:text-purple-300 drop-shadow-xs truncate">
-                            {dinhDangTienVND(danhSachDonHang.reduce((sum, d) => sum + (Number(d.tong_tien_thanh_toan) || Number(d.tong_tien) || 0), 0))}
+                            {dinhDangTienVND(donHangThongKe.reduce((sum, d) => sum + (Number(d.tong_tien_thanh_toan) || Number(d.tong_tien) || 0), 0))}
                         </span>
                     </div>
                     <div className="mt-1.5 flex items-center">
                         <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black bg-purple-600/15 text-purple-900 dark:text-purple-100 flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400"></span>
-                            <span>{danhSachDonHang.filter(d => d.da_thanh_toan).length} đơn đã thanh toán</span>
+                            <span>{donHangThongKe.filter(d => d.da_thanh_toan).length} đơn đã thanh toán</span>
                         </span>
                     </div>
                 </div>
