@@ -168,6 +168,12 @@ export default function ModalSanPham({
     if (!dangMoModalSp) return null;
     const cacNhuCauLaptop = danhSachNhuCauLaptop.length ? danhSachNhuCauLaptop : NHU_CAU_LAPTOP;
     const maNhuCauLaptop = new Set(cacNhuCauLaptop.map((item) => item.ma));
+    const taoMaSanPhamTuDong = () => {
+        const tienTo = String(formSp.hang_san_xuat || 'SP').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 5);
+        const phanTen = String(formSp.ten_san_pham || 'SANPHAM').replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
+        const soNgauNhien = Math.random().toString(36).slice(2, 6).toUpperCase();
+        setFormSp({ ...formSp, ma_san_pham: `${tienTo}-${phanTen}-${soNgauNhien}` });
+    };
 
     // Các ô bắt buộc còn thiếu (hiện ở chân form để admin biết cần điền gì)
     const oConThieu = [
@@ -322,7 +328,7 @@ export default function ModalSanPham({
                                                     <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shadow-xs">
                                                         <Tag className="w-3.5 h-3.5" />
                                                     </span>
-                                                    <span>1. Định Danh & Ảnh Đại Diện Sản Phẩm</span>
+                                                    <span>1. Định Danh & Ảnh Đại Diện Sản Phẩm *</span>
                                                 </div>
                                                 <span className="text-[10px] font-bold text-blue-700 bg-blue-50 dark:bg-blue-950 dark:text-blue-300 px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                                                     Bắt buộc
@@ -334,7 +340,7 @@ export default function ModalSanPham({
                                                 <div className="flex flex-col sm:flex-row gap-4 items-start">
                                                     {/* KHUNG ẢNH ĐẠI DIỆN TRỰC QUAN CÓ UPLOAD FILE TỪ MÁY */}
                                                     <div className="w-full sm:w-auto shrink-0 flex sm:flex-col items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80">
-                                                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center relative overflow-hidden group shadow-2xs">
+                                                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center relative overflow-hidden group shadow-2xs" title="Bắt buộc: tải ảnh từ máy hoặc dán đường dẫn ảnh hợp lệ">
                                                             {(formSp.hinh_anh_chinh || formSp.hinh_anh) ? (
                                                                 <AnhXemTruoc src={formSp.hinh_anh_chinh || formSp.hinh_anh} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
                                                             ) : (
@@ -374,7 +380,7 @@ export default function ModalSanPham({
                                                             <div className="space-y-1">
                                                                 <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
                                                                     <Link2 className="w-3 h-3 text-blue-500" />
-                                                                    <span>Đường dẫn link ảnh online:</span>
+                                                                    <span>Đường dẫn ảnh online (nếu không tải ảnh máy):</span>
                                                                 </label>
                                                                 <input
                                                                     type="text"
@@ -397,7 +403,10 @@ export default function ModalSanPham({
                                                                         <Barcode className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                                                                         <span>Mã SKU / Mã SP *</span>
                                                                     </span>
-                                                                    <NhanDaSua fieldName="ma_san_pham" />
+                                                                    <div className="flex items-center gap-1">
+                                                                        <button type="button" onClick={taoMaSanPhamTuDong} className="rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-black text-blue-700 hover:bg-blue-100" title="Tự sinh mã SKU">Tự sinh</button>
+                                                                        <NhanDaSua fieldName="ma_san_pham" />
+                                                                    </div>
                                                                 </label>
                                                                 <input
                                                                     type="text"
