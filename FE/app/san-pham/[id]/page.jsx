@@ -523,13 +523,14 @@ export default function TrangChiTietSanPham({ params }) {
                     <Sparkles className="w-4 h-4 text-[#0052cc] dark:text-cyan-400" />
                     <span>Trải Nghiệm & Đánh Giá Chuyên Sâu Từ TNTP LAPTOP</span>
                   </h3>
+                  <p className="mb-1 text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">Mô tả ngắn</p>
                   <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
-                    {sanPham.mo_ta_ngan || sanPham.thong_so?.mo_ta_ngan || sanPham.mo_ta_chi_tiet || 'Sản phẩm chính hãng với cấu hình mạnh mẽ, hiệu năng xuất sắc và độ bền bỉ cao.'}
+                    {sanPham.mo_ta_ngan || sanPham.thong_so?.mo_ta_ngan || 'Chưa có mô tả ngắn.'}
                   </p>
-                  {sanPham.mo_ta_chi_tiet && sanPham.mo_ta_chi_tiet !== (sanPham.mo_ta_ngan || sanPham.thong_so?.mo_ta_ngan) && (
+                  {(sanPham.mo_ta_chi_tiet || sanPham.mo_ta || sanPham.thong_so?.mo_ta_chi_tiet) && (
                     <div className="border-t border-slate-200 pt-3 dark:border-slate-700">
                       <p className="mb-1.5 text-xs font-black uppercase tracking-wide text-slate-900 dark:text-white">Mô tả chi tiết</p>
-                      <p className="whitespace-pre-line text-slate-700 dark:text-slate-300">{sanPham.mo_ta_chi_tiet}</p>
+                      <p className="whitespace-pre-line text-slate-700 dark:text-slate-300">{sanPham.mo_ta_chi_tiet || sanPham.mo_ta || sanPham.thong_so?.mo_ta_chi_tiet}</p>
                     </div>
                   )}
                   <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 text-xs text-blue-900 dark:text-blue-200 space-y-1.5">
