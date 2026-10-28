@@ -940,172 +940,180 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                 />
             </div>
 
-            {/* 4. Modal Xem Chi Tiết & Ghi Chú CSKH */}
+            {/* 4. Modal Xem Chi Tiết & Ghi Chú CSKH (Thiết kế thanh thoát, gọn gàng, tinh tế) */}
             {phieuDangXem && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-[#0d1527] w-full max-w-xl rounded-3xl shadow-2xl border-2 border-slate-200 dark:border-slate-700/80 overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+                    <div className="bg-white dark:bg-[#0d1527] w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
 
-                        {/* ── HEADER: gradient tím xanh nổi bật ── */}
-                        <div className="relative px-5 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-700 flex items-center justify-between overflow-hidden">
-                            <Headphones className="absolute -right-4 -top-3 w-28 h-28 text-white/8 pointer-events-none" />
-                            <div className="flex items-center gap-3 relative z-10">
-                                <div className="w-10 h-10 rounded-2xl bg-white/20 ring-2 ring-white/30 flex items-center justify-center shrink-0">
-                                    <Headphones className="w-5 h-5 text-white" />
+                        {/* ── HEADER GỌN GÀNG ── */}
+                        <div className="shrink-0 px-4 py-3 bg-gradient-to-r from-indigo-50/80 via-white to-purple-50/60 dark:from-slate-800 dark:via-slate-800 dark:to-slate-800/90 border-b border-slate-200 dark:border-slate-700/80 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl bg-indigo-100/80 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                                    <Headphones className="w-4 h-4" />
                                 </div>
                                 <div>
-                                    <div className="font-black text-sm text-white tracking-tight">
-                                        Chi Tiết #{phieuDangXem.ma_yeu_cau}
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-mono font-black text-xs text-indigo-700 dark:text-indigo-300">
+                                            #{phieuDangXem.ma_yeu_cau}
+                                        </span>
+                                        <span className="text-[10px] text-slate-400">•</span>
+                                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                                            {dinhDangNgay(phieuDangXem.ngay_tao || phieuDangXem.createdAt)}
+                                        </span>
                                     </div>
-                                    <div className="text-[11px] text-indigo-200 font-medium mt-0.5">
-                                        Tiếp nhận: {dinhDangNgay(phieuDangXem.ngay_tao || phieuDangXem.createdAt)}
-                                    </div>
+                                    <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                                        Chi Tiết Phiếu Tư Vấn & CSKH
+                                    </h4>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setPhieuDangXem(null)}
-                                className="relative z-10 p-2 rounded-xl bg-white/15 hover:bg-white/25 transition-colors cursor-pointer text-white"
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
                             >
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
 
-                        {/* ── BODY ── */}
-                        <div className="max-h-[72vh] overflow-y-auto divide-y-2 divide-slate-100 dark:divide-slate-800">
+                        {/* ── BODY CUỘN MƯỢT ── */}
+                        <div className="overflow-y-auto p-4 space-y-3 text-xs">
 
-                            {/* Vùng 1: Thông tin khách — nền xanh lá nhạt */}
-                            <div className="px-5 py-4 bg-gradient-to-br from-emerald-50/80 to-teal-50/40 dark:from-emerald-950/30 dark:to-teal-950/20">
-                                <div className="flex items-center gap-1.5 mb-3">
-                                    <div className="w-1.5 h-4 rounded-full bg-gradient-to-b from-emerald-400 to-teal-500" />
-                                    <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Thông Tin Khách Hàng</span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3 text-xs">
-                                    <div className="p-3 rounded-2xl bg-white dark:bg-slate-800/80 border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
-                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Họ và tên</div>
-                                        <div className="font-extrabold text-slate-900 dark:text-white text-sm leading-tight">{phieuDangXem.ho_ten}</div>
+                            {/* Khối 1: Thông tin khách hàng */}
+                            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                        <UserCheck className="w-3.5 h-3.5 text-indigo-500" />
+                                        Thông Tin Khách Hàng
+                                    </span>
+                                    <div className="flex items-center gap-1.5">
+                                        <a
+                                            href={`tel:${(phieuDangXem.so_dien_thoai || '').replace(/\D/g, '')}`}
+                                            className="h-6 px-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] inline-flex items-center gap-1 transition-all shadow-xs"
+                                        >
+                                            <Phone className="w-2.5 h-2.5 fill-white" />
+                                            Gọi
+                                        </a>
+                                        <a
+                                            href={`https://zalo.me/${(phieuDangXem.so_dien_thoai || '').replace(/\D/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="h-6 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] inline-flex items-center gap-1 transition-all shadow-xs"
+                                        >
+                                            <MessageSquare className="w-2.5 h-2.5 fill-white" />
+                                            Zalo
+                                        </a>
                                     </div>
-                                    <div className="p-3 rounded-2xl bg-white dark:bg-slate-800/80 border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
-                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Số điện thoại</div>
-                                        <div className="font-black text-emerald-600 dark:text-emerald-400 font-mono flex items-center gap-1">
-                                            <Phone className="w-3.5 h-3.5 shrink-0" />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-700/50">
+                                    <div>
+                                        <div className="text-[10px] text-slate-400">Họ tên</div>
+                                        <div className="font-extrabold text-slate-800 dark:text-slate-100 text-xs truncate">
+                                            {phieuDangXem.ho_ten}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[10px] text-slate-400">Số điện thoại</div>
+                                        <div className="font-mono font-black text-emerald-600 dark:text-emerald-400 text-xs">
                                             {phieuDangXem.so_dien_thoai}
                                         </div>
                                     </div>
                                     {phieuDangXem.email && (
-                                        <div className="col-span-2 p-3 rounded-2xl bg-white dark:bg-slate-800/80 border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
-                                            <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Email liên hệ</div>
-                                            <div className="font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
-                                                <Mail className="w-3.5 h-3.5 shrink-0" />
+                                        <div className="col-span-2">
+                                            <div className="text-[10px] text-slate-400">Email</div>
+                                            <div className="font-medium text-blue-600 dark:text-blue-400 text-xs truncate flex items-center gap-1">
+                                                <Mail className="w-3 h-3 shrink-0" />
                                                 {phieuDangXem.email}
                                             </div>
                                         </div>
                                     )}
-                                    <div className="col-span-2 p-3 rounded-2xl bg-white dark:bg-slate-800/80 border border-emerald-200 dark:border-emerald-900/50 shadow-sm">
-                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Chủ đề quan tâm</div>
-                                        <div className="font-black text-indigo-600 dark:text-indigo-400">{phieuDangXem.chu_de}</div>
+                                    <div className="col-span-2">
+                                        <div className="text-[10px] text-slate-400">Nhu cầu / Chủ đề</div>
+                                        <span className="inline-block mt-0.5 px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-[11px] border border-indigo-100 dark:border-indigo-900/60">
+                                            {phieuDangXem.chu_de}
+                                        </span>
                                     </div>
-                                </div>
-
-                                {/* Nút gọi + Zalo nhanh ngay trong vùng khách */}
-                                <div className="grid grid-cols-2 gap-2.5 mt-3">
-                                    <a
-                                        href={`tel:${(phieuDangXem.so_dien_thoai || '').replace(/\D/g, '')}`}
-                                        className="py-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/25 hover:scale-[1.02] active:scale-95"
-                                    >
-                                        <Phone className="w-3.5 h-3.5 fill-white" />
-                                        Gọi Khách Ngay
-                                    </a>
-                                    <a
-                                        href={`https://zalo.me/${(phieuDangXem.so_dien_thoai || '').replace(/\D/g, '')}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="py-2 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-blue-500/25 hover:scale-[1.02] active:scale-95"
-                                    >
-                                        <MessageSquare className="w-3.5 h-3.5 fill-white/50" />
-                                        Mở Chat Zalo
-                                    </a>
                                 </div>
                             </div>
 
-                            {/* Vùng 2: Nội dung yêu cầu — nền xanh dương nhạt */}
-                            <div className="px-5 py-4 bg-gradient-to-br from-sky-50/80 to-blue-50/40 dark:from-sky-950/20 dark:to-blue-950/10">
-                                <div className="flex items-center gap-1.5 mb-2.5">
-                                    <div className="w-1.5 h-4 rounded-full bg-gradient-to-b from-sky-400 to-blue-500" />
-                                    <span className="text-[11px] font-black text-sky-700 dark:text-sky-400 uppercase tracking-wider">Nội Dung Yêu Cầu</span>
-                                </div>
-                                <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-800/80 border-2 border-sky-200 dark:border-sky-900/50 text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium italic shadow-sm">
+                            {/* Khối 2: Nội dung yêu cầu của khách */}
+                            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70 space-y-1.5">
+                                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                    <FileText className="w-3.5 h-3.5 text-blue-500" />
+                                    Nội Dung Yêu Cầu
+                                </span>
+                                <div className="p-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-xs text-slate-700 dark:text-slate-200 leading-relaxed italic">
                                     &ldquo;{phieuDangXem.noi_dung}&rdquo;
                                 </div>
                             </div>
 
-                            {/* Vùng 3: Phản hồi email — nền tím nhạt */}
-                            <div className="px-5 py-4 bg-gradient-to-br from-violet-50/80 to-indigo-50/40 dark:from-violet-950/20 dark:to-indigo-950/10">
-                                <div className="flex items-center gap-1.5 mb-2.5">
-                                    <div className="w-1.5 h-4 rounded-full bg-gradient-to-b from-violet-400 to-indigo-500" />
-                                    <span className="text-[11px] font-black text-violet-700 dark:text-violet-400 uppercase tracking-wider">Phản Hồi Qua Email</span>
-                                </div>
-                                {phieuDangXem.email ? (
-                                    <>
-                                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                                            <Mail className="w-3 h-3 text-violet-400" />
-                                            Gửi đến: <span className="font-bold text-violet-600 dark:text-violet-300">{phieuDangXem.email}</span>
-                                        </div>
-                                        <textarea
-                                            value={noiDungPhanHoi}
-                                            onChange={(e) => setNoiDungPhanHoi(e.target.value)}
-                                            rows={3}
-                                            placeholder="Nhập nội dung phản hồi cho khách..."
-                                            className="w-full p-3 text-xs rounded-2xl border-2 border-violet-200 dark:border-violet-800/60 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 transition-all"
-                                        />
+                            {/* Khối 3: Phản hồi qua email khách hàng */}
+                            {phieuDangXem.email ? (
+                                <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                            <Send className="w-3.5 h-3.5 text-purple-500" />
+                                            Phản Hồi Email
+                                        </span>
+                                        <span className="text-[10px] text-slate-400 truncate max-w-[200px]" title={phieuDangXem.email}>
+                                            Tới: <span className="font-semibold text-slate-600 dark:text-slate-300">{phieuDangXem.email}</span>
+                                        </span>
+                                    </div>
+                                    <textarea
+                                        value={noiDungPhanHoi}
+                                        onChange={(e) => setNoiDungPhanHoi(e.target.value)}
+                                        rows={2}
+                                        placeholder="Nhập nội dung phản hồi nhanh cho khách..."
+                                        className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20"
+                                    />
+                                    <div className="flex justify-end">
                                         <button
                                             type="button"
                                             onClick={xuLyGuiPhanHoi}
                                             disabled={dangGuiPhanHoi}
-                                            className="mt-2.5 w-full py-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 disabled:opacity-60 text-white text-xs font-extrabold flex items-center justify-center gap-2 shadow-md shadow-violet-500/25 transition-all"
+                                            className="h-7 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] inline-flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer shadow-xs"
                                         >
-                                            {dangGuiPhanHoi ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                                            {dangGuiPhanHoi ? 'Đang gửi...' : 'Gửi phản hồi qua email'}
+                                            {dangGuiPhanHoi ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                                            {dangGuiPhanHoi ? 'Đang gửi...' : 'Gửi Email'}
                                         </button>
-                                    </>
-                                ) : (
-                                    <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 text-xs text-rose-600 dark:text-rose-400 font-semibold">
-                                        Khách chưa cung cấp email nên chưa thể gửi phản hồi.
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Vùng 4: Trạng thái + ghi chú — nền vàng cam nhạt */}
-                            <div className="px-5 py-4 bg-gradient-to-br from-amber-50/80 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10">
-                                <div className="flex items-center gap-1.5 mb-3">
-                                    <div className="w-1.5 h-4 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
-                                    <span className="text-[11px] font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">Xử Lý & Ghi Chú Nội Bộ</span>
                                 </div>
-                                <select
-                                    value={trangThaiTam}
-                                    onChange={(e) => setTrangThaiTam(e.target.value)}
-                                    className="w-full p-2.5 rounded-2xl border-2 border-amber-200 dark:border-amber-800/60 bg-white dark:bg-slate-800 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400 cursor-pointer shadow-sm mb-3"
-                                >
-                                    <option value="chua_xu_ly">⚡ Chưa Tư Vấn (Mới tiếp nhận)</option>
-                                    <option value="dang_xu_ly">📞 Đang Liên Hệ (Đã gọi / nhắn Zalo)</option>
-                                    <option value="da_hoan_thanh">✅ Đã Hoàn Tất (Khách chốt / được giải đáp)</option>
-                                    <option value="da_huy">❌ Đã Hủy (Không bắt máy / nhầm số)</option>
-                                </select>
-                                <textarea
-                                    value={ghiChuTam}
-                                    onChange={(e) => setGhiChuTam(e.target.value)}
-                                    rows={3}
-                                    placeholder="VD: Đã gọi lúc 10h15, khách quan tâm Legion 5 Pro tầm 28tr, hẹn chiều ghé Showroom Q10..."
-                                    className="w-full p-3 text-xs font-medium rounded-2xl border-2 border-amber-200 dark:border-amber-800/60 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 transition-all resize-none shadow-sm"
-                                />
+                            ) : null}
+
+                            {/* Khối 4: Trạng thái & Ghi chú nội bộ */}
+                            <div className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/70 space-y-2">
+                                <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                    <Edit3 className="w-3.5 h-3.5 text-amber-500" />
+                                    Trạng Thái & Ghi Chú CSKH
+                                </span>
+                                <div className="space-y-2">
+                                    <select
+                                        value={trangThaiTam}
+                                        onChange={(e) => setTrangThaiTam(e.target.value)}
+                                        className="w-full h-8 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                                    >
+                                        <option value="chua_xu_ly">⚡ Chưa Tư Vấn (Tiếp nhận)</option>
+                                        <option value="dang_xu_ly">📞 Đang Liên Hệ (Đã gọi / Zalo)</option>
+                                        <option value="da_hoan_thanh">✅ Đã Hoàn Tất (Chốt / giải đáp xong)</option>
+                                        <option value="da_huy">❌ Đã Hủy (Nhầm số / sai)</option>
+                                    </select>
+                                    <textarea
+                                        value={ghiChuTam}
+                                        onChange={(e) => setGhiChuTam(e.target.value)}
+                                        rows={2}
+                                        placeholder="Ghi chú nội bộ: VD gọi khách hẹn chiều qua showroom..."
+                                        className="w-full p-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 resize-none"
+                                    />
+                                </div>
                             </div>
                         </div>
 
-                        {/* ── FOOTER ── */}
-                        <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-800/60 border-t-2 border-slate-100 dark:border-slate-700/70 flex items-center justify-end gap-2.5">
+                        {/* ── FOOTER THANH MẢNH ── */}
+                        <div className="shrink-0 px-4 py-2.5 bg-slate-50/90 dark:bg-slate-900/80 border-t border-slate-200 dark:border-slate-700/80 flex items-center justify-end gap-2">
                             <button
                                 type="button"
                                 onClick={() => setPhieuDangXem(null)}
-                                className="px-4 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-all"
+                                className="h-7 px-3 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                             >
                                 Đóng
                             </button>
@@ -1113,9 +1121,9 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                                 type="button"
                                 onClick={xuLyLuuModal}
                                 disabled={dangLuuGhiChu}
-                                className="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-indigo-500/25 cursor-pointer disabled:opacity-60 transition-all"
+                                className="h-7 px-3.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 transition-colors"
                             >
-                                {dangLuuGhiChu ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 stroke-[3]" />}
+                                {dangLuuGhiChu ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3.5 h-3.5 stroke-[2.5]" />}
                                 <span>Lưu Thay Đổi</span>
                             </button>
                         </div>
