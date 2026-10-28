@@ -576,34 +576,105 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                         Thời gian:
                     </span>
                     <div className="flex flex-wrap items-center gap-2">
+                        {/* Nút tắt nhanh */}
+                        {[
+                            {
+                                ten: 'Hôm nay', id: 'hom_nay',
+                                tao: () => {
+                                    const d = new Date();
+                                    const fmt = (x) => x.toISOString().slice(0, 10);
+                                    return { tu: fmt(d), den: fmt(d) };
+                                }
+                            },
+                            {
+                                ten: 'Hôm qua', id: 'hom_qua',
+                                tao: () => {
+                                    const d = new Date(); d.setDate(d.getDate() - 1);
+                                    const fmt = (x) => x.toISOString().slice(0, 10);
+                                    return { tu: fmt(d), den: fmt(d) };
+                                }
+                            },
+                            {
+                                ten: '7 ngày qua', id: '7_ngay',
+                                tao: () => {
+                                    const den = new Date();
+                                    const tu = new Date(); tu.setDate(tu.getDate() - 6);
+                                    const fmt = (x) => x.toISOString().slice(0, 10);
+                                    return { tu: fmt(tu), den: fmt(den) };
+                                }
+                            },
+                            {
+                                ten: 'Tuần này', id: 'tuan_nay',
+                                tao: () => {
+                                    const now = new Date();
+                                    const thu = now.getDay() === 0 ? 6 : now.getDay() - 1;
+                                    const tu = new Date(now); tu.setDate(now.getDate() - thu);
+                                    const den = new Date(tu); den.setDate(tu.getDate() + 6);
+                                    const fmt = (x) => x.toISOString().slice(0, 10);
+                                    return { tu: fmt(tu), den: fmt(den) };
+                                }
+                            },
+                            {
+                                ten: 'Tháng này', id: 'thang_nay',
+                                tao: () => {
+                                    const now = new Date();
+                                    const tu = new Date(now.getFullYear(), now.getMonth(), 1);
+                                    const den = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                                    const fmt = (x) => x.toISOString().slice(0, 10);
+                                    return { tu: fmt(tu), den: fmt(den) };
+                                }
+                            }
+                        ].map((preset) => {
+                            const range = preset.tao();
+                            const dangChon = locTuNgay === range.tu && locDenNgay === range.den;
+                            return (
+                                <button
+                                    key={preset.id}
+                                    type="button"
+                                    onClick={() => { setLocTuNgay(range.tu); setLocDenNgay(range.den); }}
+                                    className={`px-3 py-1.5 rounded-xl text-[11px] font-black border-2 transition-all cursor-pointer whitespace-nowrap ${
+                                        dangChon
+                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-indigo-500 shadow-md shadow-indigo-500/25 scale-105'
+                                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:text-indigo-700 dark:hover:text-indigo-300'
+                                    }`}
+                                >
+                                    {preset.ten}
+                                </button>
+                            );
+                        })}
+
+                        {/* Separator */}
+                        <span className="text-slate-300 dark:text-slate-600 text-sm font-bold select-none">|</span>
+
+                        {/* Input ngày tùy chỉnh */}
                         <div className="flex items-center gap-1.5">
-                            <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Từ ngày</label>
+                            <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Từ</label>
                             <input
                                 type="date"
                                 value={locTuNgay}
                                 onChange={(e) => setLocTuNgay(e.target.value)}
-                                className="text-xs font-bold px-2.5 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
+                                className="text-xs font-bold px-2.5 py-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
                             />
                         </div>
                         <div className="flex items-center gap-1.5">
-                            <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Đến ngày</label>
+                            <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Đến</label>
                             <input
                                 type="date"
                                 value={locDenNgay}
                                 onChange={(e) => setLocDenNgay(e.target.value)}
                                 min={locTuNgay || undefined}
-                                className="text-xs font-bold px-2.5 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
+                                className="text-xs font-bold px-2.5 py-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
                             />
                         </div>
                         {(locTuNgay || locDenNgay) && (
                             <button
                                 type="button"
                                 onClick={() => { setLocTuNgay(''); setLocDenNgay(''); }}
-                                className="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[11px] font-black bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-2 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all cursor-pointer"
+                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-2 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all cursor-pointer whitespace-nowrap"
                                 title="Xóa lọc ngày"
                             >
                                 <X className="w-3 h-3" />
-                                Xóa lọc ngày
+                                Xóa
                             </button>
                         )}
                     </div>
