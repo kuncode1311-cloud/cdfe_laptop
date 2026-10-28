@@ -9,6 +9,23 @@ import { slugSanPham } from '@/utils/taoSlug';
 import { useGioHang } from '@/contexts/CartContext';
 import { useSoSanh, coTheSoSanh } from '@/contexts/CompareContext';
 
+const GIA_TRI_THONG_SO_RAC = new Set([
+    'hh', 'h', 'dsd', 'chip 1', 'chip 2', 'tên sản phẩm', 'mô tả ngắn', 'chi tiết',
+    'đang cập nhật', 'không hỗ trợ', 'không áp dụng'
+]);
+
+function locThongSoHienThi(values) {
+    return [...new Set(values
+        .map(value => String(value ?? '').replace(/\s+/g, ' ').trim())
+        .filter(value => {
+            const normalized = value.toLowerCase();
+            return value.length >= 2
+                && !GIA_TRI_THONG_SO_RAC.has(normalized)
+                && !/^([a-z])\1+$/.test(normalized)
+                && !/^bảo hành\b/i.test(normalized);
+        }))].slice(0, 4);
+}
+
 /**
  * Trích xuất 3-4 thông số kỹ thuật cốt lõi chuẩn e-commerce
  * Chuẩn 100% theo dữ liệu MongoDB Atlas, thích ứng linh hoạt theo từng dòng sản phẩm
@@ -136,12 +153,12 @@ function layThongSoNhanh(sanPham) {
             else if (thongSo.che_do_bao_hanh) ketQua.push('BH Chính Hãng');
         }
 
-        if (ketQua.length > 0) return ketQua.filter(Boolean).slice(0, 3);
+        if (ketQua.length > 0) return locThongSoHienThi(ketQua).slice(0, 3);
 
         const muc1 = thongSo.loai_linh_kien || 'Đang cập nhật';
         const muc2 = thongSo.dung_luong || thongSo.toc_do || 'Đang cập nhật';
         const muc3 = thongSo.che_do_bao_hanh ? thongSo.che_do_bao_hanh.split('(')[0].trim() : 'Đang cập nhật';
-        return [muc1, muc2, muc3].filter(Boolean).slice(0, 3);
+        return locThongSoHienThi([muc1, muc2, muc3]).slice(0, 3);
     }
 
     // Laptop: CPU - Card đồ họa / Màn hình - RAM - Ổ cứng
@@ -190,7 +207,7 @@ function layThongSoNhanh(sanPham) {
         ketQua.push(`${thongSo.tan_so_quet}Hz`);
     }
 
-    return ketQua.filter(Boolean).slice(0, 4);
+    return locThongSoHienThi(ketQua);
 }
 
 /**
@@ -286,13 +303,15 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                         </h3>
                     </Link>
 
-                    <div className="flex flex-wrap gap-1 text-[11px]">
-                        {cacThongSo.map((ts, idx) => (
-                            <span key={idx} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
-                                {ts}
-                            </span>
-                        ))}
-                    </div>
+                    {cacThongSo.length > 0 && (
+                        <div className="flex flex-wrap gap-1 text-[11px]">
+                            {cacThongSo.map((ts, idx) => (
+                                <span key={idx} className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium">
+                                    {ts}
+                                </span>
+                            ))}
+                        </div>
+                    )}
 
                     {sanPham.qua_tang && sanPham.qua_tang.length > 0 ? (
                         <div className="text-[11px] text-emerald-700 dark:text-emerald-400 truncate flex items-center gap-1 font-medium">
