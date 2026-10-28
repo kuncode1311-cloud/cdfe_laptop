@@ -37,6 +37,9 @@ export default function QuanLyDanhGia({ xacNhan }) {
     const [danhSach, setDanhSach] = useState([]);
     const [dangTai, setDangTai] = useState(true);
     const [tuKhoa, setTuKhoa] = useState('');
+    const [locSoSao, setLocSoSao] = useState('tat_ca');
+    const [locTrangThai, setLocTrangThai] = useState('tat_ca');
+    const [sapXep, setSapXep] = useState('moi_nhat');
     const [dangXuLyId, setDangXuLyId] = useState(null);
 
     const taiDuLieu = async () => {
@@ -59,13 +62,21 @@ export default function QuanLyDanhGia({ xacNhan }) {
     // Lọc client-side theo tên sản phẩm / tên khách
     const danhSachDaLoc = useMemo(() => {
         const tu = tuKhoa.trim().toLowerCase();
-        if (!tu) return danhSach;
-        return danhSach.filter((dg) => {
+        const ketQua = danhSach.filter((dg) => {
             const ten = (dg.ten_san_pham || '').toLowerCase();
             const khach = (dg.ho_ten || '').toLowerCase();
-            return ten.includes(tu) || khach.includes(tu);
+            const dungTuKhoa = !tu || ten.includes(tu) || khach.includes(tu);
+            const dungSoSao = locSoSao === 'tat_ca' || Number(dg.so_sao) === Number(locSoSao);
+            const hienThi = dg.hien_thi !== false;
+            const dungTrangThai = locTrangThai === 'tat_ca' || (locTrangThai === 'hien' ? hienThi : !hienThi);
+            return dungTuKhoa && dungSoSao && dungTrangThai;
         });
-    }, [danhSach, tuKhoa]);
+        return ketQua.sort((a, b) => {
+            const ngayA = new Date(a.createdAt || a.ngay_tao || 0).getTime();
+            const ngayB = new Date(b.createdAt || b.ngay_tao || 0).getTime();
+            return sapXep === 'cu_nhat' ? ngayA - ngayB : ngayB - ngayA;
+        });
+    }, [danhSach, tuKhoa, locSoSao, locTrangThai, sapXep]);
 
     const {
         trangHienTai,
@@ -75,7 +86,7 @@ export default function QuanLyDanhGia({ xacNhan }) {
         tongSoTrang,
         tongSoMuc,
         danhSachTrenTrang
-    } = usePhanTrang(danhSachDaLoc, 10, [tuKhoa]);
+    } = usePhanTrang(danhSachDaLoc, 10, [tuKhoa, locSoSao, locTrangThai, sapXep]);
 
     const layId = (dg) => dg._id || dg.id;
 
@@ -134,8 +145,9 @@ export default function QuanLyDanhGia({ xacNhan }) {
     return (
         <div className="space-y-6">
             {/* Thanh công cụ tìm kiếm */}
-            <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-50/90 via-white to-amber-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#1c1409] border-2 border-amber-100/90 dark:border-slate-800 shadow-md shadow-amber-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="relative flex-1 max-w-lg">
+            <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-50/90 via-white to-amber-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#1c1409] border-2 border-amber-100/90 dark:border-slate-800 shadow-md shadow-amber-500/5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="relative flex-1 max-w-lg">
                     <Search className="w-4 h-4 text-amber-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                         type="text"
@@ -153,10 +165,22 @@ export default function QuanLyDanhGia({ xacNhan }) {
                             <X className="w-3.5 h-3.5" />
                         </button>
                     )}
+                    </div>
+                    <span className="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-black whitespace-nowrap">
+                        {danhSachDaLoc.length} / {danhSach.length} đánh giá
+                    </span>
                 </div>
-                <span className="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-black whitespace-nowrap">
-                    {danhSachDaLoc.length} / {danhSach.length} đánh giá
-                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <select value={locSoSao} onChange={(e) => setLocSoSao(e.target.value)} className="h-9 px-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200">
+                        <option value="tat_ca">Tất cả số sao</option><option value="5">★★★★★ 5 sao</option><option value="4">★★★★ 4 sao</option><option value="3">★★★ 3 sao</option><option value="2">★★ 2 sao</option><option value="1">★ 1 sao</option>
+                    </select>
+                    <select value={locTrangThai} onChange={(e) => setLocTrangThai(e.target.value)} className="h-9 px-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200">
+                        <option value="tat_ca">Tất cả trạng thái</option><option value="hien">Đang hiển thị</option><option value="an">Đã ẩn</option>
+                    </select>
+                    <select value={sapXep} onChange={(e) => setSapXep(e.target.value)} className="h-9 px-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200">
+                        <option value="moi_nhat">Mới nhất trước</option><option value="cu_nhat">Cũ nhất trước</option>
+                    </select>
+                </div>
             </div>
 
             {/* Bảng danh sách đánh giá */}
