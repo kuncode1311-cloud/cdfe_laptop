@@ -578,7 +578,7 @@ export default function TrangLienHe() {
                             </div>
 
                             <p className="text-[11.5px] text-amber-900 bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-left font-medium leading-relaxed">
-                                📞 Chuyên viên tư vấn TNTP sẽ gọi lại vào số <strong>{ketQuaGui.so_dien_thoai}</strong> trong 10 - 15 phút để báo giá và giải đáp chi tiết.
+                                💌 Cảm ơn bạn đã liên hệ! Chuyên viên TNTP sẽ phản hồi qua số <strong>{ketQuaGui.so_dien_thoai}</strong> hoặc email <strong>{ketQuaGui.email || email}</strong> trong thời gian sớm nhất.
                             </p>
 
                             <div className="flex items-center gap-2 pt-1">
