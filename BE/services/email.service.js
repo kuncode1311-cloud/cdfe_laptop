@@ -424,6 +424,8 @@ async function guiMailXacNhanDonHang(donHang) {
     }
 }
 
+const taoTemplateLienHe = ({ tieuDe, nhan, noiDung }) => `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${tieuDe}</title></head><body style="margin:0;padding:24px 12px;background:#eef4ff;font-family:Arial,Helvetica,sans-serif;color:#172554"><div style="max-width:620px;margin:auto;background:#fff;border:1px solid #dbeafe;border-radius:24px;overflow:hidden;box-shadow:0 16px 40px rgba(30,64,175,.14)"><div style="padding:30px 28px;background:linear-gradient(135deg,#0758d8,#4338ca 62%,#7c3aed);color:#fff"><div style="display:inline-block;padding:6px 12px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.16);font-size:12px;font-weight:800;letter-spacing:1px">TRÍ KUN LAPTOP</div><h1 style="margin:16px 0 0;font-size:24px;line-height:1.25">${tieuDe}</h1><p style="margin:8px 0 0;color:#dbeafe;font-size:13px">Hệ thống hỗ trợ khách hàng chính thức</p></div><div style="padding:30px 28px"><div style="font-size:16px;font-weight:700;margin-bottom:14px">Xin chào ${nhan},</div>${noiDung}</div><div style="padding:20px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;color:#64748b;font-size:12px;line-height:1.7">Bạn nhận được email này vì đã gửi yêu cầu tại Trí Kun Laptop.<br><strong style="color:#1d4ed8">Hotline:</strong> 1900.8946 &nbsp;•&nbsp; <strong style="color:#1d4ed8">Website:</strong> trikun.site<br><span style="color:#94a3b8">© 2026 Trí Kun Laptop</span></div></div></body></html>`;
+
 async function guiMailPhanHoiLienHe({ emailNhan, hoTen, maYeuCau, chuDe, noiDung }) {
     const ten = escapeHtml(hoTen || 'Quý khách');
     const ma = escapeHtml(maYeuCau || '');
@@ -433,7 +435,7 @@ async function guiMailPhanHoiLienHe({ emailNhan, hoTen, maYeuCau, chuDe, noiDung
         from: `"Trí Kun Laptop" <${emailUser}>`,
         to: emailNhan,
         subject: `[Trí Kun Laptop] Phản hồi yêu cầu ${ma}`,
-        html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#172554"><h2>Xin chào ${ten},</h2><p>Trí Kun Laptop phản hồi yêu cầu <strong>${ma}</strong> của bạn.</p><p><strong>Chủ đề:</strong> ${tieuDe}</p><div style="padding:16px;background:#eff6ff;border-radius:8px;white-space:normal">${noiDungHtml}</div><p>Trân trọng,<br />Đội ngũ Trí Kun Laptop</p></div>`,
+        html: taoTemplateLienHe({ tieuDe: 'Phản hồi yêu cầu hỗ trợ', nhan: ten, noiDung: `<p style="color:#475569;line-height:1.7">Trí Kun Laptop đã phản hồi yêu cầu của bạn.</p><div style="display:inline-block;padding:10px 16px;border-radius:12px;background:#eef2ff;border:1px solid #c7d2fe;color:#4338ca;font-weight:900;font-family:monospace">MÃ PHIẾU: ${ma}</div><p style="color:#475569"><strong>Chủ đề:</strong> ${tieuDe}</p><div style="margin:20px 0;padding:18px;border-left:4px solid #4f46e5;background:#f5f7ff;border-radius:12px;color:#1e293b;line-height:1.7">${noiDungHtml}</div><p style="color:#475569">Trân trọng,<br><strong style="color:#1d4ed8">Đội ngũ Trí Kun Laptop</strong></p>` }),
         text: `Xin chào ${hoTen || 'Quý khách'},\n\nTrí Kun Laptop phản hồi yêu cầu ${maYeuCau || ''}.\nChủ đề: ${chuDe || 'Yêu cầu tư vấn'}\n\n${noiDung || ''}\n\nTrân trọng,\nĐội ngũ Trí Kun Laptop`
     });
 }
@@ -446,7 +448,7 @@ async function guiMailXacNhanLienHe({ emailNhan, hoTen, maYeuCau, chuDe, noiDung
     return guiMailBangTransporter({
         to: emailNhan,
         subject: `[Trí Kun Laptop] Đã tiếp nhận yêu cầu ${ma}`,
-        html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#172554"><h2>Xin chào ${ten},</h2><p>Yêu cầu hỗ trợ của bạn đã được gửi thành công đến Trí Kun Laptop.</p><p><strong>Mã phiếu:</strong> ${ma}</p><p><strong>Chủ đề:</strong> ${tieuDe}</p><div style="padding:16px;background:#eff6ff;border-radius:8px"><strong>Nội dung bạn đã gửi:</strong><br />${noiDungHtml}</div><p>Chuyên viên sẽ liên hệ qua số điện thoại hoặc email của bạn trong thời gian sớm nhất.</p><p>Trân trọng,<br />Đội ngũ Trí Kun Laptop</p></div>`,
+        html: taoTemplateLienHe({ tieuDe: 'Đã tiếp nhận yêu cầu của bạn', nhan: ten, noiDung: `<p style="color:#475569;line-height:1.7">Yêu cầu hỗ trợ của bạn đã được gửi thành công.</p><div style="display:inline-block;padding:10px 16px;border-radius:12px;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-weight:900;font-family:monospace">MÃ PHIẾU: ${ma}</div><p style="color:#475569"><strong>Chủ đề:</strong> ${tieuDe}</p><div style="margin:20px 0;padding:18px;border-left:4px solid #10b981;background:#f0fdf4;border-radius:12px;color:#1e293b;line-height:1.7"><strong>Nội dung đã gửi:</strong><br>${noiDungHtml}</div><p style="color:#475569">Chuyên viên sẽ phản hồi qua số điện thoại hoặc email của bạn trong thời gian sớm nhất.</p>` }),
         text: `Xin chào ${hoTen || 'Quý khách'},\n\nYêu cầu hỗ trợ của bạn đã được gửi thành công.\nMã phiếu: ${maYeuCau || ''}\nChủ đề: ${chuDe || 'Yêu cầu tư vấn'}\n\nNội dung: ${noiDung || ''}\n\nChuyên viên sẽ phản hồi sớm qua số điện thoại hoặc email của bạn.\n\nTrân trọng,\nĐội ngũ Trí Kun Laptop`
     });
 }
