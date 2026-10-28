@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { BaoHanhService } from '@/services/bao-hanh.service';
+import PhanTrangAdmin, { usePhanTrang } from '@/components/admin/PhanTrangAdmin';
 
 // Helper format ngày: hỗ trợ cả ISO string, đối tượng Date lẫn chuỗi dd/mm/yyyy từ Backend
 const dinhDangNgay = (giaTri) => {
@@ -79,6 +80,16 @@ export default function QuanLyBaoHanh({ xacNhan }) {
             return ma.includes(tu) || khach.includes(tu) || serial.includes(tu);
         });
     }, [danhSach, tuKhoa]);
+
+    const {
+        trangHienTai,
+        setTrangHienTai,
+        soMucMoiTrang,
+        setSoMucMoiTrang,
+        tongSoTrang,
+        tongSoMuc,
+        danhSachTrenTrang
+    } = usePhanTrang(danhSachDaLoc, 10, [tuKhoa]);
 
     const moModalSua = (bh) => {
         setMucDangSua(bh);
@@ -216,7 +227,7 @@ export default function QuanLyBaoHanh({ xacNhan }) {
                                     </td>
                                 </tr>
                             ) : (
-                                danhSachDaLoc.map((bh) => {
+                                danhSachTrenTrang.map((bh) => {
                                     const key = `${bh.ma_don_hang}_${bh.id_muc}`;
                                     const conHieuLuc = !!bh.con_hieu_luc;
                                     return (
@@ -288,6 +299,17 @@ export default function QuanLyBaoHanh({ xacNhan }) {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Thanh Phân Trang Chuẩn */}
+                <PhanTrangAdmin
+                    trangHienTai={trangHienTai}
+                    tongSoTrang={tongSoTrang}
+                    tongSoMuc={tongSoMuc}
+                    soMucMoiTrang={soMucMoiTrang}
+                    onDoiTrang={setTrangHienTai}
+                    onDoiSoMucMoiTrang={setSoMucMoiTrang}
+                    nhanLoaiMuc="phiếu bảo hành"
+                />
             </div>
 
             {/* Modal sửa thông tin bảo hành */}

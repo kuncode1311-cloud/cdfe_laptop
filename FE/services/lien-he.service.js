@@ -149,6 +149,13 @@ export const LienHeService = {
         }
     },
 
+    async guiPhanHoiLienHeAsync(id, noiDung) {
+        return await apiFetch(`/lien-he/${id}/phan-hoi`, {
+            method: 'POST',
+            body: JSON.stringify({ noi_dung: noiDung })
+        });
+    },
+
     /**
      * Xóa phiếu liên hệ (Admin)
      */

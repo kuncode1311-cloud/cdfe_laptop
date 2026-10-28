@@ -19,6 +19,7 @@ router.get('/', xacThucToken, chiAdmin, lienHeController.layDanhSachLienHe);
 // 3. Cập nhật trạng thái và ghi chú nội bộ CSKH (Chỉ Admin)
 router.patch('/:id', xacThucToken, chiAdmin, lienHeController.capNhatLienHe);
 router.put('/:id', xacThucToken, chiAdmin, lienHeController.capNhatLienHe);
+router.post('/:id/phan-hoi', xacThucToken, chiAdmin, lienHeController.guiPhanHoiLienHe);
 
 // 4. Xóa phiếu liên hệ (Chỉ Admin)
 router.delete('/:id', xacThucToken, chiAdmin, lienHeController.xoaLienHe);

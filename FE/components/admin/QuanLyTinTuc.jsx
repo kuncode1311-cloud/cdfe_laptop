@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { slugTinTuc } from '@/utils/taoSlug';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import PhanTrangAdmin, { usePhanTrang } from '@/components/admin/PhanTrangAdmin';
 
 // Component Tab "Tin Tức & Bài Viết" của trang quản trị: tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
 export default function QuanLyTinTuc({
@@ -34,6 +35,21 @@ export default function QuanLyTinTuc({
     moModalSuaTinTuc,
     xuLyXoaTinTuc
 }) {
+    const {
+        trangHienTai,
+        setTrangHienTai,
+        soMucMoiTrang,
+        setSoMucMoiTrang,
+        tongSoTrang,
+        tongSoMuc,
+        viTriBatDau,
+        danhSachTrenTrang
+    } = usePhanTrang(tinTucHienThi, 10, [
+        tuKhoaTinTuc,
+        locChuyenMucTinTuc,
+        locTrangThaiTinTuc
+    ]);
+
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
             {/* Insight Cards (3 KPI Cards Gradient 3D Hiện Đại) */}
@@ -172,7 +188,7 @@ export default function QuanLyTinTuc({
                                     </td>
                                 </tr>
                             ) : (
-                                tinTucHienThi.map((tin, idx) => {
+                                danhSachTrenTrang.map((tin, idx) => {
                                     const tinId = tin.id || tin._id;
                                     const dangXuLy = dangXuLyTinTucId === tinId;
                                     const daAnTin = tin.xuat_ban === false;
@@ -186,7 +202,7 @@ export default function QuanLyTinTuc({
                                             }`}
                                         >
                                             <td className={`py-2 px-2 text-center font-bold border-b border-r whitespace-nowrap ${daAnTin ? 'border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400 font-black' : 'border-slate-200 dark:border-slate-800 text-slate-400'}`}>
-                                                #{idx + 1}
+                                                #{viTriBatDau + idx + 1}
                                             </td>
                                             <td className={`py-2 px-2 text-center border-b border-r whitespace-nowrap ${daAnTin ? 'border-rose-200 dark:border-rose-900/60' : 'border-slate-200 dark:border-slate-800'}`}>
                                                 <div className="w-10 h-7 rounded-lg bg-slate-950 overflow-hidden relative mx-auto border border-slate-200 dark:border-slate-700 shrink-0 shadow-2xs">
@@ -289,6 +305,17 @@ export default function QuanLyTinTuc({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Thanh Phân Trang Chuẩn */}
+                <PhanTrangAdmin
+                    trangHienTai={trangHienTai}
+                    tongSoTrang={tongSoTrang}
+                    tongSoMuc={tongSoMuc}
+                    soMucMoiTrang={soMucMoiTrang}
+                    onDoiTrang={setTrangHienTai}
+                    onDoiSoMucMoiTrang={setSoMucMoiTrang}
+                    nhanLoaiMuc="bài viết"
+                />
             </div>
         </div>
     );

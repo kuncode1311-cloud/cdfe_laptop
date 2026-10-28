@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import PhanTrangAdmin, { usePhanTrang } from '@/components/admin/PhanTrangAdmin';
 
 // Component Tab "Quản Lý Khách Hàng" của trang quản trị: tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
 export default function QuanLyKhachHang({
@@ -38,6 +39,21 @@ export default function QuanLyKhachHang({
     moModalSuaUser,
     xuLyXoaUser
 }) {
+    const {
+        trangHienTai,
+        setTrangHienTai,
+        soMucMoiTrang,
+        setSoMucMoiTrang,
+        tongSoTrang,
+        tongSoMuc,
+        viTriBatDau,
+        danhSachTrenTrang
+    } = usePhanTrang(khachHangHienThi, 10, [
+        tuKhoaKhachHang,
+        locKhachHang,
+        sapXepKhachHang
+    ]);
+
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
             {/* Insight Cards (3 KPI Cards Gradient 3D Hiện Đại) */}
@@ -186,7 +202,7 @@ export default function QuanLyKhachHang({
                                     </td>
                                 </tr>
                             ) : (
-                                khachHangHienThi.map((user, idx) => {
+                                danhSachTrenTrang.map((user, idx) => {
                                     const uId = user.id || user._id;
                                     const dangXuLy = dangXuLyUserId === uId;
                                     const daBiKhoa = Boolean(user.biKhoa || user.trangThai === 'bi_khoa');
@@ -207,7 +223,7 @@ export default function QuanLyKhachHang({
                                             <td className={`py-2 px-2 text-center font-bold border-b border-r whitespace-nowrap ${
                                                 daBiKhoa ? 'border-rose-300 dark:border-rose-800/70 text-rose-700 dark:text-rose-300 font-black' : chuaKichHoat ? 'border-slate-300 dark:border-slate-700 text-amber-700 dark:text-amber-300 font-black' : 'border-slate-300 dark:border-slate-700 text-slate-500'
                                             }`}>
-                                                #{idx + 1}
+                                                #{viTriBatDau + idx + 1}
                                             </td>
 
                                             {/* Cột 2: KHÁCH HÀNG & LIÊN HỆ (Gom Tên + Email + SĐT) */}
@@ -362,6 +378,17 @@ export default function QuanLyKhachHang({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Thanh Phân Trang Chuẩn */}
+                <PhanTrangAdmin
+                    trangHienTai={trangHienTai}
+                    tongSoTrang={tongSoTrang}
+                    tongSoMuc={tongSoMuc}
+                    soMucMoiTrang={soMucMoiTrang}
+                    onDoiTrang={setTrangHienTai}
+                    onDoiSoMucMoiTrang={setSoMucMoiTrang}
+                    nhanLoaiMuc="khách hàng"
+                />
             </div>
         </div>
     );

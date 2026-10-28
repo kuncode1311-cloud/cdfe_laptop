@@ -263,6 +263,11 @@ export default function TrangLienHe() {
             return;
         }
 
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+            toast.error('Vui lòng nhập email hợp lệ để nhận phản hồi');
+            return;
+        }
+
         if (!noiDung.trim()) {
             toast.error('Vui lòng nhập nội dung cần tư vấn');
             return;

@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import PhanTrangAdmin, { usePhanTrang } from '@/components/admin/PhanTrangAdmin';
 
 // Component Tab "Quản Lý Đơn Hàng" của trang quản trị: tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
 export default function QuanLyDonHang({
@@ -59,6 +60,23 @@ export default function QuanLyDonHang({
     xuLyXoaDonHang
 }) {
     const donHangThongKe = donHangHienThi;
+
+    const {
+        trangHienTai,
+        setTrangHienTai,
+        soMucMoiTrang,
+        setSoMucMoiTrang,
+        tongSoTrang,
+        tongSoMuc,
+        viTriBatDau,
+        danhSachTrenTrang
+    } = usePhanTrang(donHangHienThi, 10, [
+        locTrangThaiDonHang,
+        locThanhToanDonHang,
+        locThoiGianDonHang,
+        locNgayCuThe,
+        sapXepDonHang
+    ]);
 
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
@@ -408,7 +426,7 @@ export default function QuanLyDonHang({
                                     </td>
                                 </tr>
                             ) : (
-                                donHangHienThi.map((dh, idx) => {
+                                danhSachTrenTrang.map((dh, idx) => {
                                     const donHangId = dh.id || dh._id;
                                     const dangXuLy = dangXuLyDonHangId === donHangId;
                                     const tenKhach = dh.thong_tin_giao_hang?.ho_ten || dh.thong_tin_giao_hang?.ho_va_ten || 'Khách vãng lai';
@@ -422,7 +440,8 @@ export default function QuanLyDonHang({
                                         'from-amber-600 to-orange-600'
                                     ];
                                     const avatarBg = gradientAvatars[idx % gradientAvatars.length];
-                                    const maHienThi = dh.ma_don_hang || `LPN-${String(idx + 1).padStart(4, '0')}`;
+                                    const soThuTu = viTriBatDau + idx + 1;
+                                    const maHienThi = dh.ma_don_hang || `LPN-${String(soThuTu).padStart(4, '0')}`;
                                     const soLuongSp = dh.danh_sach_san_pham?.length || 1;
 
                                     // Format ngày tháng chống Invalid Date triệt để
@@ -460,7 +479,7 @@ export default function QuanLyDonHang({
                                                 <div className="flex flex-col items-center justify-center">
                                                     <div className="flex items-center gap-1">
                                                         <span className={`px-1.5 py-0.5 rounded font-mono font-black text-[10px] shadow-2xs ${daHuy ? 'bg-rose-200 text-rose-900 border border-rose-300' : 'bg-slate-100 dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700 text-slate-700 dark:text-slate-300'}`}>
-                                                            #{idx + 1}
+                                                            #{soThuTu}
                                                         </span>
                                                         {daHuy && (
                                                             <span className="px-1 py-0.2 rounded text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white shadow-2xs">
@@ -703,6 +722,17 @@ export default function QuanLyDonHang({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Thanh Phân Trang Chuẩn */}
+                <PhanTrangAdmin
+                    trangHienTai={trangHienTai}
+                    tongSoTrang={tongSoTrang}
+                    tongSoMuc={tongSoMuc}
+                    soMucMoiTrang={soMucMoiTrang}
+                    onDoiTrang={setTrangHienTai}
+                    onDoiSoMucMoiTrang={setSoMucMoiTrang}
+                    nhanLoaiMuc="đơn hàng"
+                />
             </div>
         </div>
     );

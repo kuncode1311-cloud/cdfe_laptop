@@ -424,9 +424,24 @@ async function guiMailXacNhanDonHang(donHang) {
     }
 }
 
+async function guiMailPhanHoiLienHe({ emailNhan, hoTen, maYeuCau, chuDe, noiDung }) {
+    const ten = escapeHtml(hoTen || 'Quý khách');
+    const ma = escapeHtml(maYeuCau || '');
+    const tieuDe = escapeHtml(chuDe || 'Yêu cầu tư vấn');
+    const noiDungHtml = escapeHtml(noiDung || '').replace(/\n/g, '<br />');
+    return guiMailBangTransporter({
+        from: `"Trí Kun Laptop" <${emailUser}>`,
+        to: emailNhan,
+        subject: `[Trí Kun Laptop] Phản hồi yêu cầu ${ma}`,
+        html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#172554"><h2>Xin chào ${ten},</h2><p>Trí Kun Laptop phản hồi yêu cầu <strong>${ma}</strong> của bạn.</p><p><strong>Chủ đề:</strong> ${tieuDe}</p><div style="padding:16px;background:#eff6ff;border-radius:8px;white-space:normal">${noiDungHtml}</div><p>Trân trọng,<br />Đội ngũ Trí Kun Laptop</p></div>`,
+        text: `Xin chào ${hoTen || 'Quý khách'},\n\nTrí Kun Laptop phản hồi yêu cầu ${maYeuCau || ''}.\nChủ đề: ${chuDe || 'Yêu cầu tư vấn'}\n\n${noiDung || ''}\n\nTrân trọng,\nĐội ngũ Trí Kun Laptop`
+    });
+}
+
 module.exports = {
     guiMailOTPQuenMatKhau,
     guiMailOTPDoiMatKhau,
     guiMailKichHoatTaiKhoan,
-    guiMailXacNhanDonHang
+    guiMailXacNhanDonHang,
+    guiMailPhanHoiLienHe
 };

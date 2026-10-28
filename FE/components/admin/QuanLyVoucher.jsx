@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import PhanTrangAdmin, { usePhanTrang } from '@/components/admin/PhanTrangAdmin';
 
 // Component Tab "Mã Khuyến Mãi & Voucher" của trang quản trị: tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
 export default function QuanLyVoucher({
@@ -28,6 +29,20 @@ export default function QuanLyVoucher({
     moModalSuaVoucher,
     xuLyXoaVoucher
 }) {
+    const {
+        trangHienTai,
+        setTrangHienTai,
+        soMucMoiTrang,
+        setSoMucMoiTrang,
+        tongSoTrang,
+        tongSoMuc,
+        viTriBatDau,
+        danhSachTrenTrang
+    } = usePhanTrang(voucherHienThi, 10, [
+        tuKhoaVoucher,
+        locTrangThaiVoucher
+    ]);
+
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
             {/* 3 KPI Cards Voucher Gradient 3D */}
@@ -193,9 +208,9 @@ export default function QuanLyVoucher({
                                     </td>
                                 </tr>
                             ) : (
-                                voucherHienThi.map((vc, idx) => {
+                                danhSachTrenTrang.map((vc, idx) => {
                                     const tongPhatHanh = vc.so_luong_phat_hanh || 20;
-                                    const daSuDung = vc.so_luong_da_dung || Math.min(2 + idx, tongPhatHanh);
+                                    const daSuDung = vc.so_luong_da_dung || Math.min(2 + (viTriBatDau + idx), tongPhatHanh);
                                     const conLai = Math.max(0, tongPhatHanh - daSuDung);
                                     const phanTramDaDung = Math.round((daSuDung / tongPhatHanh) * 100);
 
@@ -363,6 +378,17 @@ export default function QuanLyVoucher({
                         </tbody>
                     </table>
                 </div>
+
+                {/* Thanh Phân Trang Chuẩn */}
+                <PhanTrangAdmin
+                    trangHienTai={trangHienTai}
+                    tongSoTrang={tongSoTrang}
+                    tongSoMuc={tongSoMuc}
+                    soMucMoiTrang={soMucMoiTrang}
+                    onDoiTrang={setTrangHienTai}
+                    onDoiSoMucMoiTrang={setSoMucMoiTrang}
+                    nhanLoaiMuc="voucher"
+                />
             </div>
         </div>
     );

@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { LienHeService } from '@/services/lien-he.service';
+import PhanTrangAdmin, { usePhanTrang } from '@/components/admin/PhanTrangAdmin';
 
 const DANH_SACH_TRANG_THAI = [
     { id: 'tat_ca', ten: 'Tất Cả Phiếu', mauText: 'text-slate-700 dark:text-slate-300', mauBg: 'bg-slate-100 dark:bg-slate-800' },
@@ -84,6 +85,22 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
     const [trangThaiTam, setTrangThaiTam] = useState('');
     const [dangLuuGhiChu, setDangLuuGhiChu] = useState(false);
     const [daCopyMa, setDaCopyMa] = useState('');
+    const [noiDungPhanHoi, setNoiDungPhanHoi] = useState('');
+    const [dangGuiPhanHoi, setDangGuiPhanHoi] = useState(false);
+
+    const {
+        trangHienTai,
+        setTrangHienTai,
+        soMucMoiTrang,
+        setSoMucMoiTrang,
+        tongSoTrang,
+        tongSoMuc,
+        danhSachTrenTrang
+    } = usePhanTrang(danhSach, 10, [
+        locTrangThai,
+        locChuDe,
+        tuKhoa
+    ]);
 
     // Tải dữ liệu từ Backend
     const taiDuLieu = async (hienThiLoading = true) => {
@@ -198,6 +215,29 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
         setPhieuDangXem(phieu);
         setGhiChuTam(phieu.ghi_chu_noi_bo || '');
         setTrangThaiTam(phieu.trang_thai || 'chua_xu_ly');
+        setNoiDungPhanHoi('');
+    };
+
+    const xuLyGuiPhanHoi = async () => {
+        if (!phieuDangXem?.email) {
+            toast.error('Phiếu này chưa có email khách hàng');
+            return;
+        }
+        if (!noiDungPhanHoi.trim()) {
+            toast.error('Vui lòng nhập nội dung phản hồi');
+            return;
+        }
+        setDangGuiPhanHoi(true);
+        try {
+            const res = await LienHeService.guiPhanHoiLienHeAsync(phieuDangXem._id || phieuDangXem.id, noiDungPhanHoi.trim());
+            if (!res?.thanh_cong) throw new Error(res?.thong_diep);
+            toast.success(res.thong_diep || 'Đã gửi phản hồi qua email');
+            setNoiDungPhanHoi('');
+        } catch (e) {
+            toast.error(e.message || 'Không thể gửi email phản hồi');
+        } finally {
+            setDangGuiPhanHoi(false);
+        }
     };
 
     // Lưu ghi chú & trạng thái từ Modal
@@ -616,7 +656,7 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                                     </td>
                                 </tr>
                             ) : (
-                                danhSach.map((phieu) => {
+                                danhSachTrenTrang.map((phieu) => {
                                     const phieuId = phieu._id || phieu.id;
                                     const sdtKhach = phieu.so_dien_thoai || '';
                                     const sdtSoOnly = sdtKhach.replace(/\D/g, '');
@@ -773,6 +813,17 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                         </tbody>
                     </table>
                 </div>
+
+                {/* Thanh Phân Trang Chuẩn */}
+                <PhanTrangAdmin
+                    trangHienTai={trangHienTai}
+                    tongSoTrang={tongSoTrang}
+                    tongSoMuc={tongSoMuc}
+                    soMucMoiTrang={soMucMoiTrang}
+                    onDoiTrang={setTrangHienTai}
+                    onDoiSoMucMoiTrang={setSoMucMoiTrang}
+                    nhanLoaiMuc="yêu cầu tư vấn"
+                />
             </div>
 
             {/* 4. Modal Xem Chi Tiết & Ghi Chú CSKH Chuyên Nghiệp */}
@@ -839,6 +890,30 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                                 <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-slate-800/80 border-2 border-blue-200 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
                                     "{phieuDangXem.noi_dung}"
                                 </div>
+                            </div>
+
+                            <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border-2 border-indigo-200 dark:border-indigo-800">
+                                <label className="block text-[11px] font-black text-indigo-700 dark:text-indigo-300 uppercase tracking-wider mb-1.5">
+                                    Phản hồi qua email khách hàng
+                                </label>
+                                {phieuDangXem.email ? (
+                                    <>
+                                        <div className="text-xs text-slate-500 mb-2">Gửi đến: <strong>{phieuDangXem.email}</strong></div>
+                                        <textarea
+                                            value={noiDungPhanHoi}
+                                            onChange={(e) => setNoiDungPhanHoi(e.target.value)}
+                                            rows={4}
+                                            placeholder="Nhập nội dung phản hồi cho khách..."
+                                            className="w-full p-3 text-xs rounded-xl border-2 border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none focus:outline-none focus:border-indigo-500"
+                                        />
+                                        <button type="button" onClick={xuLyGuiPhanHoi} disabled={dangGuiPhanHoi} className="mt-2 w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-extrabold flex items-center justify-center gap-2">
+                                            {dangGuiPhanHoi ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                            {dangGuiPhanHoi ? 'Đang gửi...' : 'Bấm gửi phản hồi qua email'}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="text-xs text-rose-600 dark:text-rose-300 font-semibold">Khách chưa cung cấp email nên chưa thể gửi phản hồi.</div>
+                                )}
                             </div>
 
                             {/* Cập nhật trạng thái */}

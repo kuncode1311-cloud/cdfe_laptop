@@ -8,6 +8,7 @@ import {
     Trash2
 } from 'lucide-react';
 import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import PhanTrangAdmin, { usePhanTrang } from '@/components/admin/PhanTrangAdmin';
 
 // Component Tab "Danh Mục / Thương Hiệu" của trang quản trị: tách từ app/admin/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
 export default function QuanLyDanhMuc({
@@ -36,6 +37,19 @@ export default function QuanLyDanhMuc({
     ];
     const tabHienTai = TAB_LOAI.find(t => t.ma === locLoaiDanhMuc) || TAB_LOAI[0];
     const tenLoai = locLoaiDanhMuc === 'loai_san_pham' ? 'loại sản phẩm' : locLoaiDanhMuc === 'nhu_cau' ? 'nhu cầu' : 'thương hiệu';
+
+    const {
+        trangHienTai,
+        setTrangHienTai,
+        soMucMoiTrang,
+        setSoMucMoiTrang,
+        tongSoTrang,
+        tongSoMuc,
+        danhSachTrenTrang
+    } = usePhanTrang(danhMucHienThi, 12, [
+        tuKhoaDanhMuc,
+        locLoaiDanhMuc
+    ]);
 
     return (
         <div className="space-y-4 animate-in fade-in duration-200">
@@ -163,7 +177,7 @@ export default function QuanLyDanhMuc({
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
-                            {danhMucHienThi.map((dm) => {
+                            {danhSachTrenTrang.map((dm) => {
                                 const soMauCuaHang = danhSachSanPham.filter(s => s.hang_san_xuat?.toLowerCase() === dm.ma_danh_muc?.toLowerCase() || s.danh_muc?.includes(dm.ma_danh_muc)).length;
                                 const dmId = dm.id || dm._id || dm.ma_danh_muc;
                                 const dangXuLyItem = dangXuLyDmId === dmId;
@@ -219,6 +233,18 @@ export default function QuanLyDanhMuc({
                         </div>
                     )}
                 </div>
+
+                {/* Thanh Phân Trang Chuẩn */}
+                <PhanTrangAdmin
+                    trangHienTai={trangHienTai}
+                    tongSoTrang={tongSoTrang}
+                    tongSoMuc={tongSoMuc}
+                    soMucMoiTrang={soMucMoiTrang}
+                    onDoiTrang={setTrangHienTai}
+                    onDoiSoMucMoiTrang={setSoMucMoiTrang}
+                    nhanLoaiMuc={tenLoai}
+                    tuyChonSoMuc={[12, 24, 48, 96]}
+                />
             </div>
         </div>
     );

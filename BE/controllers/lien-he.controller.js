@@ -1,5 +1,6 @@
 const { escapeRegex } = require('../utils/bao-mat');
 const LienHe = require('../models/lien-he.model');
+const { guiMailPhanHoiLienHe } = require('../services/email.service');
 
 /**
  * Hàm sinh mã phiếu yêu cầu liên hệ định dạng: LH-YYMMDD-XXXX
@@ -201,6 +202,22 @@ exports.capNhatLienHe = async (req, res) => {
             thanh_cong: false,
             thong_diep: 'Không thể cập nhật phiếu liên hệ'
         });
+    }
+};
+
+exports.guiPhanHoiLienHe = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const noiDung = String(req.body.noi_dung || '').trim();
+        if (!noiDung) return res.status(400).json({ thanh_cong: false, thong_diep: 'Vui lòng nhập nội dung phản hồi' });
+        const lienHe = await LienHe.findById(id).lean();
+        if (!lienHe) return res.status(404).json({ thanh_cong: false, thong_diep: 'Không tìm thấy phiếu yêu cầu liên hệ' });
+        if (!lienHe.email) return res.status(400).json({ thanh_cong: false, thong_diep: 'Phiếu này chưa có email khách hàng' });
+        await guiMailPhanHoiLienHe({ emailNhan: lienHe.email, hoTen: lienHe.ho_ten, maYeuCau: lienHe.ma_yeu_cau, chuDe: lienHe.chu_de, noiDung });
+        return res.status(200).json({ thanh_cong: true, thong_diep: `Đã gửi phản hồi đến ${lienHe.email}` });
+    } catch (loi) {
+        console.error('[LỖI GỬI PHẢN HỒI LIÊN HỆ]:', loi);
+        return res.status(502).json({ thanh_cong: false, thong_diep: 'Không thể gửi email phản hồi. Kiểm tra cấu hình email máy chủ.' });
     }
 };
 

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DanhGiaService } from '@/services/danh-gia.service';
+import PhanTrangAdmin, { usePhanTrang } from '@/components/admin/PhanTrangAdmin';
 
 // Helper format thời gian
 const dinhDangNgay = (isoString) => {
@@ -65,6 +66,16 @@ export default function QuanLyDanhGia({ xacNhan }) {
             return ten.includes(tu) || khach.includes(tu);
         });
     }, [danhSach, tuKhoa]);
+
+    const {
+        trangHienTai,
+        setTrangHienTai,
+        soMucMoiTrang,
+        setSoMucMoiTrang,
+        tongSoTrang,
+        tongSoMuc,
+        danhSachTrenTrang
+    } = usePhanTrang(danhSachDaLoc, 10, [tuKhoa]);
 
     const layId = (dg) => dg._id || dg.id;
 
@@ -199,7 +210,7 @@ export default function QuanLyDanhGia({ xacNhan }) {
                                     </td>
                                 </tr>
                             ) : (
-                                danhSachDaLoc.map((dg) => {
+                                danhSachTrenTrang.map((dg) => {
                                     const id = layId(dg);
                                     const dangXuLy = dangXuLyId === id;
                                     const hienThi = dg.hien_thi !== false;
@@ -281,6 +292,17 @@ export default function QuanLyDanhGia({ xacNhan }) {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Thanh Phân Trang Chuẩn */}
+                <PhanTrangAdmin
+                    trangHienTai={trangHienTai}
+                    tongSoTrang={tongSoTrang}
+                    tongSoMuc={tongSoMuc}
+                    soMucMoiTrang={soMucMoiTrang}
+                    onDoiTrang={setTrangHienTai}
+                    onDoiSoMucMoiTrang={setSoMucMoiTrang}
+                    nhanLoaiMuc="đánh giá"
+                />
             </div>
         </div>
     );
