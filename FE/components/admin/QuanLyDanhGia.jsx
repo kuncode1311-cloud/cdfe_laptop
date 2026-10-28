@@ -10,7 +10,13 @@ import {
     Loader2,
     MessageSquare,
     ImageIcon,
-    X
+    X,
+    SlidersHorizontal,
+    ChevronDown,
+    ArrowUpDown,
+    Filter,
+    RotateCcw,
+    Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DanhGiaService } from '@/services/danh-gia.service';
@@ -72,11 +78,49 @@ export default function QuanLyDanhGia({ xacNhan }) {
             return dungTuKhoa && dungSoSao && dungTrangThai;
         });
         return ketQua.sort((a, b) => {
+            if (sapXep === 'sao_cao') {
+                return (Number(b.so_sao) || 0) - (Number(a.so_sao) || 0);
+            }
+            if (sapXep === 'sao_thap') {
+                return (Number(a.so_sao) || 0) - (Number(b.so_sao) || 0);
+            }
             const ngayA = new Date(a.createdAt || a.ngay_tao || 0).getTime();
             const ngayB = new Date(b.createdAt || b.ngay_tao || 0).getTime();
             return sapXep === 'cu_nhat' ? ngayA - ngayB : ngayB - ngayA;
         });
     }, [danhSach, tuKhoa, locSoSao, locTrangThai, sapXep]);
+
+    // Thống kê số lượng theo sao & trạng thái để hiển thị trên bộ lọc
+    const thongKe = useMemo(() => {
+        let sao5 = 0;
+        let sao4 = 0;
+        let sao3 = 0;
+        let sao12 = 0;
+        let hien = 0;
+        let an = 0;
+
+        danhSach.forEach((dg) => {
+            const sao = Number(dg.so_sao) || 0;
+            if (sao === 5) sao5++;
+            else if (sao === 4) sao4++;
+            else if (sao === 3) sao3++;
+            else if (sao <= 2) sao12++;
+
+            if (dg.hien_thi !== false) hien++;
+            else an++;
+        });
+
+        return { sao5, sao4, sao3, sao12, hien, an };
+    }, [danhSach]);
+
+    const dangLoc = tuKhoa.trim() !== '' || locSoSao !== 'tat_ca' || locTrangThai !== 'tat_ca' || sapXep !== 'moi_nhat';
+
+    const datLaiBoLoc = () => {
+        setTuKhoa('');
+        setLocSoSao('tat_ca');
+        setLocTrangThai('tat_ca');
+        setSapXep('moi_nhat');
+    };
 
     const {
         trangHienTai,
@@ -144,42 +188,243 @@ export default function QuanLyDanhGia({ xacNhan }) {
 
     return (
         <div className="space-y-6">
-            {/* Thanh công cụ tìm kiếm */}
-            <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-50/90 via-white to-amber-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#1c1409] border-2 border-amber-100/90 dark:border-slate-800 shadow-md shadow-amber-500/5 space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                    <div className="relative flex-1 max-w-lg">
-                    <Search className="w-4 h-4 text-amber-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                        type="text"
-                        value={tuKhoa}
-                        onChange={(e) => setTuKhoa(e.target.value)}
-                        placeholder="Tìm theo tên sản phẩm hoặc tên khách hàng..."
-                        className="w-full pl-9 pr-8 py-2.5 text-xs font-bold rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition-all shadow-2xs"
-                    />
-                    {tuKhoa && (
+            {/* SECTION BỘ LỌC ĐÁNH GIÁ (Chuẩn Tone Cam / Hổ Phách Sang Trọng, Đa Sắc Phân Biệt Sắc Nét & Đồng Bộ) */}
+            <div className="bg-gradient-to-br from-amber-50/90 via-orange-50/60 to-amber-100/70 dark:from-[#19140c] dark:via-[#16121f] dark:to-[#0f172a] rounded-3xl border-2 border-amber-300/80 dark:border-amber-800/80 shadow-md shadow-amber-500/5 p-3.5 sm:p-4 space-y-3">
+                {/* Tầng 1: Tiêu đề + Thống kê số lượng + Nút Tải lại */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 pb-2.5 border-b border-amber-200/80 dark:border-amber-900/60">
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-600 to-orange-500 text-white flex items-center justify-center font-black shadow-md shadow-orange-500/30 shrink-0">
+                            <SlidersHorizontal className="w-4 h-4 text-white" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-sm sm:text-base font-black text-amber-950 dark:text-amber-100 tracking-tight">
+                                    Bộ Lọc & Quản Lý Đánh Giá
+                                </h2>
+                                <span className="px-2.5 py-0.5 rounded-full bg-amber-600 text-white font-black text-[11px] shadow-xs">
+                                    {danhSachDaLoc.length} / {danhSach.length} đánh giá
+                                </span>
+                            </div>
+                            <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80 font-semibold mt-0.5 hidden sm:block">
+                                Kiểm duyệt nội dung đánh giá của khách hàng, lọc đa chiều theo số sao và trạng thái hiển thị
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
                         <button
                             type="button"
-                            onClick={() => setTuKhoa('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                            onClick={taiDuLieu}
+                            disabled={dangTai}
+                            className="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 border-2 border-amber-300 dark:border-amber-700 hover:border-amber-500 text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/50 font-black text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                            title="Tải lại danh sách đánh giá từ máy chủ"
                         >
-                            <X className="w-3.5 h-3.5" />
+                            <RotateCcw className={`w-3.5 h-3.5 ${dangTai ? 'animate-spin' : ''}`} />
+                            <span>{dangTai ? 'Đang tải...' : 'Làm Mới'}</span>
                         </button>
-                    )}
                     </div>
-                    <span className="px-3 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-black whitespace-nowrap">
-                        {danhSachDaLoc.length} / {danhSach.length} đánh giá
-                    </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <select value={locSoSao} onChange={(e) => setLocSoSao(e.target.value)} className="h-9 px-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200">
-                        <option value="tat_ca">Tất cả số sao</option><option value="5">★★★★★ 5 sao</option><option value="4">★★★★ 4 sao</option><option value="3">★★★ 3 sao</option><option value="2">★★ 2 sao</option><option value="1">★ 1 sao</option>
-                    </select>
-                    <select value={locTrangThai} onChange={(e) => setLocTrangThai(e.target.value)} className="h-9 px-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200">
-                        <option value="tat_ca">Tất cả trạng thái</option><option value="hien">Đang hiển thị</option><option value="an">Đã ẩn</option>
-                    </select>
-                    <select value={sapXep} onChange={(e) => setSapXep(e.target.value)} className="h-9 px-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200">
-                        <option value="moi_nhat">Mới nhất trước</option><option value="cu_nhat">Cũ nhất trước</option>
-                    </select>
+
+                {/* Tầng 2: Thanh Ribbon Bộ Lọc Màu Sắc Trực Quan (Từng ô đều có icon và màu sắc nhận diện đồng bộ Đơn Hàng) */}
+                <div className="flex flex-wrap items-center justify-between gap-2.5 bg-white/95 dark:bg-[#0c1222]/95 p-2.5 rounded-2xl border-2 border-amber-300/70 dark:border-amber-900/60 shadow-xs backdrop-blur-md">
+                    <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto flex-1">
+                        {/* 1. Ô Tìm Kiếm Sản Phẩm / Tên Khách Hàng */}
+                        <div className="relative flex-1 min-w-[200px] sm:min-w-[240px]">
+                            <Search className="w-4 h-4 text-amber-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            <input
+                                type="text"
+                                value={tuKhoa}
+                                onChange={(e) => setTuKhoa(e.target.value)}
+                                placeholder="Tìm tên máy, tên khách, nội dung..."
+                                className="w-full pl-9 pr-8 py-2 text-xs font-bold rounded-xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50/40 dark:bg-amber-950/20 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-amber-500/20 transition-all shadow-2xs"
+                            />
+                            {tuKhoa && (
+                                <button
+                                    type="button"
+                                    onClick={() => setTuKhoa('')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5"
+                                    title="Xóa từ khóa tìm kiếm"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
+                        </div>
+
+                        {/* 2. Lọc Số Sao (Màu Vàng Hổ Phách Amber) */}
+                        <div className="relative min-w-[155px] flex-1 sm:flex-initial">
+                            <select
+                                value={locSoSao}
+                                onChange={(e) => setLocSoSao(e.target.value)}
+                                className="w-full appearance-none pl-8 pr-7 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 border-2 border-amber-300 dark:border-amber-700 text-xs font-black text-amber-950 dark:text-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer shadow-2xs transition-all"
+                                title="Lọc theo mức đánh giá sao"
+                            >
+                                <option value="tat_ca">⭐ Tất cả số sao ({danhSach.length})</option>
+                                <option value="5">★★★★★ 5 sao ({thongKe.sao5})</option>
+                                <option value="4">★★★★ 4 sao ({thongKe.sao4})</option>
+                                <option value="3">★★★ 3 sao ({thongKe.sao3})</option>
+                                <option value="2">★★ 2 sao ({thongKe.sao12})</option>
+                                <option value="1">★ 1 sao</option>
+                            </select>
+                            <Star className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-500 fill-amber-400 pointer-events-none" />
+                            <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-700 dark:text-amber-300 pointer-events-none stroke-[2.5]" />
+                        </div>
+
+                        {/* 3. Lọc Trạng Thái Hiển Thị (Màu Xanh Lá Emerald) */}
+                        <div className="relative min-w-[160px] flex-1 sm:flex-initial">
+                            <select
+                                value={locTrangThai}
+                                onChange={(e) => setLocTrangThai(e.target.value)}
+                                className="w-full appearance-none pl-8 pr-7 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border-2 border-emerald-300 dark:border-emerald-700 text-xs font-black text-emerald-950 dark:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-400 cursor-pointer shadow-2xs transition-all"
+                                title="Lọc theo trạng thái kiểm duyệt"
+                            >
+                                <option value="tat_ca">👁️ Tất cả trạng thái</option>
+                                <option value="hien">✅ Đang hiển thị ({thongKe.hien})</option>
+                                <option value="an">🚫 Đã ẩn kiểm duyệt ({thongKe.an})</option>
+                            </select>
+                            <Eye className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-emerald-600 dark:text-emerald-400 pointer-events-none" />
+                            <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 text-emerald-700 dark:text-emerald-300 pointer-events-none stroke-[2.5]" />
+                        </div>
+                    </div>
+
+                    {/* Cụm Bên Phải: Sắp Xếp & Nút Đặt Lại */}
+                    <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                        {/* 4. Sắp Xếp (Màu Tím Purple / Indigo) */}
+                        <div className="relative min-w-[160px]">
+                            <select
+                                value={sapXep}
+                                onChange={(e) => setSapXep(e.target.value)}
+                                className="w-full appearance-none pl-8 pr-7 py-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 border-2 border-purple-300 dark:border-purple-700 text-xs font-black text-purple-950 dark:text-purple-100 focus:outline-none focus:ring-2 focus:ring-purple-400 cursor-pointer shadow-2xs transition-all"
+                                title="Sắp xếp danh sách đánh giá"
+                            >
+                                <option value="moi_nhat">✨ Mới nhất trước</option>
+                                <option value="cu_nhat">⏳ Cũ nhất trước</option>
+                                <option value="sao_cao">⭐ Sao cao nhất (5→1)</option>
+                                <option value="sao_thap">💔 Sao thấp nhất (1→5)</option>
+                            </select>
+                            <ArrowUpDown className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-purple-600 dark:text-purple-400 pointer-events-none" />
+                            <ChevronDown className="w-3 h-3 absolute right-2.5 top-1/2 -translate-y-1/2 text-purple-700 dark:text-purple-300 pointer-events-none stroke-[2.5]" />
+                        </div>
+
+                        {/* 5. Nút Đặt Lại Bộ Lọc (Tone Đỏ Hồng Rose) */}
+                        {dangLoc && (
+                            <button
+                                type="button"
+                                onClick={datLaiBoLoc}
+                                className="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 !text-white text-xs font-black flex items-center gap-1.5 shadow-md shadow-rose-600/25 cursor-pointer transition-all hover:scale-105 active:scale-95 shrink-0"
+                                title="Đặt lại toàn bộ bộ lọc về mặc định"
+                            >
+                                <RotateCcw className="w-3.5 h-3.5 !text-white" />
+                                <span className="!text-white whitespace-nowrap">Đặt lại</span>
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Tầng 3: Dãy nút Pill Lọc Nhanh 1 Chạm Sắc Nét & Đồng Bộ */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-amber-900/70 dark:text-amber-200/70 mr-1 flex items-center gap-1">
+                        <Filter className="w-3 h-3" />
+                        Lọc Nhanh:
+                    </span>
+
+                    {/* Nút Tất Cả */}
+                    <button
+                        type="button"
+                        onClick={() => { setLocSoSao('tat_ca'); setLocTrangThai('tat_ca'); }}
+                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                            locSoSao === 'tat_ca' && locTrangThai === 'tat_ca'
+                                ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md shadow-amber-600/30 scale-105'
+                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-2 border-amber-200/80 dark:border-slate-700 hover:border-amber-400'
+                        }`}
+                    >
+                        Tất Cả ({danhSach.length})
+                    </button>
+
+                    {/* Nút 5 Sao */}
+                    <button
+                        type="button"
+                        onClick={() => setLocSoSao(locSoSao === '5' ? 'tat_ca' : '5')}
+                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+                            locSoSao === '5'
+                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 scale-105'
+                                : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-2 border-amber-200/80 dark:border-slate-700 hover:border-amber-400'
+                        }`}
+                    >
+                        <span>★★★★★ 5 sao</span>
+                        <span className="text-[10px] opacity-80">({thongKe.sao5})</span>
+                    </button>
+
+                    {/* Nút 4 Sao */}
+                    <button
+                        type="button"
+                        onClick={() => setLocSoSao(locSoSao === '4' ? 'tat_ca' : '4')}
+                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+                            locSoSao === '4'
+                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 scale-105'
+                                : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-2 border-amber-200/80 dark:border-slate-700 hover:border-amber-400'
+                        }`}
+                    >
+                        <span>★★★★ 4 sao</span>
+                        <span className="text-[10px] opacity-80">({thongKe.sao4})</span>
+                    </button>
+
+                    {/* Nút 3 Sao */}
+                    <button
+                        type="button"
+                        onClick={() => setLocSoSao(locSoSao === '3' ? 'tat_ca' : '3')}
+                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+                            locSoSao === '3'
+                                ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black shadow-md shadow-amber-500/30 scale-105'
+                                : 'bg-white dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-2 border-amber-200/80 dark:border-slate-700 hover:border-amber-400'
+                        }`}
+                    >
+                        <span>★★★ 3 sao</span>
+                        <span className="text-[10px] opacity-80">({thongKe.sao3})</span>
+                    </button>
+
+                    {/* Nút 1-2 Sao */}
+                    <button
+                        type="button"
+                        onClick={() => setLocSoSao(locSoSao === '2' ? 'tat_ca' : '2')}
+                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+                            locSoSao === '2' || locSoSao === '1'
+                                ? 'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md shadow-rose-600/30 scale-105'
+                                : 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border-2 border-rose-200/80 dark:border-slate-700 hover:border-rose-400'
+                        }`}
+                    >
+                        <span>★ 1-2 sao</span>
+                        <span className="text-[10px] opacity-80">({thongKe.sao12})</span>
+                    </button>
+
+                    <span className="h-4 w-px bg-amber-300/80 dark:bg-slate-700 mx-1 hidden sm:inline-block" />
+
+                    {/* Nút Đang Hiển Thị */}
+                    <button
+                        type="button"
+                        onClick={() => setLocTrangThai(locTrangThai === 'hien' ? 'tat_ca' : 'hien')}
+                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+                            locTrangThai === 'hien'
+                                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/30 scale-105'
+                                : 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 border-2 border-emerald-200/80 dark:border-slate-700 hover:border-emerald-400'
+                        }`}
+                    >
+                        <Eye className="w-3 h-3" />
+                        <span>Đang Hiện ({thongKe.hien})</span>
+                    </button>
+
+                    {/* Nút Đã Ẩn */}
+                    <button
+                        type="button"
+                        onClick={() => setLocTrangThai(locTrangThai === 'an' ? 'tat_ca' : 'an')}
+                        className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${
+                            locTrangThai === 'an'
+                                ? 'bg-gradient-to-r from-slate-700 to-slate-900 text-white shadow-md scale-105'
+                                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-2 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                        }`}
+                    >
+                        <EyeOff className="w-3 h-3" />
+                        <span>Đã Ẩn ({thongKe.an})</span>
+                    </button>
                 </div>
             </div>
 
@@ -273,39 +518,46 @@ export default function QuanLyDanhGia({ xacNhan }) {
                                                     "{dg.noi_dung || ''}"
                                                 </p>
                                             </td>
-                                            <td className="py-3 px-3.5 border-b border-r border-slate-200 dark:border-slate-800 align-middle whitespace-nowrap text-slate-500 font-semibold">
-                                                {dinhDangNgay(dg.createdAt)}
+                                            <td className="py-3 px-3.5 border-b border-r border-slate-200 dark:border-slate-800 align-middle whitespace-nowrap text-slate-500 dark:text-slate-400 font-medium">
+                                                <div className="flex items-center gap-1.5 text-[11px]">
+                                                    <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                                                    <span>{dinhDangNgay(dg.createdAt)}</span>
+                                                </div>
                                             </td>
-                                            <td className="py-3 px-3.5 border-b border-r border-slate-200 dark:border-slate-800 align-middle text-center">
+                                            <td className="py-3 px-3.5 border-b border-r border-slate-200 dark:border-slate-800 align-middle text-center whitespace-nowrap">
                                                 {hienThi ? (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 whitespace-nowrap">
-                                                        <Eye className="w-3 h-3" /> Hiện
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xs shadow-emerald-500/20 whitespace-nowrap">
+                                                        <Eye className="w-3 h-3 stroke-[2.5]" /> Đang Hiện
                                                     </span>
                                                 ) : (
-                                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 whitespace-nowrap">
-                                                        <EyeOff className="w-3 h-3" /> Đã ẩn
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-300 dark:border-slate-700 whitespace-nowrap">
+                                                        <EyeOff className="w-3 h-3" /> Đã Ẩn
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="py-3 px-3.5 border-b border-slate-200 dark:border-slate-800 align-middle text-right">
+                                            <td className="py-3 px-3.5 border-b border-slate-200 dark:border-slate-800 align-middle text-right whitespace-nowrap">
                                                 <div className="flex items-center justify-end gap-1.5">
                                                     <button
                                                         type="button"
                                                         onClick={() => xuLyAnHien(dg)}
                                                         disabled={dangXuLy}
-                                                        className="p-1.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-blue-200 dark:border-blue-800 hover:border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-all shadow-xs hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
-                                                        title={hienThi ? 'Ẩn đánh giá này' : 'Hiện lại đánh giá này'}
+                                                        className={`p-2 rounded-xl border-2 transition-all shadow-xs hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 ${
+                                                            hienThi
+                                                                ? 'bg-white dark:bg-slate-800 border-amber-300 dark:border-amber-800 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50'
+                                                                : 'bg-white dark:bg-slate-800 border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/50'
+                                                        }`}
+                                                        title={hienThi ? 'Ẩn đánh giá này khỏi web' : 'Hiện lại đánh giá này lên web'}
                                                     >
-                                                        {dangXuLy ? <Loader2 className="w-4 h-4 animate-spin" /> : hienThi ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                        {dangXuLy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : hienThi ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                                                     </button>
                                                     <button
                                                         type="button"
                                                         onClick={() => xuLyXoa(dg)}
                                                         disabled={dangXuLy}
-                                                        className="p-1.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-rose-200 dark:border-rose-900/60 hover:border-rose-500 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-all shadow-xs hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
-                                                        title="Xóa đánh giá"
+                                                        className="p-2 rounded-xl bg-white dark:bg-slate-800 border-2 border-rose-200 dark:border-rose-900/60 hover:border-rose-500 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-all shadow-xs hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50"
+                                                        title="Xóa vĩnh viễn đánh giá"
                                                     >
-                                                        <Trash2 className="w-4 h-4" />
+                                                        <Trash2 className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>
                                             </td>
