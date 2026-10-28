@@ -845,32 +845,6 @@ export default function ModalSanPham({
                                                                 className={layClassInput('dung_luong_vram')}
                                                             />
                                                         </div>
-                                                        <div className="space-y-1">
-                                                            <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                                                                <span>Công suất TGP và Ray Tracing</span>
-                                                                <div className="flex items-center gap-1.5">
-                                                                    <NhanDaSua fieldName="cong_suat_tgp" />
-                                                                    <NhanDaSua fieldName="ho_tro_ray_tracing" />
-                                                                </div>
-                                                            </label>
-                                                            <div className="grid grid-cols-2 gap-2">
-                                                                <input
-                                                                    type="text"
-                                                                    placeholder="175 (Watt)..."
-                                                                    value={formSp.cong_suat_tgp}
-                                                                    onChange={(e) => setFormSp({ ...formSp, cong_suat_tgp: e.target.value })}
-                                                                    className={layClassInput('cong_suat_tgp')}
-                                                                />
-                                                                <select
-                                                                    value={formSp.ho_tro_ray_tracing ? 'true' : 'false'}
-                                                                    onChange={(e) => setFormSp({ ...formSp, ho_tro_ray_tracing: e.target.value === 'true' })}
-                                                                    className={layClassInput('ho_tro_ray_tracing')}
-                                                                >
-                                                                    <option value="true">✅ Có Ray Tracing & DLSS</option>
-                                                                    <option value="false">— Không áp dụng</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
                                                     </div>
                                                 </div>
 
