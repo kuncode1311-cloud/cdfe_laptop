@@ -398,8 +398,6 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                     { nhan: 'Số nhân & Luồng:', giaTri: formatGiaTri(ts.so_nhan_luong) },
                     { nhan: 'Tốc độ xung nhịp:', giaTri: formatGiaTri(ts.xung_nhip_toi_da) },
                     { nhan: 'Bộ nhớ đệm (Cache):', giaTri: formatGiaTri(ts.bo_nho_dem_cache) },
-                    { nhan: 'Chip AI NPU:', giaTri: formatGiaTri(ts.chip_ai_npu) },
-                    { nhan: 'Hiệu năng AI (TOPS):', giaTri: ts.hieu_nang_ai_tops ? `${ts.hieu_nang_ai_tops} TOPS` : null }
                 ]
             },
             {
@@ -569,6 +567,15 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
 
     return (
         <div className="space-y-4">
+            <div className="rounded-2xl border border-indigo-200 bg-indigo-50/80 px-4 py-3 dark:border-indigo-900 dark:bg-indigo-950/30">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-black text-indigo-900 dark:text-indigo-200">
+                    <ShieldCheck className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                    <span>Bảo hành sản phẩm</span>
+                </div>
+                <p className="mt-1 pl-6 text-xs font-semibold text-indigo-800 dark:text-indigo-300">
+                    {formatGiaTri(ts.che_do_bao_hanh) || 'Chính hãng 24 tháng'}
+                </p>
+            </div>
             {danhSachHopLe.map((nhom) => {
                 const IconComponent = nhom.icon;
                 const dangMo = nhomDangMo[nhom.id] !== false;
