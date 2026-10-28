@@ -524,7 +524,7 @@ export default function TrangChiTietSanPham({ params }) {
                     <span>Trải Nghiệm & Đánh Giá Chuyên Sâu Từ TNTP LAPTOP</span>
                   </h3>
                   <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
-                    {sanPham.mo_ta_ngan || sanPham.mo_ta_chi_tiet || 'Sản phẩm chính hãng với cấu hình mạnh mẽ, hiệu năng xuất sắc và độ bền bỉ cao.'}
+                    {sanPham.mo_ta_ngan || sanPham.thong_so?.mo_ta_ngan || sanPham.mo_ta_chi_tiet || 'Sản phẩm chính hãng với cấu hình mạnh mẽ, hiệu năng xuất sắc và độ bền bỉ cao.'}
                   </p>
                   <div className="p-4 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60 text-xs text-blue-900 dark:text-blue-200 space-y-1.5">
                     <p className="font-bold">✦ Đặc quyền cam kết chất lượng dịch vụ TNTP:</p>

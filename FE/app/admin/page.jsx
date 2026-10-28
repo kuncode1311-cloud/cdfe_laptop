@@ -2338,7 +2338,7 @@ export default function TrangQuanTriCuaHang() {
             la_ban_chay: !!sp.la_ban_chay,
             la_san_pham_moi: !!sp.la_san_pham_moi,
             mo_ta_chi_tiet: sp.mo_ta_chi_tiet || '',
-            mo_ta_ngan: sp.mo_ta_ngan || '',
+            mo_ta_ngan: sp.mo_ta_ngan || specs.mo_ta_ngan || '',
             dac_diem_noi_bat: Array.isArray(sp.dac_diem_noi_bat) ? [...sp.dac_diem_noi_bat] : [],
             qua_tang: Array.isArray(sp.qua_tang) ? JSON.parse(JSON.stringify(sp.qua_tang)) : [],
             tuy_chon_phien_ban: Array.isArray(sp.tuy_chon_phien_ban) ? JSON.parse(JSON.stringify(sp.tuy_chon_phien_ban)) : [],
@@ -2985,7 +2985,7 @@ export default function TrangQuanTriCuaHang() {
                     ten_qua_tang: q.ten_qua_tang.trim(),
                     gia_tri: Number(q.gia_tri) || 0
                 })),
-                thong_so: thongSoPayload,
+                thong_so: { ...thongSoPayload, mo_ta_ngan: formSp.mo_ta_ngan || '' },
                 tuy_chon_phien_ban: danhSachBienTheChuan,
                 thu_vien_hinh_anh: formSp.thu_vien_hinh_anh || []
             };
