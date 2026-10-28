@@ -770,7 +770,7 @@ export default function TrangQuanTriCuaHang() {
         con_hang: true,
         la_flash_sale: false,
         la_ban_chay: false,
-        la_san_pham_moi: true,
+        la_san_pham_moi: false,
         mo_ta_chi_tiet: '',
         dac_diem_noi_bat: [],
         qua_tang: [],
@@ -2074,7 +2074,7 @@ export default function TrangQuanTriCuaHang() {
         setTabModalSp('thong_tin');
         setLoaiFormSanPham('laptop');
         setThongSoTuyChinh([]);
-        // Form thêm mới luôn trống: chỉ giữ các tiêu đề nhóm và vài mặc định (còn hàng, hàng mới)
+        // Form thêm mới không tự gắn nhãn Hàng Mới; admin chủ động bật khi cần.
         setFormSp(lamTrongFormSp({
             ma_san_pham: '',
             ten_san_pham: '',
@@ -2088,7 +2088,7 @@ export default function TrangQuanTriCuaHang() {
             con_hang: true,
             la_flash_sale: false,
             la_ban_chay: false,
-            la_san_pham_moi: true,
+            la_san_pham_moi: false,
             mo_ta_chi_tiet: '',
             dac_diem_noi_bat: [
                 'Bộ đôi vi xử lý thế hệ mới cực mạnh kết hợp card đồ họa kiến trúc tân tiến',
