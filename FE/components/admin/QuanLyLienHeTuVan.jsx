@@ -75,6 +75,7 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
     const [locChuDe, setLocChuDe] = useState('tat_ca');
     const [locTuNgay, setLocTuNgay] = useState('');
     const [locDenNgay, setLocDenNgay] = useState('');
+    const [locThoiGian, setLocThoiGian] = useState('tat_ca');
 
     // Real-time State
     const [tuDongDongBo, setTuDongDongBo] = useState(true);
@@ -91,9 +92,36 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
     const [dangGuiPhanHoi, setDangGuiPhanHoi] = useState(false);
 
     const danhSachSauLocNgay = useMemo(() => {
-        if (!locTuNgay && !locDenNgay) return danhSach;
-        const tuNgay = locTuNgay ? new Date(locTuNgay + 'T00:00:00') : null;
-        const denNgay = locDenNgay ? new Date(locDenNgay + 'T23:59:59') : null;
+        const fmt = (x) => x.toISOString().slice(0, 10);
+        let tuNgayStr = locTuNgay;
+        let denNgayStr = locDenNgay;
+
+        // Tính range từ preset nhanh
+        if (locThoiGian !== 'tat_ca') {
+            const now = new Date();
+            if (locThoiGian === 'hom_nay') {
+                tuNgayStr = fmt(now); denNgayStr = fmt(now);
+            } else if (locThoiGian === 'hom_qua') {
+                const hq = new Date(now); hq.setDate(now.getDate() - 1);
+                tuNgayStr = fmt(hq); denNgayStr = fmt(hq);
+            } else if (locThoiGian === '7_ngay') {
+                const tu = new Date(now); tu.setDate(now.getDate() - 6);
+                tuNgayStr = fmt(tu); denNgayStr = fmt(now);
+            } else if (locThoiGian === 'tuan_nay') {
+                const thu = now.getDay() === 0 ? 6 : now.getDay() - 1;
+                const tu = new Date(now); tu.setDate(now.getDate() - thu);
+                const den = new Date(tu); den.setDate(tu.getDate() + 6);
+                tuNgayStr = fmt(tu); denNgayStr = fmt(den);
+            } else if (locThoiGian === 'thang_nay') {
+                const tu = new Date(now.getFullYear(), now.getMonth(), 1);
+                const den = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                tuNgayStr = fmt(tu); denNgayStr = fmt(den);
+            }
+        }
+
+        if (!tuNgayStr && !denNgayStr) return danhSach;
+        const tuNgay = tuNgayStr ? new Date(tuNgayStr + 'T00:00:00') : null;
+        const denNgay = denNgayStr ? new Date(denNgayStr + 'T23:59:59') : null;
         return danhSach.filter((phieu) => {
             const ngay = new Date(phieu.ngay_tao || phieu.createdAt);
             if (isNaN(ngay)) return true;
@@ -101,7 +129,7 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
             if (denNgay && ngay > denNgay) return false;
             return true;
         });
-    }, [danhSach, locTuNgay, locDenNgay]);
+    }, [danhSach, locTuNgay, locDenNgay, locThoiGian]);
 
     const {
         trangHienTai,
@@ -116,7 +144,8 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
         locChuDe,
         tuKhoa,
         locTuNgay,
-        locDenNgay
+        locDenNgay,
+        locThoiGian
     ]);
 
     // Tải dữ liệu từ Backend
@@ -569,115 +598,72 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                     </div>
                 </div>
 
-                {/* Lọc theo thời gian */}
+                {/* Lọc theo thời gian — Select gọn */}
                 <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t-2 border-slate-200/70 dark:border-slate-700/70">
                     <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
                         <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                         Thời gian:
                     </span>
-                    <div className="flex flex-wrap items-center gap-2">
-                        {/* Nút tắt nhanh */}
-                        {[
-                            {
-                                ten: 'Hôm nay', id: 'hom_nay',
-                                tao: () => {
-                                    const d = new Date();
-                                    const fmt = (x) => x.toISOString().slice(0, 10);
-                                    return { tu: fmt(d), den: fmt(d) };
+                    <div className="relative">
+                        <select
+                            value={locThoiGian}
+                            onChange={(e) => {
+                                setLocThoiGian(e.target.value);
+                                if (e.target.value !== 'tuy_chinh') {
+                                    setLocTuNgay('');
+                                    setLocDenNgay('');
                                 }
-                            },
-                            {
-                                ten: 'Hôm qua', id: 'hom_qua',
-                                tao: () => {
-                                    const d = new Date(); d.setDate(d.getDate() - 1);
-                                    const fmt = (x) => x.toISOString().slice(0, 10);
-                                    return { tu: fmt(d), den: fmt(d) };
-                                }
-                            },
-                            {
-                                ten: '7 ngày qua', id: '7_ngay',
-                                tao: () => {
-                                    const den = new Date();
-                                    const tu = new Date(); tu.setDate(tu.getDate() - 6);
-                                    const fmt = (x) => x.toISOString().slice(0, 10);
-                                    return { tu: fmt(tu), den: fmt(den) };
-                                }
-                            },
-                            {
-                                ten: 'Tuần này', id: 'tuan_nay',
-                                tao: () => {
-                                    const now = new Date();
-                                    const thu = now.getDay() === 0 ? 6 : now.getDay() - 1;
-                                    const tu = new Date(now); tu.setDate(now.getDate() - thu);
-                                    const den = new Date(tu); den.setDate(tu.getDate() + 6);
-                                    const fmt = (x) => x.toISOString().slice(0, 10);
-                                    return { tu: fmt(tu), den: fmt(den) };
-                                }
-                            },
-                            {
-                                ten: 'Tháng này', id: 'thang_nay',
-                                tao: () => {
-                                    const now = new Date();
-                                    const tu = new Date(now.getFullYear(), now.getMonth(), 1);
-                                    const den = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-                                    const fmt = (x) => x.toISOString().slice(0, 10);
-                                    return { tu: fmt(tu), den: fmt(den) };
-                                }
-                            }
-                        ].map((preset) => {
-                            const range = preset.tao();
-                            const dangChon = locTuNgay === range.tu && locDenNgay === range.den;
-                            return (
-                                <button
-                                    key={preset.id}
-                                    type="button"
-                                    onClick={() => { setLocTuNgay(range.tu); setLocDenNgay(range.den); }}
-                                    className={`px-3 py-1.5 rounded-xl text-[11px] font-black border-2 transition-all cursor-pointer whitespace-nowrap ${
-                                        dangChon
-                                            ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-indigo-500 shadow-md shadow-indigo-500/25 scale-105'
-                                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-600 hover:text-indigo-700 dark:hover:text-indigo-300'
-                                    }`}
-                                >
-                                    {preset.ten}
-                                </button>
-                            );
-                        })}
-
-                        {/* Separator */}
-                        <span className="text-slate-300 dark:text-slate-600 text-sm font-bold select-none">|</span>
-
-                        {/* Input ngày tùy chỉnh */}
-                        <div className="flex items-center gap-1.5">
-                            <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Từ</label>
-                            <input
-                                type="date"
-                                value={locTuNgay}
-                                onChange={(e) => setLocTuNgay(e.target.value)}
-                                className="text-xs font-bold px-2.5 py-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
-                            />
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                            <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Đến</label>
-                            <input
-                                type="date"
-                                value={locDenNgay}
-                                onChange={(e) => setLocDenNgay(e.target.value)}
-                                min={locTuNgay || undefined}
-                                className="text-xs font-bold px-2.5 py-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
-                            />
-                        </div>
-                        {(locTuNgay || locDenNgay) && (
-                            <button
-                                type="button"
-                                onClick={() => { setLocTuNgay(''); setLocDenNgay(''); }}
-                                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-2 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all cursor-pointer whitespace-nowrap"
-                                title="Xóa lọc ngày"
-                            >
-                                <X className="w-3 h-3" />
-                                Xóa
-                            </button>
-                        )}
+                            }}
+                            className="appearance-none pl-3.5 pr-8 py-2 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-black text-slate-800 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
+                        >
+                            <option value="tat_ca">📅 Tất cả thời gian</option>
+                            <option value="hom_nay">🔴 Hôm nay</option>
+                            <option value="hom_qua">🟡 Hôm qua</option>
+                            <option value="7_ngay">📆 7 ngày qua</option>
+                            <option value="tuan_nay">📅 Tuần này</option>
+                            <option value="thang_nay">🗓️ Tháng này</option>
+                            <option value="tuy_chinh">✏️ Tùy chỉnh ngày...</option>
+                        </select>
+                        <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </span>
                     </div>
+
+                    {/* Chỉ hiện input ngày khi chọn "Tùy chỉnh" */}
+                    {locThoiGian === 'tuy_chinh' && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5">
+                                <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Từ</label>
+                                <input
+                                    type="date"
+                                    value={locTuNgay}
+                                    onChange={(e) => setLocTuNgay(e.target.value)}
+                                    className="text-xs font-bold px-2.5 py-1.5 rounded-xl border-2 border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                                />
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Đến</label>
+                                <input
+                                    type="date"
+                                    value={locDenNgay}
+                                    onChange={(e) => setLocDenNgay(e.target.value)}
+                                    min={locTuNgay || undefined}
+                                    className="text-xs font-bold px-2.5 py-1.5 rounded-xl border-2 border-indigo-200 dark:border-indigo-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {locThoiGian !== 'tat_ca' && (
+                        <button
+                            type="button"
+                            onClick={() => { setLocThoiGian('tat_ca'); setLocTuNgay(''); setLocDenNgay(''); }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-black bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-2 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all cursor-pointer whitespace-nowrap"
+                        >
+                            <X className="w-3 h-3" />
+                            Xóa
+                        </button>
+                    )}
                 </div>
 
                 {/* Các Tab lọc trạng thái đa sắc màu Vibrant Pills */}
