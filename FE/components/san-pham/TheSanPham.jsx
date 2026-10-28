@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShoppingCart, GitCompare, Star, Gift, ShieldCheck, Flame, Plus, Check } from 'lucide-react';
+import { ShoppingCart, GitCompare, Star, ShieldCheck, Flame, Plus, Check } from 'lucide-react';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import { slugSanPham } from '@/utils/taoSlug';
 import { useGioHang } from '@/contexts/CartContext';
@@ -313,17 +313,10 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                         </div>
                     )}
 
-                    {sanPham.qua_tang && sanPham.qua_tang.length > 0 ? (
-                        <div className="text-[11px] text-emerald-700 dark:text-emerald-400 truncate flex items-center gap-1 font-medium">
-                            <Gift className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            <span className="truncate">{sanPham.qua_tang[0].ten_qua_tang}</span>
-                        </div>
-                    ) : (
-                        <div className="text-[11px] text-slate-500 truncate flex items-center gap-1">
-                            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                            <span className="truncate">{sanPham.thong_so?.che_do_bao_hanh || 'Bảo hành chính hãng'}</span>
-                        </div>
-                    )}
+                    <div className="text-[11px] text-slate-500 truncate flex items-center gap-1">
+                        <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span className="truncate">{sanPham.thong_so?.che_do_bao_hanh || 'Bảo hành chính hãng'}</span>
+                    </div>
                 </div>
 
                 <div className="w-full sm:w-44 shrink-0 flex sm:flex-col justify-between items-end sm:items-stretch gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
@@ -456,15 +449,6 @@ export default function TheSanPham({ sanPham, cheDoHienThi = 'luoi', hienThiThan
                             {ts}
                         </span>
                     ))}
-                    {sanPham.qua_tang && sanPham.qua_tang.length > 0 && (
-                        <span
-                            className="px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[10px] border border-emerald-200/60 shrink-0 truncate flex items-center gap-1"
-                            title={sanPham.qua_tang[0].ten_qua_tang}
-                        >
-                            <Gift className="w-2.5 h-2.5 shrink-0" />
-                            <span className="truncate">Quà tặng</span>
-                        </span>
-                    )}
                 </div>
 
                 {/* 6. FLASH SALE STOCK PROGRESS BAR (Chỉ hiện khi hienThiThanhFlashSale = true) */}
