@@ -672,7 +672,7 @@ const paths = {
     // ============================================================ SẢN PHẨM
     '/api/san-pham': {
         get: op({
-            tag: T.sp, summary: 'Danh sách / tìm kiếm / lọc sản phẩm',
+            tag: T.sp, summary: 'Danh sách / tìm kiếm / lọc sản phẩm', auth: 'optional',
             description: 'Công khai, có `Cache-Control` 60 giây. Trả về **mảng** sản phẩm (tối đa 200 bản ghi mỗi lần). Từ khóa tìm kiếm được escape để chống ReDoS. Sản phẩm **tạm ẩn** (`con_hang = false`) chỉ hiện khi gửi kèm token Admin; khách không thấy.',
             params: [
                 query('tu_khoa', 'Tìm theo tên, mã, hãng, CPU, card đồ họa (hỗ trợ cả `q`)', { type: 'string' }, 'rtx'),
@@ -696,7 +696,7 @@ const paths = {
     },
     '/api/san-pham/{id}': {
         get: op({
-            tag: T.sp, summary: 'Chi tiết sản phẩm',
+            tag: T.sp, summary: 'Chi tiết sản phẩm', auth: 'optional',
             description: 'Tra theo `id`, `slug` hoặc `_id` (hoặc khớp tên).',
             params: [pathId('id', 'id / slug của sản phẩm', 'sp-asus-rog-strix-g16')],
             responses: { 200: ok('Chi tiết sản phẩm', ref('SanPham')), 404: loi(404) }
@@ -877,12 +877,39 @@ const paths = {
             responses: { 200: ok('Danh sách đánh giá', { type: 'array', items: ref('DanhGia') }) }
         })
     },
+    '/api/danh-gia/quan-tri/tat-ca': {
+        get: op({
+            tag: T.dg, summary: 'Toàn bộ đánh giá cho quản trị', auth: 'admin',
+            description: 'Bao gồm cả đánh giá đang hiển thị và đã ẩn; bổ sung tên và hình ảnh sản phẩm để Admin kiểm duyệt.',
+            responses: { 200: ok('Danh sách đánh giá mới nhất trước', { type: 'array', items: ref('DanhGia') }) }
+        })
+    },
     '/api/danh-gia/{id}/thich': {
         patch: op({
             tag: T.dg, summary: 'Thích một đánh giá', rate: '30 lần / phút / IP',
             description: 'Tăng `luot_thich` thêm 1. Không cần đăng nhập.',
             params: [pathId('id', 'id của đánh giá', 'dg-1759300000000')],
             responses: { 200: ok('Đánh giá sau khi cập nhật', ref('DanhGia')), 404: loi(404) }
+        })
+    },
+    '/api/danh-gia/{id}/an-hien': {
+        patch: op({
+            tag: T.dg, summary: 'Ẩn hoặc hiện đánh giá', auth: 'admin',
+            description: 'Sau khi đổi trạng thái hiển thị, hệ thống tính lại điểm và số lượt đánh giá của sản phẩm.',
+            params: [pathId('id', 'id hoặc MongoDB ObjectId của đánh giá', 'dg-1759300000000')],
+            requestBody: body({
+                type: 'object', required: ['hien_thi'],
+                properties: { hien_thi: { type: 'boolean', description: '`true` để hiện, `false` để ẩn' } }
+            }, { hien_thi: false }),
+            responses: { 200: ok('Đánh giá sau khi cập nhật', ref('DanhGia')), 404: loi(404) }
+        })
+    },
+    '/api/danh-gia/{id}': {
+        delete: op({
+            tag: T.dg, summary: 'Xóa đánh giá', auth: 'admin',
+            description: 'Xóa vĩnh viễn đánh giá và tính lại điểm trung bình của sản phẩm.',
+            params: [pathId('id', 'id hoặc MongoDB ObjectId của đánh giá', 'dg-1759300000000')],
+            responses: { 200: ok('Đã xóa', ref('XoaThanhCong'), { thong_diep: 'Đã xóa đánh giá thành công' }), 404: loi(404) }
         })
     },
 
@@ -954,6 +981,31 @@ const paths = {
             responses: { 200: ok('Kết quả (kể cả khi không tìm thấy: `hop_le = false`, `danh_sach = []`)', ref('KetQuaBaoHanh')), 403: ok('Tra bằng SĐT mà thiếu mã đơn hàng', ref('KetQuaBaoHanh'), { hop_le: false, thong_diep: 'Để bảo vệ thông tin khách hàng, tra cứu bằng số điện thoại cần nhập kèm mã đơn hàng.', yeu_cau_ma_don_hang: true, danh_sach: [] }) }
         })
     },
+    '/api/bao-hanh/quan-tri/tat-ca': {
+        get: op({
+            tag: T.bh, summary: 'Danh sách bảo hành cho quản trị', auth: 'admin',
+            description: 'Tổng hợp sản phẩm trong các đơn đã giao, kèm Serial và thời hạn bảo hành đã ghi đè nếu có.',
+            params: [query('gioi_han', 'Số đơn đã giao tối đa cần lấy (1–500)', { type: 'integer', minimum: 1, maximum: 500, default: 300 }, 300)],
+            responses: { 200: ok('Danh sách bảo hành', { type: 'object', properties: { tong_so: { type: 'integer' }, danh_sach: { type: 'array', items: { type: 'object', additionalProperties: true } } } }) }
+        })
+    },
+    '/api/bao-hanh/ghi-de': {
+        patch: op({
+            tag: T.bh, summary: 'Cập nhật Serial / thời hạn bảo hành', auth: 'admin',
+            description: 'Tạo mới hoặc cập nhật thông tin bảo hành ghi đè cho một sản phẩm trong đơn hàng.',
+            requestBody: body({
+                type: 'object', required: ['ma_don_hang', 'id_muc'],
+                properties: {
+                    ma_don_hang: { type: 'string' }, id_muc: { type: 'string' }, so_serial: { type: 'string', maxLength: 100 },
+                    thoi_han_bao_hanh_thang: { type: 'integer', minimum: 1 }
+                }
+            }, { ma_don_hang: 'LPN-2026-0123454821', id_muc: 'muc-1', so_serial: 'G614JV-2026-00001', thoi_han_bao_hanh_thang: 24 }),
+            responses: {
+                200: ok('Đã lưu', { type: 'object', properties: { thong_diep: { type: 'string' }, ghi_de: { type: 'object', additionalProperties: true } } }),
+                400: loi(400), 404: loi(404)
+            }
+        })
+    },
 
     // ============================================================ LIÊN HỆ
     '/api/lien-he': {
@@ -979,6 +1031,22 @@ const paths = {
         delete: op({
             tag: T.lh, summary: 'Xóa phiếu liên hệ', auth: 'admin', params: [pathId('id', '`_id` (MongoDB ObjectId) của phiếu', '66f1a2b3c4d5e6f708192a3b')],
             responses: { 200: ok('Đã xóa', { type: 'object', properties: { thanh_cong: { type: 'boolean' }, thong_diep: { type: 'string' } } }), 404: ok('Không tìm thấy phiếu', ref('LoiThanhCong')) }
+        })
+    },
+    '/api/lien-he/{id}/phan-hoi': {
+        post: op({
+            tag: T.lh, summary: 'Gửi email phản hồi khách hàng', auth: 'admin',
+            description: 'Gửi nội dung phản hồi tới email được lưu trong phiếu liên hệ.',
+            params: [pathId('id', '`_id` (MongoDB ObjectId) của phiếu', '66f1a2b3c4d5e6f708192a3b')],
+            requestBody: body({
+                type: 'object', required: ['noi_dung'],
+                properties: { noi_dung: { type: 'string', minLength: 1 } }
+            }, { noi_dung: 'Chào bạn, bên mình đề xuất mẫu laptop phù hợp như sau...' }),
+            responses: {
+                200: ok('Đã gửi email', ref('LoiThanhCong'), { thanh_cong: true, thong_diep: 'Đã gửi phản hồi đến an.nguyen@gmail.com' }),
+                400: ok('Thiếu nội dung hoặc phiếu chưa có email', ref('LoiThanhCong')), 404: ok('Không tìm thấy phiếu', ref('LoiThanhCong')),
+                502: ok('Không thể gửi email', ref('LoiThanhCong'))
+            }
         })
     },
 
@@ -1026,6 +1094,62 @@ const paths = {
             responses: { 200: ok('Trạng thái', { type: 'object', properties: { thanh_cong: { type: 'boolean' }, du_lieu: { type: 'object', additionalProperties: true, properties: { nhaCungCapUuTien: { type: 'string', example: '9Router' }, nineRouter: { type: 'object', properties: { daCauHinh: { type: 'boolean' }, model: { type: 'string' } } }, gemini: { type: 'object', additionalProperties: true } } } } }) }
         })
     }
+};
+
+// Các alias tương thích ngược vẫn tồn tại trong Express. Đánh dấu deprecated để
+// client mới dùng đường dẫn chuẩn nhưng tài liệu vẫn bao phủ toàn bộ route thực tế.
+paths['/api/bao-hanh'] = {
+    get: {
+        ...paths['/api/bao-hanh/tra-cuu'].get,
+        summary: 'Tra cứu bảo hành điện tử (alias)',
+        description: 'Alias tương thích ngược của `GET /api/bao-hanh/tra-cuu`.',
+        deprecated: true
+    }
+};
+paths['/api/lien-he/{id}'].put = {
+    ...paths['/api/lien-he/{id}'].patch,
+    summary: 'Cập nhật trạng thái phiếu (alias PUT)',
+    description: 'Alias tương thích ngược của `PATCH /api/lien-he/{id}`.',
+    deprecated: true
+};
+paths['/api/thanh-toan/tao_link'] = {
+    post: {
+        ...paths['/api/thanh-toan/tao-link'].post,
+        summary: 'Tạo mã QR / link PayOS (alias)',
+        description: 'Alias tương thích ngược của `POST /api/thanh-toan/tao-link`.',
+        deprecated: true
+    }
+};
+paths['/api/thanh-toan/kiem_tra/{orderCode}'] = {
+    get: {
+        ...paths['/api/thanh-toan/kiem-tra/{orderCode}'].get,
+        summary: 'Kiểm tra thanh toán (alias)',
+        description: 'Alias tương thích ngược của `GET /api/thanh-toan/kiem-tra/{orderCode}`.',
+        deprecated: true
+    }
+};
+paths['/api/thanh-toan/payos-webhook'] = {
+    post: {
+        ...paths['/api/thanh-toan/webhook'].post,
+        summary: 'Webhook PayOS (alias)',
+        description: 'Alias tương thích ngược của `POST /api/thanh-toan/webhook`.',
+        deprecated: true
+    }
+};
+paths['/api/tro-ly-ai'] = {
+    post: {
+        ...paths['/api/tro-ly-ai/chat'].post,
+        summary: 'Chat với trợ lý AI (alias)',
+        description: 'Alias tương thích ngược của `POST /api/tro-ly-ai/chat`.',
+        deprecated: true
+    }
+};
+paths['/api-docs.json'] = {
+    get: op({
+        tag: T.ht, summary: 'Đặc tả OpenAPI dạng JSON',
+        description: 'File nguồn cho Swagger UI và công cụ nhập API như Postman.',
+        responses: { 200: ok('Đặc tả OpenAPI 3.0', { type: 'object', additionalProperties: true }) }
+    })
 };
 
 // ---------------------------------------------------------------- Spec
