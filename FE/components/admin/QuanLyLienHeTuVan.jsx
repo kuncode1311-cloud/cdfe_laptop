@@ -73,6 +73,8 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
     const [tuKhoa, setTuKhoa] = useState('');
     const [locTrangThai, setLocTrangThai] = useState('tat_ca');
     const [locChuDe, setLocChuDe] = useState('tat_ca');
+    const [locTuNgay, setLocTuNgay] = useState('');
+    const [locDenNgay, setLocDenNgay] = useState('');
 
     // Real-time State
     const [tuDongDongBo, setTuDongDongBo] = useState(true);
@@ -88,6 +90,19 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
     const [noiDungPhanHoi, setNoiDungPhanHoi] = useState('');
     const [dangGuiPhanHoi, setDangGuiPhanHoi] = useState(false);
 
+    const danhSachSauLocNgay = useMemo(() => {
+        if (!locTuNgay && !locDenNgay) return danhSach;
+        const tuNgay = locTuNgay ? new Date(locTuNgay + 'T00:00:00') : null;
+        const denNgay = locDenNgay ? new Date(locDenNgay + 'T23:59:59') : null;
+        return danhSach.filter((phieu) => {
+            const ngay = new Date(phieu.ngay_tao || phieu.createdAt);
+            if (isNaN(ngay)) return true;
+            if (tuNgay && ngay < tuNgay) return false;
+            if (denNgay && ngay > denNgay) return false;
+            return true;
+        });
+    }, [danhSach, locTuNgay, locDenNgay]);
+
     const {
         trangHienTai,
         setTrangHienTai,
@@ -96,10 +111,12 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
         tongSoTrang,
         tongSoMuc,
         danhSachTrenTrang
-    } = usePhanTrang(danhSach, 10, [
+    } = usePhanTrang(danhSachSauLocNgay, 10, [
         locTrangThai,
         locChuDe,
-        tuKhoa
+        tuKhoa,
+        locTuNgay,
+        locDenNgay
     ]);
 
     // Tải dữ liệu từ Backend
@@ -549,6 +566,46 @@ export default function QuanLyLienHeTuVan({ onCapNhatSoLuongChuaXuLy, xacNhan })
                             <RotateCcw className={`w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 ${dangTai ? 'animate-spin' : ''}`} />
                             <span>Làm mới</span>
                         </button>
+                    </div>
+                </div>
+
+                {/* Lọc theo thời gian */}
+                <div className="flex flex-wrap items-center gap-2.5 pt-3 border-t-2 border-slate-200/70 dark:border-slate-700/70">
+                    <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5 shrink-0">
+                        <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                        Thời gian:
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                            <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Từ ngày</label>
+                            <input
+                                type="date"
+                                value={locTuNgay}
+                                onChange={(e) => setLocTuNgay(e.target.value)}
+                                className="text-xs font-bold px-2.5 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
+                            />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <label className="text-[11px] font-bold text-slate-500 whitespace-nowrap">Đến ngày</label>
+                            <input
+                                type="date"
+                                value={locDenNgay}
+                                onChange={(e) => setLocDenNgay(e.target.value)}
+                                min={locTuNgay || undefined}
+                                className="text-xs font-bold px-2.5 py-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all shadow-2xs cursor-pointer"
+                            />
+                        </div>
+                        {(locTuNgay || locDenNgay) && (
+                            <button
+                                type="button"
+                                onClick={() => { setLocTuNgay(''); setLocDenNgay(''); }}
+                                className="flex items-center gap-1 px-2.5 py-2 rounded-xl text-[11px] font-black bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-2 border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/50 transition-all cursor-pointer"
+                                title="Xóa lọc ngày"
+                            >
+                                <X className="w-3 h-3" />
+                                Xóa lọc ngày
+                            </button>
+                        )}
                     </div>
                 </div>
 
