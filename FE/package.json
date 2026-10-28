@@ -28,7 +28,7 @@
     "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
     "concurrently": "^10.0.5",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "16.3.2",
     "tailwindcss": "^4",
     "typescript": "^6.0.3"
