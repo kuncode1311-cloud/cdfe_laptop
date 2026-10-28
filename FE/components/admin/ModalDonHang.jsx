@@ -54,6 +54,26 @@ export default function ModalDonHang({
 
     const danhMucSanPham = useMemo(() => [...new Set(danhSachSanPham.flatMap((sp) => Array.isArray(sp.danh_muc) ? sp.danh_muc : [sp.danh_muc]).filter(Boolean))], [danhSachSanPham]);
     const hangSanPham = useMemo(() => [...new Set(danhSachSanPham.map((sp) => sp.hang_san_xuat).filter(Boolean))].sort(), [danhSachSanPham]);
+    const hienThiNhan = (giaTri) => {
+        const nhanDacBiet = {
+            'van-phong-mong-nhe': 'Văn phòng – Mỏng nhẹ',
+            'ai-pc': 'AI PC',
+            'do-hoa-sang-tao': 'Đồ họa – Sáng tạo',
+            'sinh-vien': 'Sinh viên',
+            'doanh-nhan': 'Doanh nhân',
+            'phu-kien-gear': 'Phụ kiện – Gear',
+            'sac-cap-hub': 'Sạc – Cáp – Hub',
+            'tai-nghe-loa': 'Tai nghe – Loa',
+            'chuot-lot-chuot': 'Chuột – Lót chuột',
+            'linh-kien-nang-cap': 'Linh kiện nâng cấp',
+            'linh-kien': 'Linh kiện',
+            'balo-tui-chong-soc': 'Balo – Túi chống sốc',
+            'gaming': 'Gaming',
+            'ban-phim-co': 'Bàn phím cơ',
+            'de-tan-gia-do': 'Đế tản – Giá đỡ'
+        };
+        return nhanDacBiet[giaTri] || String(giaTri || '').replace(/[-_]/g, ' ').replace(/\b\w/g, (kyTu) => kyTu.toUpperCase());
+    };
 
     useEffect(() => {
         if (!dangMoModalDonHang) return;
@@ -239,11 +259,11 @@ export default function ModalDonHang({
                                         <div className="grid grid-cols-3 gap-2">
                                             <select value={locLoaiSanPham} onChange={(e) => setLocLoaiSanPham(e.target.value)} className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-bold">
                                                 <option value="tat_ca">Tất cả loại</option>
-                                                {danhMucSanPham.map((loai) => <option key={loai} value={loai}>{loai}</option>)}
+                                                {danhMucSanPham.map((loai) => <option key={loai} value={loai}>{hienThiNhan(loai)}</option>)}
                                             </select>
                                             <select value={locHangSanPham} onChange={(e) => setLocHangSanPham(e.target.value)} className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-bold">
                                                 <option value="tat_ca">Tất cả hãng</option>
-                                                {hangSanPham.map((hang) => <option key={hang} value={hang}>{hang}</option>)}
+                                                {hangSanPham.map((hang) => <option key={hang} value={hang}>{hienThiNhan(hang)}</option>)}
                                             </select>
                                             <select value={locTonKho} onChange={(e) => setLocTonKho(e.target.value)} className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-bold">
                                                 <option value="con_hang">Còn hàng</option>
