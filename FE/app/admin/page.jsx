@@ -1554,7 +1554,15 @@ export default function TrangQuanTriCuaHang() {
             return matchTuKhoa && matchNganhHang && matchHang && matchTonKho;
         });
 
-        if (sapXepSanPham === 'gia_giam') {
+        const layThoiDiemCapNhatSanPham = (sp) => {
+            const giaTri = sp.updatedAt || sp.ngay_cap_nhat || sp.createdAt || sp.ngay_tao || sp.ngayTao;
+            const thoiDiem = new Date(giaTri || 0).getTime();
+            return Number.isFinite(thoiDiem) ? thoiDiem : 0;
+        };
+
+        if (sapXepSanPham === 'moi_nhat') {
+            list.sort((a, b) => layThoiDiemCapNhatSanPham(b) - layThoiDiemCapNhatSanPham(a));
+        } else if (sapXepSanPham === 'gia_giam') {
             list.sort((a, b) => (b.gia_khuyen_mai || 0) - (a.gia_khuyen_mai || 0));
         } else if (sapXepSanPham === 'gia_tang') {
             list.sort((a, b) => (a.gia_khuyen_mai || 0) - (b.gia_khuyen_mai || 0));
