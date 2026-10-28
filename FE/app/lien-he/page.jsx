@@ -603,7 +603,7 @@ export default function TrangLienHe() {
                                     <span>GỬI YÊU CẦU TƯ VẤN NHANH</span>
                                 </div>
                                 <h3 className="text-base font-black text-slate-900">
-                                    Nhận Báo Giá Ưu Đãi & Quà Tặng
+                                    Nhận Tư Vấn & Báo Giá
                                 </h3>
                             </div>
 
@@ -660,6 +660,20 @@ export default function TrangLienHe() {
                                         onChange={(e) => setSoDienThoai(e.target.value)}
                                         placeholder="Ví dụ: 0948.37.79.79"
                                         className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-mono"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="font-bold text-slate-800 block mb-1">
+                                        Email nhận phản hồi <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="Ví dụ: ban@example.com"
+                                        className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                                     />
                                 </div>
 
