@@ -12,7 +12,6 @@ import {
     ExternalLink,
     Eye,
     FileText,
-    Gift,
     GitCompare,
     Laptop,
     Layers,
@@ -302,29 +301,6 @@ export default function OverlayXemSanPham({
                                                             );
                                                         })}
                                                     </div>
-                                                </div>
-                                            )}
-
-                                            {/* Quà Tặng Kèm Giá Trị */}
-                                            {sanPhamXemTruoc.qua_tang && sanPhamXemTruoc.qua_tang.length > 0 && (
-                                                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border border-amber-300/80 dark:border-amber-800/60 space-y-2">
-                                                    <div className="flex items-center gap-2 text-xs font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">
-                                                        <Gift className="w-4 h-4 text-amber-500 shrink-0" />
-                                                        <span>ĐẶC QUYỀN QUÀ TẶNG TNTP (TRỊ GIÁ ĐẾN {dinhDangTienVND(sanPhamXemTruoc.qua_tang.reduce((t, q) => t + (Number(q.gia_tri) || 0), 0))}):</span>
-                                                    </div>
-                                                    <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
-                                                        {sanPhamXemTruoc.qua_tang.map((q, idx) => (
-                                                            <li key={idx} className="flex items-start gap-2">
-                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0" />
-                                                                <span className="font-medium">{q.ten_qua_tang}</span>
-                                                                {Number(q.gia_tri) > 0 && (
-                                                                    <span className="text-[10.5px] font-bold text-amber-700 dark:text-amber-400 ml-auto shrink-0">
-                                                                        ({dinhDangTienVND(q.gia_tri)})
-                                                                    </span>
-                                                                )}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
                                                 </div>
                                             )}
 

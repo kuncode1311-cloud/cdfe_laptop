@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Trash2, Plus, Minus, Gift, Cpu, Sparkles, Check, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Minus, Cpu, Sparkles, Check, ArrowRight } from 'lucide-react';
 import { useGioHang } from '@/contexts/CartContext';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import { slugSanPham } from '@/utils/taoSlug';
@@ -15,7 +15,6 @@ export default function DanhSachMucGioHang() {
         <div className="space-y-4">
             {gio_hang.danh_sach_muc.map((muc) => {
                 const cauHinh = muc.tuy_chon_chon?.ten_tuy_chon || muc.tuy_chon_chon?.ram || muc.san_pham?.ram;
-                const coQuaTang = muc.san_pham?.qua_tang && muc.san_pham.qua_tang.length > 0;
                 const giaGocDonVi = Number(muc.san_pham?.gia_goc || 0) + Number(muc.tuy_chon_chon?.chenh_lech_gia || 0);
                 const coGiamGia = giaGocDonVi > muc.gia_hien_tai;
                 const phanTramGiam = muc.san_pham?.phan_tram_giam_gia || (coGiamGia ? Math.round(((giaGocDonVi - muc.gia_hien_tai) / giaGocDonVi) * 100) : 0);
@@ -86,12 +85,6 @@ export default function DanhSachMucGioHang() {
                                             </div>
                                         )}
 
-                                        {coQuaTang && (
-                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/60 dark:to-orange-950/60 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs font-extrabold truncate max-w-xs shadow-2xs">
-                                                <Gift className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                                <span className="truncate">Tặng: {muc.san_pham.qua_tang[0].ten_qua_tang}</span>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             </div>

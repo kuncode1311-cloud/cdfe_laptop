@@ -225,7 +225,6 @@ export default function TrangChiTietSanPham({ params }) {
         ? sanPham.thu_vien_hinh_anh
         : [sanPham.hinh_anh_chinh || '/placeholder.png'];
     const dacDiemNoiBat = Array.isArray(sanPham.dac_diem_noi_bat) ? sanPham.dac_diem_noi_bat : [];
-    const quaTang = Array.isArray(sanPham.qua_tang) ? sanPham.qua_tang : [];
     const tonKho = Array.isArray(sanPham.ton_kho) ? sanPham.ton_kho : [];
     const danhGia = Array.isArray(sanPham.danh_gia) ? sanPham.danh_gia : [];
     return (
@@ -393,29 +392,6 @@ export default function TrangChiTietSanPham({ params }) {
                   );
                 })}
               </div>
-            </div>
-          )}
-
-          {/* Quà Tặng Kèm Giá Trị */}
-          {quaTang.length > 0 && (
-            <div className="p-4.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/30 border-2 border-amber-300 dark:border-amber-800/80 space-y-2.5 shadow-xs">
-              <div className="flex items-center gap-2 text-xs font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">
-                <Gift className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0"/>
-                <span>ĐẶC QUYỀN QUÀ TẶNG TNTP (TRỊ GIÁ ĐẾN {dinhDangTienVND(quaTang.reduce((t, q) => t + (q.gia_tri || 0), 0))}):</span>
-              </div>
-              <ul className="space-y-1.5 text-xs text-slate-800 dark:text-slate-200">
-                {quaTang.map((q, idx) => (
-                  <li key={idx} className="flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"/>
-                    <span className="font-medium">{q.ten_qua_tang}</span>
-                    {q.gia_tri > 0 && (
-                      <span className="text-[11px] font-bold text-amber-700 dark:text-amber-400 ml-auto shrink-0 bg-amber-100/90 dark:bg-amber-900/40 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-800">
-                        ({dinhDangTienVND(q.gia_tri)})
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
             </div>
           )}
 
