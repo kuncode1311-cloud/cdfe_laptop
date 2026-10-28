@@ -311,6 +311,52 @@
   animation: toastProgress 3200ms linear forwards;
 }
 
+/* Admin interface: one quiet visual system across every management tab. */
+.admin-shell {
+  --admin-accent: #2563eb;
+  --admin-border: #e2e8f0;
+  --admin-surface: #ffffff;
+}
+
+.admin-shell [class*="rounded-3xl"] {
+  border-radius: 1rem !important;
+}
+
+.admin-shell [class*="border-2"] {
+  border-width: 1px !important;
+}
+
+.admin-shell [class*="shadow-"] {
+  box-shadow: 0 1px 3px rgb(15 23 42 / 8%) !important;
+}
+
+.admin-shell [class*="bg-gradient-to-br"][class*="p-"] {
+  background-image: none !important;
+  background-color: var(--admin-surface) !important;
+  border-color: var(--admin-border) !important;
+}
+
+.admin-shell aside nav button[class*="bg-gradient-to-r"] {
+  background-image: none !important;
+  background-color: var(--admin-accent) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  font-weight: 600 !important;
+}
+
+.admin-shell [class*="font-black"] {
+  font-weight: 700 !important;
+}
+
+.admin-shell [class*="hover:scale-"]:hover {
+  transform: none !important;
+}
+
+.dark .admin-shell {
+  --admin-border: #263449;
+  --admin-surface: #0f172a;
+}
+
 /* =======================================================
    HỆ THỐNG TOAST THÔNG BÁO TOÀN SÀN (SONNER TOASTER)
    - Đồng bộ góc dưới bên phải (bottom-right)

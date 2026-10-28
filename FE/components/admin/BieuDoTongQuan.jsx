@@ -506,25 +506,25 @@ export default function BieuDoTongQuan({
             {/* HÀNG 1: BIỂU ĐỒ DOANH THU & BIỂU ĐỒ CƠ CẤU NGÀNH HÀNG */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* 1.1 BIỂU ĐỒ DIỆN TÍCH SÓNG DOANH THU */}
-                <div className="lg:col-span-8 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 flex flex-col justify-between">
+                <div className="lg:col-span-8 bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
                     <div>
                         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
                             <div>
                                 <div className="flex items-center gap-2.5">
-                                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-500/25">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                         <TrendingUp className="w-4 h-4 text-white" />
                                     </div>
-                                    <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white uppercase tracking-wider">
-                                        XU HƯỚNG DOANH THU & GIAO DỊCH
+                                    <h3 className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white">
+                                        Xu hướng doanh thu và giao dịch
                                     </h3>
                                 </div>
-                                <p className="text-xs text-slate-500 font-semibold mt-0.5 ml-11">
+                                <p className="text-xs text-slate-500 font-normal mt-0.5 ml-10">
                                     Theo dõi thời gian thực dòng tiền và số lượng đơn hàng phát sinh
                                 </p>
                             </div>
 
                             {/* Bộ Lọc Khung Thời Gian Realtime */}
-                            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border-2 border-slate-200 dark:border-slate-700 text-xs font-black shadow-2xs">
+                            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium">
                                 <button
                                     onClick={() => thayDoiKhungThoiGian('7_ngay')}
                                     className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${khungThoiGian === '7_ngay' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'}`}
@@ -554,53 +554,53 @@ export default function BieuDoTongQuan({
 
                         {/* Thông số nhanh đầu biểu đồ (3 Hộp Thống Kê Realtime Đậm Màu Sắc Nét theo đúng Bộ Lọc) */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 my-4">
-                            <div className="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/50 border-2 border-blue-300 dark:border-blue-700 shadow-2xs">
+                            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
                                 <div className="flex items-center justify-between">
-                                    <div className="text-[11px] font-black text-blue-900 dark:text-blue-300 uppercase tracking-wider">
+                                    <div className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
                                         Doanh thu kỳ này
                                     </div>
                                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-200/80 dark:bg-blue-900 text-blue-900 dark:text-blue-200 font-black">
                                         {tenKhungThoiGian}
                                     </span>
                                 </div>
-                                <div className="text-base sm:text-xl font-black text-blue-700 dark:text-cyan-300 mt-1">
+                                <div className="text-base sm:text-xl font-semibold text-slate-900 dark:text-white mt-1">
                                     {dinhDangTienVND(thongKeKyNay.tongDoanhThu)}
                                 </div>
-                                <div className="text-[11px] text-blue-900/80 dark:text-cyan-400 font-semibold mt-1">
+                                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                                     {thongKeKyNay.tongDon} đơn hàng phát sinh
                                 </div>
                             </div>
 
-                            <div className="p-3.5 rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/50 border-2 border-emerald-300 dark:border-emerald-700 shadow-2xs">
+                            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
                                 <div className="flex items-center justify-between">
-                                    <div className="text-[11px] font-black text-emerald-900 dark:text-emerald-300 uppercase tracking-wider">
+                                    <div className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
                                         Đã thu thực tế
                                     </div>
                                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200/80 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200 font-black">
                                         {tenKhungThoiGian}
                                     </span>
                                 </div>
-                                <div className="text-base sm:text-xl font-black text-emerald-700 dark:text-emerald-300 mt-1">
+                                <div className="text-base sm:text-xl font-semibold text-slate-900 dark:text-white mt-1">
                                     {dinhDangTienVND(thongKeKyNay.doanhThuThanhCong)}
                                 </div>
-                                <div className="text-[11px] text-emerald-900/80 dark:text-emerald-400 font-semibold mt-1">
+                                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                                     {thongKeKyNay.soDonThanhCong} đơn giao thành công
                                 </div>
                             </div>
 
-                            <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/50 border-2 border-amber-300 dark:border-amber-700 shadow-2xs">
+                            <div className="col-span-2 sm:col-span-1 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
                                 <div className="flex items-center justify-between">
-                                    <div className="text-[11px] font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">
+                                    <div className="text-[11px] font-medium text-slate-600 dark:text-slate-300">
                                         Tỷ lệ thành công
                                     </div>
                                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900 text-amber-900 dark:text-amber-200 font-black">
                                         {tenKhungThoiGian}
                                     </span>
                                 </div>
-                                <div className="text-base sm:text-xl font-black text-amber-700 dark:text-amber-400 mt-1">
+                                <div className="text-base sm:text-xl font-semibold text-slate-900 dark:text-white mt-1">
                                     {thongKeKyNay.tyLeThanhCong}%
                                 </div>
-                                <div className="text-[11px] text-amber-900/80 dark:text-amber-400 font-semibold mt-1">
+                                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
                                     {thongKeKyNay.soDonThanhCong}/{thongKeKyNay.tongDon || 0} đơn hoàn tất
                                 </div>
                             </div>
@@ -695,16 +695,16 @@ export default function BieuDoTongQuan({
                 </div>
 
                 {/* 1.2 BIỂU ĐỒ TRÒN CƠ CẤU 7 NGÀNH HÀNG */}
-                <div className="lg:col-span-4 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 flex flex-col justify-between">
+                <div className="lg:col-span-4 bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
                     <div>
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 gap-2">
                             <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-purple-600 to-fuchsia-600 text-white flex items-center justify-center font-bold shadow-md shadow-purple-500/25">
+                                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                     <PieIcon className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">
-                                        CƠ CẤU 7 NGÀNH HÀNG
+                                    <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
+                                        Cơ cấu ngành hàng
                                     </h3>
                                     <p className="text-[11px] text-slate-500 font-semibold">
                                         {kieuXemNganhHang === 'kho' ? 'Tỷ trọng mẫu hàng trong kho' : `Doanh số theo kỳ (${tenKhungThoiGian})`}
@@ -713,17 +713,17 @@ export default function BieuDoTongQuan({
                             </div>
 
                             {/* Tab chuyển đổi xem Mẫu kho vs Doanh số kỳ này */}
-                            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-black">
+                                <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] font-medium">
                                 <button
                                     onClick={() => setKieuXemNganhHang('kho')}
-                                    className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${kieuXemNganhHang === 'kho' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400'}`}
+                                    className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${kieuXemNganhHang === 'kho' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400'}`}
                                     title="Xem tỷ trọng số lượng mẫu hàng"
                                 >
                                     Kho
                                 </button>
                                 <button
                                     onClick={() => setKieuXemNganhHang('doanh_thu')}
-                                    className={`px-2 py-1 rounded-lg transition-all cursor-pointer ${kieuXemNganhHang === 'doanh_thu' ? 'bg-purple-600 text-white shadow-2xs' : 'text-slate-600 dark:text-slate-400'}`}
+                                    className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${kieuXemNganhHang === 'doanh_thu' ? 'bg-blue-600 text-white' : 'text-slate-600 dark:text-slate-400'}`}
                                     title="Xem doanh thu theo ngành hàng trong kỳ lọc"
                                 >
                                     Doanh Số
@@ -790,15 +790,15 @@ export default function BieuDoTongQuan({
             {/* HÀNG 2: TIẾN ĐỘ XỬ LÝ ĐƠN HÀNG & TỒN KHO THEO THƯƠNG HIỆU */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* 2.1 TRẠNG THÁI XỬ LÝ ĐƠN HÀNG (TIẾN ĐỘ & PHỄU CẬP NHẬT REALTIME THEO KỲ) */}
-                <div className="lg:col-span-6 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 space-y-4">
+                <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
                     <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center font-bold shadow-md shadow-amber-500/25">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                 <ShoppingBag className="w-4 h-4 text-white" />
                             </div>
                             <div>
-                                <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">
-                                    TIẾN ĐỘ XỬ LÝ ĐƠN HÀNG
+                                <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
+                                    Tiến độ xử lý đơn hàng
                                 </h3>
                                 <p className="text-[11px] text-slate-500 font-semibold">
                                     Phân luồng trạng thái đơn hàng trong kỳ ({tenKhungThoiGian})
@@ -841,16 +841,16 @@ export default function BieuDoTongQuan({
                 </div>
 
                 {/* 2.2 BIỂU ĐỒ CỘT TOP THƯƠNG HIỆU TỒN KHO & MẪU HÀNG */}
-                <div className="lg:col-span-6 bg-white dark:bg-[#0d1527] rounded-3xl p-5 sm:p-6 border-2 border-slate-300 dark:border-slate-800 shadow-md shadow-slate-900/5 flex flex-col justify-between">
+                <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
                     <div>
                         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
                             <div className="flex items-center gap-2.5">
-                                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-600 to-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-cyan-500/25">
+                                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                                     <BarChart3 className="w-4 h-4 text-white" />
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-sm text-slate-900 dark:text-white uppercase tracking-wider">
-                                        TỒN KHO THEO THƯƠNG HIỆU
+                                    <h3 className="font-semibold text-sm text-slate-900 dark:text-white">
+                                        Tồn kho theo thương hiệu
                                     </h3>
                                     <p className="text-[11px] text-slate-500 font-semibold">Top các hãng công nghệ chiếm tỷ trọng lớn trong kho</p>
                                 </div>

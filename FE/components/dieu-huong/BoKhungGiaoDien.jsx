@@ -22,7 +22,7 @@ export default function BoKhungGiaoDien({ children }) {
 
     if (laTrangAdmin) {
         return (
-            <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+            <div className="h-screen w-full overflow-hidden bg-slate-950 text-slate-100 flex flex-col">
                 {children}
             </div>
         );
