@@ -94,6 +94,7 @@ exports.guiYeuCauLienHe = async (req, res) => {
                 ma_yeu_cau: lienHeMoi.ma_yeu_cau,
                 ho_ten: lienHeMoi.ho_ten,
                 so_dien_thoai: lienHeMoi.so_dien_thoai,
+                email: lienHeMoi.email,
                 chu_de: lienHeMoi.chu_de,
                 ngay_tao: lienHeMoi.ngay_tao
             }

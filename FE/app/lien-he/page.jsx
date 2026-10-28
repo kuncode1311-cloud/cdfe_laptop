@@ -291,6 +291,7 @@ export default function TrangLienHe() {
                     ma_yeu_cau: `LH-${Date.now().toString().slice(-6)}`,
                     ho_ten: hoTen,
                     so_dien_thoai: sdtChuan,
+                    email: email.trim(),
                     chu_de: chuDeDaChon,
                     ngay_tao: new Date().toISOString()
                 });
@@ -565,6 +566,10 @@ export default function TrangLienHe() {
                                 <div className="flex items-center justify-between">
                                     <span className="text-slate-500 font-medium">Số điện thoại:</span>
                                     <span className="font-mono font-bold text-slate-900">{ketQuaGui.so_dien_thoai}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="text-slate-500 font-medium">Email nhận phản hồi:</span>
+                                    <span className="font-medium text-blue-700 truncate" title={ketQuaGui.email || email}>{ketQuaGui.email || email}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-slate-500 font-medium">Chủ đề:</span>
