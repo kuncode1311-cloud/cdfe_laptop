@@ -36,7 +36,8 @@ export default function ModalDonHang({
     const [tuKhoaSanPham, setTuKhoaSanPham] = useState('');
     const [locLoaiSanPham, setLocLoaiSanPham] = useState('tat_ca');
     const [locHangSanPham, setLocHangSanPham] = useState('tat_ca');
-    const [locTonKho, setLocTonKho] = useState('con_hang');
+    const [trangSanPham, setTrangSanPham] = useState(1);
+    const soSanPhamMoiTrang = 10;
 
     const danhSachSanPhamLoc = useMemo(() => {
         const tuKhoa = tuKhoaSanPham.trim().toLowerCase();
@@ -47,13 +48,26 @@ export default function ModalDonHang({
             const khopLoai = locLoaiSanPham === 'tat_ca' || loai.toLowerCase().includes(locLoaiSanPham.toLowerCase());
             const khopHang = locHangSanPham === 'tat_ca' || sp.hang_san_xuat === locHangSanPham;
             const tonKho = Number(sp.so_luong_ton_kho) || 0;
-            const khopTon = locTonKho === 'tat_ca' || (locTonKho === 'con_hang' ? tonKho > 0 : tonKho <= 0);
-            return khopTuKhoa && khopLoai && khopHang && khopTon;
+            return khopTuKhoa && khopLoai && khopHang && tonKho > 0;
         });
-    }, [danhSachSanPham, tuKhoaSanPham, locLoaiSanPham, locHangSanPham, locTonKho]);
+    }, [danhSachSanPham, tuKhoaSanPham, locLoaiSanPham, locHangSanPham]);
 
-    const danhMucSanPham = useMemo(() => [...new Set(danhSachSanPham.flatMap((sp) => Array.isArray(sp.danh_muc) ? sp.danh_muc : [sp.danh_muc]).filter(Boolean))], [danhSachSanPham]);
-    const hangSanPham = useMemo(() => [...new Set(danhSachSanPham.map((sp) => sp.hang_san_xuat).filter(Boolean))].sort(), [danhSachSanPham]);
+    const sanPhamConHang = useMemo(() => danhSachSanPham.filter((sp) => (Number(sp.so_luong_ton_kho) || 0) > 0), [danhSachSanPham]);
+    const danhMucSanPham = useMemo(() => [...new Set(sanPhamConHang.flatMap((sp) => Array.isArray(sp.danh_muc) ? sp.danh_muc : [sp.danh_muc]).filter(Boolean))], [sanPhamConHang]);
+    const hangSanPham = useMemo(() => [...new Set(sanPhamConHang.map((sp) => sp.hang_san_xuat).filter(Boolean))].sort(), [sanPhamConHang]);
+    const danhSachSanPhamTrang = useMemo(() => danhSachSanPhamLoc.slice((trangSanPham - 1) * soSanPhamMoiTrang, trangSanPham * soSanPhamMoiTrang), [danhSachSanPhamLoc, trangSanPham]);
+    const tongTrangSanPham = Math.max(1, Math.ceil(danhSachSanPhamLoc.length / soSanPhamMoiTrang));
+
+    useEffect(() => {
+        if (dangMoModalDonHang) {
+            setTuKhoaSanPham('');
+            setLocLoaiSanPham('tat_ca');
+            setLocHangSanPham('tat_ca');
+            setTrangSanPham(1);
+        }
+    }, [dangMoModalDonHang]);
+
+    useEffect(() => setTrangSanPham(1), [tuKhoaSanPham, locLoaiSanPham, locHangSanPham]);
     const hienThiNhan = (giaTri) => {
         const nhanDacBiet = {
             'van-phong-mong-nhe': 'Văn phòng – Mỏng nhẹ',
@@ -258,20 +272,16 @@ export default function ModalDonHang({
                                         <input value={tuKhoaSanPham} onChange={(e) => setTuKhoaSanPham(e.target.value)} placeholder="Tìm tên, mã sản phẩm, thương hiệu..." className="w-full px-3 py-2 rounded-lg border border-orange-200 dark:border-orange-800 bg-white dark:bg-slate-800 text-xs font-bold focus:border-orange-500 focus:outline-none" />
                                         <div className="grid grid-cols-3 gap-2">
                                             <select value={locLoaiSanPham} onChange={(e) => setLocLoaiSanPham(e.target.value)} className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-bold">
-                                                <option value="tat_ca">Tất cả loại</option>
-                                                {danhMucSanPham.map((loai) => <option key={loai} value={loai}>{hienThiNhan(loai)}</option>)}
+                                                <option value="tat_ca">Tất cả loại ({sanPhamConHang.length})</option>
+                                                {danhMucSanPham.map((loai) => <option key={loai} value={loai}>{hienThiNhan(loai)} ({sanPhamConHang.filter((sp) => (Array.isArray(sp.danh_muc) ? sp.danh_muc : [sp.danh_muc]).includes(loai)).length})</option>)}
                                             </select>
                                             <select value={locHangSanPham} onChange={(e) => setLocHangSanPham(e.target.value)} className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-bold">
-                                                <option value="tat_ca">Tất cả hãng</option>
-                                                {hangSanPham.map((hang) => <option key={hang} value={hang}>{hienThiNhan(hang)}</option>)}
+                                                <option value="tat_ca">Tất cả hãng ({sanPhamConHang.length})</option>
+                                                {hangSanPham.map((hang) => <option key={hang} value={hang}>{hienThiNhan(hang)} ({sanPhamConHang.filter((sp) => sp.hang_san_xuat === hang).length})</option>)}
                                             </select>
-                                            <select value={locTonKho} onChange={(e) => setLocTonKho(e.target.value)} className="px-2 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-[11px] font-bold">
-                                                <option value="con_hang">Còn hàng</option>
-                                                <option value="tat_ca">Tất cả tồn kho</option>
-                                                <option value="het_hang">Hết hàng</option>
-                                            </select>
+                                            <div className="px-2 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 text-[11px] font-bold text-center">✓ Chỉ còn hàng</div>
                                         </div>
-                                        <div className="text-[10px] font-bold text-orange-700 dark:text-orange-300">Hiển thị {danhSachSanPhamLoc.length}/{danhSachSanPham.length} sản phẩm phù hợp</div>
+                                        <div className="flex items-center justify-between text-[10px] font-bold text-orange-700 dark:text-orange-300"><span>{danhSachSanPhamLoc.length}/{sanPhamConHang.length} sản phẩm còn hàng phù hợp</span><span>Trang {trangSanPham}/{tongTrangSanPham}</span></div>
                                     </div>
 
                                     {(formDonHang.cac_san_pham || []).map((dong, idx) => (
@@ -282,12 +292,16 @@ export default function ModalDonHang({
                                                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white font-bold text-xs focus:bg-white focus:border-orange-500 focus:outline-none transition-all cursor-pointer"
                                             >
                                                 <option value="">-- Chọn sản phẩm --</option>
-                                                {[...danhSachSanPhamLoc, ...danhSachSanPham.filter((sp) => (sp.id || sp._id) === dong.san_pham_id && !danhSachSanPhamLoc.some((item) => (item.id || item._id) === (sp.id || sp._id)))].map(sp => (
+                                                {[...danhSachSanPhamTrang, ...danhSachSanPham.filter((sp) => (sp.id || sp._id) === dong.san_pham_id && !danhSachSanPhamTrang.some((item) => (item.id || item._id) === (sp.id || sp._id)))].map(sp => (
                                                     <option key={sp.id || sp._id} value={sp.id || sp._id}>
                                                         {sp.ten_san_pham} · {sp.hang_san_xuat || 'Không hãng'} · {dinhDangTienVND(sp.gia_khuyen_mai)} · Tồn: {Number(sp.so_luong_ton_kho) || 0}
                                                     </option>
                                                 ))}
                                             </select>
+                                            <div className="sm:col-span-3 flex items-center justify-end gap-1">
+                                                <button type="button" disabled={trangSanPham <= 1} onClick={() => setTrangSanPham((trang) => Math.max(1, trang - 1))} className="px-2 py-1 rounded-md border border-slate-200 text-[10px] font-bold disabled:opacity-40">‹ Trước</button>
+                                                <button type="button" disabled={trangSanPham >= tongTrangSanPham} onClick={() => setTrangSanPham((trang) => Math.min(tongTrangSanPham, trang + 1))} className="px-2 py-1 rounded-md border border-slate-200 text-[10px] font-bold disabled:opacity-40">Sau ›</button>
+                                            </div>
                                             <input
                                                 type="number"
                                                 min="1"
