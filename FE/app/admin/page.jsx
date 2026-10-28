@@ -772,6 +772,7 @@ export default function TrangQuanTriCuaHang() {
         la_ban_chay: false,
         la_san_pham_moi: false,
         mo_ta_chi_tiet: '',
+        mo_ta_ngan: '',
         dac_diem_noi_bat: [],
         qua_tang: [],
         tuy_chon_phien_ban: [],
@@ -2098,6 +2099,7 @@ export default function TrangQuanTriCuaHang() {
             la_ban_chay: false,
             la_san_pham_moi: false,
             mo_ta_chi_tiet: '',
+            mo_ta_ngan: '',
             dac_diem_noi_bat: [
                 'Bộ đôi vi xử lý thế hệ mới cực mạnh kết hợp card đồ họa kiến trúc tân tiến',
                 'Màn hình chuẩn màu đồ họa tần số quét cao siêu mượt, độ phân giải sắc nét',
@@ -2336,6 +2338,7 @@ export default function TrangQuanTriCuaHang() {
             la_ban_chay: !!sp.la_ban_chay,
             la_san_pham_moi: !!sp.la_san_pham_moi,
             mo_ta_chi_tiet: sp.mo_ta_chi_tiet || '',
+            mo_ta_ngan: sp.mo_ta_ngan || '',
             dac_diem_noi_bat: Array.isArray(sp.dac_diem_noi_bat) ? [...sp.dac_diem_noi_bat] : [],
             qua_tang: Array.isArray(sp.qua_tang) ? JSON.parse(JSON.stringify(sp.qua_tang)) : [],
             tuy_chon_phien_ban: Array.isArray(sp.tuy_chon_phien_ban) ? JSON.parse(JSON.stringify(sp.tuy_chon_phien_ban)) : [],
@@ -2976,6 +2979,7 @@ export default function TrangQuanTriCuaHang() {
                 la_ban_chay: Boolean(formSp.la_ban_chay),
                 la_san_pham_moi: Boolean(formSp.la_san_pham_moi),
                 mo_ta_chi_tiet: formSp.mo_ta_chi_tiet || '',
+                mo_ta_ngan: formSp.mo_ta_ngan || '',
                 dac_diem_noi_bat: (formSp.dac_diem_noi_bat || []).map(s => String(s).trim()).filter(Boolean),
                 qua_tang: (formSp.qua_tang || []).filter(q => q && q.ten_qua_tang && q.ten_qua_tang.trim()).map(q => ({
                     ten_qua_tang: q.ten_qua_tang.trim(),

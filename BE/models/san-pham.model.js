@@ -114,6 +114,10 @@ const SanPhamSchema = new mongoose.Schema(
             type: String,
             default: ''
         },
+        mo_ta_ngan: {
+            type: String,
+            default: ''
+        },
         con_hang: {
             type: Boolean,
             default: true
