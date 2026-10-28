@@ -126,7 +126,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                 },
                 {
                     id: 'balo_tien_ich',
-                    tenNhom: ts.tieu_de_nhom_balo_tien_ich || 'Tiện Ích, Tính Năng & Bảo Hành',
+                    tenNhom: ts.tieu_de_nhom_balo_tien_ich || 'Tiện Ích & Tính Năng',
                     icon: ShieldCheck,
                     mauSac: {
                         border: 'border-l-purple-600',
@@ -135,7 +135,6 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                     },
                     danhSach: [
                         { nhan: 'Tính năng nổi bật:', giaTri: formatGiaTri(ts.cong_tinh_nang), noiBat: true },
-                        { nhan: 'Chính sách bảo hành:', giaTri: formatGiaTri(ts.che_do_bao_hanh) }
                     ]
                 }
             ];
@@ -191,7 +190,6 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                         { nhan: 'Hệ thống đèn LED:', giaTri: formatGiaTri(ts.den_led), noiBat: true },
                         { nhan: 'Dung lượng Pin / Nguồn điện:', giaTri: formatGiaTri(ts.dung_luong_pin) },
                         { nhan: 'Khả năng tương thích:', giaTri: formatGiaTri(ts.tuong_thich) },
-                        { nhan: 'Chính sách bảo hành:', giaTri: formatGiaTri(ts.che_do_bao_hanh) }
                     ]
                 }
             ];
@@ -238,7 +236,6 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                         { nhan: 'Đế chuột (Feet):', giaTri: formatGiaTri(ts.chat_lieu_feet) },
                         { nhan: 'Kích thước:', giaTri: formatGiaTri(ts.kich_thuoc) },
                         { nhan: 'Khối lượng thiết bị:', giaTri: ts.trong_luong ? `${ts.trong_luong < 1 ? Math.round(ts.trong_luong * 1000) + ' gram' : ts.trong_luong + ' kg'}` : null, noiBat: true },
-                        { nhan: 'Chính sách bảo hành:', giaTri: formatGiaTri(ts.che_do_bao_hanh) }
                     ]
                 }
             ];
@@ -284,7 +281,6 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                         { nhan: 'Bộ điều khiển:', giaTri: formatGiaTri(ts.bo_dieu_khien) },
                         { nhan: 'Kích thước:', giaTri: formatGiaTri(ts.kich_thuoc) },
                         { nhan: 'Khối lượng thiết bị:', giaTri: ts.trong_luong ? `${ts.trong_luong < 1 ? Math.round(ts.trong_luong * 1000) + ' gram' : ts.trong_luong + ' kg'}` : null },
-                        { nhan: 'Chính sách bảo hành:', giaTri: formatGiaTri(ts.che_do_bao_hanh) }
                     ]
                 }
             ];
@@ -332,7 +328,6 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                         { nhan: 'Kích thước:', giaTri: formatGiaTri(ts.kich_thuoc) },
                         { nhan: 'Khối lượng thiết bị:', giaTri: ts.trong_luong ? `${ts.trong_luong < 1 ? Math.round(ts.trong_luong * 1000) + ' gram' : ts.trong_luong + ' kg'}` : null },
                         { nhan: 'Khả năng tương thích:', giaTri: formatGiaTri(ts.tuong_thich) },
-                        { nhan: 'Chính sách bảo hành:', giaTri: formatGiaTri(ts.che_do_bao_hanh) }
                     ]
                 }
             ];
@@ -380,7 +375,6 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                         { nhan: 'Tính năng đặc biệt:', giaTri: formatGiaTri(ts.tinh_nang_dac_biet) },
                         { nhan: 'Tương thích laptop:', giaTri: formatGiaTri(ts.kich_co_laptop_phu_hop) },
                         { nhan: 'Khối lượng thiết bị:', giaTri: ts.trong_luong ? `${ts.trong_luong < 1 ? Math.round(ts.trong_luong * 1000) + ' gram' : ts.trong_luong + ' kg'}` : null },
-                        { nhan: 'Chính sách bảo hành:', giaTri: formatGiaTri(ts.che_do_bao_hanh) }
                     ]
                 }
             ];
@@ -481,7 +475,7 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
             },
             {
                 id: 'ket_noi_os',
-                tenNhom: ts.tieu_de_nhom_thiet_ke || 'Cổng Kết Nối, Hệ Điều Hành & Bảo Hành',
+                tenNhom: ts.tieu_de_nhom_thiet_ke || 'Cổng Kết Nối, Hệ Điều Hành & Khác',
                 icon: Radio,
                 mauSac: {
                     border: 'border-l-indigo-600',
@@ -494,7 +488,6 @@ export default function BangThongSoKyThuat({ thongSo = {}, sanPham = {} }) {
                     { nhan: 'Bàn phím & Đèn nền:', giaTri: formatGiaTri(ts.ban_phim) },
                     { nhan: 'Công nghệ âm thanh:', giaTri: formatGiaTri(ts.am_thanh) },
                     { nhan: 'Hệ điều hành tích hợp:', giaTri: formatGiaTri(ts.he_dieu_hanh), noiBat: true },
-                    { nhan: 'Chính sách bảo hành:', giaTri: formatGiaTri(ts.che_do_bao_hanh) || 'Bảo hành chính hãng 24 tháng tại TNTP LAPTOP' }
                 ]
             }
         ];
