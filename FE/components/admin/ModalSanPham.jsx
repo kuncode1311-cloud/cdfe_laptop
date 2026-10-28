@@ -646,7 +646,7 @@ export default function ModalSanPham({
                                                     <div className="space-y-1.5">
                                                         <label className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 text-xs">
                                                             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                                            <span>Nhãn nổi bật & trạng thái bán</span>
+                                                            <span>Nhãn nổi bật</span>
                                                         </label>
                                                         <div className="flex flex-wrap items-center gap-2">
                                                             {/* Flash Sale Toggle */}
@@ -677,19 +677,6 @@ export default function ModalSanPham({
                                                                 <span>🔥 Bán Chạy</span>
                                                             </button>
 
-                                                            {/* Trạng thái cho phép bán: đây là quyền kinh doanh, không phải huy hiệu */}
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setFormSp({ ...formSp, con_hang: !formSp.con_hang })}
-                                                                className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 border transition-all cursor-pointer ${
-                                                                    formSp.con_hang
-                                                                        ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
-                                                                        : 'bg-emerald-50 dark:bg-slate-800 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/50 hover:bg-emerald-100'
-                                                                }`}
-                                                            >
-                                                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                                                <span>{formSp.con_hang ? '✅ Cho Phép Bán' : '⛔ Tạm Ngưng Bán'}</span>
-                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
