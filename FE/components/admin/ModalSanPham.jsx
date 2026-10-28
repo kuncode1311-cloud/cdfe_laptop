@@ -340,7 +340,7 @@ export default function ModalSanPham({
                                                 <div className="flex flex-col sm:flex-row gap-4 items-start">
                                                     {/* KHUNG ẢNH ĐẠI DIỆN TRỰC QUAN CÓ UPLOAD FILE TỪ MÁY */}
                                                     <div className="w-full sm:w-auto shrink-0 flex sm:flex-col items-center gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80">
-                                                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center relative overflow-hidden group shadow-2xs" title="Bắt buộc: tải ảnh từ máy hoặc dán đường dẫn ảnh hợp lệ">
+                                                        <div className="w-24 aspect-video rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1 flex items-center justify-center relative overflow-hidden group shadow-2xs" title="Bắt buộc: tải ảnh từ máy hoặc dán đường dẫn ảnh hợp lệ">
                                                             {(formSp.hinh_anh_chinh || formSp.hinh_anh) ? (
                                                                 <AnhXemTruoc src={formSp.hinh_anh_chinh || formSp.hinh_anh} className="w-full h-full object-contain group-hover:scale-105 transition-transform" />
                                                             ) : (
@@ -371,6 +371,7 @@ export default function ModalSanPham({
                                                                 <Link2 className="w-2.5 h-2.5" />
                                                                 <span>{hienOUrlAnhChinh ? 'Ẩn link' : 'Dán link'}</span>
                                                             </button>
+                                                            <p className="text-[9px] leading-tight text-center text-slate-500 dark:text-slate-400">Khuyên dùng ảnh ngang 16:9<br />tối thiểu 1200 × 675px</p>
                                                         </div>
                                                     </div>
 
@@ -392,6 +393,7 @@ export default function ModalSanPham({
                                                                     className="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
                                                                 />
 <LoiLinkAnh loi={loiLinkAnh(formSp.hinh_anh_chinh)} />
+                                                                <p className="text-[10px] text-slate-500 dark:text-slate-400">Khuyên dùng JPG, PNG hoặc WebP; ảnh sẽ tự tối ưu khi tải từ máy.</p>
                                                             </div>
                                                         )}
 
