@@ -607,6 +607,10 @@ export default function TrangChiTietSanPham({ params }) {
                 Yên Tâm Mua Sắm Tại TNTP LAPTOP:
               </span>
               <div className="space-y-2.5 text-slate-700 dark:text-slate-300">
+                <div className="flex items-center gap-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 px-3 py-2 text-indigo-800 dark:text-indigo-200">
+                  <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                  <span className="font-bold">Bảo hành sản phẩm: {sanPham.thong_so?.che_do_bao_hanh || 'Chính hãng 24 tháng'}</span>
+                </div>
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span className="font-medium">100% Sản phẩm chính hãng nguyên seal</span>
