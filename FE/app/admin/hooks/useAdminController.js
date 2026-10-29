@@ -998,7 +998,9 @@ export default function useAdminController() {
             const us = results[4].status === 'fulfilled' && Array.isArray(results[4].value) ? results[4].value : [];
             const tts = results[5].status === 'fulfilled' && Array.isArray(results[5].value) ? results[5].value : [];
 
-            setDanhSachSanPham(sps);
+            if (results[0].status === 'fulfilled' && Array.isArray(results[0].value)) {
+                setDanhSachSanPham(sps);
+            }
             setDanhSachDonHang(dhs);
             setDanhSachVoucher(vcs);
             setDanhSachDanhMuc(dms);
@@ -1577,6 +1579,7 @@ export default function useAdminController() {
 
     const { danhSachHangThucTe, danhSachLoaiSanPham, sanPhamHienThi, moModalThemSp, moModalSuaSp, xayThongSoTheoLoai, sanPhamXemTruoc, dacDiemNoiBatXemTruoc, tuyChonHienTaiXemTruoc, giaHienTaiXemTruoc, giaGocHienTaiXemTruoc, tienTietKiemXemTruoc, xuLyLuuSanPham } = useSanPhamController({
         setSpDangSua,
+        setDanhSachSanPham,
         setFormSpGoc,
         setThongSoTuyChinhGoc,
         setTabModalSp,
@@ -1612,7 +1615,12 @@ export default function useAdminController() {
         id,
         tieuDeXacNhan: 'Xóa Sản Phẩm Khỏi Hệ Thống?',
         noiDungXacNhan: `Bạn có chắc chắn muốn xóa vĩnh viễn sản phẩm:\n"${ten}"?\n\nThao tác này không thể hoàn tác.`,
-        xoaApi: () => SanPhamService.xoaSanPham(id),
+        xoaApi: async () => {
+            await SanPhamService.xoaSanPham(id);
+            setDanhSachSanPham((cu) => cu.filter((sp) =>
+                sp.id !== id && sp._id !== id && sp.ma_san_pham !== id
+            ));
+        },
         thongBaoThanhCong: `Đã xóa sản phẩm "${ten}" thành công!`,
         tieuDeLoi: 'Không Thể Xóa Sản Phẩm',
         setDangXuLy: setDangXuLySpId

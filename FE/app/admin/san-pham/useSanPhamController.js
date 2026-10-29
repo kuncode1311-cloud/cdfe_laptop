@@ -9,7 +9,7 @@ import { TU_DIEN_THONG_SO_ADMIN } from '@/app/admin/constants/tu-dien-thong-so';
 
 // Xử lý nghiệp vụ SanPham; dữ liệu dùng chung được truyền từ controller chính.
 export default function useSanPhamController(dependencies) {
-    const { canhBao, chuyenKeySangSlug, danhSachDanhMuc, formSp, hienThongBao, lamTrongFormSp, layTenHienThiKey, loaiFormSanPham, setDangLuuSp, setDangMoModalSp, setFormSp, setFormSpGoc, setLoaiFormSanPham, setSpDangSua, setTabModalSp, setThongSoTuyChinh, setThongSoTuyChinhGoc, spDangSua, taiDuLieuToanBo, thongSoTuyChinh, TU_DIEN_THONG_SO_ADMIN, tuyChonXemTruoc, xacDinhLoaiSanPham } = dependencies;
+    const { canhBao, chuyenKeySangSlug, danhSachDanhMuc, formSp, hienThongBao, lamTrongFormSp, layTenHienThiKey, loaiFormSanPham, setDangLuuSp, setDangMoModalSp, setDanhSachSanPham, setFormSp, setFormSpGoc, setLoaiFormSanPham, setSpDangSua, setTabModalSp, setThongSoTuyChinh, setThongSoTuyChinhGoc, spDangSua, taiDuLieuToanBo, thongSoTuyChinh, TU_DIEN_THONG_SO_ADMIN, tuyChonXemTruoc, xacDinhLoaiSanPham } = dependencies;
     const { danhSachSanPham, tuKhoaGlobal, tuKhoaSanPham, locNganhHang, locHangSanPham, locTonKhoSanPham, sapXepSanPham } = dependencies;
     // Mở form thêm sản phẩm mới và xóa dữ liệu mẫu trong form.
     const moModalThemSp = () => {
@@ -723,7 +723,10 @@ export default function useSanPhamController(dependencies) {
             };
 
             if (spDangSua) {
-                await SanPhamService.capNhatSanPham(spDangSua.id || spDangSua._id, payload);
+                const sanPhamDaLuu = await SanPhamService.capNhatSanPham(spDangSua.id || spDangSua._id, payload);
+                setDanhSachSanPham((cu) => cu.map((sp) =>
+                    (sp.id || sp._id) === (spDangSua.id || spDangSua._id) ? sanPhamDaLuu : sp
+                ));
                 hienThongBao(`Đã cập nhật "${payload.ten_san_pham}" thành công!`);
             } else {
                 payload.id = formSp.ten_san_pham
@@ -733,7 +736,8 @@ export default function useSanPhamController(dependencies) {
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-4);
 
-                await SanPhamService.themSanPham(payload);
+                const sanPhamDaLuu = await SanPhamService.themSanPham(payload);
+                setDanhSachSanPham((cu) => [sanPhamDaLuu, ...cu]);
                 hienThongBao(`Đã thêm mới "${payload.ten_san_pham}" vào kho!`);
             }
 

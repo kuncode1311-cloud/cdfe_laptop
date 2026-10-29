@@ -335,9 +335,12 @@ export const SanPhamService = {
     async themSanPham(duLieuMoi) {
         const res = await apiFetch('/san-pham', {
             method: 'POST',
-            body: JSON.stringify(duLieuMoi)
+            body: JSON.stringify(duLieuMoi),
+            timeoutMs: 60000
         });
-        await this.layTatCaSanPhamAsync(); // Cập nhật lại bộ nhớ đệm
+        if (res && typeof res === 'object') {
+            boNhoDemSanPham = [res, ...boNhoDemSanPham.filter((sp) => sp.id !== res.id)];
+        }
         thongBaoThayDoi('san_pham'); // Báo cho các tab / trang của khách tự làm mới
         return res;
     },
@@ -348,9 +351,14 @@ export const SanPhamService = {
     async capNhatSanPham(id, duLieuCapNhat) {
         const res = await apiFetch(`/san-pham/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(duLieuCapNhat)
+            body: JSON.stringify(duLieuCapNhat),
+            timeoutMs: 60000
         });
-        await this.layTatCaSanPhamAsync(); // Cập nhật lại bộ nhớ đệm
+        if (res && typeof res === 'object') {
+            boNhoDemSanPham = boNhoDemSanPham.map((sp) =>
+                sp.id === id || sp._id === id || sp.ma_san_pham === id ? res : sp
+            );
+        }
         thongBaoThayDoi('san_pham'); // Báo cho các tab / trang của khách tự làm mới
         return res;
     },
@@ -362,7 +370,9 @@ export const SanPhamService = {
         const res = await apiFetch(`/san-pham/${id}`, {
             method: 'DELETE'
         });
-        await this.layTatCaSanPhamAsync(); // Cập nhật lại bộ nhớ đệm
+        boNhoDemSanPham = boNhoDemSanPham.filter((sp) =>
+            sp.id !== id && sp._id !== id && sp.ma_san_pham !== id
+        );
         thongBaoThayDoi('san_pham'); // Báo cho các tab / trang của khách tự làm mới
         return res;
     }
