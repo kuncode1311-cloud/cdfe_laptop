@@ -1,9 +1,10 @@
-'use client';
+'use client'; // Trang cần hook React để lấy dữ liệu từ Context.
+
 import QuanLyKhachHang from './components/QuanLyKhachHang';
 import { useAdmin } from '@/app/admin/context/AdminContext';
 
-// Trang quản lý khach-hang: chỉ ghép giao diện với dữ liệu từ controller.
 export default function Page() {
+    // Lấy danh sách khách hàng và các hàm quản lý từ Context.
     const { thongSoQuanLyKhachHang } = useAdmin();
     return (<QuanLyKhachHang {...thongSoQuanLyKhachHang} />);
 }

@@ -18,195 +18,7 @@ export default function useSanPhamController(dependencies) {
         setLoaiFormSanPham('laptop');
         setThongSoTuyChinh([]);
         // Form thêm mới không tự gắn nhãn Hàng Mới; admin chủ động bật khi cần.
-        setFormSp(lamTrongFormSp({
-            ma_san_pham: '',
-            ten_san_pham: '',
-            hang_san_xuat: 'asus',
-            danh_muc: [],
-            gia_goc: 30000000,
-            gia_khuyen_mai: 27990000,
-            phan_tram_giam_gia: 10,
-            hinh_anh_chinh: '/images/sp/asus_rog_scar18.jpg',
-            so_luong_ton_kho: 15,
-            con_hang: true,
-            la_flash_sale: false,
-            la_ban_chay: false,
-            la_san_pham_moi: false,
-            mo_ta_chi_tiet: '',
-            mo_ta_ngan: '',
-            dac_diem_noi_bat: [
-                'Bộ đôi vi xử lý thế hệ mới cực mạnh kết hợp card đồ họa kiến trúc tân tiến',
-                'Màn hình chuẩn màu đồ họa tần số quét cao siêu mượt, độ phân giải sắc nét',
-                'Hệ thống tản nhiệt thông minh tối ưu luồng gió mát lạnh êm ái',
-                'Bộ nhớ tốc độ cao và khả năng nâng cấp linh hoạt trong tương lai'
-            ],
-            qua_tang: [],
-            tuy_chon_phien_ban: [],
-            thu_vien_hinh_anh: [],
-
-            // 1. Cấu hình chi tiết Laptop
-            cpu: 'Intel Core i9-14900HX (24 Nhân 32 Luồng, Max 5.8GHz, 36MB Cache)',
-            so_nhan_luong: '24 Nhân (8 P-Core + 16 E-Core), 32 Luồng',
-            xung_nhip_toi_da: '5.8 GHz Turbo Boost',
-            bo_nho_dem_cache: '36MB Intel Smart Cache',
-            chip_ai_npu: 'Intel AI Boost NPU tích hợp',
-            hieu_nang_ai_tops: '45',
-            card_do_hoa: 'NVIDIA GeForce RTX 4090 Laptop GPU 16GB GDDR6 (175W TGP)',
-            dung_luong_vram: '16GB GDDR6',
-            cong_suat_tgp: '175',
-            ho_tro_ray_tracing: true,
-            ram: '64GB DDR5 5600MHz (2x32GB)',
-            loai_ram: 'DDR5 5600MHz',
-            toc_do_bus: '5600',
-            nang_cap_ram_toi_da: 'Lên tới 64GB (2 khe SODIMM)',
-            o_cung: '2TB PCIe 4.0 NVMe M.2 Performance SSD (Raid 0)',
-            khe_cam_mo_rong: '2 khe M.2 PCIe Gen 4',
-            man_hinh: '18.0 inch QHD+ (2560 x 1600) ROG Nebula HDR Mini-LED 240Hz 3ms',
-            do_phan_giai: '2.5K QHD+ (2560 x 1600), tỷ lệ 16:10',
-            tan_so_quet: '240',
-            tam_nen: 'Mini-LED, ROG Nebula HDR Display',
-            do_phu_mau: '100% DCI-P3, Chuẩn màu Pantone Validated',
-            do_sang_nits: '1100',
-            cong_nghe_man_hinh: 'G-Sync, Dolby Vision HDR, Chống chói Anti-Glare',
-            pin: '90WHrs, 4-cell Li-ion',
-            dung_luong_pin: '90WHrs, 4-cell Li-ion',
-            thoi_luong_su_dung_uoc_tinh: 'Khoảng 6 - 8 tiếng sử dụng cơ bản',
-            cong_suat_sac: '330W AC Adapter, hỗ trợ sạc nhanh Type-C PD 100W',
-            he_thong_tan_nhiet: 'Hệ thống ROG Intelligent Cooling, buồng hơi Vapor Chamber, kim loại lỏng',
-            chi_tiet_tan_nhiet: 'Hệ thống ROG Intelligent Cooling, buồng hơi Vapor Chamber, kim loại lỏng',
-            trong_luong: '3.1 kg',
-            kich_thuoc: '39.9 x 29.4 x 2.31 ~ 3.08 cm',
-            chat_lieu_vo: 'Hợp kim Nhôm - Magie cao cấp phay xước viền LED Aura Sync',
-            cong_ket_noi: '1x Thunderbolt 4, 1x USB 3.2 Gen 2 Type-C, 2x USB 3.2 Gen 2 Type-A, 1x HDMI 2.1, 1x LAN RJ45 2.5G, 1x Jack 3.5mm',
-            chuan_wifi_bluetooth: 'Wi-Fi 7 (802.11be) 3 băng tần + Bluetooth 5.4',
-            ban_phim: 'Bàn phím Chiclet Per-Key RGB Aura Sync, hành trình phím 2.0mm sâu',
-            am_thanh: 'Hệ thống 4 loa công nghệ Dolby Atmos, Smart Amp, Khử ồn AI hai chiều',
-            he_dieu_hanh: 'Windows 11 Home bản quyền vĩnh viễn',
-
-            // 2. Bàn phím cơ
-            loai_switch: 'ROG NX Snow Switch (Linear, 45g)',
-            tinh_nang_dac_biet: 'Hot-swap 3-pin / 5-pin mạch xuôi',
-            cau_truc_mount: 'Gasket Mount kèm lót Foam Poron tiêu âm',
-            layout_ban_phim: '75% (81 phím) + Màn hình OLED mini',
-            keycap_chat_lieu: 'PBT Doubleshot siêu bền',
-            chat_lieu_case: 'Nhôm CNC Anodized nguyên khối',
-            kieu_ket_noi_gear: '3 Chế độ: Type-C, SpeedNova 2.4GHz, Bluetooth 5.1',
-            led_rgb_gear: 'RGB Per-key Aura Sync 16.8 triệu màu',
-            dung_luong_pin_gear: '4000 mAh (Lên tới 2000 giờ)',
-            hot_swap: 'Hot-swap 5-pin hỗ trợ mọi loại switch',
-            tuong_thich_gear: 'Windows, macOS, Linux, iOS, Android',
-            trong_luong_gear: '1.2 kg',
-
-            // 3. Chuột & Lót chuột
-            cam_bien_chuot: 'ROG AimPoint Pro 42.000 DPI đỉnh cao',
-            do_phan_giai_dpi: '42.000 DPI (50G gia tốc, 750 IPS)',
-            toc_do_ips_gia_toc: '750 IPS / 50G',
-            switch_chuot: 'ROG Optical Micro Switch 100 triệu lần nhấn',
-            polling_rate: '1000Hz - 8000Hz Polling Rate',
-            loai_lot_chuot: 'Speed & Control cân bằng',
-            chat_lieu_be_mat: 'Vải dệt Cordura chống nước',
-            chat_lieu_de: 'Cao su tự nhiên Poron chống trượt',
-            kieu_ket_noi_chuot: 'SpeedNova Wireless 2.4GHz + Bluetooth + Type-C (Polling rate 8000Hz)',
-            che_do_led: 'RGB Aura Sync',
-            thoi_luong_pin_chuot: 'Lên tới 90 giờ chơi liên tục',
-            chat_lieu_feet: '100% Virgin PTFE bo góc mượt mà',
-            kich_thuoc_chuot: '120 x 65 x 37.8 mm',
-            trong_luong_chuot: '54g Siêu nhẹ',
-
-            // 4. Balo & Túi chống sốc
-            kich_co_laptop_phu_hop: 'Vừa vặn mọi laptop từ 15.6 đến 18 inch',
-            dung_tich_balo: '28 Lít',
-            so_ngan_chua: 'Ngăn laptop chống sốc riêng + 5 ngăn phụ',
-            kich_thuoc_balo: '540 x 350 x 220 mm',
-            trong_luong_tui: '1.2 kg',
-            chat_lieu_chinh: 'Vải Cordura 1000D chống xước cao cấp',
-            lop_lot_bao_ve: 'Đệm bọt khí EVA mật độ cao 3 lớp',
-            khoa_keo: 'YKK chống kẹt nước chuẩn Nhật Bản',
-            kha_nang_khang_nuoc: 'Kháng nước chuẩn IPX4 + khóa kéo chống nước',
-            dem_lung_thoang_khi: 'Đệm khí 3D tổ ong công thái học',
-            cong_tinh_nang: 'Tích hợp cổng sạc USB ngoài, ngăn chống trộm RFID',
-
-            // 5. Tai nghe & Loa
-            mang_loa_driver: 'Graphene 50mm Hi-Res Audio',
-            cong_nghe_am_thanh: 'Âm thanh vòm 7.1 DTS Headphone:X 2.0',
-            tan_so_dap_ung: '20Hz - 40.000Hz',
-            tro_khang_do_nhay: '32 Ohm / 100 dB SPL @ 1kHz',
-            chong_on_anc: 'Chống ồn chủ động ANC Hybrid đa cấp',
-            micro_dam_thoai: 'Micro Blue VO!CE lọc ồn AI rời',
-            kieu_ket_noi_tai_nghe: 'Lightspeed 2.4GHz + Bluetooth + Jack 3.5mm',
-            thoi_luong_pin_tai_nghe: 'Lên tới 50 giờ chơi liên tục',
-            khang_nuoc_tai_nghe: 'IPX4 kháng mồ hôi',
-            dem_tai: 'Bọt biển Memory Foam bọc da protein êm ái',
-            bo_dieu_khien: 'Nút cuộn âm lượng, tắt mic trên củ tai',
-            kich_thuoc_tai_nghe: '190 x 180 x 85 mm',
-            trong_luong_tai_nghe: '320g',
-
-            // 6. Củ sạc & Hub chuyển đổi
-            cong_suat_tong: '140W GaN Prime thế hệ mới',
-            cong_nghe_sac: 'PD 3.1, QC 4.0+, PPS, GaN III',
-            giao_thuc_ho_tro: 'Power Delivery 3.1, Quick Charge 4.0, Apple 2.4A',
-            dung_luong_pin_sac: '24.000 mAh 86.4Wh',
-            man_hinh_hien_thi: 'Màn hình TFT màu hiển thị công suất thời gian thực',
-            tinh_nang_an_toan: 'ActiveShield 2.0 kiểm soát nhiệt 3 triệu lần/ngày',
-            so_cong_sac: '2 x Type-C (140W max), 1 x USB-A (22.5W)',
-            bang_thong_truyen_du_lieu: '10Gbps USB 3.2 Gen 2 / 40Gbps USB4',
-            cong_suat_sac_pass_through: '100W Power Delivery',
-            xuat_hinh_anh: 'HDMI 2.1 4K@120Hz / 8K@60Hz',
-            chieu_dai_cap: '1.8 mét bọc dù chống đứt',
-            chat_lieu_vo_sac: 'Hợp kim nhôm tản nhiệt nguyên khối',
-            tuong_thich_sac: 'Laptop Gaming, MacBook Pro 16, Dell XPS, iPhone',
-            kich_thuoc_trong_luong_sac: '215g - Nhỏ hơn 40% củ sạc gốc',
-            kich_thuoc_sac: '85 x 50 x 30 mm',
-            trong_luong_sac: '215g',
-
-            // 7. Linh kiện & Tản nhiệt
-            loai_linh_kien: 'Ổ cứng SSD M.2 NVMe PCIe 4.0',
-            dung_luong_linh_kien: '2TB (2048GB)',
-            toc_do_doc_ghi: 'Đọc 7.450 MB/s - Ghi 6.900 MB/s',
-            toc_do_bus_linh_kien: '5600 MHz CL46',
-            do_tre_cl: 'CL30 / CL40',
-            so_nhan_luong_linh_kien: '24 Nhân 32 Luồng',
-            xung_nhip_toi_da_linh_kien: '5.8 GHz',
-            bo_nho_dem_cache_linh_kien: '36MB Intel Smart Cache',
-            cong_suat_tdp: '125W - 253W',
-            ho_tro_ram: 'DDR5 5600MHz / DDR4 3200MHz',
-            toc_do_quat: '2800 RPM điều tốc tự động',
-            hieu_qua_giam_nhiet: 'Giảm ngay từ 15°C - 25°C cho CPU/GPU',
-            do_dan_nhiet: '14.2 W/m-K',
-            chuan_giao_tiep: 'PCIe Gen 4.0 x4 M.2 NVMe',
-            do_ben_tbw: '1.200 TBW - 1.5 triệu giờ MTBF',
-            tinh_nang_dac_biet_linh_kien: 'Heatsink Nhôm Hàng Không tản nhiệt thụ động',
-            he_thong_tan_nhiet: 'Heatsink Nhôm Hàng Không tản nhiệt thụ động',
-            tuong_thich_linh_kien: 'Laptop Gaming, PC Desktop, PlayStation 5',
-            kich_co_laptop_linh_kien: 'Laptop 14 inch - 18 inch',
-            trong_luong_linh_kien: '80g',
-
-            // Tiêu đề phân nhóm cấu hình kỹ thuật tùy biến
-            tieu_de_nhom_cpu: '1. Bộ Xử Lý & Hiệu Năng (CPU)',
-            tieu_de_nhom_gpu: '2. Đồ Họa & Xử Lý Hình Ảnh (GPU)',
-            tieu_de_nhom_ram: '3. Bộ Nhớ RAM & Ổ Cứng Lưu Trữ',
-            tieu_de_nhom_man_hinh: '4. Màn Hình & Không Gian Hiển Thị',
-            tieu_de_nhom_pin: '5. Hệ Thống Tản Nhiệt & Thời Lượng Pin',
-            tieu_de_nhom_thiet_ke: '6. Thiết Kế Khung Vỏ, Bàn Phím & Cổng Giao Tiếp',
-            tieu_de_nhom_linh_kien_hieu_nang: '1. Hiệu Năng & Tốc Độ Truyền Tải',
-            tieu_de_nhom_linh_kien_chuan: '2. Chuẩn Giao Tiếp & Độ Bền',
-            tieu_de_nhom_balo_ngan_chua: '1. Ngăn Chứa & Kích Thước Máy',
-            tieu_de_nhom_balo_chat_lieu: '2. Chất Liệu & Khả Năng Kháng Nước',
-            tieu_de_nhom_balo_tien_ich: '3. Tiện Ích, Tính Năng & Bảo Hành',
-            tieu_de_nhom_phim_switch: '1. Switch & Cảm Giác Gõ Phím',
-            tieu_de_nhom_phim_layout: '2. Layout, Keycap & Khung Vỏ',
-            tieu_de_nhom_phim_ket_noi: '3. Kết Nối, Đèn LED & Pin',
-            tieu_de_nhom_chuot_cam_bien: '1. Cảm Biến, DPI & Độ Chính Xác',
-            tieu_de_nhom_chuot_ket_noi: '2. Kết Nối, Kích Thước & Thời Lượng Pin',
-            tieu_de_nhom_tai_nghe_am_thanh: '1. Màng Loa, Âm Thanh & Chống Ồn ANC',
-            tieu_de_nhom_tai_nghe_ket_noi: '2. Kết Nối, Micro & Thời Lượng Pin',
-            tieu_de_nhom_tai_nghe_thiet_ke: '3. Thiết Kế, Đệm Tai & Kháng Nước',
-            tieu_de_nhom_sac_cong_suat: '1. Công Suất & Công Nghệ Sạc Nhanh GaN',
-            tieu_de_nhom_sac_cong_ket_noi: '2. Cổng Kết Nối & Băng Thông Truyền Tải',
-            tieu_de_nhom_sac_thiet_ke: '3. Thiết Kế, Dây Cáp & Độ Bền',
-
-            che_do_bao_hanh: ''
-        }));
+        setFormSp(lamTrongFormSp(formSp));
         setDangMoModalSp(true);
     };
 
@@ -260,12 +72,12 @@ export default function useSanPhamController(dependencies) {
         const formSuaMoi = {
             ma_san_pham: sp.ma_san_pham || '',
             ten_san_pham: sp.ten_san_pham || '',
-            hang_san_xuat: sp.hang_san_xuat || 'asus',
+            hang_san_xuat: sp.hang_san_xuat || '',
             danh_muc: Array.isArray(sp.danh_muc) ? sp.danh_muc : [],
             gia_goc: sp.gia_goc || 0,
             gia_khuyen_mai: sp.gia_khuyen_mai || 0,
             phan_tram_giam_gia: sp.phan_tram_giam_gia || 0,
-            hinh_anh_chinh: sp.hinh_anh_chinh || '/images/sp/asus_rog_scar18.jpg',
+            hinh_anh_chinh: sp.hinh_anh_chinh || '',
             so_luong_ton_kho: sp.so_luong_ton_kho !== undefined ? sp.so_luong_ton_kho : 10,
             con_hang: sp.con_hang !== false,
             la_flash_sale: !!sp.la_flash_sale,
@@ -675,21 +487,21 @@ export default function useSanPhamController(dependencies) {
         return {
             _id: spDangSua?._id || 'xem_truoc_card',
             id: spDangSua?._id || 'xem_truoc_card',
-            ma_san_pham: formSp.ma_san_pham || 'SKU-SAMPLE',
-            ten_san_pham: formSp.ten_san_pham || 'Tên Sản Phẩm Mẫu',
-            hang_san_xuat: formSp.hang_san_xuat || 'asus',
+            ma_san_pham: formSp.ma_san_pham || '',
+            ten_san_pham: formSp.ten_san_pham || '',
+            hang_san_xuat: formSp.hang_san_xuat || '',
             danh_muc: Array.isArray(formSp.danh_muc) ? formSp.danh_muc : [],
             gia_goc: Number(formSp.gia_goc) || 0,
             gia_khuyen_mai: Number(formSp.gia_khuyen_mai) || 0,
             phan_tram_giam_gia: Number(formSp.phan_tram_giam_gia) || 0,
-            hinh_anh_chinh: formSp.hinh_anh_chinh || '/images/sp/asus_rog_scar18.jpg',
+            hinh_anh_chinh: formSp.hinh_anh_chinh || '',
             hinh_anh_phu: formSp.thu_vien_hinh_anh || [],
             thu_vien_hinh_anh: formSp.thu_vien_hinh_anh && formSp.thu_vien_hinh_anh.length > 0
                 ? formSp.thu_vien_hinh_anh
                 : (spDangSua?.thu_vien_hinh_anh && spDangSua.thu_vien_hinh_anh.length > 0
                     ? spDangSua.thu_vien_hinh_anh
-                    : [formSp.hinh_anh_chinh || '/images/sp/asus_rog_scar18.jpg']),
-            video_demo: formSp.video_demo || spDangSua?.video_demo || '/videos/1-2_1080p_202608242249.mp4',
+                    : (formSp.hinh_anh_chinh ? [formSp.hinh_anh_chinh] : [])),
+            video_demo: formSp.video_demo || spDangSua?.video_demo || '',
             dac_diem_noi_bat: Array.isArray(formSp.dac_diem_noi_bat) && formSp.dac_diem_noi_bat.length > 0
                 ? formSp.dac_diem_noi_bat
                 : (Array.isArray(spDangSua?.dac_diem_noi_bat) ? spDangSua.dac_diem_noi_bat : []),
@@ -699,7 +511,7 @@ export default function useSanPhamController(dependencies) {
             ton_kho: Array.isArray(spDangSua?.ton_kho) && spDangSua.ton_kho.length > 0
                 ? spDangSua.ton_kho
                 : [],
-            so_luong_ton_kho: Number(formSp.so_luong_ton_kho) || 10,
+            so_luong_ton_kho: Number(formSp.so_luong_ton_kho) || 0,
             con_hang: formSp.con_hang !== false,
             la_flash_sale: !!formSp.la_flash_sale,
             so_luong_flash_sale: Number(formSp.so_luong_flash_sale) || 0,
@@ -709,33 +521,12 @@ export default function useSanPhamController(dependencies) {
                 : (spDangSua?.tuy_chon_phien_ban || []),
             thong_so: thongSoForm,
             mo_ta_chi_tiet: formSp.mo_ta_chi_tiet || spDangSua?.mo_ta_chi_tiet || '',
-            rating: spDangSua?.rating || spDangSua?.diem_danh_gia_tb || 5,
-            diem_danh_gia_tb: spDangSua?.diem_danh_gia_tb || spDangSua?.rating || 5,
-            so_danh_gia: spDangSua?.so_danh_gia || spDangSua?.so_luong_danh_gia || 16,
-            so_luong_danh_gia: spDangSua?.so_luong_danh_gia || spDangSua?.so_danh_gia || 16,
-            so_luong_da_ban: spDangSua?.so_luong_da_ban || 18,
-            danh_gia: Array.isArray(spDangSua?.danh_gia) && spDangSua.danh_gia.length > 0
-                ? spDangSua.danh_gia
-                : [
-                    {
-                        id: 'dg-1',
-                        ten_nguoi_dung: 'Hoàng Long (Gamer Pro)',
-                        so_sao: 5,
-                        tieu_de: 'Cỗ máy quái vật đích thực!',
-                        noi_dung: 'Màn hình hiển thị sắc nét đỉnh cao, hiệu năng đồ họa cực khủng mượt mà không giật lag. Tản nhiệt êm ái.',
-                        ngay_danh_gia: '12/09/2026',
-                        da_mua_hang: true
-                    },
-                    {
-                        id: 'dg-2',
-                        ten_nguoi_dung: 'Minh Trí (Creator)',
-                        so_sao: 5,
-                        tieu_de: 'Rất đáng tiền',
-                        noi_dung: 'Xử lý các tác vụ render nặng siêu tốc độ, cấu hình quá ngon trong tầm giá.',
-                        ngay_danh_gia: '08/09/2026',
-                        da_mua_hang: true
-                    }
-                ]
+            rating: spDangSua?.rating ?? spDangSua?.diem_danh_gia_tb ?? 0,
+            diem_danh_gia_tb: spDangSua?.diem_danh_gia_tb ?? spDangSua?.rating ?? 0,
+            so_danh_gia: spDangSua?.so_danh_gia ?? spDangSua?.so_luong_danh_gia ?? 0,
+            so_luong_danh_gia: spDangSua?.so_luong_danh_gia ?? spDangSua?.so_danh_gia ?? 0,
+            so_luong_da_ban: spDangSua?.so_luong_da_ban ?? 0,
+            danh_gia: Array.isArray(spDangSua?.danh_gia) ? spDangSua.danh_gia : []
         };
     }, [spDangSua, formSp, loaiFormSanPham, thongSoTuyChinh]);
 
@@ -756,7 +547,6 @@ export default function useSanPhamController(dependencies) {
         if (ts.cam_bien) ds.push(`Cảm biến quang học cao cấp ${ts.cam_bien}`);
         if (ts.dung_luong_pin || ts.pin) ds.push(`Thời lượng pin ấn tượng: ${ts.dung_luong_pin || ts.pin}`);
         if (ts.che_do_bao_hanh) ds.push(`Chế độ bảo hành: ${ts.che_do_bao_hanh}`);
-        if (ds.length === 0) ds.push('Thiết kế cao cấp, chất liệu bền bỉ chuẩn công nghệ mới');
         return ds.slice(0, 5);
     }, [sanPhamXemTruoc]);
 
@@ -894,7 +684,7 @@ export default function useSanPhamController(dependencies) {
                 ma_tuy_chon: opt.ma_tuy_chon?.trim() || `opt-${i + 1}`,
                 ten_tuy_chon: opt.ten_tuy_chon?.trim() || `Tùy chọn ${i + 1}`,
                 chenh_lech_gia: Number(opt.chenh_lech_gia) || 0,
-                hinh_anh: opt.hinh_anh?.trim() || formSp.hinh_anh_chinh?.trim() || '/images/sp/asus_rog_scar18.jpg'
+                hinh_anh: opt.hinh_anh?.trim() || formSp.hinh_anh_chinh?.trim() || ''
             }));
 
             const payload = {

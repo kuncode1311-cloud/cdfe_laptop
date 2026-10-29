@@ -1,9 +1,10 @@
-'use client';
+'use client'; // Trang cần hook React để lấy dữ liệu từ Context.
+
 import QuanLyVoucher from './components/QuanLyVoucher';
 import { useAdmin } from '@/app/admin/context/AdminContext';
 
-// Trang quản lý voucher: chỉ ghép giao diện với dữ liệu từ controller.
 export default function Page() {
+    // Lấy danh sách voucher, bộ lọc và hàm quản lý từ Context.
     const { thongSoQuanLyVoucher } = useAdmin();
     return (<QuanLyVoucher {...thongSoQuanLyVoucher} />);
 }

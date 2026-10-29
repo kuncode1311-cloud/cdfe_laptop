@@ -1,9 +1,10 @@
-'use client';
+'use client'; // Trang cần hook React để lấy dữ liệu từ Context.
+
 import TongQuanTab from './components/TongQuanTab';
 import { useAdmin } from '@/app/admin/context/AdminContext';
 
-// Trang quản lý tong-quan: chỉ ghép giao diện với dữ liệu từ controller.
 export default function Page() {
+    // Lấy số liệu tổng hợp và hành động của dashboard từ Context.
     const { thongSoTongQuanTab } = useAdmin();
     return (<TongQuanTab {...thongSoTongQuanTab} />);
 }

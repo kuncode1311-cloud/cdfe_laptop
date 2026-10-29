@@ -1,9 +1,10 @@
-'use client';
+'use client'; // Trang cần hook React để lấy dữ liệu từ Context.
+
 import CauHinhShowroom from './components/CauHinhShowroom';
 import { useAdmin } from '@/app/admin/context/AdminContext';
 
-// Trang quản lý showroom: chỉ ghép giao diện với dữ liệu từ controller.
 export default function Page() {
+    // Lấy dữ liệu và hàm cấu hình showroom từ Context.
     const { thongSoCauHinhShowroom } = useAdmin();
     return (<CauHinhShowroom {...thongSoCauHinhShowroom} />);
 }

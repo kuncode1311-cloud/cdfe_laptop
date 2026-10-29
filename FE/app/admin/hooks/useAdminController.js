@@ -74,9 +74,8 @@ const layDateDonHang = (donHang) => {
     return timestamp > 0 ? new Date(timestamp) : null;
 };
 
-// Làm trống dữ liệu mẫu của form thêm sản phẩm: chữ/số -> rỗng, danh sách -> rỗng, bật/tắt -> tắt.
-// Giữ lại tiêu đề nhóm (tieu_de_nhom_*) vì đó là nhãn giao diện, cùng các mặc định cần thiết.
-const KHOA_GIU_MAC_DINH = { con_hang: true, la_san_pham_moi: true };
+// Làm trống form thêm sản phẩm, chỉ giữ trạng thái còn hàng và tiêu đề nhóm thông số.
+const KHOA_GIU_MAC_DINH = { con_hang: true };
 const lamTrongFormSp = (mau) =>
     Object.fromEntries(
         Object.entries(mau).map(([khoa, giaTri]) => {
@@ -578,13 +577,13 @@ export default function useAdminController() {
     const [formSp, setFormSp] = useState({
         ma_san_pham: '',
         ten_san_pham: '',
-        hang_san_xuat: 'asus',
+        hang_san_xuat: '',
         danh_muc: [],
-        gia_goc: 30000000,
-        gia_khuyen_mai: 27990000,
-        phan_tram_giam_gia: 10,
-        hinh_anh_chinh: '/images/asus_rog_scar18.jpg',
-        so_luong_ton_kho: 15,
+        gia_goc: '',
+        gia_khuyen_mai: '',
+        phan_tram_giam_gia: '',
+        hinh_anh_chinh: '',
+        so_luong_ton_kho: '',
         con_hang: true,
         la_flash_sale: false,
         la_ban_chay: false,
@@ -606,7 +605,7 @@ export default function useAdminController() {
         card_do_hoa: '',
         dung_luong_vram: '',
         cong_suat_tgp: '',
-        ho_tro_ray_tracing: true,
+        ho_tro_ray_tracing: false,
         ram: '',
         loai_ram: '',
         toc_do_bus: '',
@@ -757,8 +756,8 @@ export default function useAdminController() {
         kich_co_laptop_linh_kien: '',
         trong_luong_linh_kien: '',
 
-        che_do_bao_hanh: '24 tháng chính hãng',
-        thoi_han_bao_hanh_thang: 24
+        che_do_bao_hanh: '',
+        thoi_han_bao_hanh_thang: ''
     });
 
     const [dangMoModalDonHang, setDangMoModalDonHang] = useState(false);
