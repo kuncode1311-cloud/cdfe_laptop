@@ -38,7 +38,8 @@ test('admin xem chi tiết, đổi trạng thái thanh toán rồi đóng đư�
     await page.getByRole('button', { name: 'Đóng', exact: true }).click();
     await expect(page.getByText('Chi Tiết Đơn Hàng & Phiếu Xuất Kho')).toBeHidden();
 
-    // Xoá để dọn dữ liệu test
+    // Xoá để dọn dữ liệu test (đợi hàng hết xử lý thao tác đổi thanh toán ở trên trước)
+    await expect(hang(hoTen).getByTitle('Xóa đơn hàng')).toBeEnabled({ timeout: 15000 });
     await hang(hoTen).getByTitle('Xóa đơn hàng').click();
     await page.getByRole('button', { name: 'Xóa Đơn Hàng', exact: true }).click();
     await expect(hang(hoTen)).toBeHidden({ timeout: 10000 });

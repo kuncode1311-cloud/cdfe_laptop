@@ -94,6 +94,7 @@ export default function useAdminController() {
 
     // State Bộ lọc & Tìm kiếm thông minh
     const [tuKhoaGlobal, setTuKhoaGlobal] = useState('');
+    const [tuKhoaDonHang, setTuKhoaDonHang] = useState('');
     const [locTrangThaiDonHang, setLocTrangThaiDonHang] = useState('tat_ca');
     const [locThanhToanDonHang, setLocThanhToanDonHang] = useState('tat_ca');
     const [sapXepDonHang, setSapXepDonHang] = useState('moi_nhat'); // 'moi_nhat' | 'cu_nhat' | 'gia_cao' | 'gia_thap'
@@ -310,7 +311,7 @@ export default function useAdminController() {
         setDangLocDonHang(true);
         const timer = setTimeout(() => setDangLocDonHang(false), 380);
         return () => clearTimeout(timer);
-    }, [locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang, tuKhoaGlobal]);
+    }, [locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang, tuKhoaDonHang, tuKhoaGlobal]);
 
     const daMountSanPhamRef = React.useRef(false);
     useEffect(() => {
@@ -1665,12 +1666,13 @@ export default function useAdminController() {
     // HÀM XỬ LÝ ĐƠN HÀNG
     // ==========================================
     const { donHangHienThi, moModalTaoDonHang, moModalSuaDonHang, themDongSanPhamDonHang, xoaDongSanPhamDonHang, capNhatDongSanPhamDonHang, xuLyLuuDonHang, xuLyDoiTrangThaiDonHang, xuLyDoiTrangThaiThanhToan, xuLyXoaDonHang } = useDonHangController({
-        danhSachDonHang, tuKhoaGlobal, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang,
+        danhSachDonHang, tuKhoaGlobal, tuKhoaDonHang, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang,
         setDonHangDangSua,
         setFormDonHang,
         danhSachSanPham,
         setDangMoModalDonHang,
         setDangLuuDonHang,
+        setDanhSachDonHang,
         donHangDangSua,
         formDonHang,
         hienThongBao,
@@ -1798,7 +1800,7 @@ export default function useAdminController() {
 
     const thongSoModalChiTietDonHang = { donHangChiTiet, setDonHangChiTiet, inHoaDonBanHang, danhSachSanPham, dinhDangTienVND, xuLyDoiTrangThaiThanhToan, moModalSuaDonHang };
 
-    const thongSoQuanLyDonHang = { danhSachDonHang, donHangHienThi, locTrangThaiDonHang, setLocTrangThaiDonHang, locThanhToanDonHang, setLocThanhToanDonHang, locThoiGianDonHang, setLocThoiGianDonHang, locNgayCuThe, setLocNgayCuThe, sapXepDonHang, setSapXepDonHang, moModalTaoDonHang, xuatExcelDonHang, dangTai, dangLocDonHang, dangXuLyDonHangId, setDonHangChiTiet, xuLyDoiTrangThaiThanhToan, xuLyDoiTrangThaiDonHang, moModalSuaDonHang, xuLyXoaDonHang };
+    const thongSoQuanLyDonHang = { danhSachDonHang, donHangHienThi, tuKhoaDonHang, setTuKhoaDonHang, locTrangThaiDonHang, setLocTrangThaiDonHang, locThanhToanDonHang, setLocThanhToanDonHang, locThoiGianDonHang, setLocThoiGianDonHang, locNgayCuThe, setLocNgayCuThe, sapXepDonHang, setSapXepDonHang, moModalTaoDonHang, xuatExcelDonHang, dangTai, dangLocDonHang, dangXuLyDonHangId, setDonHangChiTiet, xuLyDoiTrangThaiThanhToan, xuLyDoiTrangThaiDonHang, moModalSuaDonHang, xuLyXoaDonHang };
 
     // Props truyền cho Tab "Kho Sản Phẩm" (component tách riêng để giảm phình file admin/page.jsx)
     const thongSoModalSanPham = { NhanDaSua,dangLuuSp,dangMoModalSp,danhSachHangThucTe,danhSachNhuCauLaptop: danhSachDanhMuc.filter(dm => dm.loai === 'nhu_cau' && dm.kich_hoat !== false).map(dm => ({ ma: dm.ma_danh_muc, ten: dm.ten_danh_muc })),demSoMucDaSua,dongModalSpAnToan,formSp,formSpGoc,hienOUrlAnhChinh,hienThongBao,layClassInput,layClassInputTuyChinh,loaiFormSanPham,setDangXemTruocCard,setFormSp,setHienOUrlAnhChinh,setLoaiFormSanPham,setModalXemAnh,setTabModalSp,setThongSoTuyChinh,spDangSua,tabModalSp,thongSoTuyChinh,xacNhan,xuLyLuuSanPham,xuLyUploadAnhBienThe,xuLyUploadAnhChinh,xuLyUploadAnhGallerySp };

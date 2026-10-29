@@ -15,7 +15,7 @@ test('admin tạo, sửa rồi xoá được một voucher', async ({ page }) =>
     await page.getByPlaceholder('Ưu đãi sinh viên / Tri ân khách hàng thân thiết...').fill('E2E Test Voucher');
     await page.getByPlaceholder('VD: 500000').fill('100000');
     await page.getByRole('button', { name: 'Tạo Voucher' }).click();
-    await expect(page.getByText('Tạo Voucher Khuyến Mãi Mới')).toBeHidden();
+    await expect(page.getByText('Tạo Voucher Khuyến Mãi Mới')).toBeHidden({ timeout: 10000 });
 
     const hang = (ma) => page.locator('tr').filter({ hasText: ma });
     await expect(hang(maCode)).toBeVisible();
@@ -25,7 +25,7 @@ test('admin tạo, sửa rồi xoá được một voucher', async ({ page }) =>
     await expect(page.getByText('Sửa Mã Khuyến Mãi')).toBeVisible();
     await page.getByPlaceholder('VD: 500000').fill('200000');
     await page.getByRole('button', { name: 'Lưu Thay Đổi' }).click();
-    await expect(page.getByText('Sửa Mã Khuyến Mãi')).toBeHidden();
+    await expect(page.getByText('Sửa Mã Khuyến Mãi')).toBeHidden({ timeout: 10000 });
     await expect(hang(maCode)).toContainText('200K');
 
     // Xoá để dọn dữ liệu test

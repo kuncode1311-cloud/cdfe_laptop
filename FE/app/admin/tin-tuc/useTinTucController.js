@@ -114,7 +114,10 @@ export default function useTinTucController(dependencies) {
             tieuDeXacNhan: 'Xóa Bài Viết Tin Tức?',
             noiDungXacNhan: `Bạn có chắc muốn xóa bài viết: "${tieuDe}"?`,
             nutXacNhan: 'Xóa Bài Viết',
-            xoaApi: () => TinTucService.xoaTinTuc(id),
+            xoaApi: async () => {
+                await TinTucService.xoaTinTuc(id);
+                setDanhSachTinTuc((cu) => cu.filter((t) => (t.id || t._id) !== id));
+            },
             thongBaoThanhCong: `Đã xóa bài viết "${tieuDe}"!`,
             tieuDeLoi: 'Không Thể Xóa Bài Viết',
             setDangXuLy: setDangXuLyTinTucId

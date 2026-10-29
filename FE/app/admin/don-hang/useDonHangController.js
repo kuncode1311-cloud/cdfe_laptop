@@ -37,8 +37,8 @@ const layDateDonHang = (donHang) => {
 
 // Xử lý nghiệp vụ DonHang; dữ liệu dùng chung được truyền từ controller chính.
 export default function useDonHangController(dependencies) {
-    const { canhBao, danhSachSanPham, danhSachVoucher, donHangDangSua, formDonHang, hienThongBao, setDangLuuDonHang, setDangMoModalDonHang, setDangXuLyDonHangId, setDonHangDangSua, setFormDonHang, taiDuLieuToanBo, thucHienXoaAdmin } = dependencies;
-    const { danhSachDonHang, tuKhoaGlobal, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang } = dependencies;
+    const { canhBao, danhSachSanPham, danhSachVoucher, donHangDangSua, formDonHang, hienThongBao, setDangLuuDonHang, setDangMoModalDonHang, setDangXuLyDonHangId, setDanhSachDonHang, setDonHangDangSua, setFormDonHang, taiDuLieuToanBo, thucHienXoaAdmin } = dependencies;
+    const { danhSachDonHang, tuKhoaGlobal, tuKhoaDonHang, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang } = dependencies;
     // Mở form tạo đơn hàng và điền giá trị ban đầu.
     const moModalTaoDonHang = () => {
         setDonHangDangSua(null);
@@ -133,7 +133,11 @@ export default function useDonHangController(dependencies) {
                     trang_thai: formDonHang.trang_thai
                 };
 
-                await DonHangService.capNhatDonHang(donHangDangSua.id || donHangDangSua._id, payloadCapNhat);
+                const idDon = donHangDangSua.id || donHangDangSua._id;
+                const donDaLuu = await DonHangService.capNhatDonHang(idDon, payloadCapNhat);
+                setDanhSachDonHang((cu) => cu.map((dh) =>
+                    (dh.id || dh._id) === idDon ? donDaLuu : dh
+                ));
                 hienThongBao(`Đã cập nhật đơn hàng ${donHangDangSua.ma_don_hang}!`);
             } else {
                 // TẠO ĐƠN HÀNG MỚI TẠI QUẦY: cho phép chọn nhiều sản phẩm (nhiều dòng) trong 1 đơn
@@ -195,7 +199,8 @@ export default function useDonHangController(dependencies) {
                     ]
                 };
 
-                await DonHangService.taoDonHang(payloadDonHang);
+                const donDaTao = await DonHangService.taoDonHang(payloadDonHang);
+                setDanhSachDonHang((cu) => [donDaTao, ...cu]);
                 hienThongBao(`Đã tạo đơn hàng mới ${payloadDonHang.ma_don_hang}!`);
             }
 
@@ -220,11 +225,12 @@ export default function useDonHangController(dependencies) {
         }
         setDangXuLyDonHangId(id);
         try {
-            await DonHangService.capNhatDonHang(id, {
+            const donDaLuu = await DonHangService.capNhatDonHang(id, {
                 trang_thai: trangThaiMoi,
                 da_thanh_toan: trangThaiMoi === 'da_giao' ? true : undefined,
                 ...(trangThaiMoi === 'da_huy' ? { ly_do_huy: lyDoHuy, nguoi_huy: 'admin' } : {})
             });
+            setDanhSachDonHang((cu) => cu.map((dh) => (dh.id || dh._id) === id ? donDaLuu : dh));
             const thongBaoText = trangThaiMoi === 'da_giao'
                 ? 'Giao hàng thành công! Đơn hàng đã hoàn tất.'
                 : trangThaiMoi === 'da_huy'
@@ -250,10 +256,11 @@ export default function useDonHangController(dependencies) {
                 ? 'thanh_toan_khi_nhan_hang'
                 : 'cho_thanh_toan';
 
-            await DonHangService.capNhatDonHang(id, {
+            const donDaLuu = await DonHangService.capNhatDonHang(id, {
                 da_thanh_toan: daThanhToanMoi,
                 trang_thai_thanh_toan: trangThaiThanhToan
             });
+            setDanhSachDonHang((cu) => cu.map((dh) => (dh.id || dh._id) === id ? donDaLuu : dh));
 
             const thongBaoText = daThanhToanMoi
                 ? 'Đã xác nhận thanh toán thành công (Thủ công)!'
@@ -273,7 +280,10 @@ export default function useDonHangController(dependencies) {
         tieuDeXacNhan: 'Xóa Đơn Hàng Này?',
         noiDungXacNhan: `Bạn có chắc chắn muốn xóa vĩnh viễn đơn hàng: "${maDon}"?`,
         nutXacNhan: 'Xóa Đơn Hàng',
-        xoaApi: () => DonHangService.xoaDonHang(id),
+        xoaApi: async () => {
+            await DonHangService.xoaDonHang(id);
+            setDanhSachDonHang((cu) => cu.filter((dh) => dh.id !== id && dh._id !== id));
+        },
         thongBaoThanhCong: `Đã xóa đơn hàng ${maDon}!`,
         tieuDeLoi: 'Không Thể Xóa Đơn Hàng',
         setDangXuLy: setDangXuLyDonHangId
@@ -281,11 +291,12 @@ export default function useDonHangController(dependencies) {
     // Lọc theo trạng thái, thanh toán và thời gian; sau đó sắp xếp cho bảng đơn hàng.
     const donHangHienThi = useMemo(() => {
         let list = danhSachDonHang.filter(dh => {
-            const matchTuKhoa = !tuKhoaGlobal.trim() ||
-                dh.ma_don_hang?.toLowerCase().includes(tuKhoaGlobal.toLowerCase()) ||
-                dh.thong_tin_giao_hang?.ho_ten?.toLowerCase().includes(tuKhoaGlobal.toLowerCase()) ||
-                dh.thong_tin_giao_hang?.so_dien_thoai?.includes(tuKhoaGlobal) ||
-                dh.thong_tin_giao_hang?.dia_chi_chi_tiet?.toLowerCase().includes(tuKhoaGlobal.toLowerCase());
+            const tuKhoa = (tuKhoaDonHang || tuKhoaGlobal).toLowerCase().trim();
+            const matchTuKhoa = !tuKhoa ||
+                dh.ma_don_hang?.toLowerCase().includes(tuKhoa) ||
+                dh.thong_tin_giao_hang?.ho_ten?.toLowerCase().includes(tuKhoa) ||
+                dh.thong_tin_giao_hang?.so_dien_thoai?.includes(tuKhoa) ||
+                dh.thong_tin_giao_hang?.dia_chi_chi_tiet?.toLowerCase().includes(tuKhoa);
 
             const matchTrangThai = locTrangThaiDonHang === 'tat_ca' || dh.trang_thai === locTrangThaiDonHang;
             const matchThanhToan = locThanhToanDonHang === 'tat_ca' ||
@@ -364,7 +375,7 @@ export default function useDonHangController(dependencies) {
             }
             return 0;
         });
-    }, [danhSachDonHang, tuKhoaGlobal, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang]);
+    }, [danhSachDonHang, tuKhoaDonHang, tuKhoaGlobal, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang]);
 
     return { donHangHienThi, moModalTaoDonHang, moModalSuaDonHang, themDongSanPhamDonHang, xoaDongSanPhamDonHang, capNhatDongSanPhamDonHang, xuLyLuuDonHang, xuLyDoiTrangThaiDonHang, xuLyDoiTrangThaiThanhToan, xuLyXoaDonHang };
 }

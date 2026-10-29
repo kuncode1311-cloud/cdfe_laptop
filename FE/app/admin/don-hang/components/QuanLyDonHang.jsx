@@ -28,7 +28,8 @@ import {
     XCircle,
     Eye,
     Edit3,
-    Trash2
+    Trash2,
+    Search
 } from 'lucide-react';
 import { dinhDangTienVND } from '@/utils/formatCurrency';
 import KhuVucDangTaiTable from '@/components/dieu-huong/KhuVucDangTaiTable';
@@ -38,6 +39,8 @@ import PhanTrangAdmin, { usePhanTrang } from '@/app/admin/components/shared/Phan
 export default function QuanLyDonHang({
     danhSachDonHang,
     donHangHienThi,
+    tuKhoaDonHang,
+    setTuKhoaDonHang,
     locTrangThaiDonHang,
     setLocTrangThaiDonHang,
     locThanhToanDonHang,
@@ -223,6 +226,26 @@ export default function QuanLyDonHang({
                 {/* Tầng 2: Thanh Ribbon Bộ Lọc Màu Sắc Trực Quan (Nhìn màu biết ngay chức năng) */}
                 <div className="flex flex-wrap items-center justify-between gap-2 bg-white/95 dark:bg-[#0c1222]/95 p-2.5 rounded-2xl border-2 border-orange-300/70 dark:border-orange-900/60 shadow-xs backdrop-blur-md">
                     <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto flex-1">
+                        {/* 0. Ô tìm kiếm nhanh theo mã đơn, tên khách, SĐT, địa chỉ */}
+                        <div className="relative min-w-[200px] flex-1 sm:flex-initial">
+                            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                            <input
+                                type="text"
+                                placeholder="Tìm mã đơn, tên khách, SĐT..."
+                                value={tuKhoaDonHang}
+                                onChange={(e) => setTuKhoaDonHang(e.target.value)}
+                                className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            />
+                            {tuKhoaDonHang && (
+                                <button
+                                    onClick={() => setTuKhoaDonHang('')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
+                        </div>
+
                         {/* 1. Lọc Trạng Thái (Màu Xanh Dương Blue - Tiến độ vận hành) */}
                         <div className="relative min-w-[150px] flex-1 sm:flex-initial">
                             <select
@@ -325,9 +348,10 @@ export default function QuanLyDonHang({
                         </div>
 
                         {/* 6. Nút Đặt Lại Bộ Lọc (Màu Đỏ Hồng Rose) */}
-                        {(locTrangThaiDonHang !== 'tat_ca' || locThanhToanDonHang !== 'tat_ca' || sapXepDonHang !== 'moi_nhat' || locThoiGianDonHang !== 'tat_ca' || locNgayCuThe) && (
+                        {(tuKhoaDonHang || locTrangThaiDonHang !== 'tat_ca' || locThanhToanDonHang !== 'tat_ca' || sapXepDonHang !== 'moi_nhat' || locThoiGianDonHang !== 'tat_ca' || locNgayCuThe) && (
                             <button
                                 onClick={() => {
+                                    setTuKhoaDonHang('');
                                     setLocTrangThaiDonHang('tat_ca');
                                     setLocThanhToanDonHang('tat_ca');
                                     setSapXepDonHang('moi_nhat');

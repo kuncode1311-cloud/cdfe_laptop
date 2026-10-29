@@ -18,7 +18,8 @@ import {
     QrCode,
     Printer,
     ExternalLink,
-    ShieldCheck
+    ShieldCheck,
+    XCircle
 } from 'lucide-react';
 
 // Modal Chi tiết đơn hàng (xem từ phía khách hàng) của trang tài khoản: tách từ app/tai-khoan/page.jsx (refactor thuần cấu trúc, không đổi hành vi/giao diện)
@@ -58,17 +59,25 @@ export default function ModalChiTietDonHangKhachHang({
                         <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap leading-tight">
                                 <span className="text-[11px] font-bold text-blue-200 uppercase tracking-wide">Chi Tiết Đơn Hàng</span>
-                                <span className={`px-2 py-0.2 rounded-full text-[10px] font-black border ${
-                                    donHangDangXemChiTiet.trang_thai === 'da_giao'
-                                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
-                                        : donHangDangXemChiTiet.trang_thai === 'dang_giao'
-                                        ? 'bg-sky-500/20 text-sky-300 border-sky-400/40'
-                                        : donHangDangXemChiTiet.trang_thai === 'da_huy'
-                                        ? 'bg-rose-500/20 text-rose-300 border-rose-400/40'
-                                        : 'bg-amber-500/20 text-amber-300 border-amber-400/40'
-                                }`}>
-                                    {donHangDangXemChiTiet.trang_thai === 'da_giao' ? 'Giao Thành Công' : donHangDangXemChiTiet.trang_thai === 'dang_giao' ? 'Đang Vận Chuyển' : donHangDangXemChiTiet.trang_thai === 'da_huy' ? 'Đã Hủy Đơn' : 'Đang Đóng Gói'}
-                                </span>
+                                {(() => {
+                                    const tt = donHangDangXemChiTiet.trang_thai;
+                                    const nhan =
+                                        tt === 'da_giao' || tt === 'giao_thanh_cong' ? 'Giao Thành Công' :
+                                        tt === 'dang_giao' || tt === 'dang_van_chuyen' ? 'Đang Giao Hàng' :
+                                        tt === 'da_xac_nhan' || tt === 'dang_dong_goi' ? 'Đã Xác Nhận' :
+                                        tt === 'da_huy' ? 'Đã Hủy Đơn' : 'Chờ Xác Nhận';
+                                    const mau =
+                                        tt === 'da_giao' || tt === 'giao_thanh_cong' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40' :
+                                        tt === 'dang_giao' || tt === 'dang_van_chuyen' ? 'bg-sky-500/20 text-sky-300 border-sky-400/40' :
+                                        tt === 'da_xac_nhan' || tt === 'dang_dong_goi' ? 'bg-indigo-500/20 text-indigo-300 border-indigo-400/40' :
+                                        tt === 'da_huy' ? 'bg-rose-500/20 text-rose-300 border-rose-400/40' :
+                                        'bg-amber-500/20 text-amber-300 border-amber-400/40';
+                                    return (
+                                        <span className={`px-2 py-0.2 rounded-full text-[10px] font-black border ${mau}`}>
+                                            {nhan}
+                                        </span>
+                                    );
+                                })()}
                             </div>
                             <div className="flex items-center gap-2 mt-0.5 text-xs">
                                 <span className="font-mono font-black text-amber-300">#{donHangDangXemChiTiet.ma_don_hang}</span>
@@ -117,6 +126,132 @@ export default function ModalChiTietDonHangKhachHang({
                             {donHangDangXemChiTiet.trang_thai === 'da_huy' ? 'Đã hủy' : `Tiến độ: ${tinhTienDoPhanTramDonHang(donHangDangXemChiTiet)}%`}
                         </span>
                     </div>
+
+                    {/* Tiến Trình Đơn Hàng (Timeline Stepper) */}
+                    {(() => {
+                        const trangThai = donHangDangXemChiTiet.trang_thai || 'cho_xac_nhan';
+                        const logs = Array.isArray(donHangDangXemChiTiet.lich_trinh_giao_hang) ? donHangDangXemChiTiet.lich_trinh_giao_hang : [];
+
+                        const logDatHang = logs.find(l => l.tieu_de?.toLowerCase().includes('đặt hàng')) || logs[0];
+                        const logXacNhan = logs.find(l => l.tieu_de?.toLowerCase().includes('xác nhận') || l.tieu_de?.toLowerCase().includes('đóng gói'));
+                        const logVanChuyen = logs.find(l => l.tieu_de?.toLowerCase().includes('vận chuyển') || l.tieu_de?.toLowerCase().includes('bàn giao'));
+                        const logGiaoHang = logs.find(l => l.tieu_de?.toLowerCase().includes('giao hàng') || l.tieu_de?.toLowerCase().includes('thành công')) || (logs.length > 1 ? logs[logs.length - 1] : null);
+
+                        const rutGonThoiGian = (str) => {
+                            if (!str) return '';
+                            try {
+                                if (str.includes('T') || (str.includes('-') && str.length >= 10)) {
+                                    const d = new Date(str);
+                                    if (!isNaN(d.getTime())) {
+                                        const hh = String(d.getHours()).padStart(2, '0');
+                                        const mm = String(d.getMinutes()).padStart(2, '0');
+                                        const dd = String(d.getDate()).padStart(2, '0');
+                                        const MM = String(d.getMonth() + 1).padStart(2, '0');
+                                        return `${hh}:${mm} ${dd}/${MM}`;
+                                    }
+                                }
+                            } catch {}
+                            return str.replace(/\/202\d/, '').trim();
+                        };
+
+                        const thoiGianDat = rutGonThoiGian(logDatHang?.thoi_gian || donHangDangXemChiTiet.ngay_tao || donHangDangXemChiTiet.createdAt);
+                        const thoiGianGiao = rutGonThoiGian(logGiaoHang?.thoi_gian);
+
+                        const buocHienTai =
+                            trangThai === 'da_giao' || trangThai === 'giao_thanh_cong' ? 4 :
+                            trangThai === 'dang_giao' || trangThai === 'dang_van_chuyen' ? 3 :
+                            trangThai === 'da_xac_nhan' || trangThai === 'dang_dong_goi' || trangThai === 'dang_xu_ly' ? 2 :
+                            trangThai === 'da_huy' ? 0 : 1;
+
+                        const cacBuocTienTrinh = [
+                            {
+                                buoc: 1,
+                                tieu_de: 'Chờ xác nhận',
+                                thoi_gian: thoiGianDat || 'Đặt hàng thành công',
+                            },
+                            {
+                                buoc: 2,
+                                tieu_de: 'Đã xác nhận',
+                                thoi_gian: rutGonThoiGian(logXacNhan?.thoi_gian) || (buocHienTai >= 2 ? 'Shop đã duyệt' : 'Chờ shop duyệt'),
+                            },
+                            {
+                                buoc: 3,
+                                tieu_de: 'Đang giao hàng',
+                                thoi_gian: rutGonThoiGian(logVanChuyen?.thoi_gian) || (buocHienTai >= 3 ? 'Đang vận chuyển' : 'Chờ bưu tá'),
+                            },
+                            {
+                                buoc: 4,
+                                tieu_de: 'Giao thành công',
+                                thoi_gian: thoiGianGiao || (buocHienTai === 4 ? 'Khách đã nhận máy' : 'Dự kiến 1-2 ngày'),
+                            }
+                        ];
+
+                        if (trangThai === 'da_huy') {
+                            return (
+                                <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-2 text-xs text-rose-700 font-bold">
+                                    <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                                    <span>Đơn hàng đã được hủy. Tiến trình vận chuyển đã ngừng.</span>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div className="p-2.5 sm:p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
+                                <div className="relative pt-1 pb-1">
+                                    {/* Ray tiến trình nối ngang */}
+                                    <div className="absolute top-3.5 left-[12.5%] right-[12.5%] h-1 bg-slate-100 rounded-full z-0">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-blue-500 via-teal-500 to-emerald-500 rounded-full transition-all duration-500"
+                                            style={{
+                                                width: buocHienTai === 4 ? '100%' : buocHienTai === 3 ? '66.6%' : buocHienTai === 2 ? '33.3%' : '0%'
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* 4 Nút Mốc Tiến Trình */}
+                                    <div className="grid grid-cols-4 gap-1 relative z-10">
+                                        {cacBuocTienTrinh.map((b) => {
+                                            const laHoanThanh = buocHienTai >= b.buoc;
+                                            const laDangXuLy = buocHienTai === b.buoc - 1 && buocHienTai > 0;
+
+                                            return (
+                                                <div key={b.buoc} className="flex flex-col items-center text-center">
+                                                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                                                        laHoanThanh
+                                                            ? 'bg-emerald-500 text-white shadow-xs ring-3 ring-emerald-50'
+                                                            : laDangXuLy
+                                                            ? 'bg-blue-600 text-white shadow-xs ring-3 ring-blue-50 animate-pulse'
+                                                            : 'bg-white text-slate-400 border border-slate-200'
+                                                    }`}>
+                                                        {laHoanThanh ? (
+                                                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                                                        ) : (
+                                                            <span className="text-[11px] font-bold font-mono">{b.buoc}</span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="mt-1 w-full px-0.5">
+                                                        <div className={`text-[11px] font-bold truncate ${
+                                                            laHoanThanh
+                                                                ? 'text-slate-800'
+                                                                : laDangXuLy
+                                                                ? 'text-blue-600'
+                                                                : 'text-slate-400'
+                                                        }`}>
+                                                            {b.tieu_de}
+                                                        </div>
+                                                        <div className="text-[9.5px] text-slate-500 font-mono truncate">
+                                                            {b.thoi_gian}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* Lưới 2 Cột: Người Nhận & Thanh Toán */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

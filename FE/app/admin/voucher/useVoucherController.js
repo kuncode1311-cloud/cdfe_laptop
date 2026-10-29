@@ -69,10 +69,15 @@ export default function useVoucherController(dependencies) {
             };
 
             if (voucherDangSua) {
-                await MaGiamGiaService.capNhatMaGiamGia(voucherDangSua.id || voucherDangSua.ma_code || voucherDangSua._id, payload);
+                const idVc = voucherDangSua.id || voucherDangSua.ma_code || voucherDangSua._id;
+                const vcDaLuu = await MaGiamGiaService.capNhatMaGiamGia(idVc, payload);
+                setDanhSachVoucher((cu) => cu.map((v) =>
+                    (v.id || v.ma_code || v._id) === idVc ? vcDaLuu : v
+                ));
                 hienThongBao(`Đã cập nhật mã giảm giá "${payload.ma_code}"!`);
             } else {
-                await MaGiamGiaService.themMaGiamGia(payload);
+                const vcDaLuu = await MaGiamGiaService.themMaGiamGia(payload);
+                setDanhSachVoucher((cu) => [vcDaLuu, ...cu]);
                 hienThongBao(`Đã tạo mã giảm giá "${payload.ma_code}" thành công!`);
             }
 
@@ -105,7 +110,11 @@ export default function useVoucherController(dependencies) {
         tieuDeXacNhan: 'Xóa Mã Giảm Giá?',
         noiDungXacNhan: `Bạn có chắc muốn xóa mã voucher: "${voucher.ma_code}"?`,
         nutXacNhan: 'Xóa Voucher',
-        xoaApi: () => MaGiamGiaService.xoaMaGiamGia(voucher.id || voucher.ma_code || voucher._id),
+        xoaApi: async () => {
+            const idVc = voucher.id || voucher.ma_code || voucher._id;
+            await MaGiamGiaService.xoaMaGiamGia(idVc);
+            setDanhSachVoucher((cu) => cu.filter((v) => (v.id || v.ma_code || v._id) !== idVc));
+        },
         thongBaoThanhCong: `Đã xóa voucher "${voucher.ma_code}"!`,
         tieuDeLoi: 'Không Thể Xóa Voucher',
         setDangXuLy: setDangXuLyVoucherId

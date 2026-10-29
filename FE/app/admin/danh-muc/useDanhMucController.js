@@ -95,7 +95,11 @@ export default function useDanhMucController(dependencies) {
         tieuDeXacNhan: 'Xóa Thương Hiệu / Danh Mục?',
         noiDungXacNhan: `Bạn có chắc chắn muốn xóa thương hiệu "${dm.ten_danh_muc}" khỏi hệ thống?`,
         nutXacNhan: 'Xóa Thương Hiệu',
-        xoaApi: () => DanhMucService.xoaDanhMuc(dm.id || dm._id || dm.ma_danh_muc),
+        xoaApi: async () => {
+            const idDm = dm.id || dm._id || dm.ma_danh_muc;
+            await DanhMucService.xoaDanhMuc(idDm);
+            setDanhSachDanhMuc((cu) => cu.filter((x) => (x.id || x._id || x.ma_danh_muc) !== idDm));
+        },
         thongBaoThanhCong: `Đã xóa thương hiệu "${dm.ten_danh_muc}"!`,
         tieuDeLoi: 'Không Thể Xóa Thương Hiệu',
         setDangXuLy: setDangXuLyDmId
