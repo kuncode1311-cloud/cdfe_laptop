@@ -46,6 +46,12 @@ export default function QuanLyBaoHanh({ xacNhan }) {
     const [danhSach, setDanhSach] = useState([]);
     const [dangTai, setDangTai] = useState(true);
     const [tuKhoa, setTuKhoa] = useState('');
+    const [trangThaiLoc, setTrangThaiLoc] = useState('tat-ca');
+    const [hangLoc, setHangLoc] = useState('tat-ca');
+
+    const danhSachHang = useMemo(() => [...new Set(danhSach
+        .map((bh) => String(bh.hang_san_xuat || '').trim())
+        .filter(Boolean))].sort((a, b) => a.localeCompare(b, 'vi')), [danhSach]);
 
     // Modal sửa thông tin bảo hành
     const [mucDangSua, setMucDangSua] = useState(null);
@@ -72,14 +78,16 @@ export default function QuanLyBaoHanh({ xacNhan }) {
 
     const danhSachDaLoc = useMemo(() => {
         const tu = tuKhoa.trim().toLowerCase();
-        if (!tu) return danhSach;
         return danhSach.filter((bh) => {
-            const ma = (bh.ma_don_hang || '').toLowerCase();
-            const khach = (bh.khach_hang || '').toLowerCase();
-            const serial = (bh.so_serial || '').toLowerCase();
-            return ma.includes(tu) || khach.includes(tu) || serial.includes(tu);
+            if (hangLoc !== 'tat-ca' && bh.hang_san_xuat !== hangLoc) return false;
+            if (trangThaiLoc === 'con-hieu-luc' && !bh.con_hieu_luc) return false;
+            if (trangThaiLoc === 'het-hieu-luc' && bh.con_hieu_luc) return false;
+            if (trangThaiLoc === 'sap-het-han' && (!bh.con_hieu_luc || Number(bh.so_thang_con_lai) > 3 || bh.so_thang_con_lai == null)) return false;
+            if (!tu) return true;
+            return [bh.ma_don_hang, bh.khach_hang, bh.so_serial, bh.ten_san_pham, bh.so_dien_thoai]
+                .some((giaTri) => String(giaTri || '').toLowerCase().includes(tu));
         });
-    }, [danhSach, tuKhoa]);
+    }, [danhSach, tuKhoa, trangThaiLoc, hangLoc]);
 
     const {
         trangHienTai,
@@ -89,7 +97,7 @@ export default function QuanLyBaoHanh({ xacNhan }) {
         tongSoTrang,
         tongSoMuc,
         danhSachTrenTrang
-    } = usePhanTrang(danhSachDaLoc, 10, [tuKhoa]);
+    } = usePhanTrang(danhSachDaLoc, 10, [tuKhoa, trangThaiLoc, hangLoc]);
 
     const moModalSua = (bh) => {
         setMucDangSua(bh);
@@ -150,14 +158,14 @@ export default function QuanLyBaoHanh({ xacNhan }) {
     return (
         <div className="space-y-6">
             {/* Thanh công cụ tìm kiếm */}
-            <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-50/90 via-white to-emerald-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#071a14] border-2 border-emerald-100/90 dark:border-slate-800 shadow-md shadow-emerald-500/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="p-5 rounded-3xl bg-gradient-to-r from-slate-50/90 via-white to-emerald-50/40 dark:from-[#0d1527] dark:via-slate-900 dark:to-[#071a14] border-2 border-emerald-100/90 dark:border-slate-800 shadow-md shadow-emerald-500/5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <div className="relative flex-1 max-w-lg">
                     <Search className="w-4 h-4 text-emerald-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                     <input
                         type="text"
                         value={tuKhoa}
                         onChange={(e) => setTuKhoa(e.target.value)}
-                        placeholder="Tìm theo mã đơn hàng, tên khách, số serial..."
+                        placeholder="Tìm mã đơn, khách, sản phẩm, số serial..."
                         className="w-full pl-9 pr-8 py-2.5 text-xs font-bold rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-2xs"
                     />
                     {tuKhoa && (
@@ -168,6 +176,21 @@ export default function QuanLyBaoHanh({ xacNhan }) {
                         >
                             <X className="w-3.5 h-3.5" />
                         </button>
+                    )}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <select aria-label="Lọc trạng thái bảo hành" value={trangThaiLoc} onChange={(e) => setTrangThaiLoc(e.target.value)} className="px-3 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-xs font-bold cursor-pointer">
+                        <option value="tat-ca">Tất cả trạng thái</option>
+                        <option value="con-hieu-luc">Còn hiệu lực</option>
+                        <option value="sap-het-han">Sắp hết hạn (≤ 3 tháng)</option>
+                        <option value="het-hieu-luc">Hết hiệu lực</option>
+                    </select>
+                    <select aria-label="Lọc hãng sản xuất" value={hangLoc} onChange={(e) => setHangLoc(e.target.value)} className="px-3 py-2.5 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white text-xs font-bold cursor-pointer">
+                        <option value="tat-ca">Tất cả hãng</option>
+                        {danhSachHang.map((hang) => <option key={hang} value={hang}>{hang}</option>)}
+                    </select>
+                    {(tuKhoa || trangThaiLoc !== 'tat-ca' || hangLoc !== 'tat-ca') && (
+                        <button type="button" onClick={() => { setTuKhoa(''); setTrangThaiLoc('tat-ca'); setHangLoc('tat-ca'); }} className="px-3 py-2.5 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-950 cursor-pointer">Xóa lọc</button>
                     )}
                 </div>
                 <span className="px-3 py-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-black whitespace-nowrap">
