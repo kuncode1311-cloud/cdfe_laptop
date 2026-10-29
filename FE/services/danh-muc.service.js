@@ -62,9 +62,12 @@ export const DanhMucService = {
     async themDanhMuc(duLieu) {
         const res = await apiFetch('/danh-muc', {
             method: 'POST',
-            body: JSON.stringify(duLieu)
+            body: JSON.stringify(duLieu),
+            timeoutMs: 60000
         });
-        await this.layDanhSachDanhMucAsync(); // Cập nhật lại bộ nhớ đệm
+        if (res && typeof res === 'object') {
+            boNhoDemDanhMuc = [res, ...boNhoDemDanhMuc.filter((dm) => dm.id !== res.id && dm._id !== res._id)];
+        }
         thongBaoThayDoi('danh_muc');
         return res;
     },
@@ -75,9 +78,14 @@ export const DanhMucService = {
     async capNhatDanhMuc(id, duLieu) {
         const res = await apiFetch(`/danh-muc/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(duLieu)
+            body: JSON.stringify(duLieu),
+            timeoutMs: 60000
         });
-        await this.layDanhSachDanhMucAsync();
+        if (res && typeof res === 'object') {
+            boNhoDemDanhMuc = boNhoDemDanhMuc.map((dm) =>
+                dm.id === id || dm._id === id || dm.ma_danh_muc === id ? res : dm
+            );
+        }
         thongBaoThayDoi('danh_muc');
         return res;
     },
@@ -89,7 +97,9 @@ export const DanhMucService = {
         const res = await apiFetch(`/danh-muc/${id}`, {
             method: 'DELETE'
         });
-        await this.layDanhSachDanhMucAsync();
+        boNhoDemDanhMuc = boNhoDemDanhMuc.filter((dm) =>
+            dm.id !== id && dm._id !== id && dm.ma_danh_muc !== id
+        );
         thongBaoThayDoi('danh_muc');
         return res;
     }

@@ -69,7 +69,8 @@ export const TinTucService = {
     async themTinTuc(duLieu) {
         const json = await apiFetch('/tin-tuc', {
             method: 'POST',
-            body: JSON.stringify(duLieu)
+            body: JSON.stringify(duLieu),
+            timeoutMs: 60000
         });
         const itemMoi = json?.duLieu || json;
         if (itemMoi) {
@@ -85,7 +86,8 @@ export const TinTucService = {
     async capNhatTinTuc(id, duLieu) {
         const json = await apiFetch(`/tin-tuc/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(duLieu)
+            body: JSON.stringify(duLieu),
+            timeoutMs: 60000
         });
         const itemSua = json?.duLieu || json;
         if (itemSua) {

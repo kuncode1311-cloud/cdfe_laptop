@@ -53,11 +53,16 @@ export default function useDanhMucController(dependencies) {
             };
 
             if (dmDangSua) {
-                await DanhMucService.capNhatDanhMuc(dmDangSua.id || dmDangSua._id || dmDangSua.ma_danh_muc, payload);
+                const idDm = dmDangSua.id || dmDangSua._id || dmDangSua.ma_danh_muc;
+                const dmDaLuu = await DanhMucService.capNhatDanhMuc(idDm, payload);
+                setDanhSachDanhMuc((cu) => cu.map((dm) =>
+                    (dm.id || dm._id || dm.ma_danh_muc) === idDm ? dmDaLuu : dm
+                ));
                 hienThongBao(`Đã cập nhật thương hiệu "${payload.ten_danh_muc}"!`);
             } else {
                 payload.id = 'brand-' + payload.ma_danh_muc;
-                await DanhMucService.themDanhMuc(payload);
+                const dmDaLuu = await DanhMucService.themDanhMuc(payload);
+                setDanhSachDanhMuc((cu) => [dmDaLuu, ...cu]);
                 hienThongBao(`Đã thêm thương hiệu "${payload.ten_danh_muc}" vào hệ thống!`);
             }
 

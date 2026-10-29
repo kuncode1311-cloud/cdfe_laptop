@@ -64,8 +64,11 @@ app.use(
         return callback(new Error(`CORS không cho phép origin: ${origin}`));
     })
 );
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+// Giới hạn 15mb vì ảnh sản phẩm/tin tức/logo danh mục được admin lưu dạng base64
+// ngay trong body JSON (không qua multer); 1mb trước đây hay khiến request có
+// nhiều ảnh (gallery sản phẩm, biến thể) bị treo/timeout phía client.
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Tài liệu API (Swagger UI) tại /api-docs. Gắn TRƯỚC datHeaderBaoMat vì CSP toàn cục
 // (default-src 'none') sẽ chặn giao diện Swagger; trang này dùng CSP nới lỏng riêng.

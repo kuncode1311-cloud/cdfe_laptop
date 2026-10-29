@@ -69,3 +69,16 @@ test('admin ghi đè serial và thời hạn bảo hành cho đơn hàng', async
     expect(luu.body.ghi_de.so_serial).toBe('SERIAL-TEST');
     expect(luu.body.ghi_de.thoi_han_bao_hanh_thang).toBe(24);
 });
+
+test('admin lưu được sản phẩm có ảnh base64 lớn hơn 1 MB', async () => {
+    const auth = await taoAdminHeader();
+    const anh = `data:image/webp;base64,${'A'.repeat(1_100_000)}`;
+    const luu = await request(app).post('/api/san-pham').set('Authorization', auth).send({
+        id: 'sp-anh-lon', ma_san_pham: 'SKU-ANH-LON', ten_san_pham: 'Sản phẩm nhiều ảnh',
+        loai_san_pham: 'laptop', hang_san_xuat: 'asus', danh_muc: ['gaming'],
+        gia_goc: 12000000, gia_khuyen_mai: 10000000,
+        hinh_anh_chinh: anh, so_luong_ton_kho: 1
+    });
+    expect(luu.status).toBe(201);
+    expect(luu.body.hinh_anh_chinh).toBe(anh);
+});

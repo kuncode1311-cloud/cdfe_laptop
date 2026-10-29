@@ -60,10 +60,13 @@ export default function useTinTucController(dependencies) {
             };
 
             if (tinTucDangSua) {
-                await TinTucService.capNhatTinTuc(tinTucDangSua.id || tinTucDangSua._id, payload);
+                const idTin = tinTucDangSua.id || tinTucDangSua._id;
+                const tinDaLuu = await TinTucService.capNhatTinTuc(idTin, payload);
+                setDanhSachTinTuc((cu) => cu.map((t) => (t.id || t._id) === idTin ? tinDaLuu : t));
                 hienThongBao(`Đã cập nhật bài viết "${payload.tieu_de}"!`);
             } else {
-                await TinTucService.themTinTuc(payload);
+                const tinDaLuu = await TinTucService.themTinTuc(payload);
+                setDanhSachTinTuc((cu) => [tinDaLuu, ...cu]);
                 hienThongBao(`Đã xuất bản bài viết mới "${payload.tieu_de}"!`);
             }
 
