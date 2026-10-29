@@ -1679,6 +1679,7 @@ export default function useAdminController() {
     const { danhMucHienThi, moModalThemDanhMuc, moModalSuaDanhMuc, xuLyLuuDanhMuc, xuLyToggleDanhMuc, xuLyXoaDanhMuc } = useDanhMucController({
         setDmDangSua,
         setFormDm,
+        tuKhoaDanhMuc,
         locLoaiDanhMuc,
         danhSachDanhMuc,
         setDangMoModalDanhMuc,
