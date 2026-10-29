@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapKhachHang } = require('./_fixtures');
+const { dangNhapKhachHang } = require('../support/_fixtures');
 
 // Smoke test cho tab Ví Voucher (components/tai-khoan/ViVoucher.jsx)
 test('khách hàng mở được tab ví voucher và thấy trạng thái ví trống', async ({ page }) => {

@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapAdmin } = require('./_fixtures');
+const { dangNhapAdmin } = require('../support/_fixtures');
 
 // Smoke test cho Modal Chi tiết đơn hàng & in hóa đơn (app/admin/don-hang/components/ModalChiTietDonHang.jsx)
 // Tạo đơn hàng test riêng để không đụng vào dữ liệu đơn hàng thật đang có.

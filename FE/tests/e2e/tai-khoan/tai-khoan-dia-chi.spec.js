@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapKhachHang } = require('./_fixtures');
+const { dangNhapKhachHang } = require('../support/_fixtures');
 
 // Smoke test cho tab Sổ Địa Chỉ (components/tai-khoan/SoDiaChi.jsx + BoChonDiaGioi.jsx)
 test('khách hàng thêm, sửa rồi xoá được một địa chỉ nhận hàng', async ({ page }) => {

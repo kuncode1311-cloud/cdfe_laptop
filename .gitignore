@@ -36,3 +36,6 @@ Thumbs.db
 *.docx
 
 trikunbackup/
+
+# Local generated files collected for cleanup
+/trikun/

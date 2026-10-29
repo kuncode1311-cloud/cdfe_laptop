@@ -8,7 +8,7 @@ try {
 }
 
 module.exports = defineConfig({
-    testDir: './tests-e2e',
+    testDir: './tests/e2e',
     fullyParallel: false,
     retries: 0,
     workers: 1,

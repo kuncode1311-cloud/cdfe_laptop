@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapAdmin } = require('./_fixtures');
+const { dangNhapAdmin } = require('../support/_fixtures');
 
 // Smoke test cho Modal Thêm/Sửa tin tức (app/admin/tin-tuc/components/ModalTinTuc.jsx)
 test('admin viết, sửa rồi xoá được một bài tin tức', async ({ page }) => {

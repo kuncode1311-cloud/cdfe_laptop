@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapAdmin } = require('./_fixtures');
+const { dangNhapAdmin } = require('../support/_fixtures');
 
 // Smoke test cho Modal Thêm/Sửa sản phẩm (app/admin/san-pham/components/ModalSanPham.jsx) — modal lớn nhất, 4 tab.
 // Vừa test CRUD vừa bấm qua toàn bộ tab + 7 loại ngành hàng + overlay xem trước để

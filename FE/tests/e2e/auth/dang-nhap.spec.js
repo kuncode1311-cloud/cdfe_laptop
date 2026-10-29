@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapAdmin, dangNhapKhachHang } = require('./_fixtures');
+const { dangNhapAdmin, dangNhapKhachHang } = require('../support/_fixtures');
 
 test('admin đăng nhập vào được /admin', async ({ page }) => {
     await dangNhapAdmin(page);

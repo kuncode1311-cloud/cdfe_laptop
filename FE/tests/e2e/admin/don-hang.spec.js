@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapAdmin } = require('./_fixtures');
+const { dangNhapAdmin } = require('../support/_fixtures');
 
 // Smoke test cho Modal Tạo/Sửa đơn hàng (app/admin/don-hang/components/ModalDonHang.jsx)
 test('admin tạo, sửa rồi xoá được một đơn hàng', async ({ page }) => {

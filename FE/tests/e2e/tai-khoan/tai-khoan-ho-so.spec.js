@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapKhachHang } = require('./_fixtures');
+const { dangNhapKhachHang } = require('../support/_fixtures');
 
 // Smoke test cho tab Hồ Sơ Cá Nhân (components/tai-khoan/HoSoCaNhan.jsx)
 // và Modal Chọn Avatar (components/tai-khoan/ModalChonAvatar.jsx)

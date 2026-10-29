@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapKhachHang } = require('./_fixtures');
+const { dangNhapKhachHang } = require('../support/_fixtures');
 
 // Smoke test cho tab Đơn Hàng Của Tôi (components/tai-khoan/LichSuDonHang.jsx)
 test('khách hàng mở được tab đơn hàng và thấy trạng thái chưa có đơn', async ({ page }) => {

@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapAdmin } = require('./_fixtures');
+const { dangNhapAdmin } = require('../support/_fixtures');
 
 // Smoke test cho Modal Thêm/Sửa thương hiệu-danh mục (app/admin/danh-muc/components/ModalThuongHieu.jsx)
 test('admin thêm, sửa rồi xoá được một thương hiệu', async ({ page }) => {

@@ -1,5 +1,5 @@
 const { test, expect } = require('@playwright/test');
-const { dangNhapKhachHang } = require('./_fixtures');
+const { dangNhapKhachHang } = require('../support/_fixtures');
 
 // Smoke test cho tab Bảo Mật & Mật Khẩu (components/tai-khoan/BaoMatTaiKhoan.jsx)
 // CHỈ kiểm tra UI/validate phía client -- KHÔNG submit đổi mật khẩu thật để tránh khoá
