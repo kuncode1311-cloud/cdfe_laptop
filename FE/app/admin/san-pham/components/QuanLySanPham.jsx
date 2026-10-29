@@ -28,6 +28,7 @@ export default function QuanLySanPham({
     locHangSanPham,
     setLocHangSanPham,
     danhSachSanPham,
+    danhSachLoaiSanPham = [],
     thongKe,
     sanPhamHienThi,
     tuKhoaSanPham,
@@ -234,14 +235,14 @@ export default function QuanLySanPham({
                         className="w-full px-3 py-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
                     >
                         <option value="tat_ca">📦 Tất cả ngành hàng ({danhSachSanPham.length})</option>
-                        <option value="laptop">💻 Laptop Gaming & AI PC ({thongKe.soLuongLaptop})</option>
-                        <option value="ban_phim">⌨️ Bàn Phím Cơ Custom ({thongKe.soLuongBanPhim})</option>
-                        <option value="chuot">🖱️ Chuột Gaming Siêu Nhẹ ({thongKe.soLuongChuot})</option>
-                        <option value="balo">🎒 Balo & Túi Chống Sốc ({thongKe.soLuongBalo})</option>
-                        <option value="tai_nghe">🎧 Tai Nghe & Loa ({thongKe.soLuongTaiNghe})</option>
-                        <option value="sac_hub">⚡ Củ Sạc GaN & Hub ({thongKe.soLuongSacHub})</option>
-                        <option value="linh-kien">💾 Linh kiện RAM/SSD ({thongKe.soLuongLinhKien})</option>
-                        <option value="phu-kien-gear">🎮 Gom toàn bộ Gear & Phụ Kiện ({thongKe.soLuongGear})</option>
+                        <option value="laptop">💻 Laptop ({thongKe.soLuongLaptop})</option>
+                        {danhSachLoaiSanPham.map((loai) => {
+                            const soLuong = danhSachSanPham.filter((sp) => {
+                                const danhMuc = Array.isArray(sp.danh_muc) ? sp.danh_muc : [sp.danh_muc].filter(Boolean);
+                                return danhMuc.includes(loai.ma);
+                            }).length;
+                            return <option key={loai.ma} value={loai.ma}>{loai.logo} {loai.ten} ({soLuong})</option>;
+                        })}
                     </select>
 
                     <select

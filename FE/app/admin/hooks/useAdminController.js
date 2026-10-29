@@ -1239,6 +1239,12 @@ export default function useAdminController() {
         return Array.from(hangSet.entries()).map(([ma, ten]) => ({ ma, ten }));
     }, [danhSachDanhMuc, danhSachSanPham]);
 
+    // Bộ lọc ngành hàng lấy tên và mã từ danh mục đang hoạt động trong DB.
+    const danhSachLoaiSanPham = useMemo(() => danhSachDanhMuc
+        .filter((dm) => dm.loai === 'loai_san_pham' && dm.kich_hoat !== false)
+        .sort((a, b) => (a.thu_tu_hien_thi || 0) - (b.thu_tu_hien_thi || 0))
+        .map((dm) => ({ ma: dm.ma_danh_muc, ten: dm.ten_danh_muc, logo: dm.logo || '📦' })), [danhSachDanhMuc]);
+
     const donHangHienThi = useMemo(() => {
         let list = danhSachDonHang.filter(dh => {
             const matchTuKhoa = !tuKhoaGlobal.trim() ||
@@ -1337,23 +1343,11 @@ export default function useAdminController() {
                 JSON.stringify(sp.thong_so || {}).toLowerCase().includes(tuKhoa);
 
             let matchNganhHang = true;
-            const loai = xacDinhLoaiSanPham(sp);
             if (locNganhHang === 'laptop') {
-                matchNganhHang = loai === 'laptop';
-            } else if (locNganhHang === 'linh-kien' || locNganhHang === 'linh_kien') {
-                matchNganhHang = loai === 'linh_kien';
-            } else if (locNganhHang === 'ban_phim') {
-                matchNganhHang = loai === 'ban_phim';
-            } else if (locNganhHang === 'chuot') {
-                matchNganhHang = loai === 'chuot';
-            } else if (locNganhHang === 'balo') {
-                matchNganhHang = loai === 'balo';
-            } else if (locNganhHang === 'tai_nghe') {
-                matchNganhHang = loai === 'tai_nghe';
-            } else if (locNganhHang === 'sac_hub') {
-                matchNganhHang = loai === 'sac_hub';
-            } else if (locNganhHang === 'phu-kien-gear') {
-                matchNganhHang = loai !== 'laptop' && loai !== 'linh_kien';
+                matchNganhHang = xacDinhLoaiSanPham(sp) === 'laptop';
+            } else if (locNganhHang !== 'tat_ca' && locNganhHang !== 'laptop') {
+                const danhMuc = Array.isArray(sp.danh_muc) ? sp.danh_muc : [sp.danh_muc].filter(Boolean);
+                matchNganhHang = danhMuc.includes(locNganhHang);
             }
 
             const matchHang = locHangSanPham === 'tat_ca' || sp.hang_san_xuat?.toLowerCase() === locHangSanPham.toLowerCase();
@@ -2105,7 +2099,7 @@ export default function useAdminController() {
 
     const thongSoOverlayXemSanPham = { daSoSanhXemTruoc,dacDiemNoiBatXemTruoc,dangXemTruocCard,giaGocHienTaiXemTruoc,giaHienTaiXemTruoc,kieuXemTruoc,modalXemAnh,sanPhamXemTruoc,setDaSoSanhXemTruoc,setDangXemTruocCard,setKieuXemTruoc,setModalXemAnh,setTabChiTietXemTruoc,setTuyChonXemTruoc,tabChiTietXemTruoc,tienTietKiemXemTruoc,tuyChonHienTaiXemTruoc };
 
-    const thongSoQuanLySanPham = { locNganhHang, setLocNganhHang, locHangSanPham, setLocHangSanPham, danhSachSanPham, thongKe, sanPhamHienThi, tuKhoaSanPham, setTuKhoaSanPham, moModalThemSp, locTonKhoSanPham, setLocTonKhoSanPham, sapXepSanPham, setSapXepSanPham, danhSachHangThucTe, dangTai, dangLocSanPham, layThongSoNhanhAdmin, dangXuLySpId, dangLuuSp, setModalXemAnh, xuLyToggleConHang, xuLyToggleFlashSale, moModalSuaSp, xuLyXoaSanPham };
+    const thongSoQuanLySanPham = { locNganhHang, setLocNganhHang, locHangSanPham, setLocHangSanPham, danhSachSanPham, danhSachLoaiSanPham, thongKe, sanPhamHienThi, tuKhoaSanPham, setTuKhoaSanPham, moModalThemSp, locTonKhoSanPham, setLocTonKhoSanPham, sapXepSanPham, setSapXepSanPham, danhSachHangThucTe, dangTai, dangLocSanPham, layThongSoNhanhAdmin, dangXuLySpId, dangLuuSp, setModalXemAnh, xuLyToggleConHang, xuLyToggleFlashSale, moModalSuaSp, xuLyXoaSanPham };
 
     // Props truyền cho Tab "Quản Lý Khách Hàng" (component tách riêng để giảm phình file admin/page.jsx)
     const thongSoModalKhachHang = { dangMoModalUser, setDangMoModalUser, userDangSua, formUser, setFormUser, xuLyLuuUser, dangLuuUser };
