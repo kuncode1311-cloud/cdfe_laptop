@@ -246,7 +246,16 @@ exports.guiPhanHoiLienHe = async (req, res) => {
             chuDe: lienHe.chu_de,
             noiDung
         });
-        return res.status(200).json({ thanh_cong: true, thong_diep: `Đã gửi phản hồi đến ${lienHe.email}` });
+        const lienHeDaHoanTat = await LienHe.findByIdAndUpdate(
+            id,
+            { $set: { trang_thai: 'da_hoan_thanh' } },
+            { returnDocument: 'after' }
+        );
+        return res.status(200).json({
+            thanh_cong: true,
+            thong_diep: `Đã gửi phản hồi đến ${lienHe.email} và hoàn tất phiếu tư vấn`,
+            du_lieu: lienHeDaHoanTat
+        });
     } catch (loi) {
         console.error('[LỖI GỬI PHẢN HỒI LIÊN HỆ]:', loi);
         return res

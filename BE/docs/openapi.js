@@ -1036,14 +1036,14 @@ const paths = {
     '/api/lien-he/{id}/phan-hoi': {
         post: op({
             tag: T.lh, summary: 'Gửi email phản hồi khách hàng', auth: 'admin',
-            description: 'Gửi nội dung phản hồi tới email được lưu trong phiếu liên hệ.',
+            description: 'Gửi nội dung phản hồi tới email được lưu trong phiếu liên hệ. Khi email gửi thành công, phiếu tự chuyển sang `da_hoan_thanh`.',
             params: [pathId('id', '`_id` (MongoDB ObjectId) của phiếu', '66f1a2b3c4d5e6f708192a3b')],
             requestBody: body({
                 type: 'object', required: ['noi_dung'],
                 properties: { noi_dung: { type: 'string', minLength: 1 } }
             }, { noi_dung: 'Chào bạn, bên mình đề xuất mẫu laptop phù hợp như sau...' }),
             responses: {
-                200: ok('Đã gửi email', ref('LoiThanhCong'), { thanh_cong: true, thong_diep: 'Đã gửi phản hồi đến an.nguyen@gmail.com' }),
+                200: ok('Đã gửi email và hoàn tất phiếu', { type: 'object', properties: { thanh_cong: { type: 'boolean' }, thong_diep: { type: 'string' }, du_lieu: ref('LienHe') } }, { thanh_cong: true, thong_diep: 'Đã gửi phản hồi đến an.nguyen@gmail.com và hoàn tất phiếu tư vấn' }),
                 400: ok('Thiếu nội dung hoặc phiếu chưa có email', ref('LoiThanhCong')), 404: ok('Không tìm thấy phiếu', ref('LoiThanhCong')),
                 502: ok('Không thể gửi email', ref('LoiThanhCong'))
             }
