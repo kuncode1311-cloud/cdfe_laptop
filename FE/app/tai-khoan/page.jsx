@@ -707,35 +707,48 @@ function NoiDungTrangTaiKhoan() {
     };
 
     useEffect(() => {
-        const taiDonHang = async () => {
+        let daHuy = false;
+        let dangTaiNgam = false;
+        const taiDonHang = async (taiNgam = false) => {
             if (!nguoiDung) {
                 setDanhSachDonHang([]);
                 return;
             }
 
-            setDangTaiDonHang(true);
+            if (taiNgam && (dangTaiNgam || document.visibilityState !== 'visible')) return;
+            dangTaiNgam = true;
+            if (!taiNgam) setDangTaiDonHang(true);
             try {
                 const laAdmin = nguoiDung?.vaiTro === 'admin' || nguoiDung?.role === 'admin';
                 if (laAdmin) {
                     // Admin xem tất cả các đơn để quản lý và kiểm tra realtime
                     const tatCa = await DonHangService.layTatCaDonHangAsync();
-                    setDanhSachDonHang(tatCa || []);
+                    if (!daHuy) setDanhSachDonHang(tatCa || []);
                 } else {
                     const idUsr = nguoiDung.id || nguoiDung._id || '';
                     const emailUsr = (nguoiDung.email || '').trim().toLowerCase();
                     const sdtUsr = (nguoiDung.soDienThoai || nguoiDung.so_dien_thoai || '').trim();
 
                     const donCuaToi = await DonHangService.layDonHangTheoNguoiDungAsync(idUsr, emailUsr, sdtUsr);
-                    setDanhSachDonHang(donCuaToi || []);
+                    if (!daHuy) setDanhSachDonHang(donCuaToi || []);
                 }
             } catch (e) {
                 console.error('Lỗi tải đơn hàng:', e);
-                setDanhSachDonHang([]);
+                if (!daHuy && !taiNgam) setDanhSachDonHang([]);
             } finally {
-                setDangTaiDonHang(false);
+                dangTaiNgam = false;
+                if (!daHuy && !taiNgam) setDangTaiDonHang(false);
             }
         };
         taiDonHang();
+        const timer = setInterval(() => taiDonHang(true), 10000);
+        const khiQuayLai = () => taiDonHang(true);
+        window.addEventListener('focus', khiQuayLai);
+        return () => {
+            daHuy = true;
+            clearInterval(timer);
+            window.removeEventListener('focus', khiQuayLai);
+        };
     }, [nguoiDung]);
 
     // Xóa sạch trạng thái đơn hàng khi người dùng bấm đăng xuất

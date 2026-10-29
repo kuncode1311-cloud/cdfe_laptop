@@ -84,30 +84,25 @@ function NoiDungTrangThanhToan() {
     useEffect(() => {
         const status = searchParams.get('status');
         const orderCode = searchParams.get('orderCode');
-        if (status === 'PAID' && orderCode) {
-            toast.success('🎉 Cổng PayOS xác nhận đã thanh toán thành công!');
-            // Tìm đơn hàng tương ứng từ Server MongoDB
-            DonHangService.layDonHangTheoIdHoacMaAsync(orderCode).then(donHang => {
-                if (donHang) {
-                    setDonHangThanhCong({
-                        ...donHang,
-                        da_thanh_toan: true,
-                        trang_thai_thanh_toan: 'da_thanh_toan'
-                    });
-                    xoaSachGioHang();
-                } else {
-                    const danhSach = DonHangService.layTatCaDonHang();
-                    const dh = danhSach.find(d => 
-                        String(d.payos_order_code) === String(orderCode) || 
-                        String(d.ma_don_hang).includes(String(orderCode))
-                    );
-                    if (dh) {
-                        setDonHangThanhCong(dh);
-                        xoaSachGioHang();
-                    }
-                }
-            });
-        }
+        if (status !== 'PAID' || !orderCode) return;
+        let daHuy = false;
+        const xacNhanTuMayChu = async () => {
+            const ketQua = await ThanhToanService.kiemTraTrangThai(orderCode);
+            if (daHuy) return;
+            if (!ketQua?.da_thanh_toan) {
+                toast.info('Đang chờ máy chủ xác nhận thanh toán. Vui lòng kiểm tra lại sau ít phút.');
+                return;
+            }
+            const donHang = await DonHangService.layDonHangTheoIdHoacMaAsync(orderCode);
+            if (daHuy) return;
+            if (donHang?.da_thanh_toan) {
+                setDonHangThanhCong(donHang);
+                xoaSachGioHang();
+                toast.success('🎉 Thanh toán đã được xác nhận!');
+            }
+        };
+        xacNhanTuMayChu();
+        return () => { daHuy = true; };
     }, [searchParams]);
 
     const xuLyDatHang = async (e) => {

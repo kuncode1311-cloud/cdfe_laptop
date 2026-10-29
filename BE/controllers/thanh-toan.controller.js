@@ -231,8 +231,8 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
             console.warn('⚠️ [PayOS] Bỏ qua lỗi kết nối PayOS, sử dụng VietQR tĩnh:', apiErr.message);
         }
 
-        // Cập nhật orderCode vào đơn hàng song song (không chặn luồng phản hồi)
-        DonHang.updateOne(
+        // Lưu mã PayOS trước khi trả QR để webhook/polling luôn tìm được đơn.
+        await DonHang.updateOne(
             { _id: donHang._id },
             {
                 $set: {
@@ -241,7 +241,7 @@ const taoYeuCauThanhToanPayOS = async (req, res) => {
                     trang_thai_thanh_toan: 'cho_thanh_toan'
                 }
             }
-        ).catch((err) => console.warn('⚠️ Lỗi update payos_order_code:', err.message));
+        );
 
         return res.status(200).json({
             success: true,
@@ -289,7 +289,7 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
         const donHangDB = await DonHang.findOne({
             $or: [{ payos_order_code: orderNum }, { ma_don_hang: String(orderCode) }]
         })
-            .select('da_thanh_toan trang_thai_thanh_toan ma_don_hang payos_order_code')
+            .select('da_thanh_toan trang_thai_thanh_toan ma_don_hang payos_order_code tong_tien_thanh_toan')
             .lean();
 
         if (donHangDB && (donHangDB.da_thanh_toan || donHangDB.trang_thai_thanh_toan === 'da_thanh_toan')) {
@@ -358,20 +358,12 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
             // Không log lỗi timeout để tránh rác log
         }
 
-        // Lưu vào cache throttle 3 giây
-        boNhoDemPayOS.set(cacheKey, {
-            timestamp: bayGio,
-            status: payosStatus,
-            daThanhToan: daThanhToan,
-            amountPaid: amountPaid
-        });
-
-        // 4. Nếu PayOS xác nhận đã thanh toán -> cập nhật DB ngay lập tức
+        // Chỉ công nhận giao dịch của đúng đơn và đúng số tiền đã lưu.
+        const soTienPhaiThu = Math.round(Number(donHangDB?.tong_tien_thanh_toan) || 0);
+        daThanhToan = Boolean(donHangDB && daThanhToan && soTienPhaiThu > 0 && amountPaid >= soTienPhaiThu);
         if (daThanhToan) {
-            DonHang.updateOne(
-                {
-                    $or: [{ payos_order_code: orderNum }, { ma_don_hang: String(orderCode) }]
-                },
+            const ketQuaLuu = await DonHang.updateOne(
+                { _id: donHangDB._id, da_thanh_toan: { $ne: true } },
                 {
                     $set: {
                         da_thanh_toan: true,
@@ -379,12 +371,13 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
                         trang_thai: 'da_xac_nhan'
                     }
                 }
-            )
-                .then(() => {
-                    console.log(`✅ [PayOS] Cập nhật thành công đơn hàng #${orderCode} ĐÃ THANH TOÁN!`);
-                })
-                .catch((err) => console.warn('⚠️ Lỗi cập nhật đơn:', err.message));
+            );
+            daThanhToan = ketQuaLuu.modifiedCount > 0 || Boolean((await DonHang.findById(donHangDB._id).select('da_thanh_toan').lean())?.da_thanh_toan);
         }
+
+        boNhoDemPayOS.set(cacheKey, {
+            timestamp: bayGio, status: payosStatus, daThanhToan, amountPaid
+        });
 
         return res.status(200).json({
             success: true,
@@ -409,7 +402,7 @@ const kiemTraTrangThaiPayOS = async (req, res) => {
  *   Bước 1: Xác thực chữ ký số bằng thuật toán crypto.timingSafeEqual (Ngăn chặn Timing Attack).
  *   Bước 2: Kiểm tra mã đơn hàng và số tiền thực nhận với đơn hàng trong database.
  *   Bước 3: Tính lũy đẳng (Idempotency): PayOS có thể gửi lại webhook nhiều lần; nếu đơn đã thanh toán thì bỏ qua, không xử lý lại.
- *   Bước 4: Cập nhật đơn hàng thành công, kích hoạt email/telegram và trả về mã 200 tức thời cho PayOS (< 50ms).
+ *   Bước 4: Lưu trạng thái đơn hàng trước khi trả 200; gửi email/Telegram sau đó.
  */
 const xuLyWebhookPayOS = async (req, res) => {
     try {
@@ -459,22 +452,9 @@ const xuLyWebhookPayOS = async (req, res) => {
 
         console.log(`🔔 [PayOS Webhook] Giao dịch thành công! Mã đơn: ${orderCode}, Số tiền: ${amount}`);
 
-        // Trả về 200 ngay tức thì cho PayOS để xác nhận thành công
-        res.status(200).json({
-            success: true,
-            message: 'Webhook processed successfully'
-        });
-
-        // Cập nhật Cache và Database ngay lập tức
+        // Chỉ xác nhận webhook sau khi MongoDB đã lưu trạng thái thanh toán.
         const cacheKey = String(orderCode);
-        boNhoDemPayOS.set(cacheKey, {
-            timestamp: Date.now(),
-            status: 'PAID',
-            daThanhToan: true,
-            amountPaid: amount
-        });
-
-        DonHang.findOneAndUpdate(
+        const donHangDaCapNhat = await DonHang.findOneAndUpdate(
             { _id: donHang._id },
             {
                 $set: {
@@ -484,21 +464,20 @@ const xuLyWebhookPayOS = async (req, res) => {
                 }
             },
             { returnDocument: 'after' }
-        )
-            .then((donHangDaCapNhat) => {
-                console.log(`✅ [PayOS Webhook] Đã lưu vào MongoDB đơn hàng #${orderCode}`);
-                if (donHangDaCapNhat) {
-                    if (donHangDaCapNhat.thong_tin_giao_hang?.email || donHangDaCapNhat.email) {
-                        guiMailXacNhanDonHang(donHangDaCapNhat).catch((e) =>
-                            console.warn('⚠️ Lỗi gửi mail sau webhook:', e.message)
-                        );
-                    }
-                    guiThongBaoDonHangTelegram(donHangDaCapNhat).catch((e) =>
-                        console.warn('⚠️ Lỗi gửi Telegram sau webhook:', e.message)
-                    );
-                }
-            })
-            .catch((err) => console.warn('⚠️ Lỗi cập nhật Webhook vào DB:', err.message));
+        );
+        if (!donHangDaCapNhat) throw new Error('Không thể lưu đơn hàng đã thanh toán');
+        boNhoDemPayOS.set(cacheKey, {
+            timestamp: Date.now(), status: 'PAID', daThanhToan: true, amountPaid: amount
+        });
+        res.status(200).json({ success: true, message: 'Webhook processed successfully' });
+        if (donHangDaCapNhat.thong_tin_giao_hang?.email || donHangDaCapNhat.email) {
+            guiMailXacNhanDonHang(donHangDaCapNhat).catch((e) =>
+                console.warn('⚠️ Lỗi gửi mail sau webhook:', e.message)
+            );
+        }
+        guiThongBaoDonHangTelegram(donHangDaCapNhat).catch((e) =>
+            console.warn('⚠️ Lỗi gửi Telegram sau webhook:', e.message)
+        );
     } catch (error) {
         console.error('❌ [PayOS Webhook] Lỗi xử lý webhook:', error);
         return res.status(500).json({ success: false, message: 'Lỗi xử lý webhook.' });

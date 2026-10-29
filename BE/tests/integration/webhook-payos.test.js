@@ -46,9 +46,6 @@ const taoDonChoThanhToan = () =>
         payos_order_code: MA_PAYOS
     });
 
-// Webhook cập nhật DB sau khi đã trả 200 cho PayOS → chờ một chút rồi mới đọc DB
-const choCapNhatNen = () => new Promise((resolve) => setTimeout(resolve, 200));
-
 describe('POST /api/thanh-toan/webhook', () => {
     beforeEach(() => {
         jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -98,8 +95,6 @@ describe('POST /api/thanh-toan/webhook', () => {
             .send(taoWebhook({ orderCode: MA_PAYOS, amount: SO_TIEN, code: '00' }));
 
         expect(res.status).toBe(200);
-        await choCapNhatNen();
-
         const don = await DonHang.findOne({ payos_order_code: MA_PAYOS });
         expect(don.da_thanh_toan).toBe(true);
         expect(don.trang_thai_thanh_toan).toBe('da_thanh_toan');
@@ -111,7 +106,6 @@ describe('POST /api/thanh-toan/webhook', () => {
         const webhook = taoWebhook({ orderCode: MA_PAYOS, amount: SO_TIEN, code: '00' });
 
         await request(app).post('/api/thanh-toan/webhook').send(webhook);
-        await choCapNhatNen();
         guiThongBaoDonHangTelegram.mockClear();
 
         const lan2 = await request(app).post('/api/thanh-toan/webhook').send(webhook);
@@ -119,5 +113,35 @@ describe('POST /api/thanh-toan/webhook', () => {
         expect(lan2.status).toBe(200);
         expect(lan2.body.message).toContain('trước đó');
         expect(guiThongBaoDonHangTelegram).not.toHaveBeenCalled();
+    });
+});
+
+describe('GET /api/thanh-toan/kiem-tra/:orderCode', () => {
+    afterEach(() => jest.restoreAllMocks());
+
+    test('PayOS báo PAID đúng tiền → DB đã lưu trước khi trả kết quả', async () => {
+        const maPayOS = MA_PAYOS + 10;
+        await taoDonChoThanhToan().then((don) => DonHang.updateOne({ _id: don._id }, { payos_order_code: maPayOS }));
+        jest.spyOn(global, 'fetch').mockResolvedValue({
+            json: async () => ({ code: '00', data: { status: 'PAID', amountPaid: SO_TIEN, amount: SO_TIEN } })
+        });
+        const res = await request(app).get(`/api/thanh-toan/kiem-tra/${maPayOS}`);
+        expect(res.status).toBe(200);
+        expect(res.body.da_thanh_toan).toBe(true);
+        const don = await DonHang.findOne({ payos_order_code: maPayOS });
+        expect(don.da_thanh_toan).toBe(true);
+        expect(don.trang_thai_thanh_toan).toBe('da_thanh_toan');
+    });
+
+    test('PayOS báo PAID nhưng thiếu tiền → không đánh dấu đơn đã thanh toán', async () => {
+        const maPayOS = MA_PAYOS + 1;
+        await taoDonChoThanhToan().then((don) => DonHang.updateOne({ _id: don._id }, { payos_order_code: maPayOS }));
+        jest.spyOn(global, 'fetch').mockResolvedValue({
+            json: async () => ({ code: '00', data: { status: 'PAID', amountPaid: SO_TIEN - 1000, amount: SO_TIEN } })
+        });
+        const res = await request(app).get(`/api/thanh-toan/kiem-tra/${maPayOS}`);
+        expect(res.status).toBe(200);
+        expect(res.body.da_thanh_toan).toBe(false);
+        expect((await DonHang.findOne({ payos_order_code: maPayOS })).da_thanh_toan).toBe(false);
     });
 });
