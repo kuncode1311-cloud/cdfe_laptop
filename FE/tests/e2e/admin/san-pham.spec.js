@@ -21,8 +21,15 @@ test('admin thêm, duyệt đủ 4 tab + 7 loại hàng, sửa rồi xoá đư�
     await page.getByRole('button', { name: 'Thêm Sản Phẩm Mới' }).click();
     await expect(page.getByPlaceholder('Nhập tên sản phẩm đầy đủ và chi tiết...')).toBeVisible();
 
-    // TAB 1: điền tên sản phẩm (trường bắt buộc duy nhất còn trống)
+    // TAB 1: điền đủ các trường bắt buộc của sản phẩm mới
     await page.getByPlaceholder('Nhập tên sản phẩm đầy đủ và chi tiết...').fill(tenSp);
+    await page.getByPlaceholder('VD: G834JYR-R9054W').fill(`E2E-${Date.now()}`);
+    await page.locator('select').filter({ has: page.locator('option', { hasText: '-- Chọn hãng --' }) }).selectOption('asus');
+    await page.getByRole('button', { name: 'Gaming', exact: true }).click();
+    await page.getByRole('button', { name: 'Dán link' }).click();
+    await page.getByPlaceholder('https://... hoặc /images/sp/...').fill('/images/khong-co-anh.svg');
+    await page.getByPlaceholder('VD: 120000000').fill('12000000');
+    await page.getByPlaceholder('VD: 109990000').fill('10000000');
 
     // TAB 2: duyệt qua cấu hình kỹ thuật của cả 7 loại ngành hàng
     await page.getByRole('button', { name: '2. Cấu Hình Chi Tiết' }).click();
