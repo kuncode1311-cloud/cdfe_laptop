@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { dangNhapAdmin } = require('./_fixtures');
 
-// Smoke test cho Modal Thêm/Sửa khách hàng (components/admin/ModalKhachHang.jsx)
+// Smoke test cho Modal Thêm/Sửa khách hàng (app/admin/khach-hang/components/ModalKhachHang.jsx)
 test('admin thêm, sửa rồi xoá được một khách hàng', async ({ page }) => {
     const email = `e2e.khachhang.${Date.now()}@laptopnew.vn`;
 

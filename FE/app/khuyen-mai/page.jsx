@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 import confetti from 'canvas-confetti';
 import TheSanPham from '@/components/san-pham/TheSanPham';
 import { CaiDatService } from '@/services/cai-dat.service';
-import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import KhuVucDangTaiTable from '@/components/dieu-huong/KhuVucDangTaiTable';
 import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 export default function TrangKhuyenMai() {

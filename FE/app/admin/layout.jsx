@@ -6,6 +6,7 @@ import { useNguoiDung } from '@/contexts/AuthContext';
 import { ShieldAlert, ShieldCheck, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import KhungQuanTri from '@/app/admin/components/layout/KhungQuanTri';
 
 /**
  * Route Guard bảo vệ nghiêm ngặt toàn bộ trang /admin
@@ -75,5 +76,5 @@ export default function AdminLayout({ children }) {
     }
 
     // 3. Người dùng hợp lệ là Quản Trị Viên -> Cho phép render Admin Dashboard
-    return children;
+    return <KhungQuanTri>{children}</KhungQuanTri>;
 }

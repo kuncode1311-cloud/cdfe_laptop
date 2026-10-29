@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Home, ChevronRight, Calendar, ArrowRight, Eye, Clock, Search, Flame, X, ChevronDown } from 'lucide-react';
 import { TinTucService } from '@/services/tin-tuc.service';
 import { slugTinTuc } from '@/utils/taoSlug';
-import KhuVucDangTaiTable from '@/components/admin/KhuVucDangTaiTable';
+import KhuVucDangTaiTable from '@/components/dieu-huong/KhuVucDangTaiTable';
 import { useDuLieuMoi } from '@/services/dong-bo.service';
 
 const CHUYEN_MUC = [

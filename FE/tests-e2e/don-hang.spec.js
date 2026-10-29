@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { dangNhapAdmin } = require('./_fixtures');
 
-// Smoke test cho Modal Tạo/Sửa đơn hàng (components/admin/ModalDonHang.jsx)
+// Smoke test cho Modal Tạo/Sửa đơn hàng (app/admin/don-hang/components/ModalDonHang.jsx)
 test('admin tạo, sửa rồi xoá được một đơn hàng', async ({ page }) => {
     const hoTen = `E2E Khach ${Date.now()}`;
 

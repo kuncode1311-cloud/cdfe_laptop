@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { dangNhapAdmin } = require('./_fixtures');
 
-// Smoke test cho Modal Thêm/Sửa sản phẩm (components/admin/ModalSanPham.jsx) — modal lớn nhất, 4 tab.
+// Smoke test cho Modal Thêm/Sửa sản phẩm (app/admin/san-pham/components/ModalSanPham.jsx) — modal lớn nhất, 4 tab.
 // Vừa test CRUD vừa bấm qua toàn bộ tab + 7 loại ngành hàng + overlay xem trước để
 // phát hiện sớm nếu có prop nào bị thiếu khi tách component (sẽ hiện ReferenceError trên console).
 test('admin thêm, duyệt đủ 4 tab + 7 loại hàng, sửa rồi xoá được một sản phẩm', async ({ page }) => {

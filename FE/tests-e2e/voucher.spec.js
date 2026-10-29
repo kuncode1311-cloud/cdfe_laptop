@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { dangNhapAdmin } = require('./_fixtures');
 
-// Smoke test cho Modal Thêm/Sửa voucher (components/admin/ModalVoucher.jsx)
+// Smoke test cho Modal Thêm/Sửa voucher (app/admin/voucher/components/ModalVoucher.jsx)
 test('admin tạo, sửa rồi xoá được một voucher', async ({ page }) => {
     const maCode = `E2E${Date.now()}`;
 

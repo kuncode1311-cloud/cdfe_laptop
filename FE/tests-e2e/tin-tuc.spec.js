@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { dangNhapAdmin } = require('./_fixtures');
 
-// Smoke test cho Modal Thêm/Sửa tin tức (components/admin/ModalTinTuc.jsx)
+// Smoke test cho Modal Thêm/Sửa tin tức (app/admin/tin-tuc/components/ModalTinTuc.jsx)
 test('admin viết, sửa rồi xoá được một bài tin tức', async ({ page }) => {
     const tieuDe = `E2E Bai Viet ${Date.now()}`;
 
