@@ -1,10 +1,12 @@
 'use client';
+import { useMemo } from 'react';
 
 import { NguoiDungService } from '@/services/nguoi-dung.service';
 
 // Xử lý nghiệp vụ KhachHang; dữ liệu dùng chung được truyền từ controller chính.
 export default function useKhachHangController(dependencies) {
     const { canhBao, formUser, hienThongBao, setDangLuuUser, setDangMoModalUser, setDangXuLyUserId, setDanhSachNguoiDung, setFormUser, setUserDangSua, userDangSua, xacNhan } = dependencies;
+    const { danhSachNguoiDung, danhSachDonHang, tuKhoaKhachHang, locKhachHang, sapXepKhachHang } = dependencies;
     const layChiTietThoiGianKhachHang = (user) => {
         if (!user) return { gio: '--:--', ngay: '--/--/----', full: 'Chưa rõ' };
 
@@ -302,5 +304,79 @@ export default function useKhachHangController(dependencies) {
             setDangXuLyUserId(null);
         }
     };
-    return { layChiTietThoiGianKhachHang, layNgayTaoKhachHang, moModalThemUser, taoMatKhauNgauNhien, moModalSuaUser, xuLyLuuUser, xuLyKhoaNguoiDung, xuLyXoaUser, xuLyDoiVaiTroNguoiDung };
+    // Khách hàng kèm doanh thu
+    // Ghép đơn hàng vào khách hàng để tính doanh thu và phân loại khách.
+    const danhSachKhachHangKemDoanhThu = useMemo(() => {
+        return danhSachNguoiDung.map(user => {
+            const emailKh = user.email?.toLowerCase().trim();
+            const sdtKh = user.soDienThoai?.trim();
+
+            const cacDonKhach = danhSachDonHang.filter(dh => {
+                if (dh.trang_thai === 'da_huy') return false;
+                const dhEmail = dh.thong_tin_giao_hang?.email?.toLowerCase().trim();
+                const dhSdt = dh.thong_tin_giao_hang?.so_dien_thoai?.trim();
+                return (emailKh && dhEmail === emailKh) || (sdtKh && dhSdt === sdtKh);
+            });
+
+            const tongChiTieu = cacDonKhach.reduce((sum, dh) => sum + (Number(dh.tong_tien_thanh_toan) || 0), 0);
+            const soDonHang = cacDonKhach.length;
+
+            const laTiemNang = tongChiTieu >= 20000000 || soDonHang >= 2;
+
+            return {
+                ...user,
+                tongChiTieu,
+                soDonHang,
+                laTiemNang
+            };
+        });
+    }, [danhSachNguoiDung, danhSachDonHang]);
+
+    // Tìm kiếm, lọc và sắp xếp bảng khách hàng.
+    const khachHangHienThi = useMemo(() => {
+        let list = danhSachKhachHangKemDoanhThu.filter(u => {
+            const key = tuKhoaKhachHang.toLowerCase().trim();
+            const matchTuKhoa = !key ||
+                u.hoTen?.toLowerCase().includes(key) ||
+                u.email?.toLowerCase().includes(key) ||
+                u.soDienThoai?.includes(key);
+
+            let matchLoai = true;
+            if (locKhachHang === 'tiem_nang') {
+                matchLoai = u.laTiemNang || u.tongChiTieu > 0;
+            } else if (locKhachHang === 'da_mua') {
+                matchLoai = u.soDonHang > 0;
+            } else if (locKhachHang === 'chua_mua') {
+                matchLoai = !u.soDonHang || u.soDonHang === 0;
+            } else if (locKhachHang === 'admin') {
+                matchLoai = u.vaiTro === 'admin';
+            } else if (locKhachHang === 'bi_khoa') {
+                matchLoai = Boolean(u.biKhoa || u.trangThai === 'bi_khoa');
+            } else if (locKhachHang === 'cho_kich_hoat') {
+                matchLoai = u.daKichHoat === false || u.trangThai === 'cho_kich_hoat';
+            } else if (locKhachHang === 'hoat_dong') {
+                matchLoai = !u.biKhoa && u.trangThai !== 'bi_khoa' && u.daKichHoat !== false && u.trangThai !== 'cho_kich_hoat';
+            }
+
+            return matchTuKhoa && matchLoai;
+        });
+
+        if (sapXepKhachHang === 'ngay_tao_moi') {
+            list.sort((a, b) => {
+                const da = new Date(a.createdAt || 0).getTime() || (typeof a.id === 'string' && a.id.startsWith('usr_') ? parseInt(a.id.replace('usr_', '').replace('gg_', ''), 10) : 0);
+                const db = new Date(b.createdAt || 0).getTime() || (typeof b.id === 'string' && b.id.startsWith('usr_') ? parseInt(b.id.replace('usr_', '').replace('gg_', ''), 10) : 0);
+                return db - da;
+            });
+        } else if (sapXepKhachHang === 'doanh_thu_giam') {
+            list.sort((a, b) => (b.tongChiTieu || 0) - (a.tongChiTieu || 0));
+        } else if (sapXepKhachHang === 'diem_giam') {
+            list.sort((a, b) => (b.soDonHang || 0) - (a.soDonHang || 0));
+        } else if (sapXepKhachHang === 'ten_az') {
+            list.sort((a, b) => (a.hoTen || '').localeCompare(b.hoTen || ''));
+        }
+
+        return list;
+    }, [danhSachKhachHangKemDoanhThu, tuKhoaKhachHang, locKhachHang, sapXepKhachHang]);
+
+    return { danhSachKhachHangKemDoanhThu, khachHangHienThi, layChiTietThoiGianKhachHang, layNgayTaoKhachHang, moModalThemUser, taoMatKhauNgauNhien, moModalSuaUser, xuLyLuuUser, xuLyKhoaNguoiDung, xuLyXoaUser, xuLyDoiVaiTroNguoiDung };
 }

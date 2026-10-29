@@ -1,10 +1,12 @@
 'use client';
+import { useMemo } from 'react';
 
 import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 
 // Xử lý nghiệp vụ Voucher; dữ liệu dùng chung được truyền từ controller chính.
 export default function useVoucherController(dependencies) {
     const { canhBao, formVoucher, hienThongBao, setDangLuuVoucher, setDangMoModalVoucher, setDangXuLyVoucherId, setDanhSachVoucher, setFormVoucher, setVoucherDangSua, taiDuLieuToanBo, thucHienToggleAdmin, thucHienXoaAdmin, voucherDangSua } = dependencies;
+    const { danhSachVoucher, tuKhoaVoucher, locTrangThaiVoucher } = dependencies;
     const moModalThemVoucher = () => {
         setVoucherDangSua(null);
         setFormVoucher({
@@ -103,5 +105,26 @@ export default function useVoucherController(dependencies) {
         tieuDeLoi: 'Không Thể Xóa Voucher',
         setDangXuLy: setDangXuLyVoucherId
     });
-    return { moModalThemVoucher, moModalSuaVoucher, xuLyLuuVoucher, xuLyToggleVoucher, xuLyXoaVoucher };
+    // Voucher hiển thị kèm bộ lọc tìm kiếm & trạng thái
+    // Tìm và lọc voucher theo trạng thái để hiển thị trong bảng.
+    const voucherHienThi = useMemo(() => {
+        return danhSachVoucher.filter(vc => {
+            const key = (tuKhoaVoucher || '').toLowerCase().trim();
+            const matchTuKhoa = !key ||
+                vc.ma_code?.toLowerCase().includes(key) ||
+                vc.tieu_de?.toLowerCase().includes(key) ||
+                vc.mo_ta?.toLowerCase().includes(key);
+
+            let matchTrangThai = true;
+            if (locTrangThaiVoucher === 'kich_hoat') {
+                matchTrangThai = vc.kich_hoat !== false;
+            } else if (locTrangThaiVoucher === 'tam_an') {
+                matchTrangThai = vc.kich_hoat === false;
+            }
+
+            return matchTuKhoa && matchTrangThai;
+        });
+    }, [danhSachVoucher, tuKhoaVoucher, locTrangThaiVoucher]);
+
+    return { voucherHienThi, moModalThemVoucher, moModalSuaVoucher, xuLyLuuVoucher, xuLyToggleVoucher, xuLyXoaVoucher };
 }

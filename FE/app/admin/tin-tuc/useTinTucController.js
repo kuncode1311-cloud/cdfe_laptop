@@ -1,10 +1,12 @@
 'use client';
+import { useMemo } from 'react';
 
 import { TinTucService } from '@/services/tin-tuc.service';
 
 // Xử lý nghiệp vụ TinTuc; dữ liệu dùng chung được truyền từ controller chính.
 export default function useTinTucController(dependencies) {
     const { canhBao, formTinTuc, hienThongBao, rutGonTen, setDangLuuTinTuc, setDangMoModalTinTuc, setDangXuLyTinTucId, setDanhSachTinTuc, setFormTinTuc, setTinTucDangSua, taiDuLieuToanBo, thucHienToggleAdmin, thucHienXoaAdmin, tinTucDangSua } = dependencies;
+    const { danhSachTinTuc, tuKhoaTinTuc, locChuyenMucTinTuc, locTrangThaiTinTuc } = dependencies;
     const moModalThemTinTuc = () => {
         setTinTucDangSua(null);
         setFormTinTuc({
@@ -108,5 +110,25 @@ export default function useTinTucController(dependencies) {
             setDangXuLy: setDangXuLyTinTucId
         });
     };
-    return { moModalThemTinTuc, moModalSuaTinTuc, moModalSuaTin, xuLyLuuTinTuc, xuLyToggleXuatBanTinTuc, xuLyToggleTieuDiemTinTuc, xuLyXoaTinTuc };
+    // Tin tức hiển thị trong Admin
+    // Tìm và lọc tin theo chuyên mục, trạng thái xuất bản.
+    const tinTucHienThi = useMemo(() => {
+        return danhSachTinTuc.filter(t => {
+            const key = tuKhoaTinTuc.toLowerCase().trim();
+            const matchTuKhoa = !key ||
+                t.tieu_de?.toLowerCase().includes(key) ||
+                t.tom_tat?.toLowerCase().includes(key) ||
+                t.tac_gia?.toLowerCase().includes(key);
+
+            const matchChuyenMuc = locChuyenMucTinTuc === 'tat_ca' ||
+                t.chuyen_muc?.toLowerCase().trim() === locChuyenMucTinTuc.toLowerCase().trim();
+
+            const matchTrangThai = locTrangThaiTinTuc === 'tat_ca' ||
+                (locTrangThaiTinTuc === 'xuat_ban' ? t.xuat_ban !== false : t.xuat_ban === false);
+
+            return matchTuKhoa && matchChuyenMuc && matchTrangThai;
+        });
+    }, [danhSachTinTuc, tuKhoaTinTuc, locChuyenMucTinTuc, locTrangThaiTinTuc]);
+
+    return { tinTucHienThi, moModalThemTinTuc, moModalSuaTinTuc, moModalSuaTin, xuLyLuuTinTuc, xuLyToggleXuatBanTinTuc, xuLyToggleTieuDiemTinTuc, xuLyXoaTinTuc };
 }

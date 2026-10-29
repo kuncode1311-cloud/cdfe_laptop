@@ -10,6 +10,7 @@ import { TU_DIEN_THONG_SO_ADMIN } from '@/app/admin/constants/tu-dien-thong-so';
 // Xử lý nghiệp vụ SanPham; dữ liệu dùng chung được truyền từ controller chính.
 export default function useSanPhamController(dependencies) {
     const { canhBao, chuyenKeySangSlug, danhSachDanhMuc, formSp, hienThongBao, lamTrongFormSp, layTenHienThiKey, loaiFormSanPham, setDangLuuSp, setDangMoModalSp, setFormSp, setFormSpGoc, setLoaiFormSanPham, setSpDangSua, setTabModalSp, setThongSoTuyChinh, setThongSoTuyChinhGoc, spDangSua, taiDuLieuToanBo, thongSoTuyChinh, TU_DIEN_THONG_SO_ADMIN, tuyChonXemTruoc, xacDinhLoaiSanPham } = dependencies;
+    const { danhSachSanPham, tuKhoaGlobal, tuKhoaSanPham, locNganhHang, locHangSanPham, locTonKhoSanPham, sapXepSanPham } = dependencies;
     const moModalThemSp = () => {
         setSpDangSua(null);
         setFormSpGoc(null);
@@ -738,5 +739,86 @@ export default function useSanPhamController(dependencies) {
             setDangLuuSp(false);
         }
     };
-    return { moModalThemSp, moModalSuaSp, xayThongSoTheoLoai, sanPhamXemTruoc, dacDiemNoiBatXemTruoc, tuyChonHienTaiXemTruoc, giaHienTaiXemTruoc, giaGocHienTaiXemTruoc, tienTietKiemXemTruoc, xuLyLuuSanPham };
+    // Lọc và sắp xếp riêng danh sách cho bảng quản lý sản phẩm.
+    const sanPhamHienThi = useMemo(() => {
+        let list = danhSachSanPham.filter(sp => {
+            const tuKhoa = (tuKhoaSanPham || tuKhoaGlobal).toLowerCase().trim();
+            const matchTuKhoa = !tuKhoa ||
+                sp.ten_san_pham?.toLowerCase().includes(tuKhoa) ||
+                sp.ma_san_pham?.toLowerCase().includes(tuKhoa) ||
+                sp.hang_san_xuat?.toLowerCase().includes(tuKhoa) ||
+                (Array.isArray(sp.tuy_chon_phien_ban) && sp.tuy_chon_phien_ban.some(opt => opt.ten_tuy_chon?.toLowerCase().includes(tuKhoa))) ||
+                JSON.stringify(sp.thong_so || {}).toLowerCase().includes(tuKhoa);
+
+            let matchNganhHang = true;
+            if (locNganhHang === 'laptop') {
+                matchNganhHang = xacDinhLoaiSanPham(sp) === 'laptop';
+            } else if (locNganhHang !== 'tat_ca' && locNganhHang !== 'laptop') {
+                const danhMuc = Array.isArray(sp.danh_muc) ? sp.danh_muc : [sp.danh_muc].filter(Boolean);
+                matchNganhHang = danhMuc.includes(locNganhHang);
+            }
+
+            const matchHang = locHangSanPham === 'tat_ca' || sp.hang_san_xuat?.toLowerCase() === locHangSanPham.toLowerCase();
+
+            let matchTonKho = true;
+            if (locTonKhoSanPham === 'con_hang') {
+                matchTonKho = (sp.so_luong_ton_kho > 0) && (sp.con_hang !== false);
+            } else if (locTonKhoSanPham === 'sap_het') {
+                matchTonKho = (sp.so_luong_ton_kho <= 5 && sp.so_luong_ton_kho > 0);
+            } else if (locTonKhoSanPham === 'tam_an') {
+                matchTonKho = (sp.so_luong_ton_kho <= 0) || (sp.con_hang === false);
+            } else if (locTonKhoSanPham === 'flash_sale') {
+                matchTonKho = Boolean(sp.la_flash_sale);
+            }
+
+            return matchTuKhoa && matchNganhHang && matchHang && matchTonKho;
+        });
+
+        const layThoiDiemCapNhatSanPham = (sp) => {
+            const giaTri = sp.updatedAt || sp.ngay_cap_nhat || sp.createdAt || sp.ngay_tao || sp.ngayTao;
+            const thoiDiem = new Date(giaTri || 0).getTime();
+            return Number.isFinite(thoiDiem) ? thoiDiem : 0;
+        };
+
+        if (sapXepSanPham === 'moi_nhat') {
+            list.sort((a, b) => layThoiDiemCapNhatSanPham(b) - layThoiDiemCapNhatSanPham(a));
+        } else if (sapXepSanPham === 'gia_giam') {
+            list.sort((a, b) => (b.gia_khuyen_mai || 0) - (a.gia_khuyen_mai || 0));
+        } else if (sapXepSanPham === 'gia_tang') {
+            list.sort((a, b) => (a.gia_khuyen_mai || 0) - (b.gia_khuyen_mai || 0));
+        } else if (sapXepSanPham === 'ban_chay') {
+            list.sort((a, b) => (b.so_luong_da_ban || 0) - (a.so_luong_da_ban || 0));
+        } else if (sapXepSanPham === 'ton_kho') {
+            list.sort((a, b) => (b.so_luong_ton_kho || 0) - (a.so_luong_ton_kho || 0));
+        }
+
+        return list;
+    }, [danhSachSanPham, tuKhoaGlobal, tuKhoaSanPham, locNganhHang, locHangSanPham, locTonKhoSanPham, sapXepSanPham, xacDinhLoaiSanPham]);
+
+    // Chuẩn bị danh sách hãng và loại hàng cho bộ lọc của trang sản phẩm.
+    const danhSachHangThucTe = useMemo(() => {
+        const hangSet = new Map();
+        // Chỉ lấy dòng là hãng, không trộn loại sản phẩm / nhu cầu vào ô "Hãng"
+        danhSachDanhMuc.forEach(dm => {
+            if (dm.loai && dm.loai !== 'thuong_hieu') return;
+            hangSet.set(dm.ma_danh_muc.toLowerCase(), dm.ten_danh_muc);
+        });
+        danhSachSanPham.forEach(sp => {
+            if (sp.hang_san_xuat) {
+                const key = sp.hang_san_xuat.toLowerCase();
+                if (!hangSet.has(key)) {
+                    hangSet.set(key, sp.hang_san_xuat.toUpperCase());
+                }
+            }
+        });
+        return Array.from(hangSet.entries()).map(([ma, ten]) => ({ ma, ten }));
+    }, [danhSachDanhMuc, danhSachSanPham]);
+
+    // Bộ lọc ngành hàng lấy tên và mã từ danh mục đang hoạt động trong DB.
+    const danhSachLoaiSanPham = useMemo(() => danhSachDanhMuc
+        .filter((dm) => dm.loai === 'loai_san_pham' && dm.kich_hoat !== false)
+        .sort((a, b) => (a.thu_tu_hien_thi || 0) - (b.thu_tu_hien_thi || 0))
+        .map((dm) => ({ ma: dm.ma_danh_muc, ten: dm.ten_danh_muc, logo: dm.logo || '📦' })), [danhSachDanhMuc]);
+
+    return { danhSachHangThucTe, danhSachLoaiSanPham, sanPhamHienThi, moModalThemSp, moModalSuaSp, xayThongSoTheoLoai, sanPhamXemTruoc, dacDiemNoiBatXemTruoc, tuyChonHienTaiXemTruoc, giaHienTaiXemTruoc, giaGocHienTaiXemTruoc, tienTietKiemXemTruoc, xuLyLuuSanPham };
 }

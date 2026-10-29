@@ -1,10 +1,42 @@
 'use client';
+import { useMemo } from 'react';
 
 import { DonHangService } from '@/services/don-hang.service';
+
+const layTimestampDonHang = (donHang) => {
+    if (!donHang) return 0;
+    const giaTri = donHang.ngay_tao || donHang.createdAt || donHang.ngayTao;
+    if (!giaTri) return 0;
+    if (typeof giaTri === 'number') return giaTri;
+    if (giaTri instanceof Date) return giaTri.getTime();
+    if (typeof giaTri === 'string') {
+        const ngayThang = giaTri.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (ngayThang) {
+            const gioPhut = giaTri.match(/(\d{1,2}):(\d{1,2})/);
+            const ngay = new Date(
+                Number(ngayThang[3]),
+                Number(ngayThang[2]) - 1,
+                Number(ngayThang[1]),
+                gioPhut ? Number(gioPhut[1]) : 0,
+                gioPhut ? Number(gioPhut[2]) : 0
+            );
+            if (!Number.isNaN(ngay.getTime())) return ngay.getTime();
+        }
+        const ngay = new Date(giaTri);
+        if (!Number.isNaN(ngay.getTime())) return ngay.getTime();
+    }
+    return 0;
+};
+
+const layDateDonHang = (donHang) => {
+    const timestamp = layTimestampDonHang(donHang);
+    return timestamp > 0 ? new Date(timestamp) : null;
+};
 
 // Xử lý nghiệp vụ DonHang; dữ liệu dùng chung được truyền từ controller chính.
 export default function useDonHangController(dependencies) {
     const { canhBao, danhSachSanPham, danhSachVoucher, donHangDangSua, formDonHang, hienThongBao, setDangLuuDonHang, setDangMoModalDonHang, setDangXuLyDonHangId, setDonHangDangSua, setFormDonHang, taiDuLieuToanBo, thucHienXoaAdmin } = dependencies;
+    const { danhSachDonHang, tuKhoaGlobal, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang } = dependencies;
     const moModalTaoDonHang = () => {
         setDonHangDangSua(null);
         setFormDonHang({
@@ -239,5 +271,93 @@ export default function useDonHangController(dependencies) {
         tieuDeLoi: 'Không Thể Xóa Đơn Hàng',
         setDangXuLy: setDangXuLyDonHangId
     });
-    return { moModalTaoDonHang, moModalSuaDonHang, themDongSanPhamDonHang, xoaDongSanPhamDonHang, capNhatDongSanPhamDonHang, xuLyLuuDonHang, xuLyDoiTrangThaiDonHang, xuLyDoiTrangThaiThanhToan, xuLyXoaDonHang };
+    // Lọc theo trạng thái, thanh toán và thời gian; sau đó sắp xếp cho bảng đơn hàng.
+    const donHangHienThi = useMemo(() => {
+        let list = danhSachDonHang.filter(dh => {
+            const matchTuKhoa = !tuKhoaGlobal.trim() ||
+                dh.ma_don_hang?.toLowerCase().includes(tuKhoaGlobal.toLowerCase()) ||
+                dh.thong_tin_giao_hang?.ho_ten?.toLowerCase().includes(tuKhoaGlobal.toLowerCase()) ||
+                dh.thong_tin_giao_hang?.so_dien_thoai?.includes(tuKhoaGlobal) ||
+                dh.thong_tin_giao_hang?.dia_chi_chi_tiet?.toLowerCase().includes(tuKhoaGlobal.toLowerCase());
+
+            const matchTrangThai = locTrangThaiDonHang === 'tat_ca' || dh.trang_thai === locTrangThaiDonHang;
+            const matchThanhToan = locThanhToanDonHang === 'tat_ca' ||
+                (locThanhToanDonHang === 'da_thanh_toan' ? dh.da_thanh_toan : !dh.da_thanh_toan);
+
+            // 1. Lọc theo ngày cụ thể nếu người dùng chọn ngày qua DatePicker (YYYY-MM-DD)
+            let matchNgayCuThe = true;
+            if (locNgayCuThe) {
+                const d = layDateDonHang(dh);
+                if (d) {
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    matchNgayCuThe = `${yyyy}-${mm}-${dd}` === locNgayCuThe;
+                } else {
+                    matchNgayCuThe = false;
+                }
+            }
+
+            // 2. Lọc theo mốc thời gian (Hôm nay / Tuần này / Tháng này / Tháng 8 / Năm 2026)
+            let matchThoiGian = true;
+            if (locThoiGianDonHang !== 'tat_ca') {
+                const ts = layTimestampDonHang(dh);
+                const d = layDateDonHang(dh);
+                const now = new Date();
+
+                if (locThoiGianDonHang === 'hom_nay') {
+                    if (d) {
+                        matchThoiGian = d.getDate() === now.getDate() &&
+                                        d.getMonth() === now.getMonth() &&
+                                        d.getFullYear() === now.getFullYear();
+                    } else {
+                        matchThoiGian = false;
+                    }
+                } else if (locThoiGianDonHang === '7_ngay') {
+                    const bayNgayMs = 7 * 24 * 60 * 60 * 1000;
+                    matchThoiGian = ts > 0 && (now.getTime() - ts <= bayNgayMs) && (ts <= now.getTime() + 60000);
+                } else if (locThoiGianDonHang === '30_ngay') {
+                    const baMuoiNgayMs = 30 * 24 * 60 * 60 * 1000;
+                    matchThoiGian = ts > 0 && (now.getTime() - ts <= baMuoiNgayMs) && (ts <= now.getTime() + 60000);
+                } else if (locThoiGianDonHang === 'thang_8_2026') {
+                    if (d) {
+                        matchThoiGian = d.getMonth() === 7 && d.getFullYear() === 2026;
+                    } else {
+                        matchThoiGian = false;
+                    }
+                } else if (locThoiGianDonHang === 'nam_2026') {
+                    if (d) {
+                        matchThoiGian = d.getFullYear() === 2026;
+                    } else {
+                        matchThoiGian = false;
+                    }
+                }
+            }
+
+            return matchTuKhoa && matchTrangThai && matchThanhToan && matchNgayCuThe && matchThoiGian;
+        });
+
+        // 3. Sắp xếp đơn hàng (Mới nhất, Cũ nhất, Giá cao nhất, Giá thấp nhất)
+        return list.sort((a, b) => {
+            if (sapXepDonHang === 'moi_nhat') {
+                return layTimestampDonHang(b) - layTimestampDonHang(a);
+            }
+            if (sapXepDonHang === 'cu_nhat') {
+                return layTimestampDonHang(a) - layTimestampDonHang(b);
+            }
+            if (sapXepDonHang === 'gia_cao') {
+                const giaA = a.tong_tien_thanh_toan ?? a.tong_tien ?? 0;
+                const giaB = b.tong_tien_thanh_toan ?? b.tong_tien ?? 0;
+                return giaB - giaA;
+            }
+            if (sapXepDonHang === 'gia_thap') {
+                const giaA = a.tong_tien_thanh_toan ?? a.tong_tien ?? 0;
+                const giaB = b.tong_tien_thanh_toan ?? b.tong_tien ?? 0;
+                return giaA - giaB;
+            }
+            return 0;
+        });
+    }, [danhSachDonHang, tuKhoaGlobal, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang]);
+
+    return { donHangHienThi, moModalTaoDonHang, moModalSuaDonHang, themDongSanPhamDonHang, xoaDongSanPhamDonHang, capNhatDongSanPhamDonHang, xuLyLuuDonHang, xuLyDoiTrangThaiDonHang, xuLyDoiTrangThaiThanhToan, xuLyXoaDonHang };
 }

@@ -1,10 +1,12 @@
 'use client';
+import { useMemo } from 'react';
 
 import { DanhMucService } from '@/services/danh-muc.service';
 
 // Xử lý nghiệp vụ DanhMuc; dữ liệu dùng chung được truyền từ controller chính.
 export default function useDanhMucController(dependencies) {
     const { canhBao, danhSachDanhMuc, dmDangSua, formDm, hienThongBao, locLoaiDanhMuc, setDangLuuDanhMuc, setDangMoModalDanhMuc, setDangXuLyDmId, setDanhSachDanhMuc, setDmDangSua, setFormDm, taiDuLieuToanBo, thucHienToggleAdmin, thucHienXoaAdmin } = dependencies;
+    const { tuKhoaDanhMuc } = dependencies;
     const moModalThemDanhMuc = () => {
         setDmDangSua(null);
         setFormDm({
@@ -88,5 +90,22 @@ export default function useDanhMucController(dependencies) {
         tieuDeLoi: 'Không Thể Xóa Thương Hiệu',
         setDangXuLy: setDangXuLyDmId
     });
-    return { moModalThemDanhMuc, moModalSuaDanhMuc, xuLyLuuDanhMuc, xuLyToggleDanhMuc, xuLyXoaDanhMuc };
+    // Tìm danh mục theo tên, mã và nhóm loại đang chọn.
+    const danhMucHienThi = useMemo(() => {
+        return danhSachDanhMuc.filter(dm => {
+            const key = tuKhoaDanhMuc.toLowerCase().trim();
+            const matchTuKhoa = !key ||
+                dm.ten_danh_muc?.toLowerCase().includes(key) ||
+                dm.ma_danh_muc?.toLowerCase().includes(key) ||
+                dm.xuat_xu?.toLowerCase().includes(key);
+
+            const matchLoai = locLoaiDanhMuc === 'thuong_hieu'
+                ? (dm.loai === 'thuong_hieu' || !dm.loai)
+                : dm.loai === locLoaiDanhMuc;
+
+            return matchTuKhoa && matchLoai;
+        });
+    }, [danhSachDanhMuc, tuKhoaDanhMuc, locLoaiDanhMuc]);
+
+    return { danhMucHienThi, moModalThemDanhMuc, moModalSuaDanhMuc, xuLyLuuDanhMuc, xuLyToggleDanhMuc, xuLyXoaDanhMuc };
 }
