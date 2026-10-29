@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { DonHangService } from '@/services/don-hang.service';
 
+// Đổi ngày tạo đơn thành mốc thời gian để so sánh và sắp xếp.
 const layTimestampDonHang = (donHang) => {
     if (!donHang) return 0;
     const giaTri = donHang.ngay_tao || donHang.createdAt || donHang.ngayTao;
@@ -28,6 +29,7 @@ const layTimestampDonHang = (donHang) => {
     return 0;
 };
 
+// Đổi ngày tạo đơn thành ngày để lọc.
 const layDateDonHang = (donHang) => {
     const timestamp = layTimestampDonHang(donHang);
     return timestamp > 0 ? new Date(timestamp) : null;
@@ -37,6 +39,7 @@ const layDateDonHang = (donHang) => {
 export default function useDonHangController(dependencies) {
     const { canhBao, danhSachSanPham, danhSachVoucher, donHangDangSua, formDonHang, hienThongBao, setDangLuuDonHang, setDangMoModalDonHang, setDangXuLyDonHangId, setDonHangDangSua, setFormDonHang, taiDuLieuToanBo, thucHienXoaAdmin } = dependencies;
     const { danhSachDonHang, tuKhoaGlobal, locTrangThaiDonHang, locThanhToanDonHang, locThoiGianDonHang, locNgayCuThe, sapXepDonHang } = dependencies;
+    // Mở form tạo đơn hàng và điền giá trị ban đầu.
     const moModalTaoDonHang = () => {
         setDonHangDangSua(null);
         setFormDonHang({
@@ -105,6 +108,7 @@ export default function useDonHangController(dependencies) {
         }));
     };
 
+    // Kiểm tra và lưu đơn hàng.
     const xuLyLuuDonHang = async (e) => {
         e.preventDefault();
         setDangLuuDonHang(true);
@@ -205,6 +209,7 @@ export default function useDonHangController(dependencies) {
         }
     };
 
+    // Cập nhật trạng thái xử lý đơn hàng.
     const xuLyDoiTrangThaiDonHang = async (id, trangThaiMoi) => {
         let lyDoHuy;
         if (trangThaiMoi === 'da_huy') {
@@ -235,6 +240,7 @@ export default function useDonHangController(dependencies) {
         }
     };
 
+    // Cập nhật trạng thái thanh toán của đơn.
     const xuLyDoiTrangThaiThanhToan = async (id, daThanhToanMoi, hinhThuc) => {
         setDangXuLyDonHangId(id);
         try {
@@ -261,6 +267,7 @@ export default function useDonHangController(dependencies) {
         }
     };
 
+    // Xác nhận rồi xóa đơn hàng.
     const xuLyXoaDonHang = (id, maDon) => thucHienXoaAdmin({
         id,
         tieuDeXacNhan: 'Xóa Đơn Hàng Này?',

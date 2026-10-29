@@ -7,6 +7,7 @@ import { NguoiDungService } from '@/services/nguoi-dung.service';
 export default function useKhachHangController(dependencies) {
     const { canhBao, formUser, hienThongBao, setDangLuuUser, setDangMoModalUser, setDangXuLyUserId, setDanhSachNguoiDung, setFormUser, setUserDangSua, userDangSua, xacNhan } = dependencies;
     const { danhSachNguoiDung, danhSachDonHang, tuKhoaKhachHang, locKhachHang, sapXepKhachHang } = dependencies;
+    // Định dạng thời điểm tạo tài khoản để hiển thị.
     const layChiTietThoiGianKhachHang = (user) => {
         if (!user) return { gio: '--:--', ngay: '--/--/----', full: 'Chưa rõ' };
 
@@ -81,11 +82,13 @@ export default function useKhachHangController(dependencies) {
         };
     };
 
+    // Lấy ngày tạo tài khoản theo định dạng của bảng.
     const layNgayTaoKhachHang = (user) => {
         const tg = layChiTietThoiGianKhachHang(user);
         return tg.full;
     };
 
+    // Mở form tạo tài khoản khách hàng.
     const moModalThemUser = () => {
         setUserDangSua(null);
         setFormUser({
@@ -105,6 +108,7 @@ export default function useKhachHangController(dependencies) {
     // thay cho mật khẩu mặc định cố định "123456" trước đây (rủi ro an ninh)
     const taoMatKhauNgauNhien = () => Math.random().toString(36).slice(-6) + Math.random().toString(36).slice(-4).toUpperCase();
 
+    // Đưa khách hàng được chọn vào form chỉnh sửa.
     const moModalSuaUser = (u) => {
         setUserDangSua(u);
         setFormUser({
@@ -120,6 +124,7 @@ export default function useKhachHangController(dependencies) {
         setDangMoModalUser(true);
     };
 
+    // Kiểm tra và lưu tài khoản khách hàng.
     const xuLyLuuUser = async (e) => {
         e.preventDefault();
         setDangLuuUser(true);
@@ -174,6 +179,7 @@ export default function useKhachHangController(dependencies) {
         }
     };
 
+    // Khóa hoặc mở khóa tài khoản khách hàng.
     const xuLyKhoaNguoiDung = async (user) => {
         const dangKhoa = Boolean(user.biKhoa || user.trangThai === 'bi_khoa');
         const id = user.id || user._id;
@@ -236,6 +242,7 @@ export default function useKhachHangController(dependencies) {
         }
     };
 
+    // Xác nhận rồi xóa tài khoản khách hàng.
     const xuLyXoaUser = async (u) => {
         const dongY = await xacNhan({
             tieuDe: 'Xóa Tài Khoản Người Dùng?',
@@ -265,6 +272,7 @@ export default function useKhachHangController(dependencies) {
         }
     };
 
+    // Đổi vai trò của tài khoản.
     const xuLyDoiVaiTroNguoiDung = async (user) => {
         const vaiTroMoi = user.vaiTro === 'admin' ? 'khach_hang' : 'admin';
         const dongY = await xacNhan({

@@ -5,6 +5,7 @@ import { CaiDatService } from '@/services/cai-dat.service';
 // Xử lý nghiệp vụ KhuyenMai; dữ liệu dùng chung được truyền từ controller chính.
 export default function useKhuyenMaiController(dependencies) {
     const { canhBao, formCaiDatKm, hienThongBao, setCaiDatKm, setDangLuuKm, setFormCaiDatKm, xacNhan } = dependencies;
+    // Kiểm tra và lưu nội dung chương trình khuyến mãi.
     const xuLyLuuCaiDatKm = (e) => {
         if (e) e.preventDefault();
         setDangLuuKm(true);
@@ -24,6 +25,7 @@ export default function useKhuyenMaiController(dependencies) {
         }
     };
 
+    // Khôi phục cấu hình khuyến mãi mặc định.
     const xuLyKhoiPhucCaiDatKm = async () => {
         const dongY = await xacNhan({
             tieuDe: 'Khôi Phục Cài Đặt Khuyến Mãi?',
@@ -49,6 +51,7 @@ export default function useKhuyenMaiController(dependencies) {
         setFormCaiDatKm((prev) => ({ ...prev, thoi_gian_ket_thuc: localISOTime }));
     };
 
+    // Đặt thời điểm kết thúc vào cuối tuần này.
     const chonCuoiTuan = () => {
         const d = new Date();
         const day = d.getDay(); // 0: Chủ Nhật
@@ -60,6 +63,7 @@ export default function useKhuyenMaiController(dependencies) {
         setFormCaiDatKm((prev) => ({ ...prev, thoi_gian_ket_thuc: localISOTime }));
     };
 
+    // Đặt thời điểm kết thúc vào cuối tháng.
     const chonCuoiThang = () => {
         const d = new Date();
         const ngayCuoiThang = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 0, 0);

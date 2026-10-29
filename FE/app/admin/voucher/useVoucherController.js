@@ -7,6 +7,7 @@ import { MaGiamGiaService } from '@/services/ma-giam-gia.service';
 export default function useVoucherController(dependencies) {
     const { canhBao, formVoucher, hienThongBao, setDangLuuVoucher, setDangMoModalVoucher, setDangXuLyVoucherId, setDanhSachVoucher, setFormVoucher, setVoucherDangSua, taiDuLieuToanBo, thucHienToggleAdmin, thucHienXoaAdmin, voucherDangSua } = dependencies;
     const { danhSachVoucher, tuKhoaVoucher, locTrangThaiVoucher } = dependencies;
+    // Mở form tạo mã giảm giá mới.
     const moModalThemVoucher = () => {
         setVoucherDangSua(null);
         setFormVoucher({
@@ -28,6 +29,7 @@ export default function useVoucherController(dependencies) {
         setDangMoModalVoucher(true);
     };
 
+    // Đưa voucher được chọn vào form chỉnh sửa.
     const moModalSuaVoucher = (vc) => {
         setVoucherDangSua(vc);
         setFormVoucher({
@@ -49,6 +51,7 @@ export default function useVoucherController(dependencies) {
         setDangMoModalVoucher(true);
     };
 
+    // Kiểm tra và lưu voucher.
     const xuLyLuuVoucher = async (e) => {
         e.preventDefault();
         setDangLuuVoucher(true);
@@ -83,6 +86,7 @@ export default function useVoucherController(dependencies) {
         }
     };
 
+    // Bật hoặc tạm ngưng voucher.
     const xuLyToggleVoucher = (voucher) => thucHienToggleAdmin({
         item: voucher,
         layId: (x) => x.id || x.ma_code || x._id,
@@ -95,6 +99,7 @@ export default function useVoucherController(dependencies) {
         nhom: 'Mã Khuyến Mãi'
     });
 
+    // Xác nhận rồi xóa voucher.
     const xuLyXoaVoucher = (voucher) => thucHienXoaAdmin({
         id: voucher.id || voucher.ma_code || voucher._id,
         tieuDeXacNhan: 'Xóa Mã Giảm Giá?',

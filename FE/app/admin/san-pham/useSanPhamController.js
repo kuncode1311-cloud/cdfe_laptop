@@ -11,6 +11,7 @@ import { TU_DIEN_THONG_SO_ADMIN } from '@/app/admin/constants/tu-dien-thong-so';
 export default function useSanPhamController(dependencies) {
     const { canhBao, chuyenKeySangSlug, danhSachDanhMuc, formSp, hienThongBao, lamTrongFormSp, layTenHienThiKey, loaiFormSanPham, setDangLuuSp, setDangMoModalSp, setFormSp, setFormSpGoc, setLoaiFormSanPham, setSpDangSua, setTabModalSp, setThongSoTuyChinh, setThongSoTuyChinhGoc, spDangSua, taiDuLieuToanBo, thongSoTuyChinh, TU_DIEN_THONG_SO_ADMIN, tuyChonXemTruoc, xacDinhLoaiSanPham } = dependencies;
     const { danhSachSanPham, tuKhoaGlobal, tuKhoaSanPham, locNganhHang, locHangSanPham, locTonKhoSanPham, sapXepSanPham } = dependencies;
+    // Mở form thêm sản phẩm mới và xóa dữ liệu mẫu trong form.
     const moModalThemSp = () => {
         setSpDangSua(null);
         setFormSpGoc(null);
@@ -23,6 +24,7 @@ export default function useSanPhamController(dependencies) {
         setDangMoModalSp(true);
     };
 
+    // Đưa dữ liệu sản phẩm đang chọn vào form chỉnh sửa.
     const moModalSuaSp = (sp, tabMacDinh = 'thong_tin') => {
         setSpDangSua(sp);
         setTabModalSp(tabMacDinh);
@@ -551,6 +553,7 @@ export default function useSanPhamController(dependencies) {
         return ds.slice(0, 5);
     }, [sanPhamXemTruoc]);
 
+    // Tìm phiên bản sản phẩm đang được chọn.
     const tuyChonHienTaiXemTruoc = useMemo(() => {
         if (tuyChonXemTruoc) return tuyChonXemTruoc;
         if (sanPhamXemTruoc.tuy_chon_phien_ban && sanPhamXemTruoc.tuy_chon_phien_ban.length > 0) {
@@ -559,10 +562,14 @@ export default function useSanPhamController(dependencies) {
         return null;
     }, [tuyChonXemTruoc, sanPhamXemTruoc]);
 
+    // Tính giá bán gồm giá sản phẩm và phần chênh lệch của phiên bản.
     const giaHienTaiXemTruoc = (sanPhamXemTruoc.gia_khuyen_mai || sanPhamXemTruoc.gia_goc || 0) + (tuyChonHienTaiXemTruoc ? Number(tuyChonHienTaiXemTruoc.chenh_lech_gia || 0) : 0);
+    // Tính giá gốc gồm giá sản phẩm và phần chênh lệch của phiên bản.
     const giaGocHienTaiXemTruoc = (sanPhamXemTruoc.gia_goc || sanPhamXemTruoc.gia_khuyen_mai || 0) + (tuyChonHienTaiXemTruoc ? Number(tuyChonHienTaiXemTruoc.chenh_lech_gia || 0) : 0);
+    // Tính số tiền khách tiết kiệm được theo giá xem trước.
     const tienTietKiemXemTruoc = giaGocHienTaiXemTruoc > giaHienTaiXemTruoc ? (giaGocHienTaiXemTruoc - giaHienTaiXemTruoc) : 0;
 
+    // Kiểm tra dữ liệu form rồi gọi API thêm hoặc cập nhật sản phẩm.
     const xuLyLuuSanPham = async (e) => {
         e.preventDefault();
         // Kiểm tra hợp lệ giá bán (không được để trống, 0đ, hoặc < 1.000 đ)

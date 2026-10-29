@@ -7,6 +7,7 @@ import { DanhMucService } from '@/services/danh-muc.service';
 export default function useDanhMucController(dependencies) {
     const { canhBao, danhSachDanhMuc, dmDangSua, formDm, hienThongBao, locLoaiDanhMuc, setDangLuuDanhMuc, setDangMoModalDanhMuc, setDangXuLyDmId, setDanhSachDanhMuc, setDmDangSua, setFormDm, taiDuLieuToanBo, thucHienToggleAdmin, thucHienXoaAdmin } = dependencies;
     const { tuKhoaDanhMuc } = dependencies;
+    // Mở form tạo danh mục theo nhóm đang xem.
     const moModalThemDanhMuc = () => {
         setDmDangSua(null);
         setFormDm({
@@ -23,6 +24,7 @@ export default function useDanhMucController(dependencies) {
         setDangMoModalDanhMuc(true);
     };
 
+    // Đưa danh mục được chọn vào form chỉnh sửa.
     const moModalSuaDanhMuc = (dm) => {
         setDmDangSua(dm);
         setFormDm({
@@ -38,6 +40,7 @@ export default function useDanhMucController(dependencies) {
         setDangMoModalDanhMuc(true);
     };
 
+    // Kiểm tra và lưu danh mục.
     const xuLyLuuDanhMuc = async (e) => {
         e.preventDefault();
         setDangLuuDanhMuc(true);
@@ -68,6 +71,7 @@ export default function useDanhMucController(dependencies) {
         }
     };
 
+    // Bật hoặc tạm ngưng danh mục.
     const xuLyToggleDanhMuc = (dm) => thucHienToggleAdmin({
         item: dm,
         layId: (x) => x.id || x._id || x.ma_danh_muc,
@@ -80,6 +84,7 @@ export default function useDanhMucController(dependencies) {
         nhom: 'Hãng & Phân Khúc'
     });
 
+    // Xác nhận rồi xóa danh mục.
     const xuLyXoaDanhMuc = (dm) => thucHienXoaAdmin({
         id: dm.id || dm._id || dm.ma_danh_muc,
         tieuDeXacNhan: 'Xóa Thương Hiệu / Danh Mục?',

@@ -68,6 +68,7 @@ export default function useAdminController() {
     const pathname = usePathname();
     const router = useRouter();
     const tabHienTai = layTabTheoDuongDan(pathname);
+    // Chuyển sang trang admin được chọn.
     const setTabHienTai = (tab) => router.push(layDuongDanAdmin(tab));
 
     const khungNoiDungChinhRef = useRef(null);
@@ -190,6 +191,7 @@ export default function useAdminController() {
         });
     }, []);
 
+    // Cập nhật một trường của showroom trong form.
     const xuLyThayDoiShowroom = (index, truong, giaTri) => {
         setDanhSachShowroomAdmin(prev => {
             const moi = [...prev];
@@ -206,6 +208,7 @@ export default function useAdminController() {
         })));
     };
 
+    // Thêm dòng showroom vào form.
     const xuLyThemShowroomMoi = () => {
         const idMoi = `showroom-${Date.now()}`;
         const srMoi = {
@@ -224,6 +227,7 @@ export default function useAdminController() {
         toast.info('Đã thêm dòng showroom mới. Hãy điền địa chỉ & tọa độ GPS!');
     };
 
+    // Xác nhận rồi xóa showroom.
     const xuLyXoaShowroom = async (index) => {
         if (danhSachShowroomAdmin.length <= 1) {
             toast.error('Hệ thống phải có ít nhất 1 showroom!');
@@ -239,6 +243,7 @@ export default function useAdminController() {
         toast.success('Đã xóa showroom khỏi danh sách cấu hình!');
     };
 
+    // Kiểm tra và lưu cấu hình showroom.
     const xuLyLuuShowroom = async () => {
         setDangLuuShowroom(true);
         try {
@@ -438,6 +443,7 @@ export default function useAdminController() {
         'am_thanh': 'Công nghệ âm thanh'
     };
 
+    // Đổi khóa thông số thành nhãn dễ đọc.
     const layTenHienThiKey = (rawKey) => {
         if (!rawKey) return '';
         const k = rawKey.trim();
@@ -473,6 +479,7 @@ export default function useAdminController() {
         onHuy: () => {}
     });
 
+    // Hiện hộp thoại xác nhận thao tác.
     const xacNhan = ({
         tieuDe = 'Xác Nhận Thao Tác',
         noiDung = 'Bạn có chắc chắn muốn thực hiện thao tác này?',
@@ -501,6 +508,7 @@ export default function useAdminController() {
         });
     };
 
+    // Hiện cảnh báo hoặc lỗi trong trang admin.
     const canhBao = ({
         tieuDe = 'Thông Báo Hệ Thống',
         noiDung = '',
@@ -810,6 +818,7 @@ export default function useAdminController() {
 
     const [donHangChiTiet, setDonHangChiTiet] = useState(null);
 
+    // Rút ngắn tên dài để vừa trong bảng.
     const rutGonTen = (str, maxLen = 45) => {
         if (!str) return '';
         return str.length > maxLen ? str.slice(0, maxLen).trim() + '...' : str;
@@ -969,6 +978,7 @@ export default function useAdminController() {
         e.target.value = '';
     };
 
+    // Tải lại dữ liệu các trang admin cần dùng.
     const taiDuLieuToanBo = async () => {
         setDangTai(true);
         try {
@@ -1071,6 +1081,7 @@ export default function useAdminController() {
         return 'laptop';
     };
 
+    // Tạo mô tả ngắn về thông số sản phẩm trong bảng.
     const layThongSoNhanhAdmin = (sp) => {
         if (!sp) return { icon: '💻', text: 'Chưa có thông số' };
         const ts = sp.thong_so || {};
@@ -1191,6 +1202,7 @@ export default function useAdminController() {
             .slice(0, 5);
     }, [danhSachSanPham]);
 
+    // Tạo và tải file Excel báo cáo đơn hàng.
     const xuatExcelDonHang = () => {
         const danhSachXuat = donHangHienThi.length > 0 ? donHangHienThi : danhSachDonHang;
         if (danhSachXuat.length === 0) {
@@ -1595,6 +1607,7 @@ export default function useAdminController() {
     const thucHienXoaAdmin = taoHandlerXoa({ xacNhan, canhBao, hienThongBao, taiLaiDuLieu: taiDuLieuToanBo });
     const thucHienToggleAdmin = taoHandlerToggleTruong({ hienThongBao });
 
+    // Xác nhận rồi xóa sản phẩm.
     const xuLyXoaSanPham = (id, ten) => thucHienXoaAdmin({
         id,
         tieuDeXacNhan: 'Xóa Sản Phẩm Khỏi Hệ Thống?',
@@ -1605,6 +1618,7 @@ export default function useAdminController() {
         setDangXuLy: setDangXuLySpId
     });
 
+    // Bật hoặc tạm ẩn sản phẩm khỏi bán.
     const xuLyToggleConHang = (sp) => thucHienToggleAdmin({
         item: sp,
         truong: 'con_hang',
@@ -1616,6 +1630,7 @@ export default function useAdminController() {
         nhom: 'Trạng Thái Sản Phẩm'
     });
 
+    // Bật hoặc tắt Flash Sale của sản phẩm.
     const xuLyToggleFlashSale = (sp) => thucHienToggleAdmin({
         item: sp,
         truong: 'la_flash_sale',

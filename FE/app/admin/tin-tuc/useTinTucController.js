@@ -7,6 +7,7 @@ import { TinTucService } from '@/services/tin-tuc.service';
 export default function useTinTucController(dependencies) {
     const { canhBao, formTinTuc, hienThongBao, rutGonTen, setDangLuuTinTuc, setDangMoModalTinTuc, setDangXuLyTinTucId, setDanhSachTinTuc, setFormTinTuc, setTinTucDangSua, taiDuLieuToanBo, thucHienToggleAdmin, thucHienXoaAdmin, tinTucDangSua } = dependencies;
     const { danhSachTinTuc, tuKhoaTinTuc, locChuyenMucTinTuc, locTrangThaiTinTuc } = dependencies;
+    // Mở form viết bài mới.
     const moModalThemTinTuc = () => {
         setTinTucDangSua(null);
         setFormTinTuc({
@@ -24,6 +25,7 @@ export default function useTinTucController(dependencies) {
         setDangMoModalTinTuc(true);
     };
 
+    // Đưa bài viết được chọn vào form chỉnh sửa.
     const moModalSuaTinTuc = (tin) => {
         setTinTucDangSua(tin);
         setFormTinTuc({
@@ -40,8 +42,10 @@ export default function useTinTucController(dependencies) {
         });
         setDangMoModalTinTuc(true);
     };
+    // Tên gọi cũ của hàm mở form sửa bài.
     const moModalSuaTin = moModalSuaTinTuc;
 
+    // Kiểm tra và lưu bài viết.
     const xuLyLuuTinTuc = async (e) => {
         e.preventDefault();
         setDangLuuTinTuc(true);
@@ -73,6 +77,7 @@ export default function useTinTucController(dependencies) {
         }
     };
 
+    // Đăng hoặc gỡ bài viết khỏi trang công khai.
     const xuLyToggleXuatBanTinTuc = (tin) => thucHienToggleAdmin({
         item: tin,
         truong: 'xuat_ban',
@@ -84,6 +89,7 @@ export default function useTinTucController(dependencies) {
         nhom: 'Tin Tức & Bài Viết'
     });
 
+    // Bật hoặc tắt trạng thái bài viết nổi bật.
     const xuLyToggleTieuDiemTinTuc = (tin) => thucHienToggleAdmin({
         item: tin,
         truong: 'la_tieu_diem',
@@ -96,6 +102,7 @@ export default function useTinTucController(dependencies) {
         loaiBat: 'deal'
     });
 
+    // Xác nhận rồi xóa bài viết.
     const xuLyXoaTinTuc = (tin, tieuDeThamKhao) => {
         const id = typeof tin === 'object' && tin !== null ? (tin.id || tin._id) : tin;
         const tieuDe = (typeof tin === 'object' && tin !== null ? tin.tieu_de : tieuDeThamKhao) || 'Bài viết';
